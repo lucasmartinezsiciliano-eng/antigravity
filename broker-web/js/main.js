@@ -21,47 +21,47 @@ function showToast(msg, type = 'success') {
 // ============================================
 function calcularScore(data) {
   let score = 0;
+  const tc = data.tipo_contrato || '';
 
-  // Tipo contrato
-  if (data.tipo_contrato === 'indefinido') score += 15;
-  else if (data.tipo_contrato === 'funcionario') score += 15;
-  else if (data.tipo_contrato === 'autonomo') score += 5;
-  else if (data.tipo_contrato === 'temporal') score += 3;
+  // ── BLOQUE A — Tipo de contrato (15 pts) ──────────────────────────────────
+  if (tc === 'indefinido' || tc === 'funcionario')          score += 15;
+  else if (tc === 'fijo_discontinuo' || tc === 'interino'
+        || tc === 'autonomo_2plus' || tc === 'temporal')    score += 8;
+  else if (tc === 'autonomo_nuevo')                          score += 5;
 
-  // Antigüedad
-  const ant = parseFloat(data.antiguedad) || 0;
-  if (ant >= 5) score += 15;
-  else if (ant >= 2) score += 10;
+  // ── BLOQUE A — Antigüedad implícita según tipo ────────────────────────────
+  // autonomo_2plus → ≥2 años (+10), autonomo_nuevo → <2 años (0)
+  // indefinido / funcionario / interino → asumimos ≥2 años (+10)
+  if (['indefinido','funcionario','interino','fijo_discontinuo','temporal'].includes(tc)) score += 10;
+  else if (tc === 'autonomo_2plus') score += 10;
+  // autonomo_nuevo → 0
 
-  // Ahorros / LTV
+  // ── BLOQUE A — Ahorros (proxy de LTV, máx 10 pts) ────────────────────────
   const ahorrosMap = { '0-5': 0, '5-10': 3, '10-20': 6, 'mas-20': 10 };
   score += ahorrosMap[data.ahorros] || 0;
-  if (data.ahorros === 'mas-20') score += 7; // premium
 
-  // Estado búsqueda / urgencia
-  if (data.estado === 'reserva') score += 30;
+  // ── BLOQUE B — Premium ────────────────────────────────────────────────────
+  if (tc === 'funcionario')          score += 10; // funcionario o gran empresa
+  if (data.ahorros === 'mas-20')     score += 7;  // ahorros >20% del precio total
+  if (data.cotitular === 'si')       score += 5;
+
+  // ── BLOQUE C — Intención real ─────────────────────────────────────────────
+  if (data.estado === 'reserva')          score += 30;
   else if (data.estado === 'identificada') score += 5;
-  else score -= 10;
+  else if (data.estado === 'mirando')      score -= 10;
 
-  if (data.urgencia === 'menos-1') score += 15;
+  if (data.urgencia === 'menos-1')  score += 15;
   else if (data.urgencia === '1-3') score += 0;
-  else score -= 5;
+  else                              score -= 5;
 
-  // Señales premium
-  if (data.tipo_contrato === 'funcionario') score += 10;
-  if (data.cotitular === 'si') score += 5;
+  // ── BLOQUE D — Valor de vida ──────────────────────────────────────────────
   if (data.primera_vivienda === 'si') score += 10;
 
-  // Banderas rojas
-  if (data.impagos === 'si') score -= 40;
-  if (data.cambio_empleo === 'si') score -= 20;
+  // ── Banderas negativas ────────────────────────────────────────────────────
+  if (data.impagos !== 'no') score = 0; // ASNEF/RAI → knockout
 
-  const s = Math.max(0, Math.min(100, score));
-  let clasificacion;
-  if (s >= 80) clasificacion = 'A';
-  else if (s >= 60) clasificacion = 'B';
-  else if (s >= 40) clasificacion = 'C';
-  else clasificacion = 'D';
+  const s = Math.max(0, Math.min(150, score));
+  const clasificacion = s >= 80 ? 'A' : s >= 60 ? 'B' : s >= 40 ? 'C' : 'D';
 
   return { score: s, clasificacion };
 }
