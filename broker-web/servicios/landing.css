@@ -1,0 +1,117 @@
+/* =============================================
+   LANDING PAGES — Shared styles
+   ============================================= */
+
+.logo-img { height: 40px; width: auto; display: block; }
+
+.persona-img img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+
+.landing-hero {
+  padding-top: 144px; padding-bottom: 80px;
+  background: linear-gradient(150deg, var(--black) 0%, var(--teal-darker) 60%, var(--teal-dark) 100%);
+  position: relative; overflow: hidden;
+}
+.landing-hero-inner {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+}
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.82rem; color: rgba(255,255,255,0.4); margin-bottom: 20px;
+}
+.breadcrumb a { color: var(--teal-light); }
+.breadcrumb span { color: rgba(255,255,255,0.2); }
+
+/* Persona card */
+.persona-card {
+  background: var(--white); border-radius: 20px; overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.persona-img {
+  width: 100%; height: 280px;
+  background: linear-gradient(135deg, var(--teal-bg), var(--teal-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5rem; position: relative;
+}
+.persona-img-placeholder { opacity: 0.5; }
+.persona-badge-img {
+  position: absolute; bottom: -14px; right: 20px;
+  background: var(--teal); color: white; border-radius: 100px;
+  padding: 7px 14px; font-size: 0.82rem; font-weight: 600;
+  border: 3px solid white; white-space: nowrap;
+}
+.persona-info { padding: 26px 22px 22px; }
+.persona-name { font-size: 1.05rem; font-weight: 700; color: var(--black); margin-bottom: 3px; }
+.persona-role { font-size: 0.85rem; color: var(--teal); font-weight: 600; margin-bottom: 10px; }
+.persona-quote {
+  font-size: 0.9rem; color: var(--gray-500); line-height: 1.5;
+  border-left: 3px solid var(--teal); padding-left: 12px; font-style: italic; margin: 0;
+}
+
+/* Ventajas */
+.ventajas { background: var(--white); padding: 80px 0; }
+.ventajas-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px;
+}
+.ventaja-item {
+  background: var(--off-white); border-radius: var(--radius); padding: 26px;
+  border: 1.5px solid var(--gray-100); transition: var(--transition);
+}
+.ventaja-item:hover { border-color: var(--teal); background: var(--teal-bg); }
+.ventaja-icon { font-size: 1.8rem; margin-bottom: 10px; }
+.ventaja-item h3 { color: var(--black); margin-bottom: 6px; font-size: 0.95rem; }
+.ventaja-item p { font-size: 0.88rem; }
+
+/* Requisitos + form */
+.requisitos { padding: 80px 0; }
+.req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+.req-list { list-style: none; margin-top: 8px; }
+.req-list li {
+  display: flex; gap: 12px; padding: 13px 0;
+  border-bottom: 1px solid var(--gray-100); font-size: 0.93rem; color: var(--gray-800);
+}
+.req-list li:last-child { border: none; }
+.req-check { color: var(--teal); font-weight: 700; flex-shrink: 0; }
+
+.landing-form-card {
+  background: var(--white); border-radius: 20px; padding: 32px;
+  box-shadow: var(--shadow-lg); border: 1.5px solid var(--gray-100);
+  position: sticky; top: 90px;
+}
+.landing-form-card h3 { color: var(--black); margin-bottom: 4px; }
+.landing-form-card > p { margin-bottom: 22px; font-size: 0.9rem; }
+
+/* FAQ */
+.faq { background: var(--white); padding: 80px 0; }
+.faq-list { max-width: 700px; margin: 40px auto 0; }
+.faq-item { border-bottom: 1px solid var(--gray-100); padding: 18px 0; }
+.faq-q { font-weight: 600; color: var(--black); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+.faq-a { color: var(--gray-500); font-size: 0.9rem; margin-top: 10px; line-height: 1.6; display: none; }
+
+/* Otros servicios */
+.otros-servicios { background: var(--off-white); padding: 64px 0; }
+.otros-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 36px; }
+.otro-card {
+  background: var(--white); border-radius: var(--radius); padding: 18px;
+  border: 1.5px solid var(--gray-100); text-align: center; transition: var(--transition);
+}
+.otro-card:hover { border-color: var(--teal); transform: translateY(-2px); box-shadow: var(--shadow); }
+.otro-card .icon { font-size: 1.6rem; margin-bottom: 6px; }
+.otro-card h4 { font-size: 0.85rem; color: var(--black); font-weight: 600; }
+
+/* Quiz embedded in landing pages (light background override) */
+#form .quiz-inner h2 { color: var(--black); }
+#form .quiz-inner > p { color: var(--gray-600); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .landing-hero { padding-top: 96px; padding-bottom: 48px; }
+  .landing-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  .persona-img { height: 220px; font-size: 4rem; }
+  .ventajas-grid { grid-template-columns: 1fr; }
+  .req-grid { grid-template-columns: 1fr; gap: 32px; }
+  .landing-form-card { position: static; }
+  .otros-grid { grid-template-columns: repeat(2, 1fr); }
+  .ventajas { padding: 56px 0; }
+  .requisitos { padding: 56px 0; }
+  .faq { padding: 56px 0; }
+}

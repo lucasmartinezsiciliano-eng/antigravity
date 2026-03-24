@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "n8n": {
+      "command": "n8n-mcp",
+      "args": [],
+      "env": {
+        "MCP_MODE": "stdio",
+        "N8N_API_URL": "https://n8n.lukimporta.es",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlNDE3YjIwOC0xZDcxLTRkYjUtODIxNC03YzFlZTI4ZTdiYjMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzczOTEwMzk5fQ.mwG1P6KdK1ureQoMfZcqcGugUWk4MNiNL3H6szVthpI",
+        "LOG_LEVEL": "error"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "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"
+      }
+    },
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer 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\", \"Notion-Version\": \"2022-06-28\"}"
+      }
+    },
+    "gdrive": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"],
+      "env": {
+        "GDRIVE_CLIENT_ID": "1030964453868-nkgd4atcb40r7mds2gnnnuqsahjrl64v.apps.googleusercontent.com",
+        "GDRIVE_CLIENT_SECRET": "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"
+      }
+    }
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "name": "Broker - Setup Google Sheet (Ejecutar 1 vez)",
+  "nodes": [
+    {
+      "id": "wf0-sticky-1",
+      "name": "INSTRUCCIONES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 60],
+      "parameters": {
+        "content": "## Setup Google Sheet — Ejecutar UNA sola vez\n\nSheet ya configurado con ID y pestaña correctos.\n\n1. Ejecuta con **Test workflow**\n2. Las columnas quedan creadas en la pestaña **Conversaciones**\n3. Usa el Sheet ID en WF1, WF2 y WF3 sustituyendo YOUR_SHEET_ID",
+        "height": 160,
+        "width": 480,
+        "color": 5
+      }
+    },
+    {
+      "id": "wf0-001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 340],
+      "parameters": {}
+    },
+    {
+      "id": "wf0-002",
+      "name": "Preparar Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 340],
+      "parameters": {
+        "jsCode": "// Fila de cabeceras (fila 1 del sheet)\nconst cabeceras = {\n  ig_user_id: 'ig_user_id',\n  ig_username: 'ig_username',\n  nombre: 'nombre',\n  telefono: 'telefono',\n  email: 'email',\n  preferencia_contacto: 'preferencia_contacto',\n  historial_conversacion: 'historial_conversacion',\n  datos_lead: 'datos_lead',\n  estado_conversacion: 'estado_conversacion',\n  knockout_motivo: 'knockout_motivo',\n  puntuacion: 'puntuacion',\n  clasificacion: 'clasificacion',\n  detalle_scoring: 'detalle_scoring',\n  comentario_origen: 'comentario_origen',\n  fecha_entrada: 'fecha_entrada',\n  fecha_actualizacion: 'fecha_actualizacion'\n};\n\n// Fila de ejemplo (fila 2)\nconst ejemplo = {\n  ig_user_id: 'EJEMPLO_001',\n  ig_username: 'usuario_ejemplo',\n  nombre: 'Juan Garcia Lopez',\n  telefono: '600123456',\n  email: 'juan@ejemplo.com',\n  preferencia_contacto: 'whatsapp',\n  historial_conversacion: '[]',\n  datos_lead: '{}',\n  estado_conversacion: 'ejemplo',\n  knockout_motivo: '',\n  puntuacion: '85',\n  clasificacion: 'A',\n  detalle_scoring: '{}',\n  comentario_origen: 'Fila de ejemplo — puedes borrarla',\n  fecha_entrada: new Date().toISOString(),\n  fecha_actualizacion: new Date().toISOString()\n};\n\nreturn [\n  { json: cabeceras },\n  { json: ejemplo }\n];\n"
+      },
+      "notes": "Genera 2 items: fila de cabeceras + fila de ejemplo"
+    },
+    {
+      "id": "wf0-003",
+      "name": "Escribir en Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [680, 340],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Conversaciones",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GSHEETS_CRED_ID",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "notes": "Escribe las 2 filas (cabeceras + ejemplo) en la pestaña Conversaciones"
+    },
+    {
+      "id": "wf0-004",
+      "name": "Setup Completado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 340],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "o1",
+              "name": "estado",
+              "value": "Sheet configurado correctamente",
+              "type": "string"
+            },
+            {
+              "id": "o2",
+              "name": "sheet_id",
+              "value": "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+              "type": "string"
+            },
+            {
+              "id": "o3",
+              "name": "siguiente_paso",
+              "value": "Pega este sheet_id en WF1, WF2 y WF3 sustituyendo YOUR_SHEET_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "Preparar Datos", "type": "main", "index": 0 }]
+      ]
+    },
+    "Preparar Datos": {
+      "main": [
+        [{ "node": "Escribir en Sheet", "type": "main", "index": 0 }]
+      ]
+    },
+    "Escribir en Sheet": {
+      "main": [
+        [{ "node": "Setup Completado", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "broker" }, { "name": "setup" }]
+}

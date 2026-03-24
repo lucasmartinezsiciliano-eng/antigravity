@@ -1,0 +1,330 @@
+{
+  "name": "Broker - Captacion Comentario IG",
+  "nodes": [
+    {
+      "id": "wf1-001",
+      "name": "IG Comment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "path": "ig-comments",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "notes": "Meta envia aqui los comentarios de Instagram. Configura este URL en Meta Developers > Webhooks > Instagram > comments"
+    },
+    {
+      "id": "wf1-002",
+      "name": "IF Verificacion o Evento",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-01",
+              "leftValue": "={{ $json.query['hub.mode'] }}",
+              "rightValue": "subscribe",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "wf1-003",
+      "name": "Respond Hub Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 180],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('IG Comment Webhook').item.json.query['hub.challenge'] }}",
+        "options": { "responseCode": 200 }
+      },
+      "notes": "Responde el hub.challenge para verificar el webhook con Meta"
+    },
+    {
+      "id": "wf1-004",
+      "name": "Extract Commenter Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 420],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "ig_user_id",
+              "value": "={{ $json.body.entry[0].changes[0].value.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "ig_username",
+              "value": "={{ $json.body.entry[0].changes[0].value.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "comentario_texto",
+              "value": "={{ $json.body.entry[0].changes[0].value.text }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "media_id",
+              "value": "={{ $json.body.entry[0].changes[0].value.media.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf1-005",
+      "name": "Sheets Buscar Usuario Existente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [900, 420],
+      "parameters": {
+        "operation": "lookup",
+        "documentId": { "__rl": true, "value": "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Conversaciones", "mode": "name" },
+        "lookupColumn": "ig_user_id",
+        "lookupValue": "={{ $json.ig_user_id }}",
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "YOUR_GSHEETS_CRED_ID", "name": "Google Sheets" } },
+      "notes": "Busca si este usuario ya fue contactado antes. Sheet: Broker - Lead Pipeline > Conversaciones"
+    },
+    {
+      "id": "wf1-006",
+      "name": "IF Usuario Ya Contactado",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 420],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-02",
+              "leftValue": "={{ $json.ig_user_id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "notes": "Si ya existe registro, no mandamos otro DM para no spamear"
+    },
+    {
+      "id": "wf1-007",
+      "name": "Respond OK Already Tracked",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1340, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"already_tracked\" }",
+        "options": { "responseCode": 200 }
+      }
+    },
+    {
+      "id": "wf1-008",
+      "name": "Send DM Inicial IG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 540],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/YOUR_IG_PAGE_ID/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "recipient": {
+            "id": "={{ $('Extract Commenter Data').item.json.ig_user_id }}"
+          },
+          "message": {
+            "text": "={{ '¡Hola ' + $('Extract Commenter Data').item.json.ig_username + '! 👋\\n\\nVi tu comentario. En Firmax llevamos más de 25 años ayudando a familias en Cataluña a conseguir la hipoteca que les corresponde — comparando entre más de 20 bancos y negociando en tu nombre.\\n\\nSoy el asistente del equipo. ¿Estás buscando hipoteca para una vivienda? Cuéntame un poco tu situación y te digo en 2 minutos si podemos ayudarte 🏠' }}"
+          }
+        },
+        "options": {}
+      },
+      "credentials": { "facebookGraphApi": { "id": "YOUR_META_CRED_ID", "name": "Meta Instagram API" } },
+      "notes": "Envia el primer DM al usuario que comento. Requiere permiso instagram_manage_messages en tu app de Meta"
+    },
+    {
+      "id": "wf1-009",
+      "name": "Sheets Registrar Conversacion",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1560, 540],
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Conversaciones", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ig_user_id": "={{ $('Extract Commenter Data').item.json.ig_user_id }}",
+            "ig_username": "={{ $('Extract Commenter Data').item.json.ig_username }}",
+            "historial_conversacion": "=[]",
+            "datos_lead": "={}",
+            "estado_conversacion": "en_conversacion",
+            "fecha_entrada": "={{ $now.toISO() }}",
+            "fecha_actualizacion": "={{ $now.toISO() }}",
+            "comentario_origen": "={{ $('Extract Commenter Data').item.json.comentario_texto }}"
+          }
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "YOUR_GSHEETS_CRED_ID", "name": "Google Sheets" } }
+    },
+    {
+      "id": "wf1-010",
+      "name": "Telegram Log Nuevo Lead Captado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1780, 540],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ '🎯 [Broker] Nuevo lead captado por comentario IG\\n\\n👤 Usuario: @' + $('Extract Commenter Data').item.json.ig_username + '\\n💬 Comentó: \"' + $('Extract Commenter Data').item.json.comentario_texto + '\"\\n\\n✅ DM inicial enviado — conversación iniciada' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID", "name": "Telegram Antigravity" } }
+    },
+    {
+      "id": "wf1-011",
+      "name": "Respond OK New Lead",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2000, 540],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"dm_sent\" }",
+        "options": { "responseCode": 200 }
+      }
+    },
+    {
+      "id": "wf1-sticky-1",
+      "name": "SETUP",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 100],
+      "parameters": {
+        "content": "## WF1 — Captacion Comentario IG\n\n**Flujo:** Reel/Post → usuario comenta 'FIRMAX' → bot envia DM automatico → inicia cualificacion en WF2.\n\n**Keyword trigger:** Solo procesa comentarios que contengan la palabra FIRMAX (mayus/minus indistinto).\n\n**Configurar:**\n- `1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU` → ID del Google Sheet 'Broker - Lead Pipeline'\n- `YOUR_IG_PAGE_ID` → ID de tu cuenta de Instagram Business\n- Credencial Meta con permiso `instagram_manage_messages`\n- Webhook URL registrar en: Meta Developers → Webhooks → instagram → comments\n- `YOUR_TELEGRAM_CHAT_ID` → ID del chat del equipo broker",
+        "height": 220,
+        "width": 650,
+        "color": 4
+      }
+    },
+    {
+      "id": "wf1-keyword",
+      "name": "IF Comentario es FIRMAX",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 420],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-kw",
+              "leftValue": "={{ $json.comentario_texto }}",
+              "rightValue": "FIRMAX",
+              "operator": { "type": "string", "operation": "contains" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "notes": "Solo actua si el comentario contiene 'FIRMAX'. Resto de comentarios se ignoran."
+    },
+    {
+      "id": "wf1-ignore",
+      "name": "Respond Ignorar Comentario",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1120, 560],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ignored_no_keyword\" }",
+        "options": { "responseCode": 200 }
+      }
+    }
+  ],
+  "connections": {
+    "IG Comment Webhook": {
+      "main": [
+        [{ "node": "IF Verificacion o Evento", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF Verificacion o Evento": {
+      "main": [
+        [{ "node": "Respond Hub Challenge", "type": "main", "index": 0 }],
+        [{ "node": "Extract Commenter Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Commenter Data": {
+      "main": [
+        [{ "node": "IF Comentario es FIRMAX", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF Comentario es FIRMAX": {
+      "main": [
+        [{ "node": "Sheets Buscar Usuario Existente", "type": "main", "index": 0 }],
+        [{ "node": "Respond Ignorar Comentario", "type": "main", "index": 0 }]
+      ]
+    },
+    "Sheets Buscar Usuario Existente": {
+      "main": [
+        [{ "node": "IF Usuario Ya Contactado", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF Usuario Ya Contactado": {
+      "main": [
+        [{ "node": "Respond OK Already Tracked", "type": "main", "index": 0 }],
+        [{ "node": "Send DM Inicial IG", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send DM Inicial IG": {
+      "main": [
+        [{ "node": "Sheets Registrar Conversacion", "type": "main", "index": 0 }]
+      ]
+    },
+    "Sheets Registrar Conversacion": {
+      "main": [
+        [{ "node": "Telegram Log Nuevo Lead Captado", "type": "main", "index": 0 }]
+      ]
+    },
+    "Telegram Log Nuevo Lead Captado": {
+      "main": [
+        [{ "node": "Respond OK New Lead", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Broker - Error Handler"
+  },
+  "tags": [{ "name": "broker" }, { "name": "instagram" }, { "name": "captacion" }]
+}

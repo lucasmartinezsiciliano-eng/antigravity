@@ -1,0 +1,291 @@
+{
+  "leads": [
+    {
+      "id": "L001",
+      "nombre": "Marcos Torres",
+      "telefono": "634 221 089",
+      "email": "marcos.torres@gmail.com",
+      "origen": "Instagram",
+      "tipo_hipoteca": "Fija",
+      "zona": "Tarragona",
+      "etapa": "documentacion",
+      "clasificacion": "A",
+      "score": 89,
+      "asignado_a": "Mariano",
+      "tipo_contrato": "Indefinido",
+      "ingresos": 3200,
+      "importe_solicitado": 195000,
+      "precio_vivienda": 240000,
+      "urgencia": "1-3 meses",
+      "fecha_entrada": "2026-03-10T09:30:00Z",
+      "fecha_etapa": "2026-03-24T16:51:20.705Z",
+      "ultima_actividad": "2026-03-24T16:51:20.705Z",
+      "proxima_accion": "Confirmar nóminas del último año",
+      "fecha_proxima_accion": "2026-03-25",
+      "notas": [
+        {
+          "id": "N001",
+          "autor": "Mariano",
+          "tipo": "llamada",
+          "texto": "Primera llamada. Familia con 2 hijos, buscan hipoteca fija para vivienda habitual en Tarragona. Tienen ahorros suficientes (entrada del 20%).",
+          "fecha": "2026-03-11T10:00:00Z"
+        },
+        {
+          "id": "N002",
+          "autor": "Mariano",
+          "tipo": "nota",
+          "texto": "Enviada lista de documentos necesarios por WhatsApp. Pendiente: nóminas últimos 3 meses y vida laboral.",
+          "fecha": "2026-03-18T10:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "L002",
+      "nombre": "Laura Sánchez",
+      "telefono": "612 887 334",
+      "email": "laura.sanchez@edu.cat",
+      "origen": "Formulario web",
+      "tipo_hipoteca": "Funcionarios",
+      "zona": "Reus",
+      "etapa": "en_banco",
+      "clasificacion": "A",
+      "score": 94,
+      "asignado_a": "Silvia",
+      "tipo_contrato": "Funcionario",
+      "ingresos": 2400,
+      "importe_solicitado": 140000,
+      "precio_vivienda": 175000,
+      "urgencia": "1-3 meses",
+      "fecha_entrada": "2026-03-05T08:00:00Z",
+      "fecha_etapa": "2026-03-24T09:48:39.202Z",
+      "ultima_actividad": "2026-03-24T09:48:39.202Z",
+      "proxima_accion": "Respuesta banco BBVA pendiente",
+      "fecha_proxima_accion": "2026-03-26",
+      "notas": [
+        {
+          "id": "N003",
+          "autor": "Silvia",
+          "tipo": "llamada",
+          "texto": "Maestra de primaria, funcionaria de carrera. Perfil impecable. Busca 1ª vivienda en Reus. Muy motivada.",
+          "fecha": "2026-03-06T11:30:00Z"
+        },
+        {
+          "id": "N004",
+          "autor": "Silvia",
+          "tipo": "reunion",
+          "texto": "Reunión presencial en oficina. Recogida toda la documentación. Operación enviada a BBVA y Santander.",
+          "fecha": "2026-03-20T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "L003",
+      "nombre": "Carlos Ruiz",
+      "telefono": "699 443 221",
+      "email": "carlos.ruiz@gmail.com",
+      "origen": "Instagram",
+      "tipo_hipoteca": "100%",
+      "zona": "Tarragona",
+      "etapa": "contactado",
+      "clasificacion": "B",
+      "score": 74,
+      "asignado_a": "Carlos",
+      "tipo_contrato": "Indefinido",
+      "ingresos": 2100,
+      "importe_solicitado": 160000,
+      "precio_vivienda": 160000,
+      "urgencia": "3-6 meses",
+      "fecha_entrada": "2026-03-15T14:00:00Z",
+      "fecha_etapa": "2026-03-24T10:43:28.898Z",
+      "ultima_actividad": "2026-03-24T10:43:28.898Z",
+      "proxima_accion": "Enviar propuesta inicial de opciones 100%",
+      "fecha_proxima_accion": "2026-03-27",
+      "notas": [
+        {
+          "id": "N005",
+          "autor": "Carlos",
+          "tipo": "llamada",
+          "texto": "27 años, primera vivienda. Sin ahorros para entrada. Explorar hipoteca 100% con aval familiar. Perfil joven pero estable.",
+          "fecha": "2026-03-16T10:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "L004",
+      "nombre": "Adrián Molina",
+      "telefono": "655 332 110",
+      "email": "adrian.molina@tech.com",
+      "origen": "Boca a boca",
+      "tipo_hipoteca": "Variable",
+      "zona": "Tarragona",
+      "etapa": "nuevo",
+      "clasificacion": "A",
+      "score": 91,
+      "asignado_a": null,
+      "tipo_contrato": "Indefinido",
+      "ingresos": 4200,
+      "importe_solicitado": 280000,
+      "precio_vivienda": 350000,
+      "urgencia": "Inmediata",
+      "fecha_entrada": "2026-03-23T16:00:00Z",
+      "fecha_etapa": "2026-03-23T16:00:00Z",
+      "ultima_actividad": "2026-03-23T16:00:00Z",
+      "proxima_accion": "Llamada inicial de cualificación",
+      "fecha_proxima_accion": "2026-03-24",
+      "notas": []
+    },
+    {
+      "id": "L005",
+      "nombre": "Roberto Páez",
+      "telefono": "677 119 008",
+      "email": "roberto.paez@autonomo.es",
+      "origen": "Instagram",
+      "tipo_hipoteca": "Reunificación",
+      "zona": "Baix Camp",
+      "etapa": "contactado",
+      "clasificacion": "C",
+      "score": 58,
+      "asignado_a": "Mariano",
+      "tipo_contrato": "Autónomo",
+      "ingresos": 1800,
+      "importe_solicitado": 120000,
+      "precio_vivienda": 145000,
+      "urgencia": "3-6 meses",
+      "fecha_entrada": "2026-03-12T11:00:00Z",
+      "fecha_etapa": "2026-03-13T09:00:00Z",
+      "ultima_actividad": "2026-03-17T14:00:00Z",
+      "proxima_accion": "Solicitar 2 años IRPF y declaraciones IVA",
+      "fecha_proxima_accion": "2026-03-28",
+      "notas": [
+        {
+          "id": "N006",
+          "autor": "Mariano",
+          "tipo": "llamada",
+          "texto": "Autónomo con 3 años de antigüedad. Busca reunificar deuda + hipoteca nueva. Ingresos variables, necesita IRPF de los últimos 2 años.",
+          "fecha": "2026-03-13T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "L006",
+      "nombre": "Jordi Puigdomènech",
+      "telefono": "625 789 456",
+      "email": "jordi.puig@empresa.cat",
+      "origen": "Referido",
+      "tipo_hipoteca": "Segunda Vivienda",
+      "zona": "Salou",
+      "etapa": "firmado",
+      "clasificacion": "A",
+      "score": 96,
+      "asignado_a": "Silvia",
+      "tipo_contrato": "Indefinido",
+      "ingresos": 5800,
+      "importe_solicitado": 220000,
+      "precio_vivienda": 320000,
+      "urgencia": "Inmediata",
+      "fecha_entrada": "2026-02-10T10:00:00Z",
+      "fecha_etapa": "2026-03-21T12:00:00Z",
+      "ultima_actividad": "2026-03-21T12:00:00Z",
+      "proxima_accion": "Operación cerrada ✓",
+      "fecha_proxima_accion": null,
+      "notas": [
+        {
+          "id": "N007",
+          "autor": "Silvia",
+          "tipo": "reunion",
+          "texto": "Director comercial, segunda vivienda en Salou para uso vacacional. Operación muy sólida. Todo en orden.",
+          "fecha": "2026-02-15T10:00:00Z"
+        },
+        {
+          "id": "N008",
+          "autor": "Silvia",
+          "tipo": "nota",
+          "texto": "Firmado ante notario hoy. Hipoteca aprobada por CaixaBank al 2.85% fijo 25 años. Comisión generada. 🎉",
+          "fecha": "2026-03-21T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "L007",
+      "nombre": "Thomas Weber",
+      "telefono": "+49 176 5534 2211",
+      "email": "thomas.weber@gmail.de",
+      "origen": "Formulario web",
+      "tipo_hipoteca": "No Residentes",
+      "zona": "Tarragona",
+      "etapa": "nuevo",
+      "clasificacion": "B",
+      "score": 78,
+      "asignado_a": "Carlos",
+      "tipo_contrato": "Indefinido",
+      "ingresos": 4100,
+      "importe_solicitado": 180000,
+      "precio_vivienda": 250000,
+      "urgencia": "3-6 meses",
+      "fecha_entrada": "2026-03-22T08:00:00Z",
+      "fecha_etapa": "2026-03-22T08:00:00Z",
+      "ultima_actividad": "2026-03-22T08:00:00Z",
+      "proxima_accion": "Videollamada de presentación (reside en Alemania)",
+      "fecha_proxima_accion": "2026-03-26",
+      "notas": []
+    },
+    {
+      "id": "L008",
+      "nombre": "Pau Ferrer",
+      "telefono": "641 008 772",
+      "email": "pau.ferrer@construye.com",
+      "origen": "Boca a boca",
+      "tipo_hipoteca": "Autopromotor",
+      "zona": "Cambrils",
+      "etapa": "descartado",
+      "clasificacion": "D",
+      "score": 38,
+      "asignado_a": "Carlos",
+      "tipo_contrato": "Autónomo",
+      "ingresos": 1600,
+      "importe_solicitado": 210000,
+      "precio_vivienda": 280000,
+      "urgencia": "1-3 meses",
+      "fecha_entrada": "2026-03-08T15:00:00Z",
+      "fecha_etapa": "2026-03-24T10:59:47.547Z",
+      "ultima_actividad": "2026-03-24T10:59:47.547Z",
+      "proxima_accion": "Archivar — revisar en 6 meses",
+      "fecha_proxima_accion": null,
+      "notas": [
+        {
+          "id": "N009",
+          "autor": "Carlos",
+          "tipo": "nota",
+          "texto": "Ingresos insuficientes para el importe solicitado. LTV al 75% pero autónomo con solo 1 año de antigüedad. Descartado hasta estabilizar 2 años más de actividad.",
+          "fecha": "2026-03-14T10:00:00Z"
+        }
+      ]
+    }
+  ],
+  "chat": [
+    {
+      "id": "M001",
+      "autor": "Silvia",
+      "mensaje": "Jordi Puigdomènech ha firmado esta mañana. CaixaBank al 2.85% fijo. ¡Operación cerrada! 🎉",
+      "fecha": "2026-03-21T12:30:00Z"
+    },
+    {
+      "id": "M002",
+      "autor": "Mariano",
+      "mensaje": "Genial Silvia! Marcos Torres sigue pendiente de mandar las nóminas. Le recuerdo mañana.",
+      "fecha": "2026-03-21T13:00:00Z"
+    },
+    {
+      "id": "M003",
+      "autor": "Carlos",
+      "mensaje": "Acaba de entrar Adrián Molina — score 91, urgencia inmediata, 280k. Alguien lo coge?",
+      "fecha": "2026-03-23T16:05:00Z"
+    },
+    {
+      "id": "M1774345469488",
+      "fecha": "2026-03-24T09:44:29.488Z",
+      "autor": "Mariano",
+      "mensaje": "hola hola, lucas prueba 1"
+    }
+  ]
+}

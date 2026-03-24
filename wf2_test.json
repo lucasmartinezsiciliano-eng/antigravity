@@ -1,0 +1,974 @@
+﻿{
+    "name":  "Broker - Conversacion DM IG",
+    "nodes":  [
+                  {
+                      "id":  "wf2-sticky-1",
+                      "name":  "SETUP WF2",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       240,
+                                       80
+                                   ],
+                      "parameters":  {
+                                         "content":  "## WF2 — Conversacion DM IG\n\n**Que hace:** Recibe cada DM entrante del usuario, carga su historial de Google Sheets, llama a OpenAI con el historial completo, y responde con el siguiente mensaje de la conversacion. Cuando el usuario da suficientes datos, propone pasar a WhatsApp para formalizar. Cuando la conversacion esta completa, llama a WF3 para scoring.\n\n**Configurar:**\n- `1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU` → Google Sheet \u0027Broker - Lead Pipeline\u0027\n- `YOUR_IG_PAGE_ID` → ID cuenta Instagram Business\n- `YOUR_WHATSAPP_LINK` → ej: wa.me/34600000000\n- `YOUR_OPENAI_CRED_ID` → Credencial OpenAI en n8n\n- Webhook URL registrar en: Meta Developers → Webhooks → instagram → messages",
+                                         "height":  220,
+                                         "width":  700,
+                                         "color":  4
+                                     }
+                  },
+                  {
+                      "id":  "wf2-001",
+                      "name":  "IG DM Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       240,
+                                       380
+                                   ],
+                      "parameters":  {
+                                         "path":  "ig-dm",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "notes":  "Recibe DMs de Instagram. Registrar en Meta Developers \u003e Webhooks \u003e instagram \u003e messages"
+                  },
+                  {
+                      "id":  "wf2-002",
+                      "name":  "IF GET Verificacion o POST Mensaje",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       460,
+                                       380
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "cond-01",
+                                                                                   "leftValue":  "={{ $json.method }}",
+                                                                                   "rightValue":  "GET",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     }
+                  },
+                  {
+                      "id":  "wf2-003",
+                      "name":  "Respond Hub Challenge",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       680,
+                                       260
+                                   ],
+                      "parameters":  {
+                                         "respondWith":  "text",
+                                         "responseBody":  "={{ $(\u0027IG DM Webhook\u0027).item.json.query[\u0027hub.challenge\u0027] }}",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "wf2-004",
+                      "name":  "Extract DM Data",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       680,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "mode":  "manual",
+                                         "duplicateItem":  false,
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "a1",
+                                                                                     "name":  "ig_user_id",
+                                                                                     "value":  "={{ $json.body.entry[0].messaging[0].sender.id }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "a2",
+                                                                                     "name":  "mensaje_texto",
+                                                                                     "value":  "={{ $json.body.entry[0].messaging[0].message.text }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "a3",
+                                                                                     "name":  "message_id",
+                                                                                     "value":  "={{ $json.body.entry[0].messaging[0].message.mid }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "a4",
+                                                                                     "name":  "timestamp_mensaje",
+                                                                                     "value":  "={{ $now.toISO() }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "wf2-005",
+                      "name":  "Respond Meta OK",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       900,
+                                       380
+                                   ],
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={ \"status\": \"received\" }",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     },
+                      "notes":  "Meta requiere respuesta 200 en menos de 20s o reintenta. Respondemos inmediatamente y procesamos async."
+                  },
+                  {
+                      "id":  "wf2-006",
+                      "name":  "Sheets Cargar Estado Conversacion",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       1100,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "operation":  "lookup",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+                                                            "mode":  "id"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "Conversaciones",
+                                                           "mode":  "name"
+                                                       },
+                                         "lookupColumn":  "ig_user_id",
+                                         "lookupValue":  "={{ $(\u0027Extract DM Data\u0027).item.json.ig_user_id }}",
+                                         "options":  {
+                                                         "returnAllMatches":  false
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "R9jx2shkEmo4V0Nz",
+                                                                        "name":  "Google Sheets account 2"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-007",
+                      "name":  "IF Conversacion Activa",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1320,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "cond-02",
+                                                                                   "leftValue":  "={{ $json.estado_conversacion }}",
+                                                                                   "rightValue":  "completado",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEquals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "cond-03",
+                                                                                   "leftValue":  "={{ $json.estado_conversacion }}",
+                                                                                   "rightValue":  "descartado",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEquals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "notes":  "Si la conversacion ya esta completada o descartada, ignoramos el mensaje"
+                  },
+                  {
+                      "id":  "wf2-008",
+                      "name":  "Preparar Contexto AI",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1540,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "return items;"
+                                     }
+                  },
+                  {
+                      "id":  "wf2-009",
+                      "name":  "OpenAI Chat Conversacion",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1760,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/chat/completions",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "openAiApi",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "body":  {
+                                                      "model":  "gpt-4o",
+                                                      "messages":  "={{ [\n  { \"role\": \"system\", \"content\": $json.systemPrompt }\n].concat(JSON.parse($json.historial)) }}",
+                                                      "response_format":  {
+                                                                              "type":  "json_object"
+                                                                          },
+                                                      "temperature":  0.7,
+                                                      "max_tokens":  800
+                                                  },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "bruZ4QXuuxXlc5uL",
+                                                            "name":  "OpenAI Firmax"
+                                                        }
+                                      },
+                      "notes":  "Llama a GPT-4o con todo el historial. Fuerza respuesta JSON via response_format."
+                  },
+                  {
+                      "id":  "wf2-010",
+                      "name":  "Parsear Respuesta AI",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1980,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "return items;"
+                                     }
+                  },
+                  {
+                      "id":  "wf2-011",
+                      "name":  "Switch Estado Conversacion",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       2200,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "mode":  "rules",
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.estado_conversacion }}",
+                                                                                                                    "rightValue":  "en_conversacion",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "outputKey":  "0",
+                                                                          "renameOutput":  true,
+                                                                          "outputLabel":  "En conversacion"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.estado_conversacion }}",
+                                                                                                                    "rightValue":  "propuesta_whatsapp",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "outputKey":  "1",
+                                                                          "renameOutput":  true,
+                                                                          "outputLabel":  "Propuesta WhatsApp"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.estado_conversacion }}",
+                                                                                                                    "rightValue":  "completado",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "outputKey":  "2",
+                                                                          "renameOutput":  true,
+                                                                          "outputLabel":  "Completado"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict"
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "leftValue":  "={{ $json.estado_conversacion }}",
+                                                                                                                    "rightValue":  "knockout",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "outputKey":  "3",
+                                                                          "renameOutput":  true,
+                                                                          "outputLabel":  "Knockout"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "fallbackOutput":  "none"
+                                     }
+                  },
+                  {
+                      "id":  "wf2-012",
+                      "name":  "Send DM Respuesta IG",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       2440,
+                                       260
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://graph.facebook.com/v18.0/YOUR_IG_PAGE_ID/messages",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "facebookGraphApi",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "body":  {
+                                                      "recipient":  {
+                                                                        "id":  "={{ $json.ig_user_id }}"
+                                                                    },
+                                                      "message":  {
+                                                                      "text":  "={{ $json.mensaje_a_enviar }}"
+                                                                  }
+                                                  },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "facebookGraphApi":  {
+                                                                   "id":  "YOUR_META_CRED_ID",
+                                                                   "name":  "Meta Instagram API"
+                                                               }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-013",
+                      "name":  "Build WhatsApp Message",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       2440,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "mode":  "manual",
+                                         "duplicateItem":  false,
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "b1",
+                                                                                     "name":  "mensaje_whatsapp",
+                                                                                     "value":  "={{ $json.mensaje_a_enviar + \u0027\\n\\n📱 Nuestro equipo de brokers te atiende directamente por WhatsApp. Llevamos 25 años en esto — una llamada puede ahorrarte miles de euros en tu hipoteca.\\n\\nWhatsApp Firmax: YOUR_WHATSAPP_LINK\\n\\nDiles que vienes de Instagram para que tengan tu caso listo.\u0027 }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "b2",
+                                                                                     "name":  "ig_user_id",
+                                                                                     "value":  "={{ $json.ig_user_id }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "b3",
+                                                                                     "name":  "datos_lead_json",
+                                                                                     "value":  "={{ $json.datos_lead_json }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "b4",
+                                                                                     "name":  "historial_actualizado",
+                                                                                     "value":  "={{ $json.historial_actualizado }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "b5",
+                                                                                     "name":  "estado_conversacion",
+                                                                                     "value":  "propuesta_whatsapp",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "b6",
+                                                                                     "name":  "rowIndex",
+                                                                                     "value":  "={{ $json.rowIndex }}",
+                                                                                     "type":  "number"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "wf2-014",
+                      "name":  "Send DM WhatsApp Transition",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       2660,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://graph.facebook.com/v18.0/YOUR_IG_PAGE_ID/messages",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "facebookGraphApi",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "body":  {
+                                                      "recipient":  {
+                                                                        "id":  "={{ $json.ig_user_id }}"
+                                                                    },
+                                                      "message":  {
+                                                                      "text":  "={{ $json.mensaje_whatsapp }}"
+                                                                  }
+                                                  },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "facebookGraphApi":  {
+                                                                   "id":  "YOUR_META_CRED_ID",
+                                                                   "name":  "Meta Instagram API"
+                                                               }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-015",
+                      "name":  "Sheets Update Estado - En Conv",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       2660,
+                                       260
+                                   ],
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+                                                            "mode":  "id"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "Conversaciones",
+                                                           "mode":  "name"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "historial_conversacion":  "={{ $json.historial_actualizado }}",
+                                                                       "datos_lead":  "={{ $json.datos_lead_json }}",
+                                                                       "estado_conversacion":  "en_conversacion",
+                                                                       "fecha_actualizacion":  "={{ $now.toISO() }}"
+                                                                   }
+                                                     },
+                                         "where":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "lookupColumn":  "ig_user_id",
+                                                                          "lookupValue":  "={{ $json.ig_user_id }}"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "R9jx2shkEmo4V0Nz",
+                                                                        "name":  "Google Sheets account 2"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-016",
+                      "name":  "Sheets Update Estado - WhatsApp",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       2880,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+                                                            "mode":  "id"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "Conversaciones",
+                                                           "mode":  "name"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "historial_conversacion":  "={{ $json.historial_actualizado }}",
+                                                                       "datos_lead":  "={{ $json.datos_lead_json }}",
+                                                                       "estado_conversacion":  "propuesta_whatsapp",
+                                                                       "fecha_actualizacion":  "={{ $now.toISO() }}"
+                                                                   }
+                                                     },
+                                         "where":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "lookupColumn":  "ig_user_id",
+                                                                          "lookupValue":  "={{ $json.ig_user_id }}"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "R9jx2shkEmo4V0Nz",
+                                                                        "name":  "Google Sheets account 2"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-017",
+                      "name":  "Sheets Update Completado",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       2440,
+                                       540
+                                   ],
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+                                                            "mode":  "id"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "Conversaciones",
+                                                           "mode":  "name"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "historial_conversacion":  "={{ $json.historial_actualizado }}",
+                                                                       "datos_lead":  "={{ $json.datos_lead_json }}",
+                                                                       "estado_conversacion":  "pendiente_scoring",
+                                                                       "fecha_actualizacion":  "={{ $now.toISO() }}"
+                                                                   }
+                                                     },
+                                         "where":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "lookupColumn":  "ig_user_id",
+                                                                          "lookupValue":  "={{ $json.ig_user_id }}"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "R9jx2shkEmo4V0Nz",
+                                                                        "name":  "Google Sheets account 2"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-018",
+                      "name":  "Trigger WF3 Scoring",
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       2660,
+                                       540
+                                   ],
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "__rl":  true,
+                                                            "value":  "Broker - Scoring y CRM",
+                                                            "mode":  "name"
+                                                        },
+                                         "mode":  "each",
+                                         "waitForSubWorkflow":  false,
+                                         "workflowInputs":  {
+                                                                "mappingMode":  "defineBelow",
+                                                                "value":  {
+                                                                              "datos_lead_json":  "={{ $json.datos_lead_json }}",
+                                                                              "ig_user_id":  "={{ $json.ig_user_id }}",
+                                                                              "ig_username":  "={{ $(\u0027Sheets Cargar Estado Conversacion\u0027).item.json.ig_username }}"
+                                                                          }
+                                                            }
+                                     },
+                      "notes":  "Llama a WF3 de forma asincrona para no bloquear esta ejecucion"
+                  },
+                  {
+                      "id":  "wf2-019",
+                      "name":  "Send DM Despedida Knockout",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       2440,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://graph.facebook.com/v18.0/YOUR_IG_PAGE_ID/messages",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "facebookGraphApi",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "body":  {
+                                                      "recipient":  {
+                                                                        "id":  "={{ $json.ig_user_id }}"
+                                                                    },
+                                                      "message":  {
+                                                                      "text":  "={{ $json.mensaje_a_enviar }}"
+                                                                  }
+                                                  },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "facebookGraphApi":  {
+                                                                   "id":  "YOUR_META_CRED_ID",
+                                                                   "name":  "Meta Instagram API"
+                                                               }
+                                      }
+                  },
+                  {
+                      "id":  "wf2-020",
+                      "name":  "Sheets Update Descartado",
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       2660,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU",
+                                                            "mode":  "id"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "Conversaciones",
+                                                           "mode":  "name"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "estado_conversacion":  "descartado",
+                                                                       "knockout_motivo":  "={{ $json.knockout_motivo }}",
+                                                                       "fecha_actualizacion":  "={{ $now.toISO() }}"
+                                                                   }
+                                                     },
+                                         "where":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "lookupColumn":  "ig_user_id",
+                                                                          "lookupValue":  "={{ $json.ig_user_id }}"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "R9jx2shkEmo4V0Nz",
+                                                                        "name":  "Google Sheets account 2"
+                                                                    }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "IG DM Webhook":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "IF GET Verificacion o POST Mensaje",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "IF GET Verificacion o POST Mensaje":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Respond Hub Challenge",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ],
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Extract DM Data",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                        "Extract DM Data":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Respond Meta OK",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 },
+                                                                 {
+                                                                     "node":  "Sheets Cargar Estado Conversacion",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Sheets Cargar Estado Conversacion":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "IF Conversacion Activa",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                        "IF Conversacion Activa":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Preparar Contexto AI",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ],
+                                                                    [
+
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Preparar Contexto AI":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "OpenAI Chat Conversacion",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "OpenAI Chat Conversacion":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Parsear Respuesta AI",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Parsear Respuesta AI":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Switch Estado Conversacion",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Switch Estado Conversacion":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Send DM Respuesta IG",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ],
+                                                                        [
+                                                                            {
+                                                                                "node":  "Build WhatsApp Message",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ],
+                                                                        [
+                                                                            {
+                                                                                "node":  "Sheets Update Completado",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ],
+                                                                        [
+                                                                            {
+                                                                                "node":  "Send DM Despedida Knockout",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Send DM Respuesta IG":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Sheets Update Estado - En Conv",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Build WhatsApp Message":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Send DM WhatsApp Transition",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Send DM WhatsApp Transition":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Sheets Update Estado - WhatsApp",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Sheets Update Completado":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Trigger WF3 Scoring",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Send DM Despedida Knockout":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Sheets Update Descartado",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 }
+}

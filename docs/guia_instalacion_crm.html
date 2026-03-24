@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guía de Instalación — CRM Firmax</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      color: #1a1a2e;
+      background: #f5f6fa;
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 50px 60px;
+    }
+
+    /* PRINT BUTTON */
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4f8ef7;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(79,142,247,0.4);
+      z-index: 999;
+    }
+    .print-btn:hover { background: #3a7ae6; }
+
+    @media print {
+      .print-btn { display: none; }
+      body { background: white; }
+      .page { padding: 20px 30px; }
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #4f8ef7;
+    }
+
+    .header-left h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a1a2e;
+      letter-spacing: -0.02em;
+    }
+
+    .header-left p {
+      color: #666;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .logo-box {
+      background: #1a1a2e;
+      color: #4f8ef7;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      padding: 10px 18px;
+      border-radius: 10px;
+    }
+
+    /* INTRO BOX */
+    .intro-box {
+      background: #eef4ff;
+      border: 2px solid #c7dbff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+    }
+
+    .intro-box p {
+      font-size: 15px;
+      color: #2a3a6a;
+      line-height: 1.7;
+    }
+
+    .intro-box strong { color: #1a1a2e; }
+
+    /* SECTION */
+    .section {
+      margin-bottom: 36px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .section-num {
+      background: #4f8ef7;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .section-num.green { background: #22c55e; }
+    .section-num.orange { background: #f97316; }
+    .section-num.purple { background: #a855f7; }
+    .section-num.red { background: #ef4444; }
+
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .section-title .badge {
+      font-size: 11px;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-weight: 600;
+    }
+
+    /* STEPS */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      background: #4f8ef7;
+      border-radius: 50%;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    .step p {
+      font-size: 15px;
+      color: #333;
+    }
+
+    .step p strong { color: #1a1a2e; }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: #1a1a2e;
+      color: #a8d8ff;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 10px 0;
+      letter-spacing: 0.03em;
+      word-break: break-all;
+    }
+
+    .code-block .highlight { color: #4ade80; font-weight: 700; }
+    .code-block .comment { color: #6b7394; }
+
+    /* URL BOX */
+    .url-box {
+      background: #f0fdf4;
+      border: 2px solid #86efac;
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #15803d;
+      text-align: center;
+    }
+
+    /* WARNING */
+    .warning {
+      background: #fff7ed;
+      border: 2px solid #fed7aa;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 12px 0;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .warning-icon { font-size: 18px; flex-shrink: 0; }
+    .warning p { font-size: 14px; color: #7c2d12; line-height: 1.5; }
+
+    /* TIP */
+    .tip {
+      background: #f0f9ff;
+      border-left: 4px solid #38bdf8;
+      padding: 12px 16px;
+      margin: 12px 0;
+      border-radius: 0 8px 8px 0;
+      font-size: 14px;
+      color: #0c4a6e;
+    }
+
+    /* TABLE */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+
+    .table th {
+      background: #f1f5f9;
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .table tr:last-child td { border-bottom: none; }
+
+    /* DIVIDER */
+    .divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 28px 0;
+    }
+
+    /* SUMMARY BOX */
+    .summary {
+      background: #1a1a2e;
+      color: #e2e6f0;
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-top: 32px;
+    }
+
+    .summary h3 {
+      color: #4f8ef7;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #252a38;
+      font-size: 14px;
+    }
+
+    .summary-item:last-child { border-bottom: none; }
+
+    .summary-item .icon { font-size: 16px; }
+
+    .worker-badges {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .worker-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #252a38;
+      border: 1px solid #3a4060;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .av-M { background: #1a3a6a; color: #60a5fa; }
+    .av-S { background: #2d1545; color: #c084fc; }
+    .av-C { background: #14401f; color: #4ade80; }
+
+    /* FOOTER */
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨️ Guardar como PDF</button>
+
+<div class="page">
+
+  <!-- CABECERA -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Guía de instalación — CRM Firmax</h1>
+      <p>Paso a paso para poner el CRM en los ordenadores del equipo</p>
+    </div>
+    <div class="logo-box">⚡ ANTIGRAVITY</div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="intro-box">
+    <p>
+      <strong>¿Qué es esto?</strong> El CRM Firmax es un programa que vive en
+      <strong>un solo ordenador de la oficina</strong> (el tuyo, por ejemplo) y al que
+      todos los demás acceden desde su navegador, igual que cuando abres una web normal.
+      No hay que instalar nada en los ordenadores de Mariano, Silvia ni Carlos —
+      solo abrir Chrome y escribir una dirección.
+    </p>
+  </div>
+
+  <!-- ESQUEMA VISUAL -->
+  <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin-bottom:32px;text-align:center;">
+    <p style="font-size:13px;color:#64748b;margin-bottom:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Cómo funciona</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+      <div style="background:white;border:2px solid #4f8ef7;border-radius:10px;padding:12px 18px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:4px;">💻</div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a2e;">Tu PC</div>
+        <div style="font-size:11px;color:#64748b;">Corre el servidor</div>
+      </div>
+      <div style="font-size:24px;color:#94a3b8;">→</div>
+      <div style="background:white;border:2px solid #e2e8f0;border-radius:10px;padding:12px 18px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:4px;">🌐</div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a2e;">Red WiFi</div>
+        <div style="font-size:11px;color:#64748b;">Misma oficina</div>
+      </div>
+      <div style="font-size:24px;color:#94a3b8;">→</div>
+      <div style="background:white;border:2px solid #e2e8f0;border-radius:10px;padding:12px 18px;text-align:center;">
+        <div style="font-size:22px;margin-bottom:4px;">👥</div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a2e;">Mariano · Silvia · Carlos</div>
+        <div style="font-size:11px;color:#64748b;">Solo abren Chrome</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── PARTE 1: TU ORDENADOR ─────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">1</div>
+      <h2>Arrancar el servidor en tu ordenador</h2>
+      <span class="badge">Solo se hace una vez</span>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>Abre la carpeta <strong>mission-control</strong> que está dentro de tu proyecto ANTIGRAVITY en el escritorio.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>Haz clic en la barra de direcciones de la carpeta, escribe <strong>cmd</strong> y pulsa Enter. Se abrirá una ventana negra.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>En esa ventana negra, escribe exactamente esto y pulsa Enter:</p>
+      </div>
+    </div>
+
+    <div class="code-block">node server.js</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>Si todo va bien, verás este mensaje en la pantalla:</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <span class="highlight">🚀 Mission Control en http://localhost:3333</span><br>
+      <span class="highlight">📊 CRM Firmax en http://localhost:3333/crm.html</span>
+    </div>
+
+    <div class="warning">
+      <div class="warning-icon">⚠️</div>
+      <p><strong>Importante:</strong> No cierres esa ventana negra mientras trabajéis. Si la cierras, el CRM deja de funcionar para todos.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ─── PARTE 2: IP ─────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num green">2</div>
+      <h2>Encontrar la dirección de tu ordenador (la IP)</h2>
+    </div>
+
+    <p style="margin-bottom:12px;color:#444;">La IP es la "dirección" de tu ordenador dentro del WiFi de la oficina. Es como el número de una casa. La necesitas para que los demás sepan a dónde conectarse.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>Pulsa las teclas <strong>Windows + R</strong> al mismo tiempo. Se abrirá una ventanita pequeña.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>Escribe <strong>cmd</strong> y pulsa Enter.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>En la ventana negra que se abre, escribe esto y pulsa Enter:</p>
+      </div>
+    </div>
+
+    <div class="code-block">ipconfig</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot"></div>
+        <p>Busca la línea que dice <strong>"Dirección IPv4"</strong>. El número que aparece ahí es tu IP.</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      📌 <strong>Ejemplo:</strong> Si tu IP es <strong>192.168.1.45</strong>, la dirección del CRM para los demás será:<br>
+      <strong style="font-family:monospace;">http://192.168.1.45:3333/crm.html</strong>
+    </div>
+
+    <div style="margin-top:14px;">
+      <p style="font-size:14px;color:#555;margin-bottom:8px;">Anota aquí tu IP para tenerla a mano:</p>
+      <div style="border:2px dashed #cbd5e1;border-radius:8px;padding:14px 20px;font-size:15px;color:#94a3b8;text-align:center;">
+        http://_____ . _____ . _____ . _____ :3333/crm.html
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ─── PARTE 3: LOS TRABAJADORES ──────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num orange">3</div>
+      <h2>Abrir el CRM en los ordenadores de los trabajadores</h2>
+    </div>
+
+    <p style="margin-bottom:14px;color:#444;">Esto es lo único que tienen que hacer Mariano, Silvia y Carlos. <strong>No hay que instalar nada.</strong></p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot" style="background:#f97316;"></div>
+        <p>Abrir <strong>Google Chrome</strong> (o cualquier navegador).</p>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:#f97316;"></div>
+        <p>En la barra de arriba (donde se escribe la web), escribir la dirección del CRM:</p>
+      </div>
+    </div>
+
+    <div class="url-box">http://TU_IP:3333/crm.html</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot" style="background:#f97316;"></div>
+        <p>Pulsar Enter. Se abrirá el CRM.</p>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:#f97316;"></div>
+        <p>En el menú lateral izquierdo, cada uno elige su nombre en el campo <strong>"Conectado como"</strong>. Solo hay que hacerlo una vez — el navegador lo recuerda.</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      💡 <strong>Consejo:</strong> Diles que guarden esa dirección como marcador en Chrome para no tener que escribirla cada vez. Botón de estrella ⭐ en Chrome → "Añadir a favoritos".
+    </div>
+
+    <div style="margin-top:18px;">
+      <p style="font-size:13px;color:#64748b;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Los tres trabajadores</p>
+      <div class="worker-badges">
+        <div class="worker-badge">
+          <div class="avatar av-M">M</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#e2e6f0;">Mariano</div>
+            <div style="font-size:11px;color:#6b7394;">Elige "Mariano" al entrar</div>
+          </div>
+        </div>
+        <div class="worker-badge">
+          <div class="avatar av-S">S</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#e2e6f0;">Silvia</div>
+            <div style="font-size:11px;color:#6b7394;">Elige "Silvia" al entrar</div>
+          </div>
+        </div>
+        <div class="worker-badge">
+          <div class="avatar av-C">C</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#e2e6f0;">Carlos</div>
+            <div style="font-size:11px;color:#6b7394;">Elige "Carlos" al entrar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ─── PARTE 4: PM2 ─────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num purple">4</div>
+      <h2>Que el servidor arranque solo al encender el PC</h2>
+      <span class="badge">Recomendado</span>
+    </div>
+
+    <p style="margin-bottom:12px;color:#444;">Sin este paso, tendrías que acordarte de abrir la ventana negra y escribir <code>node server.js</code> cada vez que enciendes el ordenador. Con PM2, el servidor arranca solo.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot" style="background:#a855f7;"></div>
+        <p><strong>Solo la primera vez</strong> — instala PM2. Abre una ventana negra (cmd) y escribe:</p>
+      </div>
+    </div>
+
+    <div class="code-block">npm install -g pm2</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot" style="background:#a855f7;"></div>
+        <p>Ve a la carpeta mission-control. En la barra de la carpeta escribe <strong>cmd</strong> y pulsa Enter. Luego ejecuta:</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      pm2 start server.js --name "crm-firmax"<br>
+      pm2 save<br>
+      pm2 startup
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot" style="background:#a855f7;"></div>
+        <p>El último comando puede pedirte que copies y pegues una línea más. Hazlo y pulsa Enter.</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      ✅ A partir de ahora el CRM se arranca solo cuando enciendes el ordenador. No tienes que hacer nada más.
+    </div>
+
+    <table class="table" style="margin-top:16px;">
+      <thead>
+        <tr>
+          <th>Comando</th>
+          <th>Para qué sirve</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pm2 status</code></td>
+          <td>Ver si el servidor está corriendo</td>
+        </tr>
+        <tr>
+          <td><code>pm2 stop crm-firmax</code></td>
+          <td>Parar el servidor</td>
+        </tr>
+        <tr>
+          <td><code>pm2 restart crm-firmax</code></td>
+          <td>Reiniciar el servidor</td>
+        </tr>
+        <tr>
+          <td><code>pm2 logs crm-firmax</code></td>
+          <td>Ver si hay algún error</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ─── PARTE 5: PROBLEMAS ──────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num red">5</div>
+      <h2>Si algo no funciona — soluciones rápidas</h2>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Problema</th>
+          <th>Solución</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>La página no carga en el PC de un trabajador</td>
+          <td>Comprueba que la ventana negra con <code>node server.js</code> siga abierta en tu PC. Si está cerrada, vuelve a abrirla.</td>
+        </tr>
+        <tr>
+          <td>Windows pide permiso de firewall</td>
+          <td>Pulsa <strong>"Permitir acceso"</strong> cuando aparezca la ventana. Solo pasa la primera vez.</td>
+        </tr>
+        <tr>
+          <td>La IP cambió y ya no funciona</td>
+          <td>Vuelve a hacer el paso 2 (ipconfig) para ver la nueva IP y dísela a los trabajadores.</td>
+        </tr>
+        <tr>
+          <td>El chat no me muestra mi nombre</td>
+          <td>Asegúrate de haber seleccionado tu nombre en el menú lateral izquierdo del CRM.</td>
+        </tr>
+        <tr>
+          <td>El servidor no arranca (error en ventana negra)</td>
+          <td>Asegúrate de estar dentro de la carpeta <strong>mission-control</strong> antes de escribir el comando.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ─── RESUMEN FINAL ───────────────────────────────────────────────────── -->
+  <div class="summary">
+    <h3>📋 Resumen — lo que hace cada uno</h3>
+    <div class="summary-item">
+      <span class="icon">💻</span>
+      <div><strong style="color:#e2e6f0;">Tú (una sola vez):</strong> <span style="color:#9ca3af;">Instalar PM2, arrancar el servidor, dar la IP a los trabajadores.</span></div>
+    </div>
+    <div class="summary-item">
+      <span class="icon">🔁</span>
+      <div><strong style="color:#e2e6f0;">Tú (cada mañana, si no tienes PM2):</strong> <span style="color:#9ca3af;">Abrir cmd en la carpeta mission-control y escribir <code style="color:#4ade80;">node server.js</code>.</span></div>
+    </div>
+    <div class="summary-item">
+      <span class="icon">👥</span>
+      <div><strong style="color:#e2e6f0;">Mariano, Silvia y Carlos:</strong> <span style="color:#9ca3af;">Abrir Chrome, escribir la dirección, elegir su nombre. Ya está.</span></div>
+    </div>
+    <div class="summary-item">
+      <span class="icon">💾</span>
+      <div><strong style="color:#e2e6f0;">Los datos:</strong> <span style="color:#9ca3af;">Se guardan solos en tu ordenador. Todos ven la misma información en tiempo real.</span></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>CRM Firmax — Mediterrane Firmax SL</span>
+    <span>Desarrollado por Antigravity · antigravity.local</span>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>

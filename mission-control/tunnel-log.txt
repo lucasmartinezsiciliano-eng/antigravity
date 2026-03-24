@@ -1,0 +1,1 @@
+/usr/bin/bash: line 1: cloudflared.exe: command not found

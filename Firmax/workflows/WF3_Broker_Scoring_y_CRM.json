@@ -1,0 +1,580 @@
+{
+  "name": "Broker - Scoring y CRM",
+  "nodes": [
+    {
+      "id": "wf3-sticky-1",
+      "name": "SETUP WF3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80],
+      "parameters": {
+        "content": "## WF3 — Scoring y CRM\n\n**Que hace:** Recibe los datos recopilados por WF2, aplica los 4 niveles del sistema de clasificacion (Filtros Knockout, Scoring 0-100, Clasificacion A/B/C/D, Filtros Avanzados de intencion y valor), y envia el lead clasificado al CRM propio + notificacion Telegram segun prioridad.\n\n**Configurar:**\n- `YOUR_CRM_WEBHOOK_URL` → Endpoint de tu CRM para crear leads\n- `YOUR_CRM_API_KEY` → API Key del CRM si requiere auth\n- `1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU` → Google Sheet 'Broker - Lead Pipeline'\n- `YOUR_TELEGRAM_CHAT_ID` → ID del chat del equipo broker\n- Credenciales Google Sheets y Telegram en n8n",
+        "height": 230,
+        "width": 700,
+        "color": 4
+      }
+    },
+    {
+      "id": "wf3-001",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 380],
+      "parameters": {},
+      "notes": "Recibe los datos de WF2 cuando la conversacion se completa"
+    },
+    {
+      "id": "wf3-002",
+      "name": "Parse Lead Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 380],
+      "parameters": {
+        "jsCode": "const input = $input.item.json;\n\n// Parsear datos del lead del JSON string\nlet d = {};\ntry {\n  d = typeof input.datos_lead_json === 'string' \n    ? JSON.parse(input.datos_lead_json) \n    : input.datos_lead_json || {};\n} catch(e) {\n  d = {};\n}\n\n// Normalizar campos con defaults seguros\nconst lead = {\n  ig_user_id: input.ig_user_id || '',\n  ig_username: input.ig_username || '',\n  nombre: d.nombre_completo || d.nombre || 'Sin nombre',\n  telefono: d.telefono_movil || d.telefono || '',\n  email: d.email || '',\n  preferencia_contacto: d.preferencia_contacto || 'whatsapp',\n\n  // Bloque A - Criterios Basicos\n  tipo_contrato: (d.tipo_contrato || '').toLowerCase(),\n  antiguedad_anios: parseFloat(d.antiguedad_anios) || 0,\n  ingresos_mensuales: parseFloat(d.ingresos_mensuales_netos) || 0,\n  sector_empresa: (d.sector_empresa || '').toLowerCase(),\n  importe_solicitado: parseFloat(d.importe_solicitado) || 0,\n  precio_vivienda: parseFloat(d.precio_vivienda) || 0,\n  otras_deudas_mensuales: parseFloat(d.otras_deudas_mensuales) || 0,\n  porcentaje_ahorros: d.porcentaje_ahorros || '0-5%',\n  estado_busqueda: (d.estado_busqueda || 'solo mirando').toLowerCase(),\n  urgencia_hipoteca: (d.urgencia_hipoteca || 'mas 3 meses').toLowerCase(),\n  hipoteca_anterior: d.hipoteca_anterior === 'si',\n  tipo_documentacion: (d.tipo_documentacion || 'dni').toLowerCase(),\n\n  // Seniales premium\n  es_funcionario_o_gran_empresa: d.es_funcionario_o_gran_empresa === true || (d.tipo_contrato || '').toLowerCase() === 'funcionario',\n  tiene_cotitular: d.tiene_cotitular === true,\n  menor_35_primera_vivienda: d.menor_35_primera_vivienda === true,\n  interes_seguros: d.interes_seguros === true,\n  es_referido: d.es_referido === true,\n  cirbe_limpio: d.cirbe_limpio !== false, // asumimos limpio si no se menciona lo contrario\n  tiene_patrimonio: d.tiene_patrimonio === true,\n\n  // Banderas rojas\n  impagos_asnef_rai: d.impagos_asnef_rai === true,\n  cambio_empleo_reciente: d.cambio_empleo_reciente === true,\n  ingresos_irregulares_mayoria: d.ingresos_irregulares_mayoria === true,\n  conflicto_legal: d.conflicto_legal === true,\n  tarjetas_limite_mas3: d.tarjetas_limite_mas3 === true\n};\n\nreturn lead;\n"
+      }
+    },
+    {
+      "id": "wf3-003",
+      "name": "Nivel 1 - Filtros Knockout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 380],
+      "parameters": {
+        "jsCode": "const l = $input.item.json;\n\nlet knockout = false;\nlet knockout_motivo = null;\nlet knockout_accion = null;\n\n// Filtro 1: Tipo de contrato\nif (!l.tipo_contrato || l.tipo_contrato === 'sin contrato' || l.tipo_contrato === 'en paro' || l.tipo_contrato === 'otro') {\n  knockout = true;\n  knockout_motivo = 'Sin contrato o en paro';\n  knockout_accion = 'lista_futuro';\n}\n\n// Filtro 2: LTV > 90%\nif (!knockout && l.precio_vivienda > 0) {\n  const ltv = l.importe_solicitado / l.precio_vivienda;\n  if (ltv > 0.90) {\n    knockout = true;\n    knockout_motivo = `LTV del ${Math.round(ltv*100)}% supera el 90% — deficit de entrada`;\n    knockout_accion = 'lista_futuro';\n  }\n}\n\n// Filtro 3: Ratio endeudamiento > 30%\nif (!knockout && l.ingresos_mensuales > 0) {\n  // Estimacion cuota hipotecaria: ~0.4% del capital al mes (aproximacion)\n  const cuotaHipotecaEst = l.importe_solicitado * 0.004;\n  const deudaTotal = l.otras_deudas_mensuales + cuotaHipotecaEst;\n  const ratioDeuda = deudaTotal / l.ingresos_mensuales;\n  if (ratioDeuda > 0.30) {\n    knockout = true;\n    knockout_motivo = `Ratio endeudamiento ${Math.round(ratioDeuda*100)}% supera el 30%`;\n    knockout_accion = 'ajustar_o_descartar';\n  }\n}\n\n// Filtro 4: Documentacion\nif (!knockout && l.tipo_documentacion === 'sin documentacion') {\n  knockout = true;\n  knockout_motivo = 'Sin documentacion espaniola';\n  knockout_accion = 'gestoria_no_residentes';\n}\n\n// Banderas Rojas (Nivel 4.3) — descalificacion inmediata\nif (!knockout && l.impagos_asnef_rai) {\n  knockout = true;\n  knockout_motivo = 'Impagos activos en ASNEF o RAI';\n  knockout_accion = 'descarte_inmediato';\n}\nif (!knockout && l.cambio_empleo_reciente) {\n  knockout = true;\n  knockout_motivo = 'Cambio de empleo en los ultimos 6 meses';\n  knockout_accion = 'lista_futuro';\n}\nif (!knockout && l.ingresos_irregulares_mayoria) {\n  knockout = true;\n  knockout_motivo = 'Mas del 50% de ingresos irregulares (comisiones/propinas)';\n  knockout_accion = 'lista_futuro';\n}\nif (!knockout && l.conflicto_legal) {\n  knockout = true;\n  knockout_motivo = 'Conflicto legal pendiente (divorcio/herencia/embargo)';\n  knockout_accion = 'lista_futuro';\n}\nif (!knockout && l.tarjetas_limite_mas3) {\n  knockout = true;\n  knockout_motivo = 'Mas de 3 tarjetas de credito al limite';\n  knockout_accion = 'lista_futuro';\n}\n\nreturn {\n  ...l,\n  knockout,\n  knockout_motivo,\n  knockout_accion\n};\n"
+      }
+    },
+    {
+      "id": "wf3-004",
+      "name": "IF Paso Knockout",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 380],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-01",
+              "leftValue": "={{ $json.knockout }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "false" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "wf3-005",
+      "name": "Nivel 2 y 4 - Calcular Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 260],
+      "parameters": {
+        "jsCode": "const l = $input.item.json;\nlet score = 0;\nconst detalle = {};\n\n// ============================================\n// BLOQUE A — Criterios Basicos (max 60 pts)\n// ============================================\n\n// Tipo de contrato (15 pts)\nlet ptsContrato = 0;\nif (l.tipo_contrato === 'indefinido') ptsContrato = 15;\nelse if (l.tipo_contrato === 'funcionario') ptsContrato = 15;\nelse if ((l.tipo_contrato === 'temporal' || l.tipo_contrato === 'autonomo') && l.antiguedad_anios >= 2) ptsContrato = 8;\nelse if (l.tipo_contrato === 'autonomo') ptsContrato = 5;\nscore += ptsContrato;\ndetalle.contrato = ptsContrato;\n\n// Antiguedad (15 pts)\nlet ptsAnt = 0;\nif (l.antiguedad_anios >= 5) ptsAnt = 15;\nelse if (l.antiguedad_anios >= 2) ptsAnt = 10;\nscore += ptsAnt;\ndetalle.antiguedad = ptsAnt;\n\n// Ratio endeudamiento (15 pts)\nlet ptsDeuda = 0;\nconst cuotaHipEst = l.importe_solicitado * 0.004;\nconst deudaTotalMes = l.otras_deudas_mensuales + cuotaHipEst;\nconst ratioDeuda = l.ingresos_mensuales > 0 ? deudaTotalMes / l.ingresos_mensuales : 1;\nif (ratioDeuda < 0.20) ptsDeuda = 15;\nelse if (ratioDeuda < 0.25) ptsDeuda = 10;\nelse if (ratioDeuda < 0.30) ptsDeuda = 5;\nscore += ptsDeuda;\ndetalle.ratio_deuda = ptsDeuda;\ndetalle.ratio_deuda_pct = Math.round(ratioDeuda * 100);\n\n// LTV (10 pts)\nlet ptsLTV = 0;\nconst ltv = l.precio_vivienda > 0 ? l.importe_solicitado / l.precio_vivienda : 1;\nif (ltv < 0.80) ptsLTV = 10;\nelse if (ltv < 0.85) ptsLTV = 7;\nelse if (ltv < 0.90) ptsLTV = 5;\nscore += ptsLTV;\ndetalle.ltv = ptsLTV;\ndetalle.ltv_pct = Math.round(ltv * 100);\n\n// Documentacion (5 pts)\nlet ptsDoc = 0;\nif (l.tipo_documentacion === 'dni') ptsDoc = 5;\nelse if (l.tipo_documentacion === 'nie') ptsDoc = 2;\nscore += ptsDoc;\ndetalle.documentacion = ptsDoc;\n\n// ============================================\n// BLOQUE B — Criterios Premium (max 40 pts)\n// ============================================\n\n// Funcionario o gran empresa (+10)\nif (l.es_funcionario_o_gran_empresa) { score += 10; detalle.premium_funcionario = 10; }\n\n// CIRBE limpio (+8)\nif (l.cirbe_limpio) { score += 8; detalle.premium_cirbe = 8; }\n\n// Ahorros >20% del precio total (+7)\nconst ahorrosMap = { '0-5%': 0.025, '5-10%': 0.075, '10-20%': 0.15, 'mas 20%': 0.25 };\nconst ahorrosPct = ahorrosMap[l.porcentaje_ahorros] || 0;\nif (ahorrosPct >= 0.20) { score += 7; detalle.premium_ahorros = 7; }\n\n// Pareja o cotitular (+5)\nif (l.tiene_cotitular) { score += 5; detalle.premium_cotitular = 5; }\n\n// Sector estrategico (+5)\nconst sectoresEst = ['tecnologia', 'sanidad', 'banca', 'educacion', 'tech', 'salud'];\nif (sectoresEst.some(s => (l.sector_empresa || '').includes(s))) {\n  score += 5; detalle.premium_sector = 5;\n}\n\n// Lead referido (+5)\nif (l.es_referido) { score += 5; detalle.premium_referido = 5; }\n\n// ============================================\n// NIVEL 4.1 — Filtro de Intencion Real\n// ============================================\n\n// Estado busqueda\nif (l.estado_busqueda === 'reserva firmada' || l.estado_busqueda === 'reserva ya firmada') { score += 30; detalle.intencion_reserva = 30; }\nelse if (l.estado_busqueda === 'vivienda identificada') { score += 5; detalle.intencion_vivienda_id = 5; }\nelse { score -= 10; detalle.intencion_solo_mirando = -10; }\n\n// Urgencia\nif (l.urgencia_hipoteca === 'menos 1 mes' || l.urgencia_hipoteca === 'menos de 1 mes') { score += 15; detalle.urgencia_alta = 15; }\nelse if (l.urgencia_hipoteca === '1-3 meses') { score += 0; }\nelse { score -= 5; detalle.urgencia_baja = -5; }\n\n// ============================================\n// NIVEL 4.4 — Valor de Vida del Cliente\n// ============================================\n\nif (l.menor_35_primera_vivienda) { score += 10; detalle.valor_joven = 10; }\nif (l.precio_vivienda > 300000) { score += 10; detalle.valor_precio_alto = 10; }\nif (l.interes_seguros) { score += 8; detalle.valor_seguros = 8; }\nif (l.tiene_patrimonio) { score += 7; detalle.valor_patrimonio = 7; }\n\n// Score final (clampar 0-100 para la clasificacion base, pero dejamos el real)\nconst scoreFinal = Math.max(0, score);\nconst scoreDisplay = Math.min(100, scoreFinal);\n\n// Clasificacion\nlet clasificacion;\nif (scoreDisplay >= 80) clasificacion = 'A';\nelse if (scoreDisplay >= 60) clasificacion = 'B';\nelse if (scoreDisplay >= 40) clasificacion = 'C';\nelse clasificacion = 'D';\n\nreturn {\n  ...l,\n  score: scoreDisplay,\n  score_real: scoreFinal,\n  clasificacion,\n  detalle_scoring: JSON.stringify(detalle)\n};\n"
+      }
+    },
+    {
+      "id": "wf3-006",
+      "name": "Switch Clasificacion ABCD",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1340, 260],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.clasificacion }}", "rightValue": "A", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "outputKey": "0",
+              "renameOutput": true,
+              "outputLabel": "Lead A"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.clasificacion }}", "rightValue": "B", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "outputKey": "1",
+              "renameOutput": true,
+              "outputLabel": "Lead B"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.clasificacion }}", "rightValue": "C", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "outputKey": "2",
+              "renameOutput": true,
+              "outputLabel": "Lead C"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $json.clasificacion }}", "rightValue": "D", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "outputKey": "3",
+              "renameOutput": true,
+              "outputLabel": "Lead D"
+            }
+          ]
+        },
+        "fallbackOutput": "none"
+      }
+    },
+    {
+      "id": "wf3-007a",
+      "name": "CRM Alta Prioridad - Lead A",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_CRM_WEBHOOK_URL/leads",
+        "onError": "continueRegularOutput",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_CRM_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "nombre": "={{ $json.nombre }}",
+          "telefono": "={{ $json.telefono }}",
+          "email": "={{ $json.email }}",
+          "clasificacion": "A",
+          "puntuacion": "={{ $json.score }}",
+          "preferencia_contacto": "={{ $json.preferencia_contacto }}",
+          "importe_hipoteca": "={{ $json.importe_solicitado }}",
+          "precio_vivienda": "={{ $json.precio_vivienda }}",
+          "tipo_contrato": "={{ $json.tipo_contrato }}",
+          "ingresos_mensuales": "={{ $json.ingresos_mensuales }}",
+          "estado_busqueda": "={{ $json.estado_busqueda }}",
+          "urgencia": "={{ $json.urgencia_hipoteca }}",
+          "origen": "Instagram DM - Broker Hipotecario Firmax",
+          "ig_username": "={{ $json.ig_username }}",
+          "prioridad": "MAXIMA",
+          "protocolo": "Broker senior — Llamada en 5 min — Propuesta en 24h",
+          "detalle_scoring": "={{ $json.detalle_scoring }}",
+          "fecha_entrada": "={{ $now.toISO() }}"
+        },
+        "options": {}
+      },
+      "notes": "LEAD A: Prioridad maxima. Respuesta en 5 minutos."
+    },
+    {
+      "id": "wf3-007b",
+      "name": "CRM Seguimiento Activo - Lead B",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_CRM_WEBHOOK_URL/leads",
+        "onError": "continueRegularOutput",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_CRM_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "nombre": "={{ $json.nombre }}",
+          "telefono": "={{ $json.telefono }}",
+          "email": "={{ $json.email }}",
+          "clasificacion": "B",
+          "puntuacion": "={{ $json.score }}",
+          "preferencia_contacto": "={{ $json.preferencia_contacto }}",
+          "importe_hipoteca": "={{ $json.importe_solicitado }}",
+          "precio_vivienda": "={{ $json.precio_vivienda }}",
+          "tipo_contrato": "={{ $json.tipo_contrato }}",
+          "ingresos_mensuales": "={{ $json.ingresos_mensuales }}",
+          "estado_busqueda": "={{ $json.estado_busqueda }}",
+          "urgencia": "={{ $json.urgencia_hipoteca }}",
+          "origen": "Instagram DM - Broker Hipotecario Firmax",
+          "ig_username": "={{ $json.ig_username }}",
+          "prioridad": "ALTA",
+          "protocolo": "Llamada al dia siguiente — Analisis financiero — Seguimiento semanal",
+          "detalle_scoring": "={{ $json.detalle_scoring }}",
+          "fecha_entrada": "={{ $now.toISO() }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf3-007c",
+      "name": "CRM Nurturing Medio - Lead C",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_CRM_WEBHOOK_URL/leads",
+        "onError": "continueRegularOutput",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_CRM_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "nombre": "={{ $json.nombre }}",
+          "telefono": "={{ $json.telefono }}",
+          "email": "={{ $json.email }}",
+          "clasificacion": "C",
+          "puntuacion": "={{ $json.score }}",
+          "preferencia_contacto": "={{ $json.preferencia_contacto }}",
+          "importe_hipoteca": "={{ $json.importe_solicitado }}",
+          "precio_vivienda": "={{ $json.precio_vivienda }}",
+          "tipo_contrato": "={{ $json.tipo_contrato }}",
+          "ingresos_mensuales": "={{ $json.ingresos_mensuales }}",
+          "estado_busqueda": "={{ $json.estado_busqueda }}",
+          "urgencia": "={{ $json.urgencia_hipoteca }}",
+          "origen": "Instagram DM - Broker Hipotecario Firmax",
+          "ig_username": "={{ $json.ig_username }}",
+          "prioridad": "MEDIA",
+          "protocolo": "Email plan de accion — Nurturing mensual — Reactivar en 3-6 meses",
+          "detalle_scoring": "={{ $json.detalle_scoring }}",
+          "fecha_entrada": "={{ $now.toISO() }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf3-007d",
+      "name": "CRM Nurturing Largo - Lead D",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1580, 540],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_CRM_WEBHOOK_URL/leads",
+        "onError": "continueRegularOutput",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_CRM_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "nombre": "={{ $json.nombre }}",
+          "telefono": "={{ $json.telefono }}",
+          "email": "={{ $json.email }}",
+          "clasificacion": "D",
+          "puntuacion": "={{ $json.score }}",
+          "preferencia_contacto": "={{ $json.preferencia_contacto }}",
+          "importe_hipoteca": "={{ $json.importe_solicitado }}",
+          "precio_vivienda": "={{ $json.precio_vivienda }}",
+          "tipo_contrato": "={{ $json.tipo_contrato }}",
+          "ingresos_mensuales": "={{ $json.ingresos_mensuales }}",
+          "estado_busqueda": "={{ $json.estado_busqueda }}",
+          "urgencia": "={{ $json.urgencia_hipoteca }}",
+          "origen": "Instagram DM - Broker Hipotecario Firmax",
+          "ig_username": "={{ $json.ig_username }}",
+          "prioridad": "BAJA",
+          "protocolo": "Email rechazo amable — Nurturing pasivo cada 2 meses — Reactivar en 6 meses",
+          "detalle_scoring": "={{ $json.detalle_scoring }}",
+          "fecha_entrada": "={{ $now.toISO() }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf3-008a",
+      "name": "Telegram Lead A",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1820, 60],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ '🔥 LEAD A — PRIORIDAD MAXIMA\\n\\n👤 ' + $json.nombre + ' (@' + $json.ig_username + ')\\n📊 Puntuacion: ' + $json.score + '/100\\n💰 Hipoteca: ' + $json.importe_solicitado.toLocaleString('es-ES') + '€ sobre ' + $json.precio_vivienda.toLocaleString('es-ES') + '€\\n📋 Contrato: ' + $json.tipo_contrato + ' | Ingresos: ' + $json.ingresos_mensuales + '€/mes\\n🏠 Estado: ' + $json.estado_busqueda + ' | Urgencia: ' + $json.urgencia_hipoteca + '\\n📱 Contacto: ' + $json.telefono + ' (' + $json.preferencia_contacto + ')\\n\\n⏱ LLAMAR EN MENOS DE 5 MINUTOS' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID", "name": "Telegram Antigravity" } }
+    },
+    {
+      "id": "wf3-008b",
+      "name": "Telegram Lead B",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1820, 220],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ '✅ LEAD B — Seguimiento Activo\\n\\n👤 ' + $json.nombre + ' (@' + $json.ig_username + ')\\n📊 Puntuacion: ' + $json.score + '/100\\n💰 Hipoteca: ' + $json.importe_solicitado.toLocaleString('es-ES') + '€ sobre ' + $json.precio_vivienda.toLocaleString('es-ES') + '€\\n📋 Contrato: ' + $json.tipo_contrato + ' | Ingresos: ' + $json.ingresos_mensuales + '€/mes\\n🏠 Estado: ' + $json.estado_busqueda + ' | Urgencia: ' + $json.urgencia_hipoteca + '\\n📱 Contacto: ' + $json.telefono + ' (' + $json.preferencia_contacto + ')\\n\\n⏱ Llamar maniana — Analisis financiero pendiente' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID", "name": "Telegram Antigravity" } }
+    },
+    {
+      "id": "wf3-008c",
+      "name": "Telegram Lead C",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1820, 380],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ '🟡 LEAD C — Nurturing Medio Plazo\\n\\n👤 ' + $json.nombre + ' (@' + $json.ig_username + ')\\n📊 Puntuacion: ' + $json.score + '/100\\n💰 Hipoteca objetivo: ' + $json.importe_solicitado.toLocaleString('es-ES') + '€\\n📋 Contrato: ' + $json.tipo_contrato + ' | Ingresos: ' + $json.ingresos_mensuales + '€/mes\\n\\n→ Enviar email plan de accion — Seguimiento en 30 dias' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID", "name": "Telegram Antigravity" } }
+    },
+    {
+      "id": "wf3-008d",
+      "name": "Telegram Lead D",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1820, 540],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ '⚪ LEAD D — Nurturing Largo Plazo\\n\\n👤 ' + $json.nombre + ' (@' + $json.ig_username + ')\\n📊 Puntuacion: ' + $json.score + '/100\\n📋 Contrato: ' + $json.tipo_contrato + '\\n\\n→ Email rechazo amable enviado — Reactivar en 6 meses' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID", "name": "Telegram Antigravity" } }
+    },
+    {
+      "id": "wf3-009",
+      "name": "Merge Todos Los Leads",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2060, 300],
+      "parameters": {
+        "mode": "passThrough",
+        "output": "input1"
+      },
+      "notes": "Convergencia de los 4 branches para actualizar Google Sheets con resultado final"
+    },
+    {
+      "id": "wf3-010",
+      "name": "Sheets Registrar Lead Final",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2280, 300],
+      "parameters": {
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Conversaciones", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nombre": "={{ $json.nombre }}",
+            "telefono": "={{ $json.telefono }}",
+            "email": "={{ $json.email }}",
+            "puntuacion": "={{ $json.score }}",
+            "clasificacion": "={{ $json.clasificacion }}",
+            "estado_conversacion": "completado",
+            "detalle_scoring": "={{ $json.detalle_scoring }}",
+            "fecha_actualizacion": "={{ $now.toISO() }}"
+          }
+        },
+        "where": {
+          "values": [{ "lookupColumn": "ig_user_id", "lookupValue": "={{ $json.ig_user_id }}" }]
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "YOUR_GSHEETS_CRED_ID", "name": "Google Sheets" } }
+    },
+    {
+      "id": "wf3-011",
+      "name": "Handle Knockout Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 500],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k1",
+              "name": "clasificacion",
+              "value": "D",
+              "type": "string"
+            },
+            {
+              "id": "k2",
+              "name": "score",
+              "value": "=0",
+              "type": "number"
+            },
+            {
+              "id": "k3",
+              "name": "motivo_knockout",
+              "value": "={{ $json.knockout_motivo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf3-012",
+      "name": "CRM Knockout Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_CRM_WEBHOOK_URL/leads",
+        "onError": "continueRegularOutput",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_CRM_API_KEY" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "nombre": "={{ $json.nombre }}",
+          "telefono": "={{ $json.telefono }}",
+          "email": "={{ $json.email }}",
+          "clasificacion": "D",
+          "puntuacion": 0,
+          "origen": "Instagram DM - Broker Hipotecario Firmax",
+          "ig_username": "={{ $json.ig_username }}",
+          "prioridad": "NINGUNA",
+          "protocolo": "Knockout automatico",
+          "knockout_motivo": "={{ $json.knockout_motivo }}",
+          "knockout_accion": "={{ $json.knockout_accion }}",
+          "fecha_entrada": "={{ $now.toISO() }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf3-013",
+      "name": "Telegram Knockout",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1560, 500],
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ '🚫 [Broker] Lead descartado por Knockout\\n\\n👤 @' + $json.ig_username + '\\n❌ Motivo: ' + $json.knockout_motivo + '\\n📋 Accion: ' + $json.knockout_accion + '\\n\\n→ Registrado en CRM como lista futura' }}",
+        "additionalFields": {}
+      },
+      "credentials": { "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID", "name": "Telegram Antigravity" } }
+    },
+    {
+      "id": "wf3-sheets-knockout",
+      "name": "Sheets Registrar Knockout",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1780, 500],
+      "parameters": {
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1ITEtRnfzOsHRBuDW5cItXfBr-A6k3FCg5d9dK1lAKlU", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Conversaciones", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "clasificacion": "D",
+            "puntuacion": "=0",
+            "estado_conversacion": "knockout",
+            "knockout_motivo": "={{ $json.knockout_motivo }}",
+            "fecha_actualizacion": "={{ $now.toISO() }}"
+          }
+        },
+        "where": {
+          "values": [{ "lookupColumn": "ig_user_id", "lookupValue": "={{ $json.ig_user_id }}" }]
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "YOUR_GSHEETS_CRED_ID", "name": "Google Sheets" } }
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [{ "node": "Parse Lead Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Lead Data": {
+      "main": [
+        [{ "node": "Nivel 1 - Filtros Knockout", "type": "main", "index": 0 }]
+      ]
+    },
+    "Nivel 1 - Filtros Knockout": {
+      "main": [
+        [{ "node": "IF Paso Knockout", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF Paso Knockout": {
+      "main": [
+        [{ "node": "Nivel 2 y 4 - Calcular Score", "type": "main", "index": 0 }],
+        [{ "node": "Handle Knockout Lead", "type": "main", "index": 0 }]
+      ]
+    },
+    "Nivel 2 y 4 - Calcular Score": {
+      "main": [
+        [{ "node": "Switch Clasificacion ABCD", "type": "main", "index": 0 }]
+      ]
+    },
+    "Switch Clasificacion ABCD": {
+      "main": [
+        [{ "node": "CRM Alta Prioridad - Lead A", "type": "main", "index": 0 }],
+        [{ "node": "CRM Seguimiento Activo - Lead B", "type": "main", "index": 0 }],
+        [{ "node": "CRM Nurturing Medio - Lead C", "type": "main", "index": 0 }],
+        [{ "node": "CRM Nurturing Largo - Lead D", "type": "main", "index": 0 }]
+      ]
+    },
+    "CRM Alta Prioridad - Lead A": {
+      "main": [[{ "node": "Telegram Lead A", "type": "main", "index": 0 }]]
+    },
+    "CRM Seguimiento Activo - Lead B": {
+      "main": [[{ "node": "Telegram Lead B", "type": "main", "index": 0 }]]
+    },
+    "CRM Nurturing Medio - Lead C": {
+      "main": [[{ "node": "Telegram Lead C", "type": "main", "index": 0 }]]
+    },
+    "CRM Nurturing Largo - Lead D": {
+      "main": [[{ "node": "Telegram Lead D", "type": "main", "index": 0 }]]
+    },
+    "Telegram Lead A": {
+      "main": [[{ "node": "Merge Todos Los Leads", "type": "main", "index": 0 }]]
+    },
+    "Telegram Lead B": {
+      "main": [[{ "node": "Merge Todos Los Leads", "type": "main", "index": 1 }]]
+    },
+    "Telegram Lead C": {
+      "main": [[{ "node": "Merge Todos Los Leads", "type": "main", "index": 2 }]]
+    },
+    "Telegram Lead D": {
+      "main": [[{ "node": "Merge Todos Los Leads", "type": "main", "index": 3 }]]
+    },
+    "Merge Todos Los Leads": {
+      "main": [[{ "node": "Sheets Registrar Lead Final", "type": "main", "index": 0 }]]
+    },
+    "Handle Knockout Lead": {
+      "main": [[{ "node": "CRM Knockout Lead", "type": "main", "index": 0 }]]
+    },
+    "CRM Knockout Lead": {
+      "main": [[{ "node": "Telegram Knockout", "type": "main", "index": 0 }]]
+    },
+    "Telegram Knockout": {
+      "main": [[{ "node": "Sheets Registrar Knockout", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Broker - Error Handler"
+  },
+  "tags": [{ "name": "broker" }, { "name": "scoring" }, { "name": "crm" }]
+}
