@@ -1,0 +1,8 @@
+node_modules
+crm-data.json
+*.log
+*.txt
+cloudflared.exe
+*.bat
+*.sh
+tunnel-*
