@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity — Mission Control</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">ANTIGRAVITY</span>
+      </div>
+      <nav>
+        <a href="index.html" class="nav-item active">Dashboard</a>
+        <a href="crm.html" class="nav-item">CRM Firmax</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div id="clock" class="clock"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <h1 class="header-title">Mission Control</h1>
+          <p id="fecha-briefing" class="header-sub"></p>
+        </div>
+        <div class="header-status">
+          <span class="dot green"></span>
+          <span>Sistema activo</span>
+        </div>
+      </header>
+
+      <!-- BRIEFING -->
+      <section id="briefing-banner" class="briefing-banner">
+        <div class="briefing-icon">📋</div>
+        <div>
+          <div class="briefing-title">Briefing del día</div>
+          <div id="briefing-texto" class="briefing-texto"></div>
+        </div>
+      </section>
+
+      <!-- ALERTAS -->
+      <section id="alertas-section" class="alertas-section hidden"></section>
+
+      <!-- STATS -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Leads</div>
+          <div id="stat-total" class="stat-value">—</div>
+        </div>
+        <div class="stat-card verde">
+          <div class="stat-label">Nuevos</div>
+          <div id="stat-nuevos" class="stat-value">—</div>
+        </div>
+        <div class="stat-card azul">
+          <div class="stat-label">En Seguimiento</div>
+          <div id="stat-seguimiento" class="stat-value">—</div>
+        </div>
+        <div class="stat-card amarillo">
+          <div class="stat-label">Reunión Agendada</div>
+          <div id="stat-reunion" class="stat-value">—</div>
+        </div>
+        <div class="stat-card morado">
+          <div class="stat-label">Cerrados ✓</div>
+          <div id="stat-cerrados" class="stat-value">—</div>
+        </div>
+        <div class="stat-card rojo">
+          <div class="stat-label">Sin Respuesta +3d</div>
+          <div id="stat-sinrespuesta" class="stat-value">—</div>
+        </div>
+      </section>
+
+      <!-- AGENTES + ACTIVIDAD -->
+      <section class="two-col">
+        <div class="card">
+          <h2 class="card-title">Agentes</h2>
+          <div id="agentes-list"></div>
+        </div>
+        <div class="card">
+          <h2 class="card-title">Actividad reciente</h2>
+          <div id="actividad-list"></div>
+        </div>
+      </section>
+
+      <!-- LEADS TABLE -->
+      <section class="card">
+        <h2 class="card-title">Pipeline Firmax</h2>
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Estado</th>
+              <th>Origen</th>
+              <th>Zona</th>
+              <th>Score</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody"></tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Load data
+    async function loadAll() {
+      const [stats, agents, leads, activity, briefing] = await Promise.all([
+        fetch('/api/stats').then(r => r.json()),
+        fetch('/api/agents').then(r => r.json()),
+        fetch('/api/leads').then(r => r.json()),
+        fetch('/api/activity').then(r => r.json()),
+        fetch('/api/briefing').then(r => r.json())
+      ]);
+
+      // Briefing
+      document.getElementById('fecha-briefing').textContent = briefing.fecha;
+      document.getElementById('briefing-texto').textContent = briefing.resumen;
+
+      // Stats
+      document.getElementById('stat-total').textContent = stats.total;
+      document.getElementById('stat-nuevos').textContent = stats.nuevos;
+      document.getElementById('stat-seguimiento').textContent = stats.enSeguimiento;
+      document.getElementById('stat-reunion').textContent = stats.reunionAgendada;
+      document.getElementById('stat-cerrados').textContent = stats.cerradosGanados;
+      document.getElementById('stat-sinrespuesta').textContent = stats.sinRespuesta;
+
+      // Alertas
+      if (stats.alertas && stats.alertas.length > 0) {
+        const sec = document.getElementById('alertas-section');
+        sec.classList.remove('hidden');
+        sec.innerHTML = stats.alertas.map(a => `<div class="alerta">⚠️ ${a}</div>`).join('');
+      }
+
+      // Agentes
+      document.getElementById('agentes-list').innerHTML = agents.map(a => `
+        <div class="agent-row">
+          <span class="agent-emoji">${a.emoji}</span>
+          <div class="agent-info">
+            <div class="agent-name">${a.name} <span class="agent-role">${a.role}</span></div>
+            <div class="agent-last">Último: ${new Date(a.lastSeen).toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <span class="badge ${a.status === 'active' ? 'badge-green' : 'badge-grey'}">${a.status === 'active' ? 'Activo' : 'Idle'}</span>
+        </div>
+      `).join('');
+
+      // Actividad
+      document.getElementById('actividad-list').innerHTML = activity.map(a => `
+        <div class="activity-row">
+          <span class="activity-time">${new Date(a.time).toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}</span>
+          <span class="activity-agent">${a.agent}</span>
+          <span class="activity-action">${a.action}</span>
+        </div>
+      `).join('');
+
+      // Leads table
+      const estadoColors = {
+        nuevo: 'badge-green',
+        en_seguimiento: 'badge-blue',
+        reunion_agendada: 'badge-yellow',
+        sin_respuesta: 'badge-red',
+        cerrado_ganado: 'badge-purple'
+      };
+      const estadoLabels = {
+        nuevo: 'Nuevo',
+        en_seguimiento: 'En seguimiento',
+        reunion_agendada: 'Reunión agendada',
+        sin_respuesta: 'Sin respuesta',
+        cerrado_ganado: 'Cerrado ✓'
+      };
+      document.getElementById('leads-tbody').innerHTML = leads.map(l => `
+        <tr>
+          <td>${l.id}</td>
+          <td><span class="badge ${estadoColors[l.estado] || ''}">${estadoLabels[l.estado] || l.estado}</span></td>
+          <td>${l.origen}</td>
+          <td>${l.zona}</td>
+          <td><span class="score score-${l.score >= 7 ? 'high' : l.score >= 4 ? 'mid' : 'low'}">${l.score}/10</span></td>
+          <td>${new Date(l.fecha).toLocaleDateString('es-ES')}</td>
+        </tr>
+      `).join('');
+    }
+
+    loadAll();
+    setInterval(loadAll, 30000); // Refresh cada 30s
+  </script>
+</body>
+</html>

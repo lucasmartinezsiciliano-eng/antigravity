@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Firmax — Antigravity</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="crm.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">ANTIGRAVITY</span>
+    </div>
+    <nav>
+      <a href="index.html" class="nav-item">Dashboard</a>
+      <a href="crm.html"   class="nav-item active">CRM Firmax</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="worker-selector">
+        <div class="worker-label">Conectado como</div>
+        <select id="worker-select" class="worker-select">
+          <option value="">— Identificarse —</option>
+          <option value="Mariano">Mariano</option>
+          <option value="Silvia">Silvia</option>
+          <option value="Carlos">Carlos</option>
+        </select>
+      </div>
+      <div id="clock" class="clock"></div>
+    </div>
+  </aside>
+
+  <!-- ═══ CRM MAIN ══════════════════════════════════════════════════════════ -->
+  <div class="crm-main">
+
+    <!-- TOP BAR -->
+    <div class="crm-topbar">
+      <div class="crm-topbar-left">
+        <h1 class="crm-title">CRM Firmax</h1>
+        <span id="lead-count" class="lead-count">— leads</span>
+      </div>
+      <div class="crm-topbar-right">
+        <input type="text" id="search-input" class="crm-search" placeholder="🔍 Buscar lead...">
+        <select id="filter-asignado" class="crm-filter">
+          <option value="">Todos los asesores</option>
+          <option value="Mariano">Mariano</option>
+          <option value="Silvia">Silvia</option>
+          <option value="Carlos">Carlos</option>
+          <option value="__unassigned__">Sin asignar</option>
+        </select>
+        <select id="filter-clasificacion" class="crm-filter">
+          <option value="">Toda clasificación</option>
+          <option value="A">Clase A</option>
+          <option value="B">Clase B</option>
+          <option value="C">Clase C</option>
+          <option value="D">Clase D</option>
+        </select>
+        <button class="btn-primary" onclick="openNewLeadModal()">+ Nuevo Lead</button>
+        <button class="btn-chat" id="btn-chat" onclick="toggleChat()">
+          💬 Chat
+          <span id="chat-badge" class="chat-badge-top hidden">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="crm-alerts" class="crm-alerts"></div>
+
+    <!-- KANBAN -->
+    <div class="kanban-wrapper" id="kanban-wrapper"></div>
+
+  </div>
+
+  <!-- ═══ DETAIL PANEL ══════════════════════════════════════════════════════ -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-header">
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+      <div class="detail-header-info">
+        <div class="detail-name" id="dp-name">—</div>
+        <div class="detail-sub" id="dp-sub">—</div>
+      </div>
+      <div id="dp-cls" class="lead-card-cls" style="font-size:14px;width:28px;height:28px;">—</div>
+    </div>
+    <div class="detail-body" id="detail-body">
+      <div style="color:var(--text-dim);font-size:13px;text-align:center;padding:40px 0;">
+        Selecciona un lead para ver los detalles
+      </div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<!-- ═══ CHAT PANEL (bottom slide-up) ════════════════════════════════════════ -->
+<div class="chat-panel hidden" id="chat-window">
+  <div class="chat-panel-header">
+    <span>💬 Chat del equipo</span>
+    <button onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:20px 0;">
+      Cargando mensajes...
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" class="chat-input"
+           placeholder="Escribe un mensaje..."
+           onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<!-- ═══ IDENTITY MODAL ═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="identity-modal">
+  <div class="identity-box">
+    <div class="identity-logo">⚡ ANTIGRAVITY</div>
+    <h2 class="identity-title">CRM Firmax</h2>
+    <p class="identity-sub">¿Quién eres? Selecciona tu nombre para continuar.</p>
+    <div class="identity-workers">
+      <button class="identity-btn" onclick="selectIdentity('Mariano')">
+        <div class="identity-avatar av-M">M</div>
+        <span>Mariano</span>
+      </button>
+      <button class="identity-btn" onclick="selectIdentity('Silvia')">
+        <div class="identity-avatar av-S">S</div>
+        <span>Silvia</span>
+      </button>
+      <button class="identity-btn" onclick="selectIdentity('Carlos')">
+        <div class="identity-avatar av-C">C</div>
+        <span>Carlos</span>
+      </button>
+    </div>
+    <p class="identity-note">Solo tendrás que hacer esto una vez en este ordenador.</p>
+  </div>
+</div>
+
+<!-- ═══ NEW LEAD MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="handleModalClick(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nuevo Lead</h2>
+      <button onclick="closeNewLeadModal()">✕</button>
+    </div>
+    <form id="new-lead-form" onsubmit="submitNewLead(event)">
+      <div class="modal-form-body">
+
+        <!-- CONTACTO -->
+        <div>
+          <div class="form-section-title">Contacto</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Nombre completo *</label>
+              <input type="text" name="nombre" required placeholder="Ej: Ana García">
+            </div>
+            <div class="form-field">
+              <label>Teléfono *</label>
+              <input type="text" name="telefono" required placeholder="612 345 678">
+            </div>
+            <div class="form-field">
+              <label>Email</label>
+              <input type="email" name="email" placeholder="ana@ejemplo.com">
+            </div>
+            <div class="form-field">
+              <label>Origen</label>
+              <select name="origen">
+                <option value="Instagram">Instagram</option>
+                <option value="Formulario web">Formulario web</option>
+                <option value="Boca a boca">Boca a boca</option>
+                <option value="Referido">Referido</option>
+                <option value="Google Ads">Google Ads</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPERACIÓN -->
+        <div>
+          <div class="form-section-title">Operación</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Tipo de hipoteca</label>
+              <select name="tipo_hipoteca">
+                <option value="Fija">Fija</option>
+                <option value="Variable">Variable</option>
+                <option value="Mixta">Mixta</option>
+                <option value="100%">100% (sin entrada)</option>
+                <option value="Funcionarios">Funcionarios</option>
+                <option value="No Residentes">No Residentes</option>
+                <option value="Segunda Vivienda">Segunda Vivienda</option>
+                <option value="Autopromotor">Autopromotor</option>
+                <option value="Reunificación">Reunificación de deuda</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Zona</label>
+              <input type="text" name="zona" placeholder="Ej: Tarragona">
+            </div>
+            <div class="form-field">
+              <label>Importe solicitado (€)</label>
+              <input type="number" name="importe_solicitado" placeholder="180000" min="0">
+            </div>
+            <div class="form-field">
+              <label>Precio vivienda (€)</label>
+              <input type="number" name="precio_vivienda" placeholder="220000" min="0">
+            </div>
+            <div class="form-field">
+              <label>Urgencia</label>
+              <select name="urgencia">
+                <option value="Inmediata">Inmediata</option>
+                <option value="1-3 meses">1-3 meses</option>
+                <option value="3-6 meses" selected>3-6 meses</option>
+                <option value="Más de 6 meses">Más de 6 meses</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Clasificación</label>
+              <select name="clasificacion">
+                <option value="">— Auto —</option>
+                <option value="A">A — Premium (90-100)</option>
+                <option value="B">B — Viable (70-89)</option>
+                <option value="C">C — Con condiciones (50-69)</option>
+                <option value="D">D — Bajo potencial (&lt;50)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- PERFIL -->
+        <div>
+          <div class="form-section-title">Perfil financiero</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Tipo de contrato</label>
+              <select name="tipo_contrato">
+                <option value="Indefinido">Indefinido</option>
+                <option value="Funcionario">Funcionario/a</option>
+                <option value="Autónomo">Autónomo/a</option>
+                <option value="Temporal">Temporal</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Ingresos netos/mes (€)</label>
+              <input type="number" name="ingresos" placeholder="2500" min="0">
+            </div>
+            <div class="form-field">
+              <label>Asignar a</label>
+              <select name="asignado_a">
+                <option value="">Sin asignar</option>
+                <option value="Mariano">Mariano</option>
+                <option value="Silvia">Silvia</option>
+                <option value="Carlos">Carlos</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Próxima acción</label>
+              <input type="text" name="proxima_accion" placeholder="Ej: Llamada de cualificación">
+            </div>
+          </div>
+          <div class="form-grid full" style="margin-top:10px;">
+            <div class="form-field">
+              <label>Notas iniciales</label>
+              <textarea name="nota_inicial" placeholder="Contexto del lead, observaciones importantes..."></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeNewLeadModal()">Cancelar</button>
+        <button type="submit" class="btn-primary">Crear Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ JAVASCRIPT ════════════════════════════════════════════════════════════ -->
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let allLeads = [];
+let currentLeadId = null;
+let selectedNoteType = 'nota';
+let chatOpen = false;
+let lastChatTs = 0;
+let unreadChat = 0;
+let chatPollInterval = null;
+
+const STAGES = [
+  { id: 'nuevo',         label: 'Nuevo',         dot: '#3b82f6' },
+  { id: 'contactado',    label: 'Contactado',     dot: '#eab308' },
+  { id: 'documentacion', label: 'Documentación',  dot: '#f97316' },
+  { id: 'en_banco',      label: 'En Banco',       dot: '#a855f7' },
+  { id: 'firmado',       label: 'Firmado ✓',      dot: '#22c55e' },
+  { id: 'descartado',    label: 'Descartado',     dot: '#6b7394' }
+];
+
+const NOTE_ICONS = {
+  llamada:   '📞',
+  whatsapp:  '💬',
+  email:     '📧',
+  reunion:   '🤝',
+  nota:      '📝'
+};
+
+const WORKER_COLORS = {
+  Mariano: 'M',
+  Silvia:  'S',
+  Carlos:  'C'
+};
+
+// ─── CLOCK ────────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── WORKER IDENTITY ─────────────────────────────────────────────────────────
+function getWorker() {
+  return localStorage.getItem('crm_worker') || '';
+}
+
+document.getElementById('worker-select').addEventListener('change', function() {
+  localStorage.setItem('crm_worker', this.value);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = getWorker();
+  if (saved) {
+    document.getElementById('worker-select').value = saved;
+    document.getElementById('identity-modal').classList.add('hidden');
+  }
+  // identity modal stays visible if no worker saved
+});
+
+function selectIdentity(name) {
+  localStorage.setItem('crm_worker', name);
+  document.getElementById('worker-select').value = name;
+  document.getElementById('identity-modal').classList.add('hidden');
+}
+
+// ─── API HELPERS ──────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`);
+  return res.json();
+}
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+function getFilters() {
+  return {
+    search:        document.getElementById('search-input').value.toLowerCase().trim(),
+    asignado:      document.getElementById('filter-asignado').value,
+    clasificacion: document.getElementById('filter-clasificacion').value
+  };
+}
+
+function applyFilters(leads) {
+  const f = getFilters();
+  return leads.filter(l => {
+    if (f.search && !l.nombre.toLowerCase().includes(f.search) &&
+        !(l.telefono || '').includes(f.search) &&
+        !(l.zona || '').toLowerCase().includes(f.search)) return false;
+    if (f.asignado === '__unassigned__') { if (l.asignado_a) return false; }
+    else if (f.asignado && l.asignado_a !== f.asignado) return false;
+    if (f.clasificacion && l.clasificacion !== f.clasificacion) return false;
+    return true;
+  });
+}
+
+document.getElementById('search-input').addEventListener('input', () => renderKanban());
+document.getElementById('filter-asignado').addEventListener('change', () => renderKanban());
+document.getElementById('filter-clasificacion').addEventListener('change', () => renderKanban());
+
+// ─── FORMATTING ──────────────────────────────────────────────────────────────
+function formatEuros(n) {
+  if (!n) return '—';
+  return Number(n).toLocaleString('es-ES') + ' €';
+}
+
+function daysAgo(dateStr) {
+  if (!dateStr) return null;
+  return Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) + ' ' +
+         d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+}
+
+function urgencyClass(urgencia) {
+  if (!urgencia) return 'urgency-mas6';
+  const u = urgencia.toLowerCase();
+  if (u.includes('inmediata')) return 'urgency-inmediata';
+  if (u.includes('1') || u.includes('2') || u.includes('1-3')) return 'urgency-1-3';
+  if (u.includes('3') || u.includes('3-6')) return 'urgency-3-6';
+  return 'urgency-mas6';
+}
+
+function workerAvatar(name) {
+  if (!name) return `<div class="worker-avatar avatar-empty" title="Sin asignar">—</div>`;
+  const init = name[0].toUpperCase();
+  return `<div class="worker-avatar avatar-${init}" title="${name}">${init}</div>`;
+}
+
+// ─── LEAD CARD ────────────────────────────────────────────────────────────────
+function buildCard(lead) {
+  const days = daysAgo(lead.fecha_etapa);
+  const daysClass = days >= 7 ? 'days-alert' : days >= 4 ? 'days-warn' : '';
+  const daysLabel = days === 0 ? 'Hoy' : days === 1 ? '1 día' : `${days} días`;
+
+  return `
+  <div class="lead-card" id="card-${lead.id}"
+       draggable="true"
+       onclick="openDetail('${lead.id}')"
+       ondragstart="onDragStart(event,'${lead.id}')"
+       ondragend="onDragEnd(event)">
+    <div class="lead-card-top">
+      <div class="lead-card-name">${lead.nombre}</div>
+      <div class="lead-card-cls cls-${lead.clasificacion || 'D'}">${lead.clasificacion || '?'}</div>
+    </div>
+    <div class="lead-card-meta">
+      ${lead.tipo_hipoteca || '—'} · ${lead.zona || '—'}
+    </div>
+    <div class="lead-card-bottom">
+      <div class="lead-card-amount">${formatEuros(lead.importe_solicitado)}</div>
+      <div class="lead-card-right">
+        <span class="lead-card-days ${daysClass}">${daysLabel}</span>
+        <div class="lead-card-urgency ${urgencyClass(lead.urgencia)}" title="Urgencia: ${lead.urgencia || '—'}"></div>
+        ${workerAvatar(lead.asignado_a)}
+      </div>
+    </div>
+    ${lead.proxima_accion ? `<div style="margin-top:7px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:6px;line-height:1.3">→ ${lead.proxima_accion}</div>` : ''}
+  </div>`;
+}
+
+// ─── KANBAN RENDER ────────────────────────────────────────────────────────────
+function renderKanban() {
+  const filtered = applyFilters(allLeads);
+  document.getElementById('lead-count').textContent = `${filtered.length} leads`;
+
+  const kanban = document.getElementById('kanban-wrapper');
+  kanban.innerHTML = '';
+
+  STAGES.forEach(stage => {
+    const stageLeads = filtered.filter(l => l.etapa === stage.id);
+
+    const col = document.createElement('div');
+    col.className = 'kanban-col';
+    col.innerHTML = `
+      <div class="col-header">
+        <div class="col-header-left">
+          <div class="col-dot" style="background:${stage.dot}"></div>
+          <span class="col-name">${stage.label}</span>
+        </div>
+        <span class="col-count">${stageLeads.length}</span>
+      </div>
+      <div class="col-body" id="col-${stage.id}"
+           ondragover="onDragOver(event)"
+           ondrop="onDrop(event,'${stage.id}')"
+           ondragleave="onDragLeave(event)">
+        ${stageLeads.length === 0
+          ? `<div class="col-empty">Sin leads</div>`
+          : stageLeads.map(buildCard).join('')}
+      </div>`;
+    kanban.appendChild(col);
+  });
+
+  renderAlerts();
+}
+
+// ─── ALERTS ───────────────────────────────────────────────────────────────────
+function renderAlerts() {
+  const stale = allLeads.filter(l => {
+    if (['firmado', 'descartado'].includes(l.etapa)) return false;
+    return daysAgo(l.ultima_actividad) > 3;
+  });
+  const container = document.getElementById('crm-alerts');
+  container.innerHTML = stale.map(l =>
+    `<div class="crm-alert">⚠️ <strong>${l.nombre}</strong> lleva ${daysAgo(l.ultima_actividad)} días sin actividad · Etapa: ${l.etapa.replace('_',' ')}</div>`
+  ).join('');
+}
+
+// ─── DRAG & DROP ──────────────────────────────────────────────────────────────
+let draggingId = null;
+
+function onDragStart(e, id) {
+  draggingId = id;
+  e.dataTransfer.setData('leadId', id);
+  setTimeout(() => document.getElementById(`card-${id}`)?.classList.add('dragging'), 0);
+}
+
+function onDragEnd(e) {
+  if (draggingId) document.getElementById(`card-${draggingId}`)?.classList.remove('dragging');
+  draggingId = null;
+  document.querySelectorAll('.col-body').forEach(c => c.classList.remove('drag-over'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+async function onDrop(e, etapa) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('leadId');
+  if (!id) return;
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead || lead.etapa === etapa) return;
+
+  // Optimistic update
+  lead.etapa = etapa;
+  renderKanban();
+  if (currentLeadId === id) renderDetail(lead);
+
+  await api('PATCH', `/api/crm/leads/${id}`, { etapa });
+  await loadLeads();
+}
+
+// ─── LOAD LEADS ───────────────────────────────────────────────────────────────
+async function loadLeads() {
+  allLeads = await api('GET', '/api/crm/leads');
+  renderKanban();
+  if (currentLeadId) {
+    const lead = allLeads.find(l => l.id === currentLeadId);
+    if (lead) renderDetail(lead);
+  }
+}
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
+function openDetail(id) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  currentLeadId = id;
+
+  document.getElementById('dp-name').textContent = lead.nombre;
+  document.getElementById('dp-sub').textContent = `${lead.tipo_hipoteca || '—'} · ${lead.zona || '—'} · ${lead.origen || '—'}`;
+  const cls = document.getElementById('dp-cls');
+  cls.className = `lead-card-cls cls-${lead.clasificacion || 'D'}`;
+  cls.textContent = lead.clasificacion || '?';
+
+  renderDetail(lead);
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  currentLeadId = null;
+}
+
+function renderDetail(lead) {
+  const score = lead.score || 0;
+  const cls = lead.clasificacion || 'D';
+  const days = daysAgo(lead.fecha_etapa);
+
+  const stepsHtml = STAGES.map(s =>
+    `<div class="stage-step ${s.id === lead.etapa ? 'active' : ''}"
+          data-etapa="${s.id}"
+          onclick="changeStage('${lead.id}','${s.id}')">${s.label}</div>`
+  ).join('');
+
+  const notesHtml = (lead.notas || []).slice().reverse().map(n => `
+    <div class="note-item">
+      <div class="note-icon">${NOTE_ICONS[n.tipo] || '📝'}</div>
+      <div class="note-content">
+        <div class="note-meta">
+          <span class="note-autor">${n.autor || '—'}</span>
+          <span class="note-fecha">${formatDateTime(n.fecha)}</span>
+        </div>
+        <div class="note-text">${n.texto}</div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text-dim);font-size:12px;">Sin notas todavía.</div>';
+
+  document.getElementById('detail-body').innerHTML = `
+
+    <!-- SCORE -->
+    <div class="detail-section">
+      <div class="detail-section-title">Score y clasificación</div>
+      <div class="score-display score-${cls}">
+        <span class="score-number">${score}</span>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" style="width:${score}%"></div>
+        </div>
+        <div class="lead-card-cls cls-${cls}" style="font-size:13px;width:26px;height:26px;">${cls}</div>
+      </div>
+    </div>
+
+    <!-- STAGE -->
+    <div class="detail-section">
+      <div class="detail-section-title">Etapa del pipeline</div>
+      <div class="stage-stepper">${stepsHtml}</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">
+        ${days === 0 ? 'Entró hoy' : `${days} día${days !== 1 ? 's' : ''} en esta etapa`}
+      </div>
+    </div>
+
+    <!-- ASIGNACIÓN -->
+    <div class="detail-section">
+      <div class="detail-section-title">Asignación</div>
+      <select class="assign-select" onchange="changeAssigned('${lead.id}', this.value)">
+        <option value="">Sin asignar</option>
+        <option value="Mariano" ${lead.asignado_a === 'Mariano' ? 'selected' : ''}>Mariano</option>
+        <option value="Silvia"  ${lead.asignado_a === 'Silvia'  ? 'selected' : ''}>Silvia</option>
+        <option value="Carlos"  ${lead.asignado_a === 'Carlos'  ? 'selected' : ''}>Carlos</option>
+      </select>
+    </div>
+
+    <!-- CONTACTO -->
+    <div class="detail-section">
+      <div class="detail-section-title">Datos de contacto</div>
+      <div class="detail-row">
+        <span class="detail-row-label">Teléfono</span>
+        <span class="detail-row-value">${lead.telefono || '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Email</span>
+        <span class="detail-row-value">${lead.email || '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Origen</span>
+        <span class="detail-row-value">${lead.origen || '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Fecha entrada</span>
+        <span class="detail-row-value">${formatDate(lead.fecha_entrada)}</span>
+      </div>
+    </div>
+
+    <!-- OPERACIÓN -->
+    <div class="detail-section">
+      <div class="detail-section-title">Datos de la operación</div>
+      <div class="detail-row">
+        <span class="detail-row-label">Tipo hipoteca</span>
+        <span class="detail-row-value">${lead.tipo_hipoteca || '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Importe</span>
+        <span class="detail-row-value">${formatEuros(lead.importe_solicitado)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Precio vivienda</span>
+        <span class="detail-row-value">${formatEuros(lead.precio_vivienda)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">LTV</span>
+        <span class="detail-row-value">${lead.precio_vivienda && lead.importe_solicitado
+          ? Math.round(lead.importe_solicitado / lead.precio_vivienda * 100) + '%'
+          : '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Zona</span>
+        <span class="detail-row-value">${lead.zona || '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Urgencia</span>
+        <span class="detail-row-value">${lead.urgencia || '—'}</span>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="detail-section">
+      <div class="detail-section-title">Perfil financiero</div>
+      <div class="detail-row">
+        <span class="detail-row-label">Contrato</span>
+        <span class="detail-row-value">${lead.tipo_contrato || '—'}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Ingresos/mes</span>
+        <span class="detail-row-value">${lead.ingresos ? formatEuros(lead.ingresos) : '—'}</span>
+      </div>
+    </div>
+
+    <!-- PRÓXIMA ACCIÓN -->
+    <div class="detail-section">
+      <div class="detail-section-title">Próxima acción</div>
+      <input type="text" class="next-action-input" id="next-action-input"
+             value="${lead.proxima_accion || ''}"
+             placeholder="Ej: Llamar el lunes para confirmar documentos"
+             onblur="saveNextAction('${lead.id}', this.value)">
+      <input type="date" class="date-input" style="margin-top:6px;"
+             value="${lead.fecha_proxima_accion || ''}"
+             onchange="saveNextActionDate('${lead.id}', this.value)">
+    </div>
+
+    <!-- NOTAS -->
+    <div class="detail-section">
+      <div class="detail-section-title">Historial de actividad</div>
+
+      <!-- Add note -->
+      <div class="add-note-form">
+        <div class="note-type-selector">
+          ${Object.entries(NOTE_ICONS).map(([tipo, icon]) =>
+            `<button type="button" class="note-type-btn ${tipo === selectedNoteType ? 'active' : ''}"
+                     onclick="selectNoteType('${tipo}')">${icon} ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</button>`
+          ).join('')}
+        </div>
+        <textarea class="note-textarea" id="note-text" placeholder="Escribe una nota sobre este lead..."></textarea>
+        <button class="save-btn" onclick="addNote('${lead.id}')">Guardar nota</button>
+      </div>
+
+      <!-- Notes list -->
+      <div class="notes-list" style="margin-top:4px;">${notesHtml}</div>
+    </div>
+  `;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+async function changeStage(id, etapa) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead || lead.etapa === etapa) return;
+  lead.etapa = etapa;
+  renderKanban();
+  renderDetail(lead);
+  await api('PATCH', `/api/crm/leads/${id}`, { etapa });
+  await loadLeads();
+}
+
+async function changeAssigned(id, worker) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  lead.asignado_a = worker || null;
+  renderKanban();
+  await api('PATCH', `/api/crm/leads/${id}`, { asignado_a: worker || null });
+}
+
+async function saveNextAction(id, value) {
+  await api('PATCH', `/api/crm/leads/${id}`, { proxima_accion: value });
+  const lead = allLeads.find(l => l.id === id);
+  if (lead) lead.proxima_accion = value;
+  renderKanban();
+}
+
+async function saveNextActionDate(id, value) {
+  await api('PATCH', `/api/crm/leads/${id}`, { fecha_proxima_accion: value });
+  const lead = allLeads.find(l => l.id === id);
+  if (lead) lead.fecha_proxima_accion = value;
+}
+
+function selectNoteType(tipo) {
+  selectedNoteType = tipo;
+  document.querySelectorAll('.note-type-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(tipo));
+  });
+}
+
+async function addNote(leadId) {
+  const texto = document.getElementById('note-text')?.value?.trim();
+  if (!texto) return;
+  const autor = getWorker() || 'Equipo';
+  const nota = await api('POST', `/api/crm/leads/${leadId}/notes`, {
+    tipo: selectedNoteType,
+    autor,
+    texto
+  });
+  const lead = allLeads.find(l => l.id === leadId);
+  if (lead) {
+    lead.notas = lead.notas || [];
+    lead.notas.push(nota);
+    lead.ultima_actividad = nota.fecha;
+    renderDetail(lead);
+    renderKanban();
+  }
+}
+
+// ─── NEW LEAD MODAL ───────────────────────────────────────────────────────────
+function openNewLeadModal() {
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.getElementById('new-lead-form').reset();
+}
+
+function closeNewLeadModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+function handleModalClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeNewLeadModal();
+}
+
+async function submitNewLead(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = {};
+  for (const [k, v] of fd.entries()) if (v.trim()) data[k] = v.trim();
+
+  // Convert numeric fields
+  ['importe_solicitado', 'precio_vivienda', 'ingresos'].forEach(f => {
+    if (data[f]) data[f] = Number(data[f]);
+  });
+
+  // Auto-clasificacion if not set
+  if (!data.clasificacion) {
+    data.clasificacion = autoClasificar(data);
+  }
+
+  const notaInicial = data.nota_inicial;
+  delete data.nota_inicial;
+
+  const lead = await api('POST', '/api/crm/leads', data);
+
+  if (notaInicial) {
+    await api('POST', `/api/crm/leads/${lead.id}/notes`, {
+      tipo: 'nota',
+      autor: getWorker() || 'Equipo',
+      texto: notaInicial
+    });
+  }
+
+  closeNewLeadModal();
+  await loadLeads();
+  openDetail(lead.id);
+}
+
+function autoClasificar(data) {
+  if (data.tipo_contrato === 'Funcionario') return 'A';
+  const ing = Number(data.ingresos) || 0;
+  const imp = Number(data.importe_solicitado) || 0;
+  const prec = Number(data.precio_vivienda) || 1;
+  const ltv = imp / prec;
+  if (ing > 3000 && ltv < 0.8) return 'A';
+  if (ing > 2000 && ltv < 0.85) return 'B';
+  if (ing > 1500) return 'C';
+  return 'D';
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const win = document.getElementById('chat-window');
+  const btn = document.getElementById('btn-chat');
+  win.classList.toggle('hidden', !chatOpen);
+  btn.classList.toggle('active', chatOpen);
+  if (chatOpen) {
+    unreadChat = 0;
+    updateChatBadge();
+    scrollChatBottom();
+    if (!chatPollInterval) {
+      chatPollInterval = setInterval(pollChat, 3000);
+    }
+  }
+}
+
+function updateChatBadge() {
+  const badge = document.getElementById('chat-badge');
+  if (unreadChat > 0 && !chatOpen) {
+    badge.classList.remove('hidden');
+    badge.textContent = unreadChat;
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+
+function scrollChatBottom() {
+  const msgs = document.getElementById('chat-messages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function buildChatMsg(msg) {
+  const cls = `author-${msg.autor}`;
+  const time = new Date(msg.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return `
+  <div class="chat-msg">
+    <div class="chat-msg-header">
+      <span class="chat-msg-author ${cls}">${msg.autor}</span>
+      <span class="chat-msg-time">${time}</span>
+    </div>
+    <div class="chat-msg-text">${escapeHtml(msg.mensaje)}</div>
+  </div>`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function loadChat() {
+  const msgs = await api('GET', '/api/crm/chat');
+  const container = document.getElementById('chat-messages');
+  if (!msgs.length) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:20px 0;">Sin mensajes todavía.</div>';
+    return;
+  }
+  container.innerHTML = msgs.map(buildChatMsg).join('');
+  if (msgs.length > 0) lastChatTs = new Date(msgs[msgs.length - 1].fecha).getTime();
+  scrollChatBottom();
+}
+
+async function pollChat() {
+  if (!chatOpen && !document.getElementById('chat-window').offsetParent) return;
+  try {
+    const newMsgs = await api('GET', `/api/crm/chat?since=${lastChatTs}`);
+    if (!newMsgs.length) return;
+
+    const container = document.getElementById('chat-messages');
+    const emptyDiv = container.querySelector('div[style]');
+    if (emptyDiv) emptyDiv.remove();
+
+    newMsgs.forEach(msg => {
+      container.insertAdjacentHTML('beforeend', buildChatMsg(msg));
+    });
+
+    lastChatTs = new Date(newMsgs[newMsgs.length - 1].fecha).getTime();
+
+    if (chatOpen) {
+      scrollChatBottom();
+    } else {
+      unreadChat += newMsgs.length;
+      updateChatBadge();
+    }
+  } catch {}
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const texto = input.value.trim();
+  if (!texto) return;
+  const autor = getWorker();
+  if (!autor) {
+    alert('Selecciona tu nombre en el panel lateral antes de chatear.');
+    return;
+  }
+  input.value = '';
+  await api('POST', '/api/crm/chat', { autor, mensaje: texto });
+  await pollChat();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadLeads();
+loadChat();
+setInterval(loadLeads, 30000); // Refresh kanban every 30s
+</script>
+</body>
+</html>
