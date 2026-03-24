@@ -165,11 +165,11 @@
             </div>
             <div class="form-field">
               <label>Origen</label>
-              <select name="origen">
+              <select name="origen" onchange="updateScorePreview()">
                 <option value="Instagram">Instagram</option>
                 <option value="Formulario web">Formulario web</option>
-                <option value="Boca a boca">Boca a boca</option>
-                <option value="Referido">Referido</option>
+                <option value="Boca a boca">Boca a boca (+5 pts)</option>
+                <option value="Referido">Referido (+5 pts)</option>
                 <option value="Google Ads">Google Ads</option>
                 <option value="Otro">Otro</option>
               </select>
@@ -201,19 +201,19 @@
             </div>
             <div class="form-field">
               <label>Importe solicitado (€)</label>
-              <input type="number" name="importe_solicitado" placeholder="180000" min="0">
+              <input type="number" name="importe_solicitado" placeholder="180000" min="0" oninput="updateScorePreview()">
             </div>
             <div class="form-field">
               <label>Precio vivienda (€)</label>
-              <input type="number" name="precio_vivienda" placeholder="220000" min="0">
+              <input type="number" name="precio_vivienda" placeholder="220000" min="0" oninput="updateScorePreview()">
             </div>
             <div class="form-field">
               <label>Urgencia</label>
-              <select name="urgencia">
-                <option value="Inmediata">Inmediata</option>
-                <option value="1-3 meses">1-3 meses</option>
-                <option value="3-6 meses" selected>3-6 meses</option>
-                <option value="Más de 6 meses">Más de 6 meses</option>
+              <select name="urgencia" onchange="updateScorePreview()">
+                <option value="Inmediata">Inmediata (+15 pts)</option>
+                <option value="1-3 meses">1-3 meses (0 pts)</option>
+                <option value="3-6 meses" selected>3-6 meses (−5 pts)</option>
+                <option value="Más de 6 meses">Más de 6 meses (−5 pts)</option>
               </select>
             </div>
             <div class="form-field">
@@ -235,17 +235,18 @@
           <div class="form-grid">
             <div class="form-field">
               <label>Tipo de contrato</label>
-              <select name="tipo_contrato">
+              <select name="tipo_contrato" onchange="updateScorePreview()">
                 <option value="Indefinido">Indefinido</option>
                 <option value="Funcionario">Funcionario/a</option>
                 <option value="Autónomo">Autónomo/a</option>
                 <option value="Temporal">Temporal</option>
+                <option value="Paro">En paro / sin contrato ⚠️</option>
                 <option value="Otro">Otro</option>
               </select>
             </div>
             <div class="form-field">
               <label>Ingresos netos/mes (€)</label>
-              <input type="number" name="ingresos" placeholder="2500" min="0">
+              <input type="number" name="ingresos" placeholder="2500" min="0" oninput="updateScorePreview()">
             </div>
             <div class="form-field">
               <label>Asignar a</label>
@@ -265,6 +266,146 @@
             <div class="form-field">
               <label>Notas iniciales</label>
               <textarea name="nota_inicial" placeholder="Contexto del lead, observaciones importantes..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCORING WF3 -->
+        <div>
+          <div class="form-section-title">Scoring WF3</div>
+          <div id="score-preview" class="score-preview-modal" style="display:none;"></div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Antigüedad en el trabajo</label>
+              <select name="antiguedad_trabajo" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="5plus">≥5 años (+15 pts)</option>
+                <option value="2plus">≥2 años (+10 pts)</option>
+                <option value="menos2">&lt;2 años (0 pts)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Otras deudas/mes (€)</label>
+              <input type="number" name="otras_deudas" placeholder="0" min="0" oninput="updateScorePreview()">
+            </div>
+            <div class="form-field">
+              <label>Documentación</label>
+              <select name="tipo_documentacion" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="dni">DNI (+5 pts)</option>
+                <option value="nie">NIE (+2 pts)</option>
+                <option value="sin_doc">Sin doc. española ⚠️ knockout</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Estado de búsqueda</label>
+              <select name="estado_busqueda" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="reserva">Reserva firmada (+30 pts)</option>
+                <option value="identificada">Vivienda identificada (+5 pts)</option>
+                <option value="mirando">Solo mirando (−10 pts)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>CIRBE limpio</label>
+              <select name="cirbe_limpio" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí (+8 pts)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Ahorros &gt;20% del precio</label>
+              <select name="ahorros_20" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí (+7 pts)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Va con cotitular</label>
+              <select name="cotitular" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí (+5 pts)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Sector estratégico</label>
+              <select name="sector_estrategico" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí — sanidad/tech/banca/edu (+5 pts)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Edad</label>
+              <input type="number" name="edad" placeholder="32" min="18" max="80" oninput="updateScorePreview()">
+            </div>
+            <div class="form-field">
+              <label>Primera vivienda</label>
+              <select name="primera_vivienda" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Interés en seguros</label>
+              <select name="interes_seguros" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí (+8 pts)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Tiene patrimonio</label>
+              <select name="tiene_patrimonio" onchange="updateScorePreview()">
+                <option value="">— No informado —</option>
+                <option value="si">Sí — propiedades/inversiones (+7 pts)</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div style="font-size:11px;color:#f87171;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Knockouts — descarte inmediato</div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label>En ASNEF / RAI</label>
+                <select name="en_asnef" onchange="updateScorePreview()">
+                  <option value="no">No</option>
+                  <option value="si">Sí ⚠️ Descarte</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Cambio de empleo &lt;6 meses</label>
+                <select name="cambio_empleo_6m" onchange="updateScorePreview()">
+                  <option value="no">No</option>
+                  <option value="si">Sí ⚠️ Descarte</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>&gt;50% ingresos irregulares</label>
+                <select name="ingresos_irregulares" onchange="updateScorePreview()">
+                  <option value="no">No</option>
+                  <option value="si">Sí ⚠️ Descarte</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Conflicto legal pendiente</label>
+                <select name="conflicto_legal" onchange="updateScorePreview()">
+                  <option value="no">No</option>
+                  <option value="si">Sí ⚠️ Descarte</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>&gt;3 tarjetas al límite</label>
+                <select name="tarjetas_limite" onchange="updateScorePreview()">
+                  <option value="no">No</option>
+                  <option value="si">Sí ⚠️ Descarte</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -802,14 +943,17 @@ async function submitNewLead(e) {
   for (const [k, v] of fd.entries()) if (v.trim()) data[k] = v.trim();
 
   // Convert numeric fields
-  ['importe_solicitado', 'precio_vivienda', 'ingresos'].forEach(f => {
+  ['importe_solicitado', 'precio_vivienda', 'ingresos', 'otras_deudas', 'edad'].forEach(f => {
     if (data[f]) data[f] = Number(data[f]);
   });
 
-  // Auto-clasificacion if not set
+  // Scoring completo WF3
+  const scoring = calcularScoring(data);
   if (!data.clasificacion) {
-    data.clasificacion = autoClasificar(data);
+    data.clasificacion = scoring.clasificacion;
   }
+  data.score = scoring.score;
+  if (scoring.knockout) data.knockout_reason = scoring.knockout;
 
   const notaInicial = data.nota_inicial;
   delete data.nota_inicial;
@@ -829,16 +973,110 @@ async function submitNewLead(e) {
   openDetail(lead.id);
 }
 
-function autoClasificar(data) {
-  if (data.tipo_contrato === 'Funcionario') return 'A';
+function calcularScoring(data) {
+  // ── KNOCKOUTS ──────────────────────────────────────────────────────────────
+  if (data.en_asnef === 'si')            return { score: 0, clasificacion: 'D', knockout: 'ASNEF/RAI' };
+  if (data.cambio_empleo_6m === 'si')    return { score: 0, clasificacion: 'D', knockout: 'Cambio empleo <6m' };
+  if (data.ingresos_irregulares === 'si')return { score: 0, clasificacion: 'D', knockout: '>50% ingresos irregulares' };
+  if (data.conflicto_legal === 'si')     return { score: 0, clasificacion: 'D', knockout: 'Conflicto legal pendiente' };
+  if (data.tarjetas_limite === 'si')     return { score: 0, clasificacion: 'D', knockout: '>3 tarjetas al límite' };
+  if (data.tipo_documentacion === 'sin_doc') return { score: 0, clasificacion: 'D', knockout: 'Sin documentación española' };
+  if (data.tipo_contrato === 'Paro')     return { score: 0, clasificacion: 'D', knockout: 'En paro / sin contrato' };
+
+  let score = 0;
+  const contrato = data.tipo_contrato || '';
   const ing = Number(data.ingresos) || 0;
   const imp = Number(data.importe_solicitado) || 0;
-  const prec = Number(data.precio_vivienda) || 1;
-  const ltv = imp / prec;
-  if (ing > 3000 && ltv < 0.8) return 'A';
-  if (ing > 2000 && ltv < 0.85) return 'B';
-  if (ing > 1500) return 'C';
-  return 'D';
+  const prec = Number(data.precio_vivienda) || 0;
+
+  // ── BLOQUE A — Base (máx 60 pts) ──────────────────────────────────────────
+  // Tipo de contrato (15 pts)
+  if (contrato === 'Indefinido' || contrato === 'Funcionario') score += 15;
+  else if (contrato === 'Temporal' || (contrato === 'Autónomo' && data.antiguedad_trabajo === '2plus')) score += 8;
+  else if (contrato === 'Autónomo') score += 5;
+
+  // Antigüedad (15 pts)
+  if (data.antiguedad_trabajo === '5plus')      score += 15;
+  else if (data.antiguedad_trabajo === '2plus') score += 10;
+
+  // Ratio de endeudamiento (15 pts)
+  if (ing > 0 && imp > 0) {
+    const cuota = imp * 0.0045;
+    const ratio = ((Number(data.otras_deudas) || 0) + cuota) / ing;
+    if (ratio >= 0.30) return { score: 0, clasificacion: 'D', knockout: 'Ratio deuda ≥30%' };
+    else if (ratio < 0.20) score += 15;
+    else if (ratio < 0.25) score += 10;
+    else score += 5;
+  }
+
+  // LTV (10 pts)
+  if (prec > 0 && imp > 0) {
+    const ltv = imp / prec;
+    if (ltv >= 0.90) return { score: 0, clasificacion: 'D', knockout: 'LTV ≥90%' };
+    else if (ltv < 0.80) score += 10;
+    else if (ltv < 0.85) score += 7;
+    else score += 5;
+  }
+
+  // Documentación (5 pts)
+  if (data.tipo_documentacion === 'dni')      score += 5;
+  else if (data.tipo_documentacion === 'nie') score += 2;
+
+  // ── BLOQUE B — Premium (máx 40 pts) ───────────────────────────────────────
+  if (contrato === 'Funcionario')          score += 10;
+  if (data.cirbe_limpio === 'si')          score += 8;
+  if (data.ahorros_20 === 'si')            score += 7;
+  if (data.cotitular === 'si')             score += 5;
+  if (data.sector_estrategico === 'si')    score += 5;
+  if (data.origen === 'Referido' || data.origen === 'Boca a boca') score += 5;
+
+  // ── BLOQUE C — Intención real ──────────────────────────────────────────────
+  if (data.estado_busqueda === 'reserva')      score += 30;
+  else if (data.estado_busqueda === 'identificada') score += 5;
+  else if (data.estado_busqueda === 'mirando') score -= 10;
+
+  if (data.urgencia === 'Inmediata')      score += 15;
+  else if (data.urgencia === '1-3 meses') score += 0;
+  else                                    score -= 5;
+
+  // ── BLOQUE D — Valor de vida ───────────────────────────────────────────────
+  const edad = Number(data.edad) || 0;
+  if (edad > 0 && edad < 35 && data.primera_vivienda === 'si') score += 10;
+  if (prec > 300000)                score += 10;
+  if (data.interes_seguros === 'si') score += 8;
+  if (data.tiene_patrimonio === 'si') score += 7;
+
+  score = Math.max(0, score);
+  const clasificacion = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+  return { score, clasificacion, knockout: null };
+}
+
+function autoClasificar(data) {
+  return calcularScoring(data).clasificacion;
+}
+
+function updateScorePreview() {
+  const form = document.getElementById('new-lead-form');
+  if (!form) return;
+  const fd = new FormData(form);
+  const data = {};
+  for (const [k, v] of fd.entries()) if (v) data[k] = v;
+  ['importe_solicitado','precio_vivienda','ingresos','otras_deudas','edad'].forEach(f => {
+    if (data[f]) data[f] = Number(data[f]);
+  });
+  const s = calcularScoring(data);
+  const preview = document.getElementById('score-preview');
+  if (!preview) return;
+  preview.style.display = 'flex';
+  if (s.knockout) {
+    preview.innerHTML = `<span>🚫 KNOCKOUT: ${s.knockout}</span><span class="sp-cls sp-cls-D">D</span>`;
+    preview.className = 'score-preview-modal sp-D';
+  } else {
+    const cls = s.clasificacion;
+    const action = cls === 'A' ? 'Llamar en <5 min' : cls === 'B' ? 'Llamar mañana' : cls === 'C' ? 'Email seguimiento 30d' : 'Reactivar en 6 meses';
+    preview.innerHTML = `<span><strong>${s.score} pts</strong> → ${action}</span><span class="sp-cls sp-cls-${cls}">${cls}</span>`;
+    preview.className = `score-preview-modal sp-${cls}`;
+  }
 }
 
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
