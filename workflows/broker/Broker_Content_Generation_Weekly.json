@@ -1,0 +1,149 @@
+{
+  "name": "Broker - Content Generation Weekly",
+  "settings": {
+    "timezone": "Europe/Madrid",
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "node-schedule",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-define-plan",
+      "name": "Definir Plan Semanal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const today = new Date();\nconst startOfYear = new Date(today.getFullYear(), 0, 1);\nconst weekNum = Math.ceil((today - startOfYear) / 604800000);\n\nconst tofu_topics = [\n  'tipos de hipoteca',\n  'por qué el banco no siempre da la mejor oferta',\n  'TIN vs TAE',\n  'hipoteca fija vs variable',\n  'cuánto necesitas ahorrado',\n  'primera vivienda pasos'\n];\n\nconst mofu_topics = [\n  '5 errores antes de firmar',\n  'cómo negociar',\n  'qué mira el banco',\n  'ratio endeudamiento',\n  'broker vs banco solo',\n  'documentación necesaria'\n];\n\nconst bofu_topics = [\n  'lo que hacemos en Firmax',\n  'proceso del primer contacto a la firma',\n  '25 años de experiencia',\n  'analizamos tu caso'\n];\n\nconst plan = [\n  { id: 1, fase: 'TOFU', formato: 'Reel educativo 35-40 seg', tema: tofu_topics[weekNum % tofu_topics.length] },\n  { id: 2, fase: 'TOFU', formato: 'Carrusel 6 slides', tema: tofu_topics[(weekNum + 1) % tofu_topics.length] },\n  { id: 3, fase: 'TOFU', formato: 'Reel aspiracional 5-9 seg', tema: tofu_topics[(weekNum + 2) % tofu_topics.length] },\n  { id: 4, fase: 'TOFU', formato: 'Story dato rápido', tema: tofu_topics[(weekNum + 3) % tofu_topics.length] },\n  { id: 5, fase: 'MOFU', formato: 'Reel proceso 35-40 seg', tema: mofu_topics[weekNum % mofu_topics.length] },\n  { id: 6, fase: 'MOFU', formato: 'Carrusel táctico 5 slides', tema: mofu_topics[(weekNum + 1) % mofu_topics.length] },\n  { id: 7, fase: 'BOFU', formato: 'Spot publicitario 15-30 seg', tema: bofu_topics[weekNum % bofu_topics.length] }\n];\n\nreturn [{ json: { plan, weekNum, generatedAt: today.toISOString() } }];"
+      }
+    },
+    {
+      "id": "node-openai",
+      "name": "OpenAI GPT-4o Generate Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "bruZ4QXuuxXlc5uL",
+          "name": "OpenAI Firmax"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "model": "gpt-4o",
+          "temperature": 0.7,
+          "messages": [
+            {
+              "role": "system",
+              "content": "Eres el director creativo de Mediterrane Firmax SL, broker hipotecario registrado en Banco de España nº D219.\n\nROL: Generas contenido de marketing hipotecario profesional, serio y directo para redes sociales.\n\nREGLAS LEGALES (LCCI):\n- NUNCA uses las palabras: mejor hipoteca, gratis, garantizado, sin coste\n- Las piezas BOFU DEBEN incluir el disclaimer: 'Mediterrane Firmax SL. Intermediario de crédito inmobiliario registrado en Banco de España nº D219'\n- Todo contenido debe ser veraz y no engañoso\n\nTONO: Profesional, serio, directo. Sin tecnicismos innecesarios.\n\nAVATAR (OmniLook S.I.M.):\n- Hombre 50-55 años, aspecto mediterráneo, con blazer\n- Entornos reales españoles: oficina, notaría, exterior urbano Tarragona\n- Los prompt_avatar deben estar en formato MP-7\n\nPARA CADA PIEZA GENERA:\n- hook: gancho de apertura impactante\n- script: guion completo de la pieza\n- caption_instagram: texto para Instagram con hashtags\n- prompt_avatar: prompt en formato MP-7 para generar el avatar\n- cta: llamada a la acción\n- disclaimer_legal: solo para BOFU incluir el texto legal completo; para TOFU y MOFU dejar string vacío\n\nRESPONDE ÚNICAMENTE con JSON válido con esta estructura:\n{\"piezas\": [{\"id\": 1, \"fase\": \"TOFU\", \"formato\": \"...\", \"tema\": \"...\", \"hook\": \"...\", \"script\": \"...\", \"caption_instagram\": \"...\", \"prompt_avatar\": \"...\", \"cta\": \"...\", \"disclaimer_legal\": \"\"}]}"
+            },
+            {
+              "role": "user",
+              "content": "=Genera el plan de contenido semanal para Mediterrane Firmax. Semana número {{ $json.weekNum }}.\n\nPlan de piezas:\n{{ JSON.stringify($json.plan, null, 2) }}\n\nGenera las 7 piezas completas siguiendo exactamente el plan. Responde SOLO con el JSON."
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-parse",
+      "name": "Parsear Respuesta OpenAI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch(e) {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    parsed = JSON.parse(match[0]);\n  } else {\n    throw new Error('No se pudo parsear la respuesta de OpenAI: ' + raw.substring(0, 200));\n  }\n}\n\nconst piezas = parsed.piezas || [];\nreturn piezas.map(p => ({ json: p }));"
+      }
+    },
+    {
+      "id": "node-format-telegram",
+      "name": "Formatear Mensajes Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst now = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nconst emoji = { TOFU: '🔵', MOFU: '🟡', BOFU: '🔴' };\n\nconst headerMsg = {\n  json: {\n    isHeader: true,\n    text: '📅 *PLAN DE CONTENIDO SEMANAL*\\nMediterrane Firmax SL\\n\\n' + now + '\\n\\n*Total piezas:* ' + items.length + '\\n🔵 TOFU: 4 piezas\\n🟡 MOFU: 2 piezas\\n🔴 BOFU: 1 pieza\\n\\n─────────────────────'\n  }\n};\n\nconst pieceMessages = items.map(item => {\n  const p = item.json;\n  const em = emoji[p.fase] || '⚪';\n  let text = em + ' *PIEZA ' + p.id + ' — ' + p.fase + '*\\n';\n  text += '📌 *Formato:* ' + p.formato + '\\n';\n  text += '🎯 *Tema:* ' + p.tema + '\\n\\n';\n  text += '🎣 *HOOK*\\n' + p.hook + '\\n\\n';\n  text += '📝 *SCRIPT*\\n' + p.script + '\\n\\n';\n  text += '📣 *CTA*\\n' + p.cta + '\\n\\n';\n  text += '🎨 *PROMPT AVATAR*\\n' + p.prompt_avatar + '\\n\\n';\n  text += '📸 *CAPTION INSTAGRAM*\\n' + p.caption_instagram;\n  if (p.disclaimer_legal && p.disclaimer_legal.length > 0) {\n    text += '\\n\\n⚖️ *DISCLAIMER LEGAL*\\n' + p.disclaimer_legal;\n  }\n  return { json: { isHeader: false, text: text, pieceId: p.id } };\n});\n\nreturn [headerMsg, ...pieceMessages];"
+      }
+    },
+    {
+      "id": "node-split",
+      "name": "SplitInBatches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1200, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "node-telegram",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1440, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "u85vcY7Rl3NpxuVQ",
+          "name": "Telegram Antigravity"
+        }
+      },
+      "parameters": {
+        "chatId": "881434335",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{"node": "Definir Plan Semanal", "type": "main", "index": 0}]]
+    },
+    "Definir Plan Semanal": {
+      "main": [[{"node": "OpenAI GPT-4o Generate Content", "type": "main", "index": 0}]]
+    },
+    "OpenAI GPT-4o Generate Content": {
+      "main": [[{"node": "Parsear Respuesta OpenAI", "type": "main", "index": 0}]]
+    },
+    "Parsear Respuesta OpenAI": {
+      "main": [[{"node": "Formatear Mensajes Telegram", "type": "main", "index": 0}]]
+    },
+    "Formatear Mensajes Telegram": {
+      "main": [[{"node": "SplitInBatches", "type": "main", "index": 0}]]
+    },
+    "SplitInBatches": {
+      "main": [[{"node": "Send Telegram Message", "type": "main", "index": 0}]]
+    }
+  }
+}
