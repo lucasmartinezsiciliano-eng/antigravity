@@ -146,22 +146,36 @@
 <!-- ═══ NEW LEAD MODAL ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay hidden" id="modal-overlay" onclick="handleModalClick(event)">
   <div class="modal-box modal-box-wide" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Nuevo Lead</h2>
-      <button type="button" onclick="closeNewLeadModal()">✕</button>
+    <div class="modal-header-new">
+      <div class="modal-header-left">
+        <span class="modal-header-icon">➕</span>
+        <div>
+          <div class="modal-header-title">Nuevo Lead</div>
+          <div class="modal-header-sub">Completa los datos del cliente</div>
+        </div>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeNewLeadModal()">✕</button>
     </div>
     <!-- TAB NAV -->
     <div class="modal-tabs">
-      <button type="button" class="modal-tab-btn active" data-tab="1" onclick="switchModalTab(1)">👤 Titular</button>
-      <button type="button" class="modal-tab-btn" data-tab="2" onclick="switchModalTab(2)">🏠 Operación</button>
-      <button type="button" class="modal-tab-btn" data-tab="3" onclick="switchModalTab(3)">💼 Perfil</button>
-      <button type="button" class="modal-tab-btn" data-tab="4" onclick="switchModalTab(4)">📊 Scoring</button>
+      <button type="button" class="modal-tab-btn active" data-tab="1" onclick="switchModalTab(1)">
+        <span class="tab-icon">👤</span><span class="tab-label">Titular</span>
+      </button>
+      <button type="button" class="modal-tab-btn" data-tab="2" onclick="switchModalTab(2)">
+        <span class="tab-icon">🏠</span><span class="tab-label">Operación</span>
+      </button>
+      <button type="button" class="modal-tab-btn" data-tab="3" onclick="switchModalTab(3)">
+        <span class="tab-icon">💼</span><span class="tab-label">Perfil</span>
+      </button>
+      <button type="button" class="modal-tab-btn" data-tab="4" onclick="switchModalTab(4)">
+        <span class="tab-icon">📊</span><span class="tab-label">Scoring</span>
+      </button>
     </div>
     <form id="new-lead-form" onsubmit="submitNewLead(event)">
       <div class="modal-form-body">
 
         <!-- ═══ TAB 1: TITULAR ═══════════════════════════════════════════ -->
-        <div class="modal-tab-content active" id="modal-tab-1">
+        <div class="modal-tab-content" id="modal-tab-1" style="display:block">
           <div class="form-section-title">Titular principal</div>
           <div class="form-grid">
             <div class="form-field"><label>Nombre *</label><input type="text" name="nombre" required placeholder="Ana"></div>
@@ -229,7 +243,7 @@
         </div>
 
         <!-- ═══ TAB 2: OPERACIÓN ══════════════════════════════════════════ -->
-        <div class="modal-tab-content" id="modal-tab-2">
+        <div class="modal-tab-content" id="modal-tab-2" style="display:none">
           <div class="form-section-title">Operación</div>
           <div class="form-grid">
             <div class="form-field"><label>Tipo de operación</label>
@@ -276,7 +290,7 @@
         </div>
 
         <!-- ═══ TAB 3: PERFIL ════════════════════════════════════════════ -->
-        <div class="modal-tab-content" id="modal-tab-3">
+        <div class="modal-tab-content" id="modal-tab-3" style="display:none">
           <div class="form-section-title">Situación laboral</div>
           <div class="form-grid">
             <div class="form-field"><label>Tipo de contrato</label>
@@ -350,7 +364,7 @@
         </div>
 
         <!-- ═══ TAB 4: SCORING ═══════════════════════════════════════════ -->
-        <div class="modal-tab-content" id="modal-tab-4">
+        <div class="modal-tab-content" id="modal-tab-4" style="display:none">
         <!-- SCORING WF3 -->
         <div>
           <div class="form-section-title">Scoring WF3</div>
@@ -1426,11 +1440,13 @@ function closeNewLeadModal() {
 
 function switchModalTab(tab) {
   document.querySelectorAll('.modal-tab-btn').forEach(btn => {
-    btn.classList.toggle('active', Number(btn.dataset.tab) === tab);
+    const isActive = Number(btn.dataset.tab) === tab;
+    btn.classList.toggle('active', isActive);
   });
-  document.querySelectorAll('.modal-tab-content').forEach(div => {
-    div.classList.toggle('active', div.id === 'modal-tab-' + tab);
-  });
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('modal-tab-' + i);
+    if (el) el.style.display = (i === tab) ? 'block' : 'none';
+  }
 }
 
 function toggleCotitular() {
