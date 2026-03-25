@@ -506,13 +506,59 @@ let unreadChat = 0;
 let chatPollInterval = null;
 
 const STAGES = [
-  { id: 'nuevo',         label: 'Nuevo',         dot: '#3b82f6' },
-  { id: 'contactado',    label: 'Contactado',     dot: '#eab308' },
-  { id: 'documentacion', label: 'Documentación',  dot: '#f97316' },
-  { id: 'en_banco',      label: 'En Banco',       dot: '#a855f7' },
-  { id: 'firmado',       label: 'Firmado ✓',      dot: '#22c55e' },
-  { id: 'descartado',    label: 'Descartado',     dot: '#6b7394' }
+  { id: 'nuevo',         label: 'Nuevo',          dot: '#3b82f6', num: 1 },
+  { id: 'contactado',    label: 'Contactado',      dot: '#eab308', num: 2 },
+  { id: 'cualificado',   label: 'Cualificado',     dot: '#f97316', num: 3 },
+  { id: 'documentacion', label: 'Documentación',   dot: '#8b5cf6', num: 4 },
+  { id: 'en_banco',      label: 'En Banco',        dot: '#ec4899', num: 5 },
+  { id: 'aprobado',      label: 'Aprobado',        dot: '#06b6d4', num: 6 },
+  { id: 'notaria',       label: 'Notaría',         dot: '#10b981', num: 7 },
+  { id: 'firmado',       label: 'Firmado ✓',       dot: '#22c55e', num: 8 },
+  { id: 'descartado',    label: 'Descartado',      dot: '#6b7394', num: null }
 ];
+
+// ─── CHECKLIST POR ETAPA ──────────────────────────────────────────────────────
+const STAGE_CHECKLIST = {
+  nuevo: [
+    { label: 'Teléfono registrado',        check: l => !!l.telefono },
+    { label: 'LOPD enviada al titular',    check: l => ['enviada','firmada'].includes(l.lopd_estado) },
+  ],
+  contactado: [
+    { label: 'Nota del primer contacto registrada', check: l => (l.notas||[]).length > 0 },
+    { label: 'Tipo de operación definido',          check: l => !!l.tipo_hipoteca },
+    { label: 'Importe solicitado registrado',       check: l => !!l.importe_solicitado },
+    { label: 'Urgencia definida',                   check: l => !!l.urgencia },
+  ],
+  cualificado: [
+    { label: 'LOPD titular firmada',                check: l => l.lopd_estado === 'firmada' },
+    { label: 'LOPD cotitular firmada (si aplica)',  check: l => l.tiene_cotitular !== 'si' || l.lopd_cotitular_estado === 'firmada' },
+    { label: 'Ingresos registrados',                check: l => !!l.ingresos },
+    { label: 'Tipo de contrato registrado',         check: l => !!l.tipo_contrato },
+    { label: 'Clasificación B o superior',          check: l => ['A','B','C'].includes(l.clasificacion) },
+  ],
+  documentacion: [
+    { label: 'DNI / NIE registrado',                check: l => !!l.dni },
+    { label: 'Fecha de nacimiento registrada',      check: l => !!l.fecha_nacimiento },
+    { label: 'Zona / localización definida',        check: l => !!l.zona },
+    { label: 'Precio de vivienda confirmado',       check: l => !!l.precio_vivienda },
+  ],
+  en_banco: [
+    { label: 'Valor hipoteca negociada registrado', check: l => !!l.obj_valor_hipoteca },
+    { label: 'Honorarios estimados definidos',      check: l => !!l.honorarios },
+    { label: 'Nota de envío a banco registrada',    check: l => (l.notas||[]).length > 0 },
+  ],
+  aprobado: [
+    { label: 'Tipo, plazo y cuota registrados',     check: l => !!l.obj_tipo && !!l.obj_plazo && !!l.obj_cuota },
+    { label: 'Fecha de cita en notaría programada', check: l => !!l.fecha_proxima_accion },
+    { label: 'Honorarios finales confirmados',      check: l => !!l.honorarios_final || !!l.honorarios },
+  ],
+  notaria: [
+    { label: 'Nota de revisión de escritura',       check: l => (l.notas||[]).length > 0 },
+    { label: 'Honorarios finales registrados',      check: l => !!l.honorarios_final || !!l.honorarios },
+  ],
+  firmado:    [],
+  descartado: [],
+};
 
 const NOTE_ICONS = {
   llamada:   '📞',
@@ -785,16 +831,67 @@ function closeDetail() {
   currentLeadId = null;
 }
 
+// ─── PIPELINE STEPPER ─────────────────────────────────────────────────────────
+function buildPipelineStepper(lead) {
+  const pipeline = STAGES.filter(s => s.id !== 'descartado');
+  const curIdx   = pipeline.findIndex(s => s.id === lead.etapa);
+  const isDesc   = lead.etapa === 'descartado';
+
+  const items = pipeline.map((s, i) => {
+    const state = isDesc ? 'pending' : i < curIdx ? 'done' : i === curIdx ? 'active' : 'pending';
+    const dotStyle = state === 'active' ? `background:${s.dot};box-shadow:0 0 0 4px ${s.dot}33;` :
+                     state === 'done'   ? `background:${s.dot};` : '';
+    return `
+      <div class="ps-item ${state}" onclick="changeStage('${lead.id}','${s.id}')" title="Mover a ${s.label}">
+        <div class="ps-col">
+          <div class="ps-dot" style="${dotStyle}">${state === 'done' ? '✓' : s.num}</div>
+          ${i < pipeline.length - 1 ? `<div class="ps-line ${state === 'done' ? 'done' : ''}"></div>` : ''}
+        </div>
+        <div class="ps-label ${state}">${s.label}</div>
+      </div>`;
+  }).join('');
+
+  return `<div class="pipeline-stepper">${isDesc ? '<div class="ps-descartado">⚫ Descartado — operación cerrada sin firma</div>' : items}</div>`;
+}
+
+function buildChecklist(lead) {
+  const pipeline = STAGES.filter(s => s.id !== 'descartado');
+  const curIdx   = pipeline.findIndex(s => s.id === lead.etapa);
+  if (curIdx < 0 || curIdx >= pipeline.length - 1) return '';
+
+  const nextStage = pipeline[curIdx + 1];
+  const items     = STAGE_CHECKLIST[lead.etapa] || [];
+  if (!items.length) return `
+    <div class="stage-checklist">
+      <button class="advance-btn ready" onclick="changeStage('${lead.id}','${nextStage.id}')">
+        Avanzar a ${nextStage.label} →
+      </button>
+    </div>`;
+
+  const allDone = items.every(item => item.check(lead));
+  const itemsHtml = items.map(item => {
+    const done = item.check(lead);
+    return `<div class="scl-item ${done ? 'done' : 'pending'}">
+      <span class="scl-icon">${done ? '✓' : '○'}</span>
+      <span>${item.label}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="stage-checklist">
+      <div class="scl-header">Pasos para avanzar a <strong>${nextStage.label}</strong></div>
+      <div class="scl-items">${itemsHtml}</div>
+      <button class="advance-btn ${allDone ? 'ready' : 'blocked'}"
+              onclick="changeStage('${lead.id}','${nextStage.id}')">
+        ${allDone ? `✓ Avanzar a ${nextStage.label} →` : `⟳ Completa los pasos anteriores`}
+      </button>
+    </div>`;
+}
+
 function renderDetail(lead) {
   const score = lead.score || 0;
   const cls = lead.clasificacion || 'D';
   const days = daysAgo(lead.fecha_etapa);
-
-  const stepsHtml = STAGES.map(s =>
-    `<div class="stage-step ${s.id === lead.etapa ? 'active' : ''}"
-          data-etapa="${s.id}"
-          onclick="changeStage('${lead.id}','${s.id}')">${s.label}</div>`
-  ).join('');
 
   const notesHtml = (lead.notas || []).slice().reverse().map(n => `
     <div class="note-item">
@@ -822,13 +919,17 @@ function renderDetail(lead) {
       </div>
     </div>
 
-    <!-- STAGE -->
+    <!-- PIPELINE -->
     <div class="detail-section">
-      <div class="detail-section-title">Etapa del pipeline</div>
-      <div class="stage-stepper">${stepsHtml}</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">
-        ${days === 0 ? 'Entró hoy' : `${days} día${days !== 1 ? 's' : ''} en esta etapa`}
+      <div class="detail-section-title">Pipeline</div>
+      ${buildPipelineStepper(lead)}
+      <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">
+        ${days === 0 ? 'Entró hoy en esta etapa' : `${days} día${days !== 1 ? 's' : ''} en esta etapa`}
       </div>
+      ${buildChecklist(lead)}
+      <button class="discard-btn" onclick="changeStage('${lead.id}','descartado')" style="${lead.etapa === 'descartado' ? 'display:none' : ''}">
+        Marcar como descartado
+      </button>
     </div>
 
     <!-- ASIGNACIÓN -->
