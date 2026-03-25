@@ -67,6 +67,9 @@
       </div>
     </div>
 
+    <!-- METRICS -->
+    <div id="crm-metrics" class="crm-metrics"></div>
+
     <!-- ALERTS -->
     <div id="crm-alerts" class="crm-alerts"></div>
 
@@ -747,18 +750,102 @@ function renderKanban() {
     kanban.appendChild(col);
   });
 
+  renderMetrics();
   renderAlerts();
 }
 
-// ─── ALERTS ───────────────────────────────────────────────────────────────────
+// ─── METRICS + ALERTS ─────────────────────────────────────────────────────────
+function renderMetrics() {
+  const active = allLeads.filter(l => !['firmado','descartado'].includes(l.etapa));
+  const firmados = allLeads.filter(l => l.etapa === 'firmado');
+
+  // Honorarios: suma de leads activos con importe
+  const honorariosPipeline = active.reduce((s, l) => s + (Number(l.honorarios) || 0), 0);
+  const honorariosCerrados = firmados.reduce((s, l) => s + (Number(l.honorarios_final) || Number(l.honorarios) || 0), 0);
+
+  // Clasificaciones
+  const porCls = { A:0, B:0, C:0, D:0 };
+  active.forEach(l => { if (l.clasificacion) porCls[l.clasificacion] = (porCls[l.clasificacion]||0) + 1; });
+
+  // Tasa de cierre (firmados / total no descartados)
+  const totalOp = allLeads.filter(l => l.etapa !== 'descartado').length;
+  const tasaCierre = totalOp > 0 ? Math.round(firmados.length / totalOp * 100) : 0;
+
+  // Tiempo medio en pipeline (días desde entrada para leads activos)
+  const diasMedio = active.length > 0
+    ? Math.round(active.reduce((s, l) => s + (daysAgo(l.fecha_entrada) || 0), 0) / active.length)
+    : 0;
+
+  // LOPD pendientes
+  const lopdPendientes = active.filter(l =>
+    (!l.lopd_estado || l.lopd_estado === 'pendiente') && daysAgo(l.fecha_entrada) >= 1
+  ).length;
+
+  document.getElementById('crm-metrics').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-value">${active.length}</div>
+      <div class="metric-label">Leads activos</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value metric-cls">
+        <span class="mcls mcls-A">A:${porCls.A}</span>
+        <span class="mcls mcls-B">B:${porCls.B}</span>
+        <span class="mcls mcls-C">C:${porCls.C}</span>
+        <span class="mcls mcls-D">D:${porCls.D}</span>
+      </div>
+      <div class="metric-label">Por clasificación</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">${honorariosPipeline > 0 ? Math.round(honorariosPipeline/1000) + 'k €' : '—'}</div>
+      <div class="metric-label">Honorarios en pipeline</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#22c55e">${honorariosCerrados > 0 ? Math.round(honorariosCerrados/1000) + 'k €' : '—'}</div>
+      <div class="metric-label">Honorarios cerrados</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">${tasaCierre}%</div>
+      <div class="metric-label">Tasa de cierre</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">${diasMedio > 0 ? diasMedio + 'd' : '—'}</div>
+      <div class="metric-label">Tiempo medio pipeline</div>
+    </div>
+    ${lopdPendientes > 0 ? `
+    <div class="metric-card metric-warn">
+      <div class="metric-value" style="color:#f59e0b">${lopdPendientes}</div>
+      <div class="metric-label">LOPD sin enviar</div>
+    </div>` : ''}
+  `;
+}
+
 function renderAlerts() {
-  const stale = allLeads.filter(l => {
-    if (['firmado', 'descartado'].includes(l.etapa)) return false;
-    return daysAgo(l.ultima_actividad) > 3;
+  const alerts = [];
+
+  // Sin actividad >3 días
+  allLeads.forEach(l => {
+    if (['firmado','descartado'].includes(l.etapa)) return;
+    const dias = daysAgo(l.ultima_actividad);
+    if (dias > 3) alerts.push({ tipo: 'warn', msg: `<strong>${l.nombre} ${l.apellidos||''}</strong> lleva ${dias} días sin actividad · Etapa: ${l.etapa.replace('_',' ')}`, id: l.id });
   });
+
+  // LOPD pendiente >3 días desde entrada
+  allLeads.forEach(l => {
+    if (['firmado','descartado'].includes(l.etapa)) return;
+    if ((!l.lopd_estado || l.lopd_estado === 'pendiente') && daysAgo(l.fecha_entrada) > 3)
+      alerts.push({ tipo: 'lopd', msg: `⏳ LOPD pendiente de enviar — <strong>${l.nombre} ${l.apellidos||''}</strong> · ${daysAgo(l.fecha_entrada)} días desde entrada`, id: l.id });
+  });
+
+  // LOPD firmada hace >12 meses → próxima a caducar
+  allLeads.forEach(l => {
+    if (['firmado','descartado'].includes(l.etapa)) return;
+    if (l.lopd_estado === 'firmada' && l.lopd_fecha && daysAgo(l.lopd_fecha) > 330)
+      alerts.push({ tipo: 'caducidad', msg: `🔄 LOPD próxima a caducar — <strong>${l.nombre} ${l.apellidos||''}</strong> · firmada hace ${daysAgo(l.lopd_fecha)} días`, id: l.id });
+  });
+
   const container = document.getElementById('crm-alerts');
-  container.innerHTML = stale.map(l =>
-    `<div class="crm-alert">⚠️ <strong>${l.nombre}</strong> lleva ${daysAgo(l.ultima_actividad)} días sin actividad · Etapa: ${l.etapa.replace('_',' ')}</div>`
+  container.innerHTML = alerts.map(a =>
+    `<div class="crm-alert crm-alert-${a.tipo}" onclick="openDetail('${a.id}')" style="cursor:pointer;">${a.tipo === 'warn' ? '⚠️' : ''} ${a.msg}</div>`
   ).join('');
 }
 
