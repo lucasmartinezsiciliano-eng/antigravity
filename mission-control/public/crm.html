@@ -152,12 +152,28 @@
           <div class="form-section-title">Contacto</div>
           <div class="form-grid">
             <div class="form-field">
-              <label>Nombre completo *</label>
-              <input type="text" name="nombre" required placeholder="Ej: Ana García">
+              <label>Nombre *</label>
+              <input type="text" name="nombre" required placeholder="Ej: Ana">
             </div>
             <div class="form-field">
-              <label>Teléfono *</label>
+              <label>Apellidos *</label>
+              <input type="text" name="apellidos" required placeholder="Ej: García Martínez">
+            </div>
+            <div class="form-field">
+              <label>DNI / NIE</label>
+              <input type="text" name="dni" placeholder="12345678A">
+            </div>
+            <div class="form-field">
+              <label>Fecha de nacimiento</label>
+              <input type="date" name="fecha_nacimiento">
+            </div>
+            <div class="form-field">
+              <label>Teléfono móvil *</label>
               <input type="text" name="telefono" required placeholder="612 345 678">
+            </div>
+            <div class="form-field">
+              <label>Teléfono fijo</label>
+              <input type="text" name="telefono_fijo" placeholder="977 000 000">
             </div>
             <div class="form-field">
               <label>Email</label>
@@ -171,8 +187,27 @@
                 <option value="Boca a boca">Boca a boca (+5 pts)</option>
                 <option value="Referido">Referido (+5 pts)</option>
                 <option value="Google Ads">Google Ads</option>
+                <option value="Prescriptor">Prescriptor</option>
                 <option value="Otro">Otro</option>
               </select>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:8px;">
+            <div class="form-field">
+              <label>Dirección</label>
+              <input type="text" name="direccion" placeholder="Calle Mayor, 12">
+            </div>
+            <div class="form-field">
+              <label>Ciudad</label>
+              <input type="text" name="ciudad" placeholder="Tarragona">
+            </div>
+            <div class="form-field">
+              <label>Provincia</label>
+              <input type="text" name="provincia" placeholder="Tarragona">
+            </div>
+            <div class="form-field">
+              <label>Código postal</label>
+              <input type="text" name="cp" placeholder="43001">
             </div>
           </div>
         </div>
@@ -182,17 +217,19 @@
           <div class="form-section-title">Operación</div>
           <div class="form-grid">
             <div class="form-field">
-              <label>Tipo de hipoteca</label>
+              <label>Tipo de operación</label>
               <select name="tipo_hipoteca">
-                <option value="Fija">Fija</option>
-                <option value="Variable">Variable</option>
-                <option value="Mixta">Mixta</option>
-                <option value="100%">100% (sin entrada)</option>
+                <option value="CV 2ª mano">CV 2ª mano</option>
+                <option value="CV Obra nueva">CV Obra nueva</option>
+                <option value="Autopromoción">Autopromoción</option>
+                <option value="Hipoteca 100%">Hipoteca 100% (sin entrada)</option>
                 <option value="Funcionarios">Funcionarios</option>
                 <option value="No Residentes">No Residentes</option>
                 <option value="Segunda Vivienda">Segunda Vivienda</option>
-                <option value="Autopromotor">Autopromotor</option>
-                <option value="Reunificación">Reunificación de deuda</option>
+                <option value="Refinanciación">Refinanciación / Reunificación</option>
+                <option value="Disolución de condominio">Disolución de condominio</option>
+                <option value="Préstamo personal">Préstamo personal</option>
+                <option value="Otros">Otros</option>
               </select>
             </div>
             <div class="form-field">
@@ -200,12 +237,20 @@
               <input type="text" name="zona" placeholder="Ej: Tarragona">
             </div>
             <div class="form-field">
+              <label>Precio vivienda (€)</label>
+              <input type="number" name="precio_vivienda" placeholder="220000" min="0" oninput="updateScorePreview()">
+            </div>
+            <div class="form-field">
               <label>Importe solicitado (€)</label>
               <input type="number" name="importe_solicitado" placeholder="180000" min="0" oninput="updateScorePreview()">
             </div>
             <div class="form-field">
-              <label>Precio vivienda (€)</label>
-              <input type="number" name="precio_vivienda" placeholder="220000" min="0" oninput="updateScorePreview()">
+              <label>Honorarios estimados (€)</label>
+              <input type="number" name="honorarios" placeholder="3500" min="0">
+            </div>
+            <div class="form-field">
+              <label>% Renuncia</label>
+              <input type="number" name="porcentaje_renuncia" placeholder="70" min="0" max="100">
             </div>
             <div class="form-field">
               <label>Urgencia</label>
@@ -220,10 +265,10 @@
               <label>Clasificación</label>
               <select name="clasificacion">
                 <option value="">— Auto —</option>
-                <option value="A">A — Premium (90-100)</option>
-                <option value="B">B — Viable (70-89)</option>
-                <option value="C">C — Con condiciones (50-69)</option>
-                <option value="D">D — Bajo potencial (&lt;50)</option>
+                <option value="A">A — Premium</option>
+                <option value="B">B — Viable</option>
+                <option value="C">C — Con condiciones</option>
+                <option value="D">D — Bajo potencial</option>
               </select>
             </div>
           </div>
@@ -266,6 +311,101 @@
             <div class="form-field">
               <label>Notas iniciales</label>
               <textarea name="nota_inicial" placeholder="Contexto del lead, observaciones importantes..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFORMACIÓN COMPLEMENTARIA -->
+        <div>
+          <div class="form-section-title">Información complementaria</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Estado civil</label>
+              <select name="estado_civil">
+                <option value="">— No informado —</option>
+                <option value="Soltero/a">Soltero/a</option>
+                <option value="Casado/a">Casado/a</option>
+                <option value="Divorciado/a">Divorciado/a</option>
+                <option value="Viudo/a">Viudo/a</option>
+                <option value="Pareja de hecho">Pareja de hecho</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Nº de hijos</label>
+              <input type="number" name="n_hijos" placeholder="0" min="0" max="20">
+            </div>
+            <div class="form-field">
+              <label>Vivienda actual</label>
+              <select name="vivienda_actual">
+                <option value="">— No informado —</option>
+                <option value="Alquiler">Alquiler</option>
+                <option value="Propiedad sin hipoteca">Propiedad sin hipoteca</option>
+                <option value="Propiedad con hipoteca">Propiedad con hipoteca</option>
+                <option value="Familiar">En casa familiar</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Otros ingresos/mes (€)</label>
+              <input type="number" name="otros_ingresos" placeholder="0" min="0">
+            </div>
+            <div class="form-field">
+              <label>Rendimiento neto IRPF (€/año)</label>
+              <input type="number" name="irpf_neto" placeholder="24000" min="0">
+            </div>
+            <div class="form-field">
+              <label>Pago préstamos/mes (€)</label>
+              <input type="number" name="pago_prestamo_mes" placeholder="0" min="0" oninput="updateScorePreview()">
+            </div>
+            <div class="form-field">
+              <label>Pago alquiler/mes (€)</label>
+              <input type="number" name="pago_alquiler_mes" placeholder="0" min="0">
+            </div>
+            <div class="form-field">
+              <label>Reducción de impuestos</label>
+              <select name="reduccion_impuestos">
+                <option value="">— No aplica —</option>
+                <option value="Menor 35 años y renta &lt;30.000€">Menor 35 años y renta &lt;30.000€</option>
+                <option value="Familia numerosa">Familia numerosa</option>
+                <option value="Discapacidad">Discapacidad reconocida</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:8px;">
+            <div class="form-field">
+              <label>Profesión</label>
+              <input type="text" name="profesion" placeholder="Ej: Médico de familia">
+            </div>
+            <div class="form-field">
+              <label>Categoría profesional</label>
+              <input type="text" name="categoria_profesional" placeholder="Ej: Especialista">
+            </div>
+            <div class="form-field">
+              <label>Nombre empresa</label>
+              <input type="text" name="nombre_empresa" placeholder="Ej: Empresa SA">
+            </div>
+            <div class="form-field">
+              <label>Actividad empresa</label>
+              <input type="text" name="actividad_empresa" placeholder="Ej: Construcción">
+            </div>
+            <div class="form-field">
+              <label>Antigüedad en empresa</label>
+              <input type="date" name="antiguedad_empresa_fecha">
+            </div>
+            <div class="form-field">
+              <label>Años cotizados</label>
+              <input type="number" name="años_cotizados" placeholder="8" min="0">
+            </div>
+            <div class="form-field">
+              <label>Bancos con los que opera</label>
+              <input type="text" name="bancos_opera" placeholder="Ej: CaixaBank, Sabadell">
+            </div>
+            <div class="form-field">
+              <label>Estado LOPD</label>
+              <select name="lopd_estado">
+                <option value="pendiente">Pendiente</option>
+                <option value="enviada">Enviada al cliente</option>
+                <option value="firmada">Firmada ✓</option>
+              </select>
             </div>
           </div>
         </div>
@@ -507,6 +647,8 @@ function applyFilters(leads) {
   const f = getFilters();
   return leads.filter(l => {
     if (f.search && !l.nombre.toLowerCase().includes(f.search) &&
+        !(l.apellidos || '').toLowerCase().includes(f.search) &&
+        !(l.dni || '').toLowerCase().includes(f.search) &&
         !(l.telefono || '').includes(f.search) &&
         !(l.zona || '').toLowerCase().includes(f.search)) return false;
     if (f.asignado === '__unassigned__') { if (l.asignado_a) return false; }
@@ -571,7 +713,7 @@ function buildCard(lead) {
        ondragstart="onDragStart(event,'${lead.id}')"
        ondragend="onDragEnd(event)">
     <div class="lead-card-top">
-      <div class="lead-card-name">${lead.nombre}</div>
+      <div class="lead-card-name">${lead.nombre}${lead.apellidos ? ' ' + lead.apellidos : ''}</div>
       <div class="lead-card-cls cls-${lead.clasificacion || 'D'}">${lead.clasificacion || '?'}</div>
     </div>
     <div class="lead-card-meta">
@@ -693,7 +835,7 @@ function openDetail(id) {
   if (!lead) return;
   currentLeadId = id;
 
-  document.getElementById('dp-name').textContent = lead.nombre;
+  document.getElementById('dp-name').textContent = lead.nombre + (lead.apellidos ? ' ' + lead.apellidos : '');
   document.getElementById('dp-sub').textContent = `${lead.tipo_hipoteca || '—'} · ${lead.zona || '—'} · ${lead.origen || '—'}`;
   const cls = document.getElementById('dp-cls');
   cls.className = `lead-card-cls cls-${lead.clasificacion || 'D'}`;
@@ -768,67 +910,98 @@ function renderDetail(lead) {
     <!-- CONTACTO -->
     <div class="detail-section">
       <div class="detail-section-title">Datos de contacto</div>
-      <div class="detail-row">
-        <span class="detail-row-label">Teléfono</span>
-        <span class="detail-row-value">${lead.telefono || '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Email</span>
-        <span class="detail-row-value">${lead.email || '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Origen</span>
-        <span class="detail-row-value">${lead.origen || '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Fecha entrada</span>
-        <span class="detail-row-value">${formatDate(lead.fecha_entrada)}</span>
-      </div>
+      <div class="detail-row"><span class="detail-row-label">DNI / NIE</span><span class="detail-row-value">${lead.dni || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Fecha nacimiento</span><span class="detail-row-value">${lead.fecha_nacimiento ? formatDate(lead.fecha_nacimiento) : '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Teléfono móvil</span><span class="detail-row-value">${lead.telefono || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Teléfono fijo</span><span class="detail-row-value">${lead.telefono_fijo || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Email</span><span class="detail-row-value">${lead.email || '—'}</span></div>
+      ${lead.direccion ? `<div class="detail-row"><span class="detail-row-label">Dirección</span><span class="detail-row-value">${lead.direccion}${lead.ciudad ? ', ' + lead.ciudad : ''}${lead.provincia ? ' (' + lead.provincia + ')' : ''}${lead.cp ? ' · ' + lead.cp : ''}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-row-label">Origen</span><span class="detail-row-value">${lead.origen || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Fecha entrada</span><span class="detail-row-value">${formatDate(lead.fecha_entrada)}</span></div>
     </div>
 
     <!-- OPERACIÓN -->
     <div class="detail-section">
       <div class="detail-section-title">Datos de la operación</div>
-      <div class="detail-row">
-        <span class="detail-row-label">Tipo hipoteca</span>
-        <span class="detail-row-value">${lead.tipo_hipoteca || '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Importe</span>
-        <span class="detail-row-value">${formatEuros(lead.importe_solicitado)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Precio vivienda</span>
-        <span class="detail-row-value">${formatEuros(lead.precio_vivienda)}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">LTV</span>
-        <span class="detail-row-value">${lead.precio_vivienda && lead.importe_solicitado
-          ? Math.round(lead.importe_solicitado / lead.precio_vivienda * 100) + '%'
-          : '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Zona</span>
-        <span class="detail-row-value">${lead.zona || '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Urgencia</span>
-        <span class="detail-row-value">${lead.urgencia || '—'}</span>
-      </div>
+      <div class="detail-row"><span class="detail-row-label">Tipo operación</span><span class="detail-row-value">${lead.tipo_hipoteca || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Precio vivienda</span><span class="detail-row-value">${formatEuros(lead.precio_vivienda)}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Importe solicitado</span><span class="detail-row-value">${formatEuros(lead.importe_solicitado)}</span></div>
+      <div class="detail-row"><span class="detail-row-label">LTV</span><span class="detail-row-value">${lead.precio_vivienda && lead.importe_solicitado ? Math.round(lead.importe_solicitado / lead.precio_vivienda * 100) + '%' : '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Zona</span><span class="detail-row-value">${lead.zona || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Urgencia</span><span class="detail-row-value">${lead.urgencia || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Honorarios</span><span class="detail-row-value">${lead.honorarios ? formatEuros(lead.honorarios) : '—'}</span></div>
+      ${lead.porcentaje_renuncia ? `<div class="detail-row"><span class="detail-row-label">% Renuncia</span><span class="detail-row-value">${lead.porcentaje_renuncia}%</span></div>` : ''}
     </div>
 
-    <!-- PERFIL -->
+    <!-- LOPD -->
+    <div class="detail-section">
+      <div class="detail-section-title">LOPD / Protección de datos</div>
+      <div class="detail-row">
+        <span class="detail-row-label">Estado LOPD</span>
+        <span class="detail-row-value">
+          <select class="assign-select" onchange="updateLopd('${lead.id}', this.value)" style="padding:4px 8px;font-size:12px;">
+            <option value="pendiente" ${(lead.lopd_estado||'pendiente')==='pendiente'?'selected':''}>⏳ Pendiente</option>
+            <option value="enviada"   ${lead.lopd_estado==='enviada'?'selected':''}>📤 Enviada al cliente</option>
+            <option value="firmada"   ${lead.lopd_estado==='firmada'?'selected':''}>✅ Firmada</option>
+          </select>
+        </span>
+      </div>
+      ${lead.lopd_fecha ? `<div class="detail-row"><span class="detail-row-label">Fecha firma</span><span class="detail-row-value">${formatDate(lead.lopd_fecha)}</span></div>` : ''}
+    </div>
+
+    <!-- PERFIL FINANCIERO -->
     <div class="detail-section">
       <div class="detail-section-title">Perfil financiero</div>
-      <div class="detail-row">
-        <span class="detail-row-label">Contrato</span>
-        <span class="detail-row-value">${lead.tipo_contrato || '—'}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-row-label">Ingresos/mes</span>
-        <span class="detail-row-value">${lead.ingresos ? formatEuros(lead.ingresos) : '—'}</span>
-      </div>
+      <div class="detail-row"><span class="detail-row-label">Tipo contrato</span><span class="detail-row-value">${lead.tipo_contrato || '—'}</span></div>
+      <div class="detail-row"><span class="detail-row-label">Ingresos/mes</span><span class="detail-row-value">${lead.ingresos ? formatEuros(lead.ingresos) : '—'}</span></div>
+      ${lead.otros_ingresos ? `<div class="detail-row"><span class="detail-row-label">Otros ingresos</span><span class="detail-row-value">${formatEuros(lead.otros_ingresos)}/mes</span></div>` : ''}
+      ${lead.irpf_neto ? `<div class="detail-row"><span class="detail-row-label">IRPF neto</span><span class="detail-row-value">${formatEuros(lead.irpf_neto)}/año</span></div>` : ''}
+      ${lead.pago_prestamo_mes ? `<div class="detail-row"><span class="detail-row-label">Pago préstamos</span><span class="detail-row-value">${formatEuros(lead.pago_prestamo_mes)}/mes</span></div>` : ''}
+      ${lead.pago_alquiler_mes ? `<div class="detail-row"><span class="detail-row-label">Pago alquiler</span><span class="detail-row-value">${formatEuros(lead.pago_alquiler_mes)}/mes</span></div>` : ''}
+      ${lead.vivienda_actual ? `<div class="detail-row"><span class="detail-row-label">Vivienda actual</span><span class="detail-row-value">${lead.vivienda_actual}</span></div>` : ''}
+      ${lead.estado_civil ? `<div class="detail-row"><span class="detail-row-label">Estado civil</span><span class="detail-row-value">${lead.estado_civil}${lead.n_hijos ? ' · ' + lead.n_hijos + ' hijos' : ''}</span></div>` : ''}
     </div>
+
+    <!-- INFO LABORAL -->
+    ${(lead.profesion || lead.nombre_empresa || lead.bancos_opera) ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Datos laborales y empresa</div>
+      ${lead.profesion ? `<div class="detail-row"><span class="detail-row-label">Profesión</span><span class="detail-row-value">${lead.profesion}${lead.categoria_profesional ? ' — ' + lead.categoria_profesional : ''}</span></div>` : ''}
+      ${lead.nombre_empresa ? `<div class="detail-row"><span class="detail-row-label">Empresa</span><span class="detail-row-value">${lead.nombre_empresa}${lead.actividad_empresa ? ' · ' + lead.actividad_empresa : ''}</span></div>` : ''}
+      ${lead.antiguedad_empresa_fecha ? `<div class="detail-row"><span class="detail-row-label">Antigüedad empresa</span><span class="detail-row-value">${formatDate(lead.antiguedad_empresa_fecha)}</span></div>` : ''}
+      ${lead.años_cotizados ? `<div class="detail-row"><span class="detail-row-label">Años cotizados</span><span class="detail-row-value">${lead.años_cotizados}</span></div>` : ''}
+      ${lead.bancos_opera ? `<div class="detail-row"><span class="detail-row-label">Bancos con los que opera</span><span class="detail-row-value">${lead.bancos_opera}</span></div>` : ''}
+    </div>` : ''}
+
+    <!-- OBJETIVO HIPOTECARIO (visible desde "en banco") -->
+    ${['en_banco','firmado'].includes(lead.etapa) ? `
+    <div class="detail-section">
+      <div class="detail-section-title">Objetivo hipotecario</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Precio compra final (€)</label><input type="number" class="next-action-input" value="${lead.obj_precio_compra||''}" placeholder="220000" onblur="saveObjetivo('${lead.id}','obj_precio_compra',this.value)"></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Valor hipoteca negociada (€)</label><input type="number" class="next-action-input" value="${lead.obj_valor_hipoteca||''}" placeholder="180000" onblur="saveObjetivo('${lead.id}','obj_valor_hipoteca',this.value)"></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Plazo (meses)</label><input type="number" class="next-action-input" value="${lead.obj_plazo||''}" placeholder="360" onblur="saveObjetivo('${lead.id}','obj_plazo',this.value)"></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Cuota mensual (€)</label><input type="number" class="next-action-input" value="${lead.obj_cuota||''}" placeholder="850" onblur="saveObjetivo('${lead.id}','obj_cuota',this.value)"></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Tipo</label>
+          <select class="assign-select" onchange="saveObjetivo('${lead.id}','obj_tipo',this.value)">
+            <option value="">—</option>
+            <option value="Fija" ${lead.obj_tipo==='Fija'?'selected':''}>Fija</option>
+            <option value="Variable" ${lead.obj_tipo==='Variable'?'selected':''}>Variable</option>
+            <option value="Mixta" ${lead.obj_tipo==='Mixta'?'selected':''}>Mixta</option>
+          </select></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Tipo interés (%)</label><input type="number" step="0.01" class="next-action-input" value="${lead.obj_tipo_interes||''}" placeholder="3.20" onblur="saveObjetivo('${lead.id}','obj_tipo_interes',this.value)"></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Diferencial (%)</label><input type="number" step="0.01" class="next-action-input" value="${lead.obj_diferencial||''}" placeholder="0.85" onblur="saveObjetivo('${lead.id}','obj_diferencial',this.value)"></div>
+        <div class="form-field"><label style="font-size:11px;color:var(--text-dim)">Honorarios finales (€)</label><input type="number" class="next-action-input" value="${lead.honorarios_final||''}" placeholder="" onblur="saveObjetivo('${lead.id}','honorarios_final',this.value)"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;font-weight:600;">Productos bancarios vinculados</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${['Nómina','Seguro vida','Seguro hogar','Seguro vehículo','Seguro salud','Tarjeta crédito','Seguro pagos','Plan pensiones','Banca electrónica','Recibos domiciliados'].map(p =>
+          `<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;">
+            <input type="checkbox" ${(lead.productos_bancarios||[]).includes(p)?'checked':''} onchange="toggleProducto('${lead.id}','${p}',this.checked)"> ${p}
+          </label>`
+        ).join('')}
+      </div>
+    </div>` : ''}
 
     <!-- PRÓXIMA ACCIÓN -->
     <div class="detail-section">
@@ -896,6 +1069,32 @@ async function saveNextActionDate(id, value) {
   if (lead) lead.fecha_proxima_accion = value;
 }
 
+async function updateLopd(id, estado) {
+  const patch = { lopd_estado: estado };
+  if (estado === 'firmada') patch.lopd_fecha = new Date().toISOString();
+  const lead = allLeads.find(l => l.id === id);
+  if (lead) Object.assign(lead, patch);
+  await api('PATCH', `/api/crm/leads/${id}`, patch);
+  if (lead) renderDetail(lead);
+}
+
+async function saveObjetivo(id, field, value) {
+  if (!value) return;
+  const patch = { [field]: isNaN(value) ? value : Number(value) };
+  const lead = allLeads.find(l => l.id === id);
+  if (lead) Object.assign(lead, patch);
+  await api('PATCH', `/api/crm/leads/${id}`, patch);
+}
+
+async function toggleProducto(id, producto, checked) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  lead.productos_bancarios = lead.productos_bancarios || [];
+  if (checked) { if (!lead.productos_bancarios.includes(producto)) lead.productos_bancarios.push(producto); }
+  else { lead.productos_bancarios = lead.productos_bancarios.filter(p => p !== producto); }
+  await api('PATCH', `/api/crm/leads/${id}`, { productos_bancarios: lead.productos_bancarios });
+}
+
 function selectNoteType(tipo) {
   selectedNoteType = tipo;
   document.querySelectorAll('.note-type-btn').forEach(b => {
@@ -943,7 +1142,9 @@ async function submitNewLead(e) {
   for (const [k, v] of fd.entries()) if (v.trim()) data[k] = v.trim();
 
   // Convert numeric fields
-  ['importe_solicitado', 'precio_vivienda', 'ingresos', 'otras_deudas', 'edad'].forEach(f => {
+  ['importe_solicitado', 'precio_vivienda', 'ingresos', 'otras_deudas', 'edad',
+   'honorarios', 'porcentaje_renuncia', 'n_hijos', 'otros_ingresos', 'irpf_neto',
+   'pago_prestamo_mes', 'pago_alquiler_mes', 'años_cotizados'].forEach(f => {
     if (data[f]) data[f] = Number(data[f]);
   });
 

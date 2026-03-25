@@ -20,45 +20,53 @@ function showToast(msg, type = 'success') {
 // SCORING A/B/C/D (replicado del WF3)
 // ============================================
 function calcularScore(data) {
+  // ── KNOCKOUT — ASNEF/RAI ──────────────────────────────────────────────────
+  if (data.impagos === 'si') return { score: 0, clasificacion: 'D' };
+
   let score = 0;
   const tc = data.tipo_contrato || '';
 
   // ── BLOQUE A — Tipo de contrato (15 pts) ──────────────────────────────────
-  if (tc === 'indefinido' || tc === 'funcionario')          score += 15;
-  else if (tc === 'fijo_discontinuo' || tc === 'interino'
-        || tc === 'autonomo_2plus' || tc === 'temporal')    score += 8;
-  else if (tc === 'autonomo_nuevo')                          score += 5;
+  if (tc === 'indefinido' || tc === 'funcionario')                              score += 15;
+  else if (['fijo_discontinuo','interino','autonomo_2plus','temporal'].includes(tc)) score += 8;
+  else if (tc === 'autonomo_nuevo')                                              score += 5;
 
-  // ── BLOQUE A — Antigüedad implícita según tipo ────────────────────────────
-  // autonomo_2plus → ≥2 años (+10), autonomo_nuevo → <2 años (0)
-  // indefinido / funcionario / interino → asumimos ≥2 años (+10)
-  if (['indefinido','funcionario','interino','fijo_discontinuo','temporal'].includes(tc)) score += 10;
-  else if (tc === 'autonomo_2plus') score += 10;
+  // ── BLOQUE A — Antigüedad implícita según tipo (15 pts) ───────────────────
+  if (['indefinido','funcionario','interino'].includes(tc))                      score += 15;
+  else if (['fijo_discontinuo','autonomo_2plus','temporal'].includes(tc))        score += 10;
   // autonomo_nuevo → 0
 
-  // ── BLOQUE A — Ahorros (proxy de LTV, máx 10 pts) ────────────────────────
-  const ahorrosMap = { '0-5': 0, '5-10': 3, '10-20': 6, 'mas-20': 10 };
-  score += ahorrosMap[data.ahorros] || 0;
+  // ── BLOQUE A — Ingresos netos del hogar (15 pts) ──────────────────────────
+  const ingresosMap = { 'menos-1500': 0, '1500-2500': 5, '2500-3500': 10, '3500-5000': 15, 'mas-5000': 15 };
+  score += ingresosMap[data.ingresos] || 0;
+
+  // ── BLOQUE A — LTV solicitado (10 pts) ────────────────────────────────────
+  const ltvMap = { 'menos-70': 10, '70-80': 8, '80-85': 5, '85-90': 2, 'mas-90': 0 };
+  score += ltvMap[data.ltv] || 0;
 
   // ── BLOQUE B — Premium ────────────────────────────────────────────────────
-  if (tc === 'funcionario')          score += 10; // funcionario o gran empresa
-  if (data.ahorros === 'mas-20')     score += 7;  // ahorros >20% del precio total
-  if (data.cotitular === 'si')       score += 5;
+  if (tc === 'funcionario')                    score += 10; // estabilidad máxima
+  if (data.cirbe_limpio === 'si')              score += 8;  // historial limpio
+  if (data.ltv === 'menos-70')                 score += 7;  // ahorros sólidos >30%
+  if (data.cotitular === 'si')                 score += 5;  // doble ingreso
+  if (data.sector_estrategico === 'si')        score += 5;  // empleo estratégico
 
   // ── BLOQUE C — Intención real ─────────────────────────────────────────────
-  if (data.estado === 'reserva')          score += 30;
-  else if (data.estado === 'identificada') score += 5;
-  else if (data.estado === 'mirando')      score -= 10;
+  if (data.estado === 'reserva')               score += 30;
+  else if (data.estado === 'identificada')     score += 5;
+  else if (data.estado === 'mirando')          score -= 10;
 
-  if (data.urgencia === 'menos-1')  score += 15;
-  else if (data.urgencia === '1-3') score += 0;
-  else                              score -= 5;
+  if (data.urgencia === 'menos-1')             score += 15;
+  else if (data.urgencia === 'mas-3')          score -= 5;
 
   // ── BLOQUE D — Valor de vida ──────────────────────────────────────────────
-  if (data.primera_vivienda === 'si') score += 10;
+  if (data.primera_vivienda === 'si')          score += 5;
+  if (['300-500','500-750','mas-750'].includes(data.precio_vivienda)) score += 5;
+  if (data.tiene_patrimonio === 'si')          score += 5;
 
-  // ── Banderas negativas ────────────────────────────────────────────────────
-  if (data.impagos !== 'no') score = 0; // ASNEF/RAI → knockout
+  // ── Penalizaciones (no knockout) ─────────────────────────────────────────
+  if (data.cambio_empleo === 'si')             score -= 15;
+  if (data.ingresos_variables === 'si')        score -= 10;
 
   const s = Math.max(0, Math.min(150, score));
   const clasificacion = s >= 80 ? 'A' : s >= 60 ? 'B' : s >= 40 ? 'C' : 'D';
@@ -109,11 +117,14 @@ function initSimpleForms() {
 // QUIZ WIZARD
 // ============================================
 const STEP_TEXTS = [
-  '⏱ 45 segundos y lo tienes',
-  '🔥 Ya llevas la mitad — 30 segundos más',
-  '💪 Tres preguntas menos, casi estás',
-  '🎯 Solo un par de pasos más',
-  '✨ Última pregunta antes de tu análisis',
+  '⏱ 2 minutos y lo tienes',
+  '🔥 Ya llevas 1 — casi en la mitad',
+  '💰 Tercera pregunta, vas muy bien',
+  '🏦 Cuarta pregunta — ya casi',
+  '🔍 La mitad del análisis lista',
+  '📅 Dos preguntas más, casi estás',
+  '✨ Última ronda antes del contacto',
+  '🎯 Solo un paso más',
   '📬 Solo necesitamos saber a quién enviárselo',
 ];
 
@@ -142,9 +153,20 @@ function initQuiz() {
   quiz.querySelectorAll('.quiz-opt').forEach(opt => {
     opt.addEventListener('click', () => {
       const step = opt.closest('.quiz-step');
-      step.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-      answers[opt.dataset.key] = opt.dataset.value;
+      if (opt.dataset.multiselect === 'true') {
+        // Multi-select: toggle individual option
+        opt.classList.toggle('selected');
+        if (opt.classList.contains('selected')) {
+          answers[opt.dataset.key] = opt.dataset.value;
+        } else {
+          delete answers[opt.dataset.key];
+        }
+      } else {
+        // Single-select: deselect all, select clicked
+        step.querySelectorAll('.quiz-opt').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        answers[opt.dataset.key] = opt.dataset.value;
+      }
     });
   });
 
