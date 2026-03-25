@@ -576,6 +576,22 @@
   cursor: default;
 }
 
+.btn-pdf {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.btn-pdf:hover { color: var(--text); border-color: var(--accent); }
+
 .discard-btn {
   background: none;
   border: none;

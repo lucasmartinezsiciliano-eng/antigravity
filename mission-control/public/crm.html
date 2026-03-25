@@ -83,7 +83,10 @@
         <div class="detail-name" id="dp-name">—</div>
         <div class="detail-sub" id="dp-sub">—</div>
       </div>
-      <div id="dp-cls" class="lead-card-cls" style="font-size:14px;width:28px;height:28px;">—</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="btn-pdf" id="btn-pdf" onclick="generateReport(currentLeadId)" title="Generar informe PDF" style="display:none;">📄</button>
+        <div id="dp-cls" class="lead-card-cls" style="font-size:14px;width:28px;height:28px;">—</div>
+      </div>
     </div>
     <div class="detail-body" id="detail-body">
       <div style="color:var(--text-dim);font-size:13px;text-align:center;padding:40px 0;">
@@ -824,6 +827,7 @@ function openDetail(id) {
 
   renderDetail(lead);
   document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('btn-pdf').style.display = 'flex';
 }
 
 function closeDetail() {
@@ -1129,6 +1133,168 @@ async function toggleProducto(id, producto, checked) {
   if (checked) { if (!lead.productos_bancarios.includes(producto)) lead.productos_bancarios.push(producto); }
   else { lead.productos_bancarios = lead.productos_bancarios.filter(p => p !== producto); }
   await api('PATCH', `/api/crm/leads/${id}`, { productos_bancarios: lead.productos_bancarios });
+}
+
+// ─── GENERAR INFORME PDF ──────────────────────────────────────────────────────
+function generateReport(id) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+
+  const now = new Date();
+  const fechaInforme = now.toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' });
+  const generadoPor  = getWorker() || 'Asesor';
+  const clsLabel = { A:'Premium', B:'Viable', C:'Con condiciones', D:'Bajo potencial' };
+  const etapaLabel = STAGES.find(s => s.id === lead.etapa)?.label || lead.etapa;
+
+  function row(label, value) {
+    if (!value || value === '—') return '';
+    return `<tr><td class="r-label">${label}</td><td class="r-value">${value}</td></tr>`;
+  }
+  function section(title) {
+    return `<tr><td colspan="2" class="r-section">${title}</td></tr>`;
+  }
+
+  const ltv = lead.precio_vivienda && lead.importe_solicitado
+    ? Math.round(lead.importe_solicitado / lead.precio_vivienda * 100) + '%' : '—';
+
+  const lopdLabel = { pendiente:'⏳ Pendiente', enviada:'📤 Enviada', firmada:'✅ Firmada' };
+
+  const notasHtml = (lead.notas||[]).slice(-5).reverse().map(n => `
+    <div class="note-line">
+      <span class="note-ts">${new Date(n.fecha).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})} — ${n.autor||'—'}</span>
+      <span class="note-body">${n.texto}</span>
+    </div>`).join('') || '<p style="color:#888;font-size:11px;">Sin notas registradas.</p>';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Informe — ${lead.nombre} ${lead.apellidos||''}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #1a1a1a; background:#fff; padding: 32px 40px; }
+    .rpt-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0D1E24; padding-bottom:16px; margin-bottom:20px; }
+    .rpt-logo { font-size:18px; font-weight:800; letter-spacing:-0.03em; color:#0D1E24; }
+    .rpt-logo span { color:#4F8CFF; }
+    .rpt-meta { text-align:right; font-size:10px; color:#666; line-height:1.6; }
+    .rpt-title { font-size:22px; font-weight:700; color:#0D1E24; margin-bottom:2px; }
+    .rpt-sub { font-size:12px; color:#666; }
+    .cls-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-weight:800; font-size:14px; letter-spacing:0.05em; margin-top:6px; }
+    .cls-A { background:#dcfce7; color:#15803d; }
+    .cls-B { background:#dbeafe; color:#1d4ed8; }
+    .cls-C { background:#fef9c3; color:#a16207; }
+    .cls-D { background:#fee2e2; color:#dc2626; }
+    table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+    td { padding:6px 8px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+    .r-section { background:#f8f9fa; font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#888; padding:8px 8px 4px; border-bottom:1px solid #e0e0e0; }
+    .r-label { color:#666; width:38%; font-size:11px; }
+    .r-value { color:#1a1a1a; font-weight:500; font-size:11px; }
+    .score-bar-wrap { display:flex; align-items:center; gap:10px; margin:10px 0; }
+    .score-bar-bg { flex:1; height:8px; background:#f0f0f0; border-radius:4px; overflow:hidden; }
+    .score-bar-fill { height:100%; border-radius:4px; }
+    .score-num { font-size:20px; font-weight:800; min-width:40px; }
+    .notes-section { margin-top:8px; }
+    .note-line { padding:6px 0; border-bottom:1px solid #f0f0f0; }
+    .note-ts { display:block; font-size:9px; color:#999; margin-bottom:2px; }
+    .note-body { font-size:11px; color:#333; }
+    .confidential { margin-top:24px; padding:10px 14px; background:#fff8e1; border-left:3px solid #f59e0b; font-size:9.5px; color:#92400e; line-height:1.5; }
+    @media print {
+      body { padding: 20px 28px; }
+      .no-print { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="rpt-header">
+    <div>
+      <div class="rpt-logo">FIRMAX <span>·</span> ANTIGRAVITY CRM</div>
+      <div style="font-size:10px;color:#666;margin-top:4px;">Mediterrane Firmax SL · CIF B26553248 · Reg. BdE D219</div>
+    </div>
+    <div class="rpt-meta">
+      Informe generado: ${fechaInforme}<br>
+      Por: ${generadoPor}<br>
+      Documento INTERNO — CONFIDENCIAL
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <div class="rpt-title">${lead.nombre} ${lead.apellidos||''}</div>
+    <div class="rpt-sub">${lead.tipo_hipoteca||'—'} · ${lead.zona||'—'} · Origen: ${lead.origen||'—'}</div>
+    <div>
+      <span class="cls-badge cls-${lead.clasificacion||'D'}">${lead.clasificacion||'?'} — ${clsLabel[lead.clasificacion]||'—'}</span>
+      <span style="margin-left:12px;font-size:11px;color:#666;">Etapa: <strong>${etapaLabel}</strong></span>
+    </div>
+  </div>
+
+  <div class="score-bar-wrap">
+    <span class="score-num" style="color:${{A:'#15803d',B:'#1d4ed8',C:'#a16207',D:'#dc2626'}[lead.clasificacion||'D']}">${lead.score||0}</span>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:${lead.score||0}%;background:${{A:'#22c55e',B:'#3b82f6',C:'#eab308',D:'#ef4444'}[lead.clasificacion||'D']}"></div></div>
+    <span style="font-size:10px;color:#888;">/ 150 pts</span>
+  </div>
+
+  <table>
+    ${section('Identificación y contacto')}
+    ${row('DNI / NIE', lead.dni)}
+    ${row('Fecha de nacimiento', lead.fecha_nacimiento ? formatDate(lead.fecha_nacimiento) : null)}
+    ${row('Teléfono móvil', lead.telefono)}
+    ${row('Teléfono fijo', lead.telefono_fijo)}
+    ${row('Email', lead.email)}
+    ${row('Dirección', [lead.direccion, lead.ciudad, lead.provincia, lead.cp].filter(Boolean).join(', '))}
+    ${row('LOPD titular', lopdLabel[lead.lopd_estado||'pendiente'])}
+    ${lead.tiene_cotitular === 'si' ? row('LOPD cotitular', lopdLabel[lead.lopd_cotitular_estado||'pendiente']) : ''}
+
+    ${section('Operación')}
+    ${row('Tipo operación', lead.tipo_hipoteca)}
+    ${row('Zona', lead.zona)}
+    ${row('Precio vivienda', lead.precio_vivienda ? formatEuros(lead.precio_vivienda) : null)}
+    ${row('Importe solicitado', lead.importe_solicitado ? formatEuros(lead.importe_solicitado) : null)}
+    ${row('LTV', ltv !== '—' ? ltv : null)}
+    ${row('Urgencia', lead.urgencia)}
+    ${row('Honorarios estimados', lead.honorarios ? formatEuros(lead.honorarios) : null)}
+
+    ${section('Perfil financiero')}
+    ${row('Tipo de contrato', lead.tipo_contrato)}
+    ${row('Ingresos netos/mes', lead.ingresos ? formatEuros(lead.ingresos) : null)}
+    ${row('Otros ingresos/mes', lead.otros_ingresos ? formatEuros(lead.otros_ingresos) : null)}
+    ${row('Pago préstamos/mes', lead.pago_prestamo_mes ? formatEuros(lead.pago_prestamo_mes) : null)}
+    ${row('Pago alquiler/mes', lead.pago_alquiler_mes ? formatEuros(lead.pago_alquiler_mes) : null)}
+    ${row('Estado civil', lead.estado_civil)}
+    ${row('Nº hijos', lead.n_hijos != null && lead.n_hijos !== '' ? String(lead.n_hijos) : null)}
+    ${row('Vivienda actual', lead.vivienda_actual)}
+    ${row('Profesión', lead.profesion)}
+    ${row('Empresa', lead.nombre_empresa)}
+    ${row('Años cotizados', lead.años_cotizados != null && lead.años_cotizados !== '' ? String(lead.años_cotizados) : null)}
+    ${row('Bancos con los que opera', lead.bancos_opera)}
+
+    ${lead.obj_valor_hipoteca ? section('Objetivo hipotecario negociado') : ''}
+    ${row('Hipoteca negociada', lead.obj_valor_hipoteca ? formatEuros(lead.obj_valor_hipoteca) : null)}
+    ${row('Plazo', lead.obj_plazo ? lead.obj_plazo + ' meses' : null)}
+    ${row('Cuota mensual', lead.obj_cuota ? formatEuros(lead.obj_cuota) : null)}
+    ${row('Tipo hipoteca', lead.obj_tipo)}
+    ${row('Tipo interés', lead.obj_tipo_interes ? lead.obj_tipo_interes + '%' : null)}
+    ${row('Honorarios finales', lead.honorarios_final ? formatEuros(lead.honorarios_final) : null)}
+    ${(lead.productos_bancarios||[]).length ? row('Productos vinculados', lead.productos_bancarios.join(', ')) : ''}
+  </table>
+
+  ${(lead.notas||[]).length ? `
+  <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#888;margin-bottom:8px;">Últimas notas del expediente</div>
+  <div class="notes-section">${notasHtml}</div>` : ''}
+
+  <div class="confidential">
+    ⚠️ DOCUMENTO CONFIDENCIAL — Protegido por el Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).
+    Este informe contiene datos personales y financieros de carácter reservado.
+    Uso exclusivo interno de Mediterrane Firmax SL. Prohibida su reproducción o difusión sin autorización expresa.
+    Generado el ${fechaInforme} por ${generadoPor} desde el sistema CRM Antigravity.
+  </div>
+
+  <script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=860,height=900');
+  win.document.write(html);
+  win.document.close();
 }
 
 function selectNoteType(tipo) {
