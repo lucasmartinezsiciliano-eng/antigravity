@@ -1003,11 +1003,13 @@
 
 .modal-form-body {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
 }
 
 .form-section-title {
