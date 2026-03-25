@@ -1082,6 +1082,69 @@
   background: var(--bg3);
 }
 
+/* ===== MODAL WIDE ===== */
+.modal-box-wide {
+  width: 740px;
+  max-width: calc(100vw - 40px);
+}
+
+/* ===== MODAL TABS ===== */
+.modal-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 22px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+.modal-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.modal-tab-btn:hover { color: var(--text); }
+.modal-tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.modal-tab-content {
+  display: none;
+}
+.modal-tab-content.active {
+  display: block;
+}
+
+/* ===== COTITULAR TOGGLE ===== */
+.cotitular-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 12px;
+  background: var(--bg3);
+  transition: border-color 0.15s;
+}
+.cotitular-toggle:hover { border-color: var(--accent); }
+.cotitular-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 /* ===== UTILITIES ===== */
 .hidden { display: none !important; }
 

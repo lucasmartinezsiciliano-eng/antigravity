@@ -139,90 +139,99 @@
 
 <!-- ═══ NEW LEAD MODAL ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay hidden" id="modal-overlay" onclick="handleModalClick(event)">
-  <div class="modal-box" onclick="event.stopPropagation()">
+  <div class="modal-box modal-box-wide" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h2>Nuevo Lead</h2>
-      <button onclick="closeNewLeadModal()">✕</button>
+      <button type="button" onclick="closeNewLeadModal()">✕</button>
+    </div>
+    <!-- TAB NAV -->
+    <div class="modal-tabs">
+      <button type="button" class="modal-tab-btn active" data-tab="1" onclick="switchModalTab(1)">👤 Titular</button>
+      <button type="button" class="modal-tab-btn" data-tab="2" onclick="switchModalTab(2)">🏠 Operación</button>
+      <button type="button" class="modal-tab-btn" data-tab="3" onclick="switchModalTab(3)">💼 Perfil</button>
+      <button type="button" class="modal-tab-btn" data-tab="4" onclick="switchModalTab(4)">📊 Scoring</button>
     </div>
     <form id="new-lead-form" onsubmit="submitNewLead(event)">
       <div class="modal-form-body">
 
-        <!-- CONTACTO -->
-        <div>
-          <div class="form-section-title">Contacto</div>
+        <!-- ═══ TAB 1: TITULAR ═══════════════════════════════════════════ -->
+        <div class="modal-tab-content active" id="modal-tab-1">
+          <div class="form-section-title">Titular principal</div>
           <div class="form-grid">
-            <div class="form-field">
-              <label>Nombre *</label>
-              <input type="text" name="nombre" required placeholder="Ej: Ana">
-            </div>
-            <div class="form-field">
-              <label>Apellidos *</label>
-              <input type="text" name="apellidos" required placeholder="Ej: García Martínez">
-            </div>
-            <div class="form-field">
-              <label>DNI / NIE</label>
-              <input type="text" name="dni" placeholder="12345678A">
-            </div>
-            <div class="form-field">
-              <label>Fecha de nacimiento</label>
-              <input type="date" name="fecha_nacimiento">
-            </div>
-            <div class="form-field">
-              <label>Teléfono móvil *</label>
-              <input type="text" name="telefono" required placeholder="612 345 678">
-            </div>
-            <div class="form-field">
-              <label>Teléfono fijo</label>
-              <input type="text" name="telefono_fijo" placeholder="977 000 000">
-            </div>
-            <div class="form-field">
-              <label>Email</label>
-              <input type="email" name="email" placeholder="ana@ejemplo.com">
-            </div>
-            <div class="form-field">
-              <label>Origen</label>
+            <div class="form-field"><label>Nombre *</label><input type="text" name="nombre" required placeholder="Ana"></div>
+            <div class="form-field"><label>Apellidos *</label><input type="text" name="apellidos" required placeholder="García Martínez"></div>
+            <div class="form-field"><label>DNI / NIE</label><input type="text" name="dni" placeholder="12345678A"></div>
+            <div class="form-field"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento"></div>
+            <div class="form-field"><label>Teléfono móvil *</label><input type="text" name="telefono" required placeholder="612 345 678"></div>
+            <div class="form-field"><label>Teléfono fijo</label><input type="text" name="telefono_fijo" placeholder="977 000 000"></div>
+            <div class="form-field"><label>Email</label><input type="email" name="email" placeholder="ana@ejemplo.com"></div>
+            <div class="form-field"><label>Origen</label>
               <select name="origen" onchange="updateScorePreview()">
                 <option value="Instagram">Instagram</option>
                 <option value="Formulario web">Formulario web</option>
-                <option value="Boca a boca">Boca a boca (+5 pts)</option>
-                <option value="Referido">Referido (+5 pts)</option>
+                <option value="Boca a boca">Boca a boca</option>
+                <option value="Referido">Referido</option>
                 <option value="Google Ads">Google Ads</option>
                 <option value="Prescriptor">Prescriptor</option>
                 <option value="Otro">Otro</option>
               </select>
             </div>
+            <div class="form-field"><label>Dirección</label><input type="text" name="direccion" placeholder="Calle Mayor, 12"></div>
+            <div class="form-field"><label>Ciudad</label><input type="text" name="ciudad" placeholder="Tarragona"></div>
+            <div class="form-field"><label>Provincia</label><input type="text" name="provincia" placeholder="Tarragona"></div>
+            <div class="form-field"><label>Código postal</label><input type="text" name="cp" placeholder="43001"></div>
           </div>
+
+          <!-- LOPD titular -->
           <div class="form-grid" style="margin-top:8px;">
-            <div class="form-field">
-              <label>Dirección</label>
-              <input type="text" name="direccion" placeholder="Calle Mayor, 12">
+            <div class="form-field"><label>LOPD titular</label>
+              <select name="lopd_estado">
+                <option value="pendiente">⏳ Pendiente</option>
+                <option value="enviada">📤 Enviada</option>
+                <option value="firmada">✅ Firmada</option>
+              </select>
             </div>
-            <div class="form-field">
-              <label>Ciudad</label>
-              <input type="text" name="ciudad" placeholder="Tarragona">
+          </div>
+
+          <!-- COTITULAR TOGGLE -->
+          <div class="cotitular-toggle" onclick="document.getElementById('tiene_cotitular').checked=!document.getElementById('tiene_cotitular').checked;toggleCotitular()">
+            <input type="checkbox" id="tiene_cotitular" name="tiene_cotitular" value="si" onclick="event.stopPropagation();toggleCotitular()">
+            <label for="tiene_cotitular" style="cursor:pointer;font-weight:600;">👫 ¿Hay cotitular?</label>
+            <span style="font-size:11px;color:var(--text-dim);margin-left:8px;">Cada titular firma su propia LOPD</span>
+          </div>
+
+          <div id="cotitular-section" style="display:none;">
+            <div class="form-section-title" style="margin-top:12px;">Cotitular</div>
+            <div class="form-grid">
+              <div class="form-field"><label>Nombre cotitular *</label><input type="text" name="cotitular_nombre" placeholder="Pedro"></div>
+              <div class="form-field"><label>Apellidos cotitular *</label><input type="text" name="cotitular_apellidos" placeholder="López García"></div>
+              <div class="form-field"><label>DNI / NIE cotitular</label><input type="text" name="cotitular_dni" placeholder="87654321B"></div>
+              <div class="form-field"><label>Fecha nacimiento cotitular</label><input type="date" name="cotitular_fecha_nacimiento"></div>
+              <div class="form-field"><label>Teléfono cotitular</label><input type="text" name="cotitular_telefono" placeholder="698 765 432"></div>
+              <div class="form-field"><label>Email cotitular</label><input type="email" name="cotitular_email" placeholder="pedro@ejemplo.com"></div>
             </div>
-            <div class="form-field">
-              <label>Provincia</label>
-              <input type="text" name="provincia" placeholder="Tarragona">
-            </div>
-            <div class="form-field">
-              <label>Código postal</label>
-              <input type="text" name="cp" placeholder="43001">
+            <div class="form-grid" style="margin-top:8px;">
+              <div class="form-field"><label>LOPD cotitular</label>
+                <select name="lopd_cotitular_estado">
+                  <option value="pendiente">⏳ Pendiente</option>
+                  <option value="enviada">📤 Enviada</option>
+                  <option value="firmada">✅ Firmada</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- OPERACIÓN -->
-        <div>
+        <!-- ═══ TAB 2: OPERACIÓN ══════════════════════════════════════════ -->
+        <div class="modal-tab-content" id="modal-tab-2">
           <div class="form-section-title">Operación</div>
           <div class="form-grid">
-            <div class="form-field">
-              <label>Tipo de operación</label>
+            <div class="form-field"><label>Tipo de operación</label>
               <select name="tipo_hipoteca">
                 <option value="CV 2ª mano">CV 2ª mano</option>
                 <option value="CV Obra nueva">CV Obra nueva</option>
                 <option value="Autopromoción">Autopromoción</option>
-                <option value="Hipoteca 100%">Hipoteca 100% (sin entrada)</option>
+                <option value="Hipoteca 100%">Hipoteca 100%</option>
                 <option value="Funcionarios">Funcionarios</option>
                 <option value="No Residentes">No Residentes</option>
                 <option value="Segunda Vivienda">Segunda Vivienda</option>
@@ -232,37 +241,20 @@
                 <option value="Otros">Otros</option>
               </select>
             </div>
-            <div class="form-field">
-              <label>Zona</label>
-              <input type="text" name="zona" placeholder="Ej: Tarragona">
-            </div>
-            <div class="form-field">
-              <label>Precio vivienda (€)</label>
-              <input type="number" name="precio_vivienda" placeholder="220000" min="0" oninput="updateScorePreview()">
-            </div>
-            <div class="form-field">
-              <label>Importe solicitado (€)</label>
-              <input type="number" name="importe_solicitado" placeholder="180000" min="0" oninput="updateScorePreview()">
-            </div>
-            <div class="form-field">
-              <label>Honorarios estimados (€)</label>
-              <input type="number" name="honorarios" placeholder="3500" min="0">
-            </div>
-            <div class="form-field">
-              <label>% Renuncia</label>
-              <input type="number" name="porcentaje_renuncia" placeholder="70" min="0" max="100">
-            </div>
-            <div class="form-field">
-              <label>Urgencia</label>
+            <div class="form-field"><label>Zona</label><input type="text" name="zona" placeholder="Ej: Tarragona"></div>
+            <div class="form-field"><label>Precio vivienda (€)</label><input type="number" name="precio_vivienda" placeholder="220000" min="0" oninput="updateScorePreview()"></div>
+            <div class="form-field"><label>Importe solicitado (€)</label><input type="number" name="importe_solicitado" placeholder="180000" min="0" oninput="updateScorePreview()"></div>
+            <div class="form-field"><label>Honorarios estimados (€)</label><input type="number" name="honorarios" placeholder="3500" min="0"></div>
+            <div class="form-field"><label>% Renuncia</label><input type="number" name="porcentaje_renuncia" placeholder="70" min="0" max="100"></div>
+            <div class="form-field"><label>Urgencia</label>
               <select name="urgencia" onchange="updateScorePreview()">
-                <option value="Inmediata">Inmediata (+15 pts)</option>
-                <option value="1-3 meses">1-3 meses (0 pts)</option>
-                <option value="3-6 meses" selected>3-6 meses (−5 pts)</option>
-                <option value="Más de 6 meses">Más de 6 meses (−5 pts)</option>
+                <option value="Inmediata">Inmediata</option>
+                <option value="1-3 meses">1-3 meses</option>
+                <option value="3-6 meses" selected>3-6 meses</option>
+                <option value="Más de 6 meses">Más de 6 meses</option>
               </select>
             </div>
-            <div class="form-field">
-              <label>Clasificación</label>
+            <div class="form-field"><label>Clasificación</label>
               <select name="clasificacion">
                 <option value="">— Auto —</option>
                 <option value="A">A — Premium</option>
@@ -272,55 +264,39 @@
               </select>
             </div>
           </div>
+          <div class="form-grid full" style="margin-top:8px;">
+            <div class="form-field"><label>Notas iniciales</label><textarea name="nota_inicial" placeholder="Contexto del lead, observaciones..."></textarea></div>
+          </div>
         </div>
 
-        <!-- PERFIL -->
-        <div>
-          <div class="form-section-title">Perfil financiero</div>
+        <!-- ═══ TAB 3: PERFIL ════════════════════════════════════════════ -->
+        <div class="modal-tab-content" id="modal-tab-3">
+          <div class="form-section-title">Situación laboral</div>
           <div class="form-grid">
-            <div class="form-field">
-              <label>Tipo de contrato</label>
+            <div class="form-field"><label>Tipo de contrato</label>
               <select name="tipo_contrato" onchange="updateScorePreview()">
-                <option value="Indefinido">Indefinido</option>
+                <option value="Indefinido">Contrato fijo indefinido</option>
+                <option value="Fijo discontinuo">Contrato fijo discontinuo</option>
                 <option value="Funcionario">Funcionario/a</option>
-                <option value="Autónomo">Autónomo/a</option>
-                <option value="Temporal">Temporal</option>
-                <option value="Paro">En paro / sin contrato ⚠️</option>
-                <option value="Otro">Otro</option>
+                <option value="Interino">Funcionario/a interino/a</option>
+                <option value="Autónomo">Autónomo/a consolidado (&gt;2 años)</option>
+                <option value="Autónomo nuevo">Autónomo/a reciente (&lt;2 años)</option>
+                <option value="Temporal">Contrato temporal</option>
+                <option value="Paro">En paro ⚠️</option>
               </select>
             </div>
-            <div class="form-field">
-              <label>Ingresos netos/mes (€)</label>
-              <input type="number" name="ingresos" placeholder="2500" min="0" oninput="updateScorePreview()">
-            </div>
-            <div class="form-field">
-              <label>Asignar a</label>
-              <select name="asignado_a">
-                <option value="">Sin asignar</option>
-                <option value="Mariano">Mariano</option>
-                <option value="Silvia">Silvia</option>
-                <option value="Carlos">Carlos</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label>Próxima acción</label>
-              <input type="text" name="proxima_accion" placeholder="Ej: Llamada de cualificación">
-            </div>
+            <div class="form-field"><label>Ingresos netos/mes (€)</label><input type="number" name="ingresos" placeholder="2500" min="0" oninput="updateScorePreview()"></div>
+            <div class="form-field"><label>Profesión</label><input type="text" name="profesion" placeholder="Médico de familia"></div>
+            <div class="form-field"><label>Nombre empresa</label><input type="text" name="nombre_empresa" placeholder="Empresa SA"></div>
+            <div class="form-field"><label>Actividad empresa</label><input type="text" name="actividad_empresa" placeholder="Construcción"></div>
+            <div class="form-field"><label>Antigüedad en empresa</label><input type="date" name="antiguedad_empresa_fecha"></div>
+            <div class="form-field"><label>Años cotizados</label><input type="number" name="años_cotizados" placeholder="8" min="0"></div>
+            <div class="form-field"><label>Bancos con los que opera</label><input type="text" name="bancos_opera" placeholder="CaixaBank, Sabadell"></div>
           </div>
-          <div class="form-grid full" style="margin-top:10px;">
-            <div class="form-field">
-              <label>Notas iniciales</label>
-              <textarea name="nota_inicial" placeholder="Contexto del lead, observaciones importantes..."></textarea>
-            </div>
-          </div>
-        </div>
 
-        <!-- INFORMACIÓN COMPLEMENTARIA -->
-        <div>
-          <div class="form-section-title">Información complementaria</div>
+          <div class="form-section-title" style="margin-top:16px;">Situación personal y gastos</div>
           <div class="form-grid">
-            <div class="form-field">
-              <label>Estado civil</label>
+            <div class="form-field"><label>Estado civil</label>
               <select name="estado_civil">
                 <option value="">— No informado —</option>
                 <option value="Soltero/a">Soltero/a</option>
@@ -330,12 +306,8 @@
                 <option value="Pareja de hecho">Pareja de hecho</option>
               </select>
             </div>
-            <div class="form-field">
-              <label>Nº de hijos</label>
-              <input type="number" name="n_hijos" placeholder="0" min="0" max="20">
-            </div>
-            <div class="form-field">
-              <label>Vivienda actual</label>
+            <div class="form-field"><label>Nº de hijos</label><input type="number" name="n_hijos" placeholder="0" min="0" max="20"></div>
+            <div class="form-field"><label>Vivienda actual</label>
               <select name="vivienda_actual">
                 <option value="">— No informado —</option>
                 <option value="Alquiler">Alquiler</option>
@@ -344,72 +316,35 @@
                 <option value="Familiar">En casa familiar</option>
               </select>
             </div>
-            <div class="form-field">
-              <label>Otros ingresos/mes (€)</label>
-              <input type="number" name="otros_ingresos" placeholder="0" min="0">
-            </div>
-            <div class="form-field">
-              <label>Rendimiento neto IRPF (€/año)</label>
-              <input type="number" name="irpf_neto" placeholder="24000" min="0">
-            </div>
-            <div class="form-field">
-              <label>Pago préstamos/mes (€)</label>
-              <input type="number" name="pago_prestamo_mes" placeholder="0" min="0" oninput="updateScorePreview()">
-            </div>
-            <div class="form-field">
-              <label>Pago alquiler/mes (€)</label>
-              <input type="number" name="pago_alquiler_mes" placeholder="0" min="0">
-            </div>
-            <div class="form-field">
-              <label>Reducción de impuestos</label>
+            <div class="form-field"><label>Otros ingresos/mes (€)</label><input type="number" name="otros_ingresos" placeholder="0" min="0"></div>
+            <div class="form-field"><label>IRPF neto (€/año)</label><input type="number" name="irpf_neto" placeholder="24000" min="0"></div>
+            <div class="form-field"><label>Pago préstamos/mes (€)</label><input type="number" name="pago_prestamo_mes" placeholder="0" min="0" oninput="updateScorePreview()"></div>
+            <div class="form-field"><label>Pago alquiler/mes (€)</label><input type="number" name="pago_alquiler_mes" placeholder="0" min="0"></div>
+            <div class="form-field"><label>Reducción de impuestos</label>
               <select name="reduccion_impuestos">
                 <option value="">— No aplica —</option>
-                <option value="Menor 35 años y renta &lt;30.000€">Menor 35 años y renta &lt;30.000€</option>
+                <option value="Menor 35 años renta &lt;30k">Menor 35 años y renta &lt;30.000€</option>
                 <option value="Familia numerosa">Familia numerosa</option>
                 <option value="Discapacidad">Discapacidad reconocida</option>
               </select>
             </div>
           </div>
+
           <div class="form-grid" style="margin-top:8px;">
-            <div class="form-field">
-              <label>Profesión</label>
-              <input type="text" name="profesion" placeholder="Ej: Médico de familia">
-            </div>
-            <div class="form-field">
-              <label>Categoría profesional</label>
-              <input type="text" name="categoria_profesional" placeholder="Ej: Especialista">
-            </div>
-            <div class="form-field">
-              <label>Nombre empresa</label>
-              <input type="text" name="nombre_empresa" placeholder="Ej: Empresa SA">
-            </div>
-            <div class="form-field">
-              <label>Actividad empresa</label>
-              <input type="text" name="actividad_empresa" placeholder="Ej: Construcción">
-            </div>
-            <div class="form-field">
-              <label>Antigüedad en empresa</label>
-              <input type="date" name="antiguedad_empresa_fecha">
-            </div>
-            <div class="form-field">
-              <label>Años cotizados</label>
-              <input type="number" name="años_cotizados" placeholder="8" min="0">
-            </div>
-            <div class="form-field">
-              <label>Bancos con los que opera</label>
-              <input type="text" name="bancos_opera" placeholder="Ej: CaixaBank, Sabadell">
-            </div>
-            <div class="form-field">
-              <label>Estado LOPD</label>
-              <select name="lopd_estado">
-                <option value="pendiente">Pendiente</option>
-                <option value="enviada">Enviada al cliente</option>
-                <option value="firmada">Firmada ✓</option>
+            <div class="form-field"><label>Asignar a</label>
+              <select name="asignado_a">
+                <option value="">Sin asignar</option>
+                <option value="Mariano">Mariano</option>
+                <option value="Silvia">Silvia</option>
+                <option value="Carlos">Carlos</option>
               </select>
             </div>
+            <div class="form-field"><label>Próxima acción</label><input type="text" name="proxima_accion" placeholder="Llamada de cualificación"></div>
           </div>
         </div>
 
+        <!-- ═══ TAB 4: SCORING ═══════════════════════════════════════════ -->
+        <div class="modal-tab-content" id="modal-tab-4">
         <!-- SCORING WF3 -->
         <div>
           <div class="form-section-title">Scoring WF3</div>
@@ -1125,10 +1060,29 @@ async function addNote(leadId) {
 function openNewLeadModal() {
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('new-lead-form').reset();
+  switchModalTab(1);
+  document.getElementById('cotitular-section').style.display = 'none';
+  document.getElementById('tiene_cotitular').checked = false;
+  document.getElementById('score-preview').style.display = 'none';
 }
 
 function closeNewLeadModal() {
   document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+function switchModalTab(tab) {
+  document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.tab) === tab);
+  });
+  document.querySelectorAll('.modal-tab-content').forEach(div => {
+    div.classList.toggle('active', div.id === 'modal-tab-' + tab);
+  });
+}
+
+function toggleCotitular() {
+  const cb = document.getElementById('tiene_cotitular');
+  const sec = document.getElementById('cotitular-section');
+  sec.style.display = cb.checked ? 'block' : 'none';
 }
 
 function handleModalClick(e) {
