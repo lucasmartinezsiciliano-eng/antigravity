@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hipoteca para Funcionarios en Tarragona | Firmax Broker — BdE D219</title>
+  <meta name="description" content="Hipoteca para funcionarios y empleados públicos en Tarragona. Tu empleo estable es tu mejor aval. Negociamos condiciones adaptadas a tu perfil de funcionario. Reg. BdE D219." />
+  <link rel="canonical" href="https://brokerhipotecario.es/servicios/funcionarios.html" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Hipoteca para Funcionarios en Tarragona | BrokerHipotecario" />
+  <meta property="og:description" content="Hipotecas con condiciones exclusivas para funcionarios y empleados públicos en Tarragona. Hasta el 100% de financiación en muchos casos. Asesor independiente. Reg. BdE D219." />
+  <meta property="og:url" content="https://brokerhipotecario.es/servicios/funcionarios.html" />
+  <meta property="og:locale" content="es_ES" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": ["FinancialService", "Service"],
+    "name": "Hipoteca para Funcionarios — BrokerHipotecario",
+    "description": "Asesoramiento hipotecario especializado para funcionarios y empleados públicos en Tarragona. Condiciones preferenciales. Intermediario de crédito inscrito en Banco de España D219.",
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "Mediterrane Firmax, SL",
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "Registro BdE",
+        "value": "D219"
+      },
+      "url": "https://brokerhipotecario.es",
+      "email": "contacto@brokerhipotecario.es",
+      "areaServed": {"@type": "City", "name": "Tarragona"}
+    },
+    "url": "https://brokerhipotecario.es/servicios/funcionarios.html",
+    "areaServed": {"@type": "City", "name": "Tarragona"},
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://brokerhipotecario.es"},
+        {"@type": "ListItem", "position": 2, "name": "Servicios", "item": "https://brokerhipotecario.es/#servicios"},
+        {"@type": "ListItem", "position": 3, "name": "Hipoteca para Funcionarios", "item": "https://brokerhipotecario.es/servicios/funcionarios.html"}
+      ]
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="landing.css" />
+  <style>
+    /* Landing-specific styles */
+    .landing-hero {
+      padding-top: 144px; padding-bottom: 80px;
+      background: linear-gradient(160deg, var(--gray-50) 0%, var(--teal-bg) 100%);
+    }
+    .landing-hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.85rem; color: var(--gray-500); margin-bottom: 24px;
+    }
+    .breadcrumb a { color: var(--teal); }
+    .breadcrumb span { color: var(--gray-300); }
+
+    .persona-card {
+      background: var(--white); border-radius: 20px; overflow: hidden;
+      box-shadow: var(--shadow-lg); position: relative;
+    }
+    .persona-img {
+      width: 100%; height: 320px; background: linear-gradient(135deg, var(--teal-bg), var(--teal-light));
+      display: flex; align-items: center; justify-content: center; font-size: 6rem;
+      position: relative;
+    }
+    .persona-img-placeholder { opacity: 0.6; }
+    .persona-badge-img {
+      position: absolute; bottom: -16px; right: 20px;
+      background: var(--teal); color: white; border-radius: 100px;
+      padding: 8px 16px; font-size: 0.85rem; font-weight: 600;
+      border: 3px solid white;
+    }
+    .persona-info { padding: 28px 24px 24px; }
+    .persona-name { font-size: 1.1rem; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+    .persona-role { font-size: 0.9rem; color: var(--teal); font-weight: 600; margin-bottom: 10px; }
+    .persona-quote {
+      font-size: 0.95rem; color: var(--gray-500); line-height: 1.5;
+      border-left: 3px solid var(--teal); padding-left: 14px; font-style: italic;
+    }
+
+    .ventajas { background: var(--white); }
+    .ventajas-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px;
+    }
+    .ventaja-item {
+      background: var(--gray-50); border-radius: var(--radius); padding: 28px;
+      border: 1.5px solid var(--gray-100); transition: var(--transition);
+    }
+    .ventaja-item:hover { border-color: var(--teal); background: var(--teal-bg); }
+    .ventaja-icon { font-size: 2rem; margin-bottom: 12px; }
+    .ventaja-item h3 { color: var(--black); margin-bottom: 8px; font-size: 1rem; }
+    .ventaja-item p { font-size: 0.9rem; }
+
+    .requisitos { background: var(--gray-50); }
+    .req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 48px; align-items: start; }
+    .req-list { list-style: none; }
+    .req-list li {
+      display: flex; gap: 12px; padding: 14px 0;
+      border-bottom: 1px solid var(--gray-100); font-size: 0.95rem; color: var(--gray-800);
+    }
+    .req-list li:last-child { border: none; }
+    .req-check { color: var(--teal); font-weight: 700; flex-shrink: 0; }
+
+    .landing-form-card {
+      background: var(--white); border-radius: 20px; padding: 36px;
+      box-shadow: var(--shadow-lg); border: 1.5px solid var(--gray-100);
+      position: sticky; top: 96px;
+    }
+    .landing-form-card h3 { color: var(--black); margin-bottom: 6px; }
+    .landing-form-card > p { margin-bottom: 24px; }
+
+    .faq { background: var(--white); }
+    .faq-list { max-width: 720px; margin: 48px auto 0; }
+    .faq-item {
+      border-bottom: 1px solid var(--gray-100); padding: 20px 0;
+    }
+    .faq-q {
+      font-weight: 600; color: var(--black); cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .faq-a { color: var(--gray-500); font-size: 0.95rem; margin-top: 12px; line-height: 1.6; }
+
+    .otros-servicios { background: var(--gray-50); }
+    .otros-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+    .otro-card {
+      background: var(--white); border-radius: var(--radius); padding: 20px;
+      border: 1.5px solid var(--gray-100); text-align: center;
+      transition: var(--transition);
+    }
+    .otro-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+    .otro-card .icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .otro-card h4 { font-size: 0.9rem; color: var(--black); }
+
+    @media (max-width: 768px) {
+      .landing-hero-inner { grid-template-columns: 1fr; }
+      .ventajas-grid { grid-template-columns: 1fr; }
+      .req-grid { grid-template-columns: 1fr; }
+      .otros-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="container header-inner">
+      <a href="../index.html" class="logo">
+        <img src="../img/logo-transparent.png" alt="Broker Hipotecario Firmax" class="logo-img" />
+        <span class="logo-text">Broker<span>Hipotecario</span></span>
+      </a>
+      <nav>
+        <a href="../index.html#servicios">Servicios</a>
+        <a href="../index.html#porque">Por qué nosotros</a>
+        <a href="../index.html#proceso">Cómo funciona</a>
+        <a href="../index.html#filtro">Contacto</a>
+      </nav>
+      <div class="header-cta">
+        
+        <a href="#form" class="btn btn-primary">Solicitar estudio</a>
+      </div>
+      <div class="hamburger"><span></span><span></span><span></span></div>
+    </div>
+  </header>
+
+  <!-- HERO LANDING -->
+  <section class="landing-hero">
+    <div class="container landing-hero-inner">
+      <div>
+        <div class="breadcrumb">
+          <a href="../index.html">Inicio</a>
+          <span>›</span>
+          <a href="../index.html#servicios">Servicios</a>
+          <span>›</span>
+          <span>Funcionarios</span>
+        </div>
+        <span class="badge" style="margin-bottom:20px;display:inline-block;">Hipoteca Funcionarios</span>
+        <h1>Tu empleo estable<br>merece la<br><span style="color:var(--teal)">hipoteca que te corresponde</span></h1>
+        <p style="font-size:1.1rem;margin:20px 0 32px;max-width:440px;">
+          Como funcionario o empleado público tienes un perfil que los bancos adoran. Aprovechémoslo para negociar condiciones muy por encima de lo que el banco te ofrecería directamente.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="#form" class="btn btn-primary">Quiero mi estudio gratuito →</a>
+          
+        </div>
+      </div>
+
+      <!-- Persona card -->
+      <div class="persona-card">
+        <div class="persona-img"><img src="../img/persona-funcionarios.png" alt="Laura, maestra funcionaria con hipoteca en Tarragona — Firmax Broker" style="object-position: center top;" /><span class="persona-badge-img">✅ Hipoteca firmada</span>
+        </div>
+        <div class="persona-info">
+          <div class="persona-name">Laura, 34 años</div>
+          <div class="persona-role">Maestra de primaria · Tarragona</div>
+          <p class="persona-quote">
+            "Llevaba dos años pensando que no podría comprar porque no llegaba al 20% de entrada. Con su ayuda firmé en 3 meses."
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VENTAJAS -->
+  <section class="ventajas" id="ventajas">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="badge">Ventajas exclusivas</span>
+        <h2>Lo que consigues como funcionario</h2>
+        <p>Tu contrato fijo es tu mejor aval. Los bancos lo saben y tú debes aprovecharlo.</p>
+      </div>
+      <div class="ventajas-grid">
+        <div class="ventaja-item" data-reveal>
+          <div class="ventaja-icon">📉</div>
+          <h3>Tipo de interés más bajo</h3>
+          <p>Los bancos ofrecen condiciones preferenciales a perfiles funcionariales por su bajo riesgo de impago.</p>
+        </div>
+        <div class="ventaja-item" data-reveal>
+          <div class="ventaja-icon">💰</div>
+          <h3>Mayor porcentaje de financiación</h3>
+          <p>En muchos casos conseguimos financiación del 90% o incluso del 100% del valor del inmueble.</p>
+        </div>
+        <div class="ventaja-item" data-reveal>
+          <div class="ventaja-icon">📋</div>
+          <h3>Menos documentación</h3>
+          <p>Tu nómina pública simplifica el proceso. Menos papeles, menos esperas, más rapidez.</p>
+        </div>
+        <div class="ventaja-item" data-reveal>
+          <div class="ventaja-icon">🤝</div>
+          <h3>Negociación directa</h3>
+          <p>Presentamos tu perfil a 20+ bancos a la vez y elegimos la oferta más ventajosa para ti.</p>
+        </div>
+        <div class="ventaja-item" data-reveal>
+          <div class="ventaja-icon">⚡</div>
+          <h3>Respuesta en 48h</h3>
+          <p>Analizamos tu caso y te damos opciones reales en menos de dos días hábiles.</p>
+        </div>
+        <div class="ventaja-item" data-reveal>
+          <div class="ventaja-icon">🎯</div>
+          <h3>Honorarios transparentes</h3>
+          <p>Los honorarios se detallan antes de iniciar el proceso, por escrito y sin sorpresas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUISITOS + FORMULARIO -->
+  <section id="form" style="background:var(--off-white);padding:60px 0;">
+  <div class="container">
+    <div class="quiz-inner" style="max-width:700px;margin:0 auto;text-align:center;">
+      <span class="badge" style="margin-bottom:16px;display:inline-block;">Análisis gratuito</span>
+      <h2 style="margin-bottom:12px;">¿Puedo conseguir mi hipoteca?</h2>
+      <p style="margin-bottom:32px;color:var(--text-muted);">Responde 5 preguntas y te decimos exactamente dónde estás. Sin compromiso.</p>
+      <div class="quiz-card" id="quiz">
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:0%"></div></div>
+          <span class="quiz-progress-text">Paso 1 de 6</span>
+        </div>
+        <div class="quiz-step active">
+          <h3>¿Cuál es tu situación laboral?</h3>
+          <p>Es el dato más importante para los bancos.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="indefinido"><span class="quiz-opt-icon">💼</span><div class="quiz-opt-text">Contrato indefinido<small>Empleado por cuenta ajena</small></div></div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="funcionario"><span class="quiz-opt-icon">🏛️</span><div class="quiz-opt-text">Funcionario / Empleado público<small>Sector público estatal o autonómico</small></div></div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo"><span class="quiz-opt-icon">🧾</span><div class="quiz-opt-text">Autónomo<small>Por cuenta propia</small></div></div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="temporal"><span class="quiz-opt-icon">📋</span><div class="quiz-opt-text">Contrato temporal<small>Fijo discontinuo u obra y servicio</small></div></div>
+          </div>
+          <div class="quiz-nav"><span></span><button class="btn btn-primary quiz-next">Siguiente →</button></div>
+        </div>
+        <div class="quiz-step">
+          <h3>¿Cuánto tienes ahorrado respecto al precio de la vivienda?</h3>
+          <p>Los bancos suelen financiar hasta el 80%. El resto lo pones tú.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="ahorros" data-value="0-5"><span class="quiz-opt-icon">😅</span><div class="quiz-opt-text">Menos del 5%<small>Poco o sin ahorros</small></div></div>
+            <div class="quiz-opt" data-key="ahorros" data-value="5-10"><span class="quiz-opt-icon">💰</span><div class="quiz-opt-text">Entre 5% y 10%<small>Algo de colchón</small></div></div>
+            <div class="quiz-opt" data-key="ahorros" data-value="10-20"><span class="quiz-opt-icon">💵</span><div class="quiz-opt-text">Entre 10% y 20%<small>Buena base</small></div></div>
+            <div class="quiz-opt" data-key="ahorros" data-value="mas-20"><span class="quiz-opt-icon">🏦</span><div class="quiz-opt-text">Más del 20%<small>Perfil muy sólido</small></div></div>
+          </div>
+          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
+        </div>
+        <div class="quiz-step">
+          <h3>¿En qué punto estás con la vivienda?</h3>
+          <p>Nos ayuda a priorizar tu caso correctamente.</p>
+          <div class="quiz-options single">
+            <div class="quiz-opt" data-key="estado" data-value="reserva"><span class="quiz-opt-icon">✅</span><div class="quiz-opt-text">Ya tengo reserva firmada<small>Necesito la hipoteca sí o sí</small></div></div>
+            <div class="quiz-opt" data-key="estado" data-value="identificada"><span class="quiz-opt-icon">🔍</span><div class="quiz-opt-text">Tengo la vivienda identificada<small>Estoy a punto de decidirme</small></div></div>
+            <div class="quiz-opt" data-key="estado" data-value="mirando"><span class="quiz-opt-icon">👀</span><div class="quiz-opt-text">Estoy mirando opciones<small>Quiero saber mis posibilidades</small></div></div>
+          </div>
+          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
+        </div>
+        <div class="quiz-step">
+          <h3>¿Cuándo necesitas tener la hipoteca?</h3>
+          <p>Gestionamos según prioridad para que llegues a tiempo.</p>
+          <div class="quiz-options single">
+            <div class="quiz-opt" data-key="urgencia" data-value="menos-1"><span class="quiz-opt-icon">🔥</span><div class="quiz-opt-text">En menos de 1 mes<small>Urgente</small></div></div>
+            <div class="quiz-opt" data-key="urgencia" data-value="1-3"><span class="quiz-opt-icon">📅</span><div class="quiz-opt-text">En 1 a 3 meses<small>Tengo margen</small></div></div>
+            <div class="quiz-opt" data-key="urgencia" data-value="mas-3"><span class="quiz-opt-icon">🗓️</span><div class="quiz-opt-text">Más de 3 meses<small>Me informo de cara al futuro</small></div></div>
+          </div>
+          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
+        </div>
+        <div class="quiz-step">
+          <h3>Una última cosa...</h3>
+          <p>Selecciona todo lo que aplique a tu caso.</p>
+          <div class="quiz-options single">
+            <div class="quiz-opt" data-key="cotitular" data-value="si"><span class="quiz-opt-icon">👫</span><div class="quiz-opt-text">Voy con pareja o cotitular<small>Dos ingresos mejoran la operación</small></div></div>
+            <div class="quiz-opt" data-key="primera_vivienda" data-value="si"><span class="quiz-opt-icon">🗝️</span><div class="quiz-opt-text">Es mi primera vivienda<small>Accedo a condiciones especiales</small></div></div>
+            <div class="quiz-opt" data-key="impagos" data-value="no"><span class="quiz-opt-icon">✔️</span><div class="quiz-opt-text">No tengo impagos ni deudas pendientes<small>Historial crediticio limpio</small></div></div>
+          </div>
+          <p style="font-size:0.82rem;margin-top:8px;">Puedes seleccionar varias opciones o ninguna.</p>
+          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
+        </div>
+        <div class="quiz-step">
+          <h3>¿A quién le enviamos el análisis?</h3>
+          <p>Te contactamos personalmente en menos de 24h.</p>
+          <div class="quiz-contact-grid">
+            <div class="form-group"><label>Nombre</label><input type="text" name="q_nombre" placeholder="Tu nombre" required /></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" name="q_telefono" placeholder="6XX XXX XXX" required /></div>
+          </div>
+          <div class="form-group"><label>Email (opcional)</label><input type="email" name="q_email" placeholder="tu@email.com" /></div>
+          <p style="font-size:0.8rem;margin-bottom:16px;">🔒 Tus datos están protegidos. No compartimos tu información con terceros.</p>
+          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next quiz-submit">Ver mi análisis →</button></div>
+        </div>
+        <div class="quiz-step quiz-result-step">
+          <div class="quiz-result">
+            <div class="result-msg" data-result="A" style="display:none;">
+              <div class="quiz-result-icon">🚀</div>
+              <h3>Tu perfil es excelente</h3>
+              <p>Tienes todo lo que los bancos quieren ver. Es muy probable que consigamos condiciones muy por encima de la media para ti.</p>
+              <div class="result-highlight result-highlight--green"><p>✅ Te contactamos en menos de 48h con las opciones disponibles y adaptadas a tu perfil. Solo tienes que elegir.</p></div>
+            </div>
+            <div class="result-msg" data-result="B" style="display:none;">
+              <div class="quiz-result-icon">💪</div>
+              <h3>Buen perfil, buenas opciones</h3>
+              <p>Tu situación es sólida. Hay varias entidades que estarían encantadas de trabajar contigo — y nosotros sabemos cuáles ofrecen las mejores condiciones.</p>
+              <div class="result-highlight result-highlight--green"><p>✅ Un asesor te contactará en menos de 48h para presentarte las opciones concretas para tu caso.</p></div>
+            </div>
+            <div class="result-msg" data-result="C" style="display:none;">
+              <div class="quiz-result-icon">💡</div>
+              <h3>Hay margen para mejorar</h3>
+              <p>Tu perfil tiene potencial, pero hay algunos puntos que conviene analizar. Con la estrategia correcta, las cosas mejoran rápido.</p>
+              <div class="result-highlight result-highlight--yellow"><p>✅ Un asesor te contactará personalmente para explicarte qué pasos dar y conseguir la hipoteca en las mejores condiciones.</p></div>
+            </div>
+            <div class="result-msg" data-result="D" style="display:none;">
+              <div class="quiz-result-icon">🤝</div>
+              <h3>Tu caso necesita estrategia</h3>
+              <p>Hay cosas que trabajar, pero eso no significa que no haya opciones. Muchos de nuestros clientes llegaron en tu misma situación y hoy tienen su hipoteca firmada.</p>
+              <div class="result-highlight result-highlight--yellow"><p>✅ Te contactamos para explicarte exactamente qué caminos existen y cuál es el más rápido para ti.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- FAQ -->
+  <section class="faq">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="badge">Preguntas frecuentes</span>
+        <h2>Lo que más nos preguntan</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">¿Puedo conseguir una hipoteca al 100% siendo funcionario? <span>+</span></div>
+          <div class="faq-a">En muchos casos sí. Tu perfil laboral estable permite que algunos bancos financien el 100% del valor de compra, especialmente si es primera vivienda. Lo estudiamos caso por caso.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">¿Cuánto tiempo tarda el proceso? <span>+</span></div>
+          <div class="faq-a">Desde que nos contactas hasta que tienes una oferta real suelen pasar entre 3 y 7 días hábiles. La firma ante notario depende de cada banco, pero solemos completarlo en 4-8 semanas.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">¿Qué documentos necesito preparar? <span>+</span></div>
+          <div class="faq-a">En la primera consulta no necesitas nada. Si avanzamos, solicitaremos: últimas 3 nóminas, declaración de la renta, vida laboral y documentación del inmueble. Te guiamos en cada paso.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">¿Cuánto me cuesta vuestra gestión? <span>+</span></div>
+          <div class="faq-a">Antes de iniciar cualquier gestión te explicamos por escrito los honorarios aplicables y el modelo de remuneración, conforme al artículo 35 de la Ley 5/2019. Sin sorpresas ni letra pequeña.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OTROS SERVICIOS -->
+  <section class="otros-servicios">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <h2>Otros servicios</h2>
+        <p>Explora el resto de hipotecas que gestionamos.</p>
+      </div>
+      <div class="otros-grid">
+        <a href="hipoteca-100.html" class="otro-card">
+          <div class="icon">🏠</div>
+          <h4>Hipoteca 100%</h4>
+        </a>
+        <a href="hipoteca-fija.html" class="otro-card">
+          <div class="icon">📌</div>
+          <h4>Hipoteca Fija</h4>
+        </a>
+        <a href="segunda-vivienda.html" class="otro-card">
+          <div class="icon">🌊</div>
+          <h4>Segunda Vivienda</h4>
+        </a>
+        <a href="reunificacion.html" class="otro-card">
+          <div class="icon">🔄</div>
+          <h4>Reunificación</h4>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="cta-banner">
+    <div class="container">
+      <h2>¿Eres funcionario y quieres comprar casa?</h2>
+      <p>Tu perfil es uno de los más valorados por la banca. Aprovéchalo con nosotros.</p>
+      <div class="cta-actions">
+        
+        <a href="#form" class="btn btn-outline" style="border-color:white;color:white;">Solicitar estudio gratuito</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">
+            <img src="../img/logo-transparent.png" alt="Broker Hipotecario Firmax" class="logo-img" />
+            <span class="logo-text">Broker<span>Hipotecario</span></span>
+          </div>
+          <p>Tu asesor hipotecario independiente en Tarragona.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Servicios</h4>
+          <a href="hipoteca-fija.html">Hipoteca Fija</a>
+          <a href="hipoteca-variable.html">Hipoteca Variable</a>
+          <a href="hipoteca-100.html">Hipoteca 100%</a>
+          <a href="funcionarios.html">Funcionarios</a>
+          <a href="segunda-vivienda.html">Segunda Vivienda</a>
+          <a href="autopromotor.html">Autopromotor</a>
+          <a href="reunificacion.html">Reunificación</a>
+          <a href="no-residentes.html">No Residentes</a>
+        </div>
+        <div class="footer-col">
+          <h4>Zonas</h4>
+          <a href="../index.html">Broker en Tarragona</a><a href="../broker-hipotecario-reus.html">Broker en Reus</a>
+          <a href="../broker-hipotecario-salou.html">Broker en Salou</a>
+          <a href="../broker-hipotecario-cambrils.html">Broker en Cambrils</a>
+        </div>
+        <div class="footer-col">
+          <h4>Empresa</h4>
+          <a href="../index.html#porque">Por qué nosotros</a>
+          <a href="../index.html#proceso">Cómo funciona</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contacto</h4>
+                    <a href="mailto:contacto@brokerhipotecario.es">contacto@brokerhipotecario.es</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 BrokerHipotecario · Mediterrane Firmax, SL · Registro BdE: D219</span>
+        <div class="footer-links">
+          <a href="../privacidad.html">Privacidad</a>
+          <a href="../aviso-legal.html">Aviso legal</a>
+          <a href="../cookies.html">Cookies</a>
+          <a href="../informacion-precontractual.html">Inf. precontractual</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>
+    // FAQ toggle
+    document.querySelectorAll('.faq-q').forEach(q => {
+      q.addEventListener('click', () => {
+        const a = q.nextElementSibling;
+        const isOpen = a.style.display === 'block';
+        document.querySelectorAll('.faq-a').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.faq-q span').forEach(el => el.textContent = '+');
+        if (!isOpen) {
+          a.style.display = 'block';
+          q.querySelector('span').textContent = '−';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

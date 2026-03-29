@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 160" fill="#00B5D4">
+  <!-- Left "B / building" shape: parallelogram outer with two counter holes -->
+  <path fill-rule="evenodd" d="
+    M 0,148 L 86,148 L 86,5 L 0,26 Z
+    M 19,40 L 64,28 L 64,66 L 19,66 Z
+    M 19,84 L 64,84 L 64,120 L 19,120 Z
+  "/>
+  <!-- Right "H" shape -->
+  <polygon points="96,9 117,4 117,70 172,70 172,14 193,14 193,148 172,148 172,92 117,92 117,148 96,148"/>
+</svg>
