@@ -1,0 +1,24 @@
+name: Deploy Broker Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'broker-web/**'
+      - '.github/workflows/deploy-broker-web.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy broker-web to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: broker-web
+          branch: gh-pages
+          clean: true
