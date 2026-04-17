@@ -16,6 +16,10 @@ ai-perfume-influencer/node_modules/
 .DS_Store
 Thumbs.db
 
+# Archivos con credenciales (NUNCA commitear)
+ai-perfume-influencer/.env
+Firmax/twilio_recovery_code.txt
+
 # Cloudflare Worker — secretos locales (NUNCA commitear)
 cloudflare-worker/.dev.vars
 cloudflare-worker/.wrangler/
