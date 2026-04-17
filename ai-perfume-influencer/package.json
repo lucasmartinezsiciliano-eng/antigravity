@@ -1,0 +1,25 @@
+{
+  "name": "ai-perfume-influencer",
+  "version": "1.0.0",
+  "description": "AI Perfume Influencer — sistema de automatización de contenido, publicación y outreach",
+  "type": "module",
+  "main": "run.js",
+  "scripts": {
+    "start": "node run.js",
+    "concept": "node run.js concept",
+    "prompts": "node run.js prompts",
+    "captions": "node run.js captions",
+    "diversify": "node run.js diversify",
+    "notion": "node run.js notion sync"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@notionhq/client": "^2.2.15",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "commander": "^12.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

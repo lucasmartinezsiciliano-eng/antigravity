@@ -1,0 +1,545 @@
+[
+  {
+    "id": "001",
+    "perfume": "Hawas",
+    "brand": "Rasasi",
+    "mode": "A",
+    "notes": [
+      "bergamot",
+      "aquatic",
+      "sea salt",
+      "driftwood",
+      "ambergris",
+      "musk"
+    ],
+    "price": 45,
+    "title": "ocean apartment",
+    "concept_summary": "Ella hace sushi en su apartamento de Mónaco mientras las olas del Mediterráneo inundan el lugar. Las notas acuáticas de Hawas se materializan como mar literal que entra por las ventanas. El frasco flota perfecto mientras ella corta pescado con total normalidad.",
+    "element_invasor": "Las olas del Mediterráneo que inundan el apartamento de lujo porque las notas acuáticas y sal marina del Hawas se materializaron como agua de mar real",
+    "localizacion": "Apartamento de lujo en Monte Carlo, Mónaco, con vista al puerto y yates",
+    "accion_protagonista": "Corta sashimi con un cuchillo japonés sobre una tabla de bambú",
+    "punch_line_wtf": "Un pulpo gigante sale del frasco de Hawas y se enrolla alrededor del candelabro de cristal del techo",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Ella corta sashimi en la isla de mármol de su cocina, agua de mar hasta las rodillas, olas entrando por los ventanales con vista a Monte Carlo, frasco de Hawas flotando perfectamente erguido junto a ella"
+      },
+      {
+        "number": 2,
+        "description": "Interior del frasco de Hawas lleno de agua salada con algas marinas flotando dentro, se ve el líquido del perfume mezclado con agua de mar"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo una pieza de atún crudo goteando, mirada directa a cámara, expresión completamente indiferente al agua que le llega al pecho"
+      },
+      {
+        "number": 4,
+        "description": "Close-up extremo de sus dedos sosteniendo el sashimi con sal marina cristalizada encima, gotas de agua salada cayendo sobre el mármol"
+      },
+      {
+        "number": 5,
+        "description": "El frasco de Hawas flotando perfecto sin una gota encima, reflejo dorado en el agua, rodeado de platos de porcelana flotando destruidos"
+      },
+      {
+        "number": 6,
+        "description": "Por la ventana se ven turistas en yates apuntando con sus teléfonos al apartamento inundado, un delfín asoma la cabeza por la ventana"
+      },
+      {
+        "number": 7,
+        "description": "Un pulpo gigante con tentáculos de 3 metros sale del interior del frasco de Hawas y se enrolla alrededor del candelabro de cristal de Baccarat colgando del techo"
+      }
+    ],
+    "caption_seed": "making dinner.",
+    "caption_alternatives": [
+      "sushi time.",
+      "cooking tonight."
+    ],
+    "difficulty": "hard",
+    "difficulty_reason": "Simular agua realista inundando un apartamento de lujo y un pulpo gigante saliendo del frasco requiere CGI complejo",
+    "viral_mechanic": "El contraste absurdo entre hacer sushi con total normalidad en un apartamento inundado + el pulpo imposible del frame 7 genera comentarios tipo '¿QUÉ ACABA DE PASAR?' y shares por lo surrealista",
+    "scent_connection": "La escena huele exactamente a Hawas porque ES Hawas: sal marina, notas acuáticas y ambergris materializados como océano literal invadiendo el lujo",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-29T16:10:52.267Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  },
+  {
+    "id": "002",
+    "perfume": "Torino 21",
+    "brand": "Xerjoff",
+    "mode": "A",
+    "notes": [
+      "mint",
+      "citrus",
+      "mojito",
+      "green",
+      "bergamot",
+      "white musk"
+    ],
+    "price": 320,
+    "title": "mojito catastrophe",
+    "concept_summary": "Ella está haciendo mojitos gigantes en las piscinas termales de Pamukkale, Turquía. Las terrazas de calcio blanco están llenas de hojas de menta flotante y bergamota fresca. Es el caos refrescante más caro del mundo.",
+    "element_invasor": "Miles de hojas de menta fresca y bergamotas enteras que flotan y se derraman por las piscinas termales blancas, convirtiendo las terrazas naturales en mojitos gigantes",
+    "localizacion": "Pamukkale, Turquía - las famosas piscinas termales blancas en terrazas de calcio",
+    "accion_protagonista": "Aplasta bergamotas con un mortero de mármol mientras está de pie en una piscina termal",
+    "punch_line_wtf": "Un elefante bebé apareció de la nada y está bebiendo directamente de una de las piscinas-mojito, con la trompa llena de hojas de menta",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Hook: ella de pie en una piscina termal blanca aplastando bergamotas con un mortero de mármol, las terrazas de calcio desbordándose con agua verde menta, hojas flotando por todas partes, frasco de Torino 21 posado elegante en el borde de mármol natural"
+      },
+      {
+        "number": 2,
+        "description": "Interior del frasco desde abajo: cristal empañado por el vapor de las termas, gotas de agua con menta flotando dentro del líquido del perfume, bergamota microscópica suspendida"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo una bergamota gigante en una mano y hojas de menta en la otra, mirando directa a cámara con total indiferencia, agua termal hasta las rodillas, vapor subiendo"
+      },
+      {
+        "number": 4,
+        "description": "Close-up extremo de bergamota aplastada contra el cristal del frasco, aceites cítricos goteando por el vidrio perfecto, hojas de menta pegadas al tapón dorado"
+      },
+      {
+        "number": 5,
+        "description": "Frasco Torino 21 impecable en primer plano sobre el mármol blanco natural, rodeado de caos verde: agua desbordada, hojas, cáscaras de bergamota, vapor aromático"
+      },
+      {
+        "number": 6,
+        "description": "Turistas japoneses tomando fotos del desastre desde arriba, algunos metiendo los pies en las piscinas-mojito, ella apenas visible como una silueta entre el vapor"
+      },
+      {
+        "number": 7,
+        "description": "Un elefante bebé surgió de detrás de las terrazas de calcio y está bebiendo de una de las piscinas termales verdes, trompa sumergida, hojas de menta colgando de sus orejas"
+      }
+    ],
+    "caption_seed": "making cocktails.",
+    "caption_alternatives": [
+      "too thirsty.",
+      "mint emergency."
+    ],
+    "difficulty": "hard",
+    "difficulty_reason": "Requiere generar correctamente las terrazas de calcio blanco de Pamukkale + elementos flotantes orgánicos + vapor realista + elefante bebé creíble",
+    "viral_mechanic": "El contraste absurdo entre patrimonio mundial de la UNESCO convertido en cóctel gigante + elefante inesperado = máximo shareable content. La gente comentará sobre la locura geográfica.",
+    "scent_connection": "Huele exactamente como un mojito fresco en termas naturales: menta mojada, bergamota exprimida y vapor mineral con musgo blanco.",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-30T20:48:54.194Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  },
+  {
+    "id": "003",
+    "perfume": "Torino 21",
+    "brand": "Xerjoff",
+    "mode": "B",
+    "notes": [
+      "mint",
+      "citrus",
+      "mojito",
+      "green",
+      "bergamot",
+      "white musk"
+    ],
+    "price": 320,
+    "title": "mojito factory",
+    "concept_summary": "Ella está en una plantación de menta en Marruecos preparando mojitos industrialmente. Las notas verdes y mentoladas del Torino 21 se materializan como toneladas de menta fresca que invaden una fábrica de hielo abandonada. El frasco perfecto contrasta con el caos de hielo derretido y hojas por todas partes.",
+    "element_invasor": "Toneladas de menta fresca que brota del suelo y paredes, combinada con bloques de hielo gigantes que se derriten por todas partes. Las notas mint + citrus + green del perfume se vuelven literalmente una avalancha de ingredientes de mojito.",
+    "localizacion": "Plantación de menta en las montañas del Atlas, Marruecos, con una fábrica de hielo abandonada invadida por la vegetación",
+    "accion_protagonista": "Está machacando menta con un mortero gigante de madera bereber, preparando mojitos en bidones industriales",
+    "punch_line_wtf": "Un camello está bebiendo directamente de uno de los bidones de mojito mientras un bereber anciano le pone una pajita en la boca",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Ella machacando menta con mortero gigante en una fábrica abandonada llena de plantas que crecen por las paredes, bloques de hielo derritiéndose por el suelo, bidones metálicos llenos de mojito, frasco Torino 21 perfecto sobre una mesa de metal oxidado"
+      },
+      {
+        "number": 2,
+        "description": "Interior de uno de los bidones: mojito verde brillante con hojas de menta flotando, hielo derritiéndose, gotas de condensación, el líquido burbujeando"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo un manojo enorme de menta fresca recién arrancada, mirada directa a cámara, completamente indiferente al caos de agua y plantas a su alrededor"
+      },
+      {
+        "number": 4,
+        "description": "Close-up de hojas de menta aplastadas contra el cristal del frasco Torino 21, gotas de agua de hielo derretido deslizándose por la superficie perfecta"
+      },
+      {
+        "number": 5,
+        "description": "El frasco Torino 21 impecable en primer plano sobre la mesa metálica, rodeado de charcos verdes, hojas flotando, hielo derretido, pero el frasco sin una sola mancha"
+      },
+      {
+        "number": 6,
+        "description": "Tres bereberes ancianos observando la escena desde la entrada de la fábrica, señalando los bidones de mojito, uno se lleva la mano a la cabeza como no entendiendo nada"
+      },
+      {
+        "number": 7,
+        "description": "Un camello marrón está bebiendo directamente de uno de los bidones de mojito mientras un bereber anciano con chilaba blanca le sostiene una pajita de bambú en la boca, el camello tiene los ojos entrecerrados de placer"
+      }
+    ],
+    "caption_seed": "making drinks.",
+    "caption_alternatives": [
+      "mint time.",
+      "fresh batch."
+    ],
+    "difficulty": "hard",
+    "difficulty_reason": "Requiere generar una fábrica abandonada específica, vegetación realista creciendo en interior industrial, líquidos y texturas de hielo derretido, plus animales interactuando de forma específica",
+    "viral_mechanic": "El contraste absurdo entre preparar mojitos industrialmente en Marruecos + el camello bebiendo con pajita es inesperado y meme-able. La gente comentará sobre el desperdicio de un perfume de 320€ para hacer bebidas.",
+    "scent_connection": "La escena literalmente huele a menta fresca, bergamota y notas verdes porque son los ingredientes físicos que están por todas partes",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-30T20:50:51.177Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  },
+  {
+    "id": "004",
+    "perfume": "Torino 21",
+    "brand": "Xerjoff",
+    "mode": "C",
+    "notes": [
+      "mint",
+      "citrus",
+      "mojito",
+      "green",
+      "bergamot",
+      "white musk"
+    ],
+    "price": 320,
+    "title": "mint emergency",
+    "concept_summary": "Torino 21's mint and citrus notes have materialized as an avalanche of fresh mojito ingredients that invaded a luxury penthouse in Miami. She's casually making mojitos while her entire apartment is buried under mint leaves, ice cubes and lime wedges. Funciona igual que kczco porque el objeto de lujo (penthouse) está completamente destruido por el elemento que debería ser su esencia más pura.",
+    "element_invasor": "Avalancha de hojas de menta fresca, cubitos de hielo, rodajas de lima y bergamota que han brotado físicamente de las notas del perfume y han inundado completamente el espacio",
+    "localizacion": "Penthouse de lujo en Miami Beach, vista panorámica del océano desde el piso 40",
+    "accion_protagonista": "Está machacando menta fresca en un mortero de mármol como si preparara mojitos",
+    "punch_line_wtf": "Un manatí flotando en la piscina infinity del balcón (ahora convertida en mojito gigante) bebiendo directamente del agua verde menta con una pajita de bambú",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Ella de pie en la cocina del penthouse machacando menta en un mortero de mármol blanco, frasco de Torino 21 sobre la isla de cocina, hojas de menta hasta las rodillas cubriendo todo el suelo de mármol, cubitos de hielo derritiéndose por las escaleras, ventanales de Miami Beach al fondo"
+      },
+      {
+        "number": 2,
+        "description": "Interior del frasco de Torino 21 visto desde arriba: líquido verde cristalino con hojas de menta microscópicas flotando dentro, gotas de condensación en el cristal"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo un puñado de hojas de menta fresca gotеando, mirando directamente a la cámara con expresión completamente neutral, menta adherida a su camiseta blanca"
+      },
+      {
+        "number": 4,
+        "description": "Close-up extremo de hojas de menta húmedas presionadas contra el cristal perfecto del frasco, gotitas de agua deslizándose por la superficie, textura de las hojas en máximo detalle"
+      },
+      {
+        "number": 5,
+        "description": "Frasco de Torino 21 PERFECTO en primer plano sobre la encimera de mármol, sin una mancha, mientras el fondo muestra el caos total: menta, hielo y lima por todas partes"
+      },
+      {
+        "number": 6,
+        "description": "Vista aérea desde el ventanal: vecinos en los balcones de otros rascacielos filmando con sus teléfonos la piscina infinity convertida en mojito gigante, helicoptero de noticias sobrevolando"
+      },
+      {
+        "number": 7,
+        "description": "Manatí flotando plácidamente en la piscina infinity del balcón (ahora agua verde menta) bebiendo con una pajita de bambú XXL, aletas apoyadas en el borde como si fuera un bar, Miami skyline de fondo"
+      }
+    ],
+    "caption_seed": "making drinks.",
+    "caption_alternatives": [
+      "mint emergency.",
+      "too fresh here."
+    ],
+    "difficulty": "hard",
+    "difficulty_reason": "Requiere renderizar líquidos (hielo derritiéndose), texturas orgánicas (hojas de menta mojadas) y un animal acuático en una piscina infinity realista en un penthouse de Miami",
+    "viral_mechanic": "La progresión de mojito casero a mojito OCÉANO con manatí es completamente impredecible. La gente comentará sobre el manatí y taggeará amigos preguntando 'pero por qué hay un manatí'. El contraste entre lujo de Miami y caos tropical es máximo.",
+    "scent_connection": "La escena literalmente huele a mojito fresco y brisa marina de Miami Beach - exactamente las notas de Torino 21",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-30T20:51:48.155Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  },
+  {
+    "id": "005",
+    "perfume": "Torino 21",
+    "brand": "Xerjoff",
+    "mode": "A",
+    "notes": [
+      "mint",
+      "citrus",
+      "mojito",
+      "green",
+      "bergamot",
+      "white musk"
+    ],
+    "price": 320,
+    "title": "mojito emergency",
+    "concept_summary": "Ella está haciendo mojitos en la azotea del Burj Al Arab mientras un huracán de hojas de menta fresca destroza el interior del hotel. El frasco perfecto en medio del caos, ella completamente indiferente machacando menta. Funciona igual que kczco porque trata lo absurdo como normal y el punch line final con el bartender del hotel es impredecible.",
+    "element_invasor": "Tornado de hojas de menta fresca que se materializa del perfume y invade violentamente el interior de lujo del hotel, cubriendo todo de verde y hielo de mojito",
+    "localizacion": "Azotea del Burj Al Arab, Dubai - el hotel vela más exclusivo del mundo",
+    "accion_protagonista": "Machacando hojas de menta fresca en un mortero de mármol para hacer mojitos",
+    "punch_line_wtf": "El bartender del hotel sirviéndole un mojito a un camello que está parado en el helipuerto, usando el frasco de Torino 21 como coctelera",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Ella machacando menta en mortero de mármol blanco en la azotea del Burj Al Arab al atardecer, viento desatado moviendo su cabello, frasco de Torino 21 sobre la mesa de cristal, tornado verde de hojas de menta entrando por las ventanas del hotel detrás de ella"
+      },
+      {
+        "number": 2,
+        "description": "Interior de la suite real del hotel completamente cubierto de hojas de menta fresca y cubitos de hielo, cama king size empapada de mojito, alfombras persas verdes de menta"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo un vaso de mojito recién hecho, mirando directamente a cámara con indiferencia total, hojas de menta pegadas en su camiseta blanca"
+      },
+      {
+        "number": 4,
+        "description": "Close-up extremo de hojas de menta fresca aplastadas contra el cristal del frasco de Torino 21, gotas de condensación mezclándose con aceites de menta"
+      },
+      {
+        "number": 5,
+        "description": "El frasco de Torino 21 perfecto e inmaculado en primer plano sobre mármol blanco, rodeado de destrucción total: hojas, hielo derretido, vasos rotos"
+      },
+      {
+        "number": 6,
+        "description": "Personal del hotel corriendo por los pasillos de mármol cubiertos de menta, un conserje limpiando hojas con una aspiradora dorada, ella de espaldas siguiendo machacando menta"
+      },
+      {
+        "number": 7,
+        "description": "Un camello árabe parado en el helipuerto del hotel, el bartender del Burj Al Arab sirviéndole un mojito perfecto usando el frasco de Torino 21 como coctelera, Dubai skyline de fondo"
+      }
+    ],
+    "caption_seed": "making mojitos.",
+    "caption_alternatives": [
+      "mint emergency.",
+      "too much mint."
+    ],
+    "difficulty": "hard",
+    "difficulty_reason": "Requiere CGI complejo para el tornado de menta, el interior del Burj Al Arab y el camello en el helipuerto son elementos muy específicos de generar",
+    "viral_mechanic": "La gente comentará sobre el desperdicio del hotel más caro del mundo y el camello bebiendo mojito será infinitamente memeable",
+    "scent_connection": "La escena huele exactamente a Torino 21 porque ES un mojito gigante materializado: menta fresca, cítricos, bergamota y la frescura verde en el aire de Dubai",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-30T20:52:19.074Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  },
+  {
+    "id": "006",
+    "perfume": "Torino 21",
+    "brand": "Xerjoff",
+    "mode": "A",
+    "notes": [
+      "mint",
+      "citrus",
+      "mojito",
+      "lime",
+      "bergamot",
+      "white musk"
+    ],
+    "price": 320,
+    "title": "mojito overflow",
+    "concept_summary": "Ella prepara mojitos en una terraza de La Habana, pero las limas se han multiplicado exponencialmente y han inundado todo el lugar. Los cristales rotos de vasos de mojito cubren el suelo, la menta crece salvaje por las paredes. Funciona igual que kczco porque el objeto de lujo (frasco) permanece perfecto mientras el caos de las notas olfativas materializadas destruye el entorno lujoso.",
+    "element_invasor": "Limas gigantes y menta salvaje que crecen descontroladamente. Las notas de mint, lime y mojito del Torino 21 se materializan físicamente e invaden la terraza colonial",
+    "localizacion": "Terraza colonial de La Habana Vieja, Cuba, con vista al Malecón y edificios art déco deteriorados",
+    "accion_protagonista": "Exprime limas gigantes directamente sobre vasos de mojito rotos en el suelo",
+    "punch_line_wtf": "Un colibrí cubano usa el frasco de Torino 21 como bebedero, sumergiendo su pico en el atomizador mientras ella sigue exprimiendo limas indiferente",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Ella exprimiendo una lima del tamaño de una pelota de fútbol sobre vasos rotos en terraza colonial habanera, frasco Torino 21 en mesa de hierro forjado, limas gigantes rodando por el suelo de mosaicos, menta salvaje trepando por columnas coloniales"
+      },
+      {
+        "number": 2,
+        "description": "Interior del frasco Torino 21 en close-up: gotas de jugo de lima real flotando dentro del perfume, creando burbujas verdes, el líquido ambarino mezclándose con pulpa de lima fresca"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo lima gigante con ambas manos, exprimiéndola directamente, jugo chorreando entre sus dedos, mirada directa a cámara, expresión de concentración normal como si fuera una lima común"
+      },
+      {
+        "number": 4,
+        "description": "Close-up extremo de una lima gigante reventada contra el cristal del frasco, pulpa blanca y jugo verde escurriendo por el vidrio perfecto del Xerjoff, semillas pegadas al logo dorado"
+      },
+      {
+        "number": 5,
+        "description": "Frasco Torino 21 impecable en primer plano sobre mesa de hierro, sin una gota de lima, mientras atrás se ve el caos total: vasos rotos, limas gigantes, menta cubriendo las paredes coloniales"
+      },
+      {
+        "number": 6,
+        "description": "Vendedor de frutas cubano en la calle observando desde abajo con carrito lleno de limas normales, señalando hacia arriba confundido, turistas tomando fotos del caos desde el Malecón"
+      },
+      {
+        "number": 7,
+        "description": "Colibrí cubano iridiscente posado sobre el atomizador del Torino 21, usando el pico para beber directamente del mecanismo de spray, mientras ella sigue exprimiendo limas gigantes indiferente en el fondo desenfocado"
+      }
+    ],
+    "caption_seed": "making mojitos.",
+    "caption_alternatives": [
+      "too many limes.",
+      "fresh mint time."
+    ],
+    "difficulty": "medium",
+    "difficulty_reason": "Requiere generar limas de tamaño irreal y colibrí interactuando con objeto pequeño, pero la escena colonial es factible",
+    "viral_mechanic": "El colibrí bebiendo perfume como néctar + el contraste absurdo entre limas gigantes y frasco perfecto harán que la gente comente sobre surrealismo y Cuba",
+    "scent_connection": "La escena literalmente huele a mojito fresco: lima exprimida, menta salvaje y el ambiente húmedo de La Habana colonial",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-30T21:11:47.944Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  },
+  {
+    "id": "007",
+    "perfume": "Torino 21",
+    "brand": "Xerjoff",
+    "mode": "A",
+    "notes": [
+      "mint",
+      "citrus",
+      "mojito"
+    ],
+    "price": 320,
+    "title": "mojito avalanche",
+    "concept_summary": "Ella hace mojitos en la terraza de un hotel de Cuba mientras una avalancha de hierbabuena, lima y hielo invade todo el lugar. El frasco perfecto en medio del caos tropical. Funciona igual que kczco porque materializa las notas del perfume en un fenómeno físico absurdo que ella trata como completamente normal.",
+    "element_invasor": "Avalancha literal de hierbabuena fresca, limas cortadas por la mitad y cubitos de hielo gigantes que brotan del aire y cubren la terraza, mesas, suelo. Las notas de mojito del Torino 21 se materializan físicamente.",
+    "localizacion": "Terraza del Hotel Nacional de Cuba en La Habana, vista al malecón, atardecer dorado, arquitectura art déco",
+    "accion_protagonista": "Machacando hierbabuena en un vaso de mojito con un muddler, completamente concentrada en su tarea",
+    "punch_line_wtf": "Un colibrí cubano está bebiendo directamente del atomizador del frasco Xerjoff como si fuera néctar de flor, con las alas extendidas",
+    "frames": [
+      {
+        "number": 1,
+        "description": "Ella machacando hierbabuena en vaso de cristal con muddler, terraza art déco del Hotel Nacional al fondo, frasco Torino 21 sobre mesa de mimbre, primeras hojas de hierbabuena y cubitos de hielo ya cayendo del cielo"
+      },
+      {
+        "number": 2,
+        "description": "Close-up del interior del vaso de mojito: cristal empañado lleno de hierbabuena machacada, lima flotando, cubitos de hielo derritiéndose, el líquido verde reflejando la luz dorada"
+      },
+      {
+        "number": 3,
+        "description": "Ella de frente sosteniendo una rama gigante de hierbabuena con ambas manos, mirada directa a cámara, expresión serena, hojas verdes enmarcando su cara"
+      },
+      {
+        "number": 4,
+        "description": "Close-up extremo de cubitos de hielo gigantes chocando contra el cristal del frasco Xerjoff, gotas de condensación, texturas del hielo derritiéndose"
+      },
+      {
+        "number": 5,
+        "description": "Frasco Torino 21 perfecto e inmaculado en primer plano sobre la mesa de mimbre, mientras detrás todo está cubierto de hierbabuena, limas y charcos de hielo derretido"
+      },
+      {
+        "number": 6,
+        "description": "Camareros cubanos del hotel barriendo montañas de hierbabuena con escobas, uno de ellos recogiendo limas en un cubo, expresiones de fastidio resignado"
+      },
+      {
+        "number": 7,
+        "description": "Colibrí cubano de plumas verdes y rojas bebiendo directamente del atomizador del frasco Torino 21, alas extendidas en pleno vuelo, pico insertado en el spray"
+      }
+    ],
+    "caption_seed": "making mojitos.",
+    "caption_alternatives": [
+      "thirsty again.",
+      "cocktail hour."
+    ],
+    "difficulty": "medium",
+    "difficulty_reason": "El colibrí bebiendo del atomizador requiere precisión en la pose y las proporciones, pero el resto son elementos simples",
+    "viral_mechanic": "El colibrí bebiendo perfume como néctar es tan absurdo y visualmente impactante que la gente tendrá que compartirlo para que otros lo vean. Además, conecta Cuba + mojito de forma inesperada con perfume de lujo.",
+    "scent_connection": "Una terraza cubana cubierta de hierbabuena machacada, lima fresca y hielo derritiéndose huele exactamente a Torino 21.",
+    "instagram_post_id": null,
+    "tiktok_post_id": null,
+    "status": "concept",
+    "caption_chosen": null,
+    "images": [],
+    "video": null,
+    "created_at": "2026-03-30T21:41:33.896Z",
+    "published_at": null,
+    "metrics": {
+      "likes": 0,
+      "comments": 0,
+      "shares": 0,
+      "saves": 0,
+      "reach": 0,
+      "impressions": 0,
+      "engagement_rate": 0
+    },
+    "notion_page_id": null
+  }
+]

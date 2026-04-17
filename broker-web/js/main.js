@@ -100,9 +100,12 @@ function initSimpleForms() {
       btn.textContent = 'Enviando...';
       btn.disabled = true;
       const fd = new FormData(form);
+      // Honeypot: si el bot rellenó el campo oculto, descarta silenciosamente
+      if (fd.get('website')) { btn.textContent = orig; btn.disabled = false; return; }
       const ok = await submitLead({
         nombre: fd.get('nombre'), telefono: fd.get('telefono'),
         servicio: fd.get('servicio') || 'General', email: fd.get('email') || '',
+        _hp: '',
         source: form.dataset.leadForm,
       });
       showToast(ok ? '✅ Recibido. Te contactamos pronto.' : '❌ Error. Llámanos directamente.', ok ? 'success' : 'error');
@@ -192,6 +195,7 @@ function initQuiz() {
     const nombre   = quiz.querySelector('[name="q_nombre"]').value.trim();
     const telefono = quiz.querySelector('[name="q_telefono"]').value.trim();
     const email    = quiz.querySelector('[name="q_email"]').value.trim();
+    const hp       = (quiz.querySelector('[name="q_hp"]') || {value: ''}).value;
 
     if (!nombre || !telefono) {
       showToast('Por favor rellena nombre y teléfono.', 'error');
@@ -206,6 +210,7 @@ function initQuiz() {
 
     const ok = await submitLead({
       nombre, telefono, email,
+      _hp: hp,
       source: 'quiz',
       clasificacion,
       score,

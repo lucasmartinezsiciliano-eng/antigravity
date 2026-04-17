@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@xi.parfum — Plan de Monetización</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', serif;
+    background: #0a0a0a;
+    color: #e8e0d4;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    line-height: 1.7;
+  }
+  @media print {
+    body { background: white; color: #111; padding: 40px; }
+    .page-break { page-break-before: always; }
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid #333;
+    padding-bottom: 40px;
+    margin-bottom: 50px;
+  }
+  .logo {
+    font-size: 48px;
+    letter-spacing: 8px;
+    color: #c9b89a;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .tagline {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #666;
+  }
+  .meta {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 1px;
+  }
+
+  /* SECTION */
+  h1 {
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #c9b89a;
+    margin-bottom: 30px;
+    margin-top: 60px;
+    border-left: 2px solid #c9b89a;
+    padding-left: 16px;
+  }
+  h2 {
+    font-size: 22px;
+    color: #e8e0d4;
+    margin-bottom: 12px;
+    margin-top: 36px;
+    font-weight: 400;
+  }
+  h3 {
+    font-size: 14px;
+    color: #c9b89a;
+    margin-bottom: 10px;
+    margin-top: 28px;
+    letter-spacing: 1px;
+  }
+  p {
+    font-size: 15px;
+    color: #b0a898;
+    margin-bottom: 14px;
+  }
+  .highlight {
+    color: #e8e0d4;
+    font-style: italic;
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    background: #151515;
+    color: #c9b89a;
+    font-weight: 400;
+    letter-spacing: 1px;
+    font-size: 11px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #1a1a1a;
+    color: #b0a898;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td strong { color: #e8e0d4; }
+  td em { color: #c9b89a; font-style: normal; }
+
+  /* MILESTONE */
+  .milestone {
+    background: #111;
+    border: 1px solid #222;
+    border-left: 3px solid #c9b89a;
+    padding: 20px 24px;
+    margin: 20px 0;
+    border-radius: 2px;
+  }
+  .milestone .period {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #c9b89a;
+    margin-bottom: 8px;
+  }
+  .milestone .amount {
+    font-size: 28px;
+    color: #e8e0d4;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .milestone .desc {
+    font-size: 13px;
+    color: #666;
+  }
+
+  /* RULE */
+  .rule {
+    background: #0d0d0d;
+    border: 1px solid #1f1f1f;
+    padding: 16px 20px;
+    margin: 12px 0;
+    border-radius: 2px;
+  }
+  .rule .num {
+    color: #c9b89a;
+    font-size: 11px;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .rule .text {
+    color: #d4ccc4;
+    font-size: 15px;
+  }
+
+  /* SWOT */
+  .swot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .swot-box {
+    background: #0d0d0d;
+    border: 1px solid #1f1f1f;
+    padding: 20px;
+    border-radius: 2px;
+  }
+  .swot-box .label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #c9b89a;
+    margin-bottom: 14px;
+    display: block;
+  }
+  .swot-box ul { list-style: none; padding: 0; }
+  .swot-box li {
+    font-size: 13px;
+    color: #999;
+    padding: 4px 0;
+    border-bottom: 1px solid #151515;
+    padding-left: 12px;
+    position: relative;
+  }
+  .swot-box li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: #444;
+  }
+  .swot-box li:last-child { border-bottom: none; }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid #1a1a1a;
+    margin: 50px 0;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 80px;
+    padding-top: 30px;
+    border-top: 1px solid #1a1a1a;
+    font-size: 11px;
+    color: #444;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* NUMBERS BIG */
+  .big-number {
+    font-size: 42px;
+    color: #c9b89a;
+    font-weight: 400;
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .number-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+  }
+  .numbers-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 30px 0;
+  }
+  .number-card {
+    background: #0d0d0d;
+    border: 1px solid #1f1f1f;
+    padding: 24px;
+    text-align: center;
+  }
+
+  /* TIMELINE */
+  .timeline { margin: 24px 0; }
+  .tl-item {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .tl-dot {
+    width: 8px;
+    height: 8px;
+    background: #c9b89a;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .tl-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .tl-dot-wrap { width: 8px; height: 8px; background: #c9b89a; border-radius: 50%; flex-shrink: 0; }
+  .tl-content { flex: 1; }
+  .tl-when { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #c9b89a; margin-bottom: 4px; }
+  .tl-what { font-size: 14px; color: #b0a898; }
+  .tl-money { font-size: 18px; color: #e8e0d4; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">XI</div>
+  <div class="tagline">xi.parfum — Plan Estratégico de Monetización</div>
+  <div class="meta">Confidencial · Generado Marzo 2026 · Antigravity</div>
+</div>
+
+
+<!-- CONCEPTO -->
+<h1>01 — El concepto</h1>
+
+<p>Canal de contenido AI para perfumes de nicho en Instagram y TikTok. El avatar publica cada 11 posts un nuevo perfume, revelando el nuevo el día 11 de cada mes.</p>
+<p>Dos pilares de contenido: <span class="highlight">posts visuales WTF</span> (estilo @kczco — 7 frames, localización épica, punch line absurdo) y <span class="highlight">posts olfativos</span> (hacer sentir el perfume sin tenerlo físicamente, a través de sinestesia y memoria sensorial).</p>
+<p>El nombre <strong style="color:#e8e0d4">XI</strong> (11 en romano) es el núcleo de identidad: corto, elegante, misterioso, universal.</p>
+
+
+<!-- DAFO -->
+<h1>02 — DAFO</h1>
+
+<div class="swot-grid">
+  <div class="swot-box">
+    <span class="label">Fortalezas</span>
+    <ul>
+      <li>Avatar AI no envejece ni se cansa</li>
+      <li>Nicho con alto poder adquisitivo</li>
+      <li>Doble pilar = doble retención</li>
+      <li>Ritual del 11 crea comunidad sola</li>
+      <li>Engine automatizado (Claude + n8n)</li>
+      <li>Alta barrera técnica para copiar</li>
+    </ul>
+  </div>
+  <div class="swot-box">
+    <span class="label">Debilidades</span>
+    <ul>
+      <li>Arranca desde cero seguidores</li>
+      <li>Sin expertise propio en perfumes</li>
+      <li>Soul ID puede perder consistencia</li>
+      <li>Dependencia del algoritmo Instagram</li>
+    </ul>
+  </div>
+  <div class="swot-box">
+    <span class="label">Oportunidades</span>
+    <ul>
+      <li>Perfumería nicho crece 12% anual</li>
+      <li>Marcas nicho sin visibilidad digital</li>
+      <li>Primero en el segmento AI + perfumes</li>
+      <li>Sample box = negocio probado escalable</li>
+      <li>YouTube SEO = ingresos pasivos perpetuos</li>
+      <li>Monetización antes de 1k seguidores</li>
+    </ul>
+  </div>
+  <div class="swot-box">
+    <span class="label">Amenazas</span>
+    <ul>
+      <li>Regulación EU sobre contenido AI</li>
+      <li>Modelo copiable cuando sea visible</li>
+      <li>Instagram premia Reels sobre carruseles</li>
+      <li>Brecha olfativa (no pueden oler)</li>
+      <li>Algoritmo puede cambiar sin previo aviso</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- LO QUE MATA EL PROYECTO -->
+<h1>03 — Qué tiene que salir bien sí o sí</h1>
+
+<div class="rule">
+  <span class="num">01</span>
+  <span class="text">El Soul ID debe ser consistente antes del primer post. Si la cara cambia entre publicaciones, el canal pierde identidad permanentemente.</span>
+</div>
+<div class="rule">
+  <span class="num">02</span>
+  <span class="text">El primer ciclo de Hawas (11 posts) tiene que ser excepcional. Los primeros posts definen si el algoritmo te empuja o te entierra.</span>
+</div>
+<div class="rule">
+  <span class="num">03</span>
+  <span class="text">Newsletter desde antes de los 1.000 seguidores. Los seguidores de Instagram no son tuyos. La lista de emails sí.</span>
+</div>
+<div class="rule">
+  <span class="num">04</span>
+  <span class="text">El 11 de cada mes sale el nuevo perfume sin falta. Si fallas 3 meses seguidos, el ritual muere y con él la comunidad.</span>
+</div>
+<div class="rule">
+  <span class="num">05</span>
+  <span class="text">Monetizar antes del mes 3. No en el mes 12. El primer link de afiliado va en el mes 1.</span>
+</div>
+
+
+<div class="page-break"></div>
+
+<!-- MONETIZACIÓN -->
+<h1>04 — Stack de monetización completo</h1>
+
+<h2>Afiliados — desde el día 1</h2>
+<p>Programas gratuitos. Te unes, obtienes un link único, lo pones en la bio. Cada venta que venga de tu link genera una comisión automática.</p>
+
+<table>
+  <tr>
+    <th>Programa</th>
+    <th>Comisión</th>
+    <th>Cookie</th>
+    <th>Por qué</th>
+  </tr>
+  <tr>
+    <td><strong>Scentbird</strong></td>
+    <td><em>$14 por suscripción</em></td>
+    <td>45 días</td>
+    <td>Suscripción recurrente = ingresos recurrentes</td>
+  </tr>
+  <tr>
+    <td><strong>Arianrhod Aromatics</strong></td>
+    <td><em>20%</em></td>
+    <td>—</td>
+    <td>Comisión más alta del sector</td>
+  </tr>
+  <tr>
+    <td><strong>FragranceX</strong></td>
+    <td><em>hasta 12%</em></td>
+    <td>45 días</td>
+    <td>Catálogo enorme, incluye marcas nicho</td>
+  </tr>
+  <tr>
+    <td><strong>Scent Split</strong></td>
+    <td><em>10%</em></td>
+    <td>—</td>
+    <td>Especializado en muestras, mismo nicho</td>
+  </tr>
+  <tr>
+    <td><strong>Notino</strong></td>
+    <td><em>4-6%</em></td>
+    <td>15 días</td>
+    <td>Muy conocido en Europa, alta conversión</td>
+  </tr>
+</table>
+
+<p><strong style="color:#e8e0d4">Evitar:</strong> Sephora (cookie 24h, inútil) · Armani/Dior (2-3% de comisión) · reventa de ediciones limitadas (riesgo reputación).</p>
+
+<h2>Brand deals — mes 3</h2>
+<p>Las marcas nicho tienen presupuesto y poca visibilidad. Tú eres exactamente lo que necesitan. El engine de outreach ya está construido para contactarlas.</p>
+
+<table>
+  <tr>
+    <th>Seguidores</th>
+    <th>Precio por post</th>
+    <th>Precio por ciclo 11 días</th>
+  </tr>
+  <tr>
+    <td><strong>5.000</strong></td>
+    <td>€300 - €600</td>
+    <td>€1.500 - €2.500</td>
+  </tr>
+  <tr>
+    <td><strong>20.000</strong></td>
+    <td>€800 - €2.000</td>
+    <td>€4.000 - €8.000</td>
+  </tr>
+  <tr>
+    <td><strong>50.000</strong></td>
+    <td>€2.000 - €4.000</td>
+    <td>€10.000 - €20.000</td>
+  </tr>
+  <tr>
+    <td><strong>100.000</strong></td>
+    <td>€5.000 - €10.000</td>
+    <td>€25.000 - €50.000</td>
+  </tr>
+</table>
+
+<p>Objetivo: <strong style="color:#e8e0d4">2 brand deals/mes</strong> desde el mes 3. Propuesta: un ciclo completo de 11 días dedicado a su perfume + todos los posts olfativos + outreach incluido.</p>
+
+<h2>Productos digitales — mes 4</h2>
+<p>Margen 85-95%. Costo de producción: €0 (el engine los genera).</p>
+
+<table>
+  <tr>
+    <th>Producto</th>
+    <th>Precio</th>
+    <th>Margen</th>
+  </tr>
+  <tr>
+    <td>Guía PDF "Los 11 perfumes que tienes que oler"</td>
+    <td>€19</td>
+    <td>95%</td>
+  </tr>
+  <tr>
+    <td>Guía de perfumes árabes y de Oriente Medio</td>
+    <td>€24</td>
+    <td>95%</td>
+  </tr>
+  <tr>
+    <td>Guía de clones nicho vs originales</td>
+    <td>€19</td>
+    <td>95%</td>
+  </tr>
+  <tr>
+    <td>Guía por temporadas (qué llevar en verano/invierno)</td>
+    <td>€15</td>
+    <td>95%</td>
+  </tr>
+  <tr>
+    <td>Curso vídeo: cómo identificar y elegir perfumes nicho</td>
+    <td>€97</td>
+    <td>85%</td>
+  </tr>
+</table>
+
+<h2>Newsletter de pago — mes 6</h2>
+<p>Substack o Patreon a <strong style="color:#e8e0d4">€9/mes</strong>. Los suscriptores reciben el análisis olfativo completo antes que nadie y votan el próximo perfume.</p>
+
+<div class="numbers-row">
+  <div class="number-card">
+    <span class="big-number">200</span>
+    <span class="number-label">suscriptores</span>
+    <p style="margin-top:8px; font-size:18px; color:#e8e0d4">€1.800/mes</p>
+  </div>
+  <div class="number-card">
+    <span class="big-number">500</span>
+    <span class="number-label">suscriptores</span>
+    <p style="margin-top:8px; font-size:18px; color:#e8e0d4">€4.500/mes</p>
+  </div>
+  <div class="number-card">
+    <span class="big-number">1.000</span>
+    <span class="number-label">suscriptores</span>
+    <p style="margin-top:8px; font-size:18px; color:#e8e0d4">€9.000/mes</p>
+  </div>
+</div>
+
+
+<div class="page-break"></div>
+
+<!-- AÑO 2 -->
+<h1>05 — El producto propio (aquí está el millón)</h1>
+
+<p>Jeremy Fragrance factura <strong style="color:#c9b89a">€357.000 en un mes</strong> con su propia marca de perfume. No con brand deals. Con su perfume. Eso define la estrategia a largo plazo.</p>
+
+<h2>XI Sample Box — año 2</h2>
+<p>11 muestras × €29/mes. Las marcas dan las muestras a coste o gratis a cambio de visibilidad. Tú pones el packaging (€3-5) y cobras €29.</p>
+
+<table>
+  <tr>
+    <th>Suscriptores</th>
+    <th>Facturación mensual</th>
+    <th>Margen (50%)</th>
+  </tr>
+  <tr>
+    <td><strong>500</strong></td>
+    <td>€14.500</td>
+    <td>€7.250</td>
+  </tr>
+  <tr>
+    <td><strong>1.000</strong></td>
+    <td>€29.000</td>
+    <td>€14.500</td>
+  </tr>
+  <tr>
+    <td><strong>2.000</strong></td>
+    <td>€58.000</td>
+    <td>€29.000</td>
+  </tr>
+</table>
+
+<h2>XI N°11 — Perfume propio edición limitada</h2>
+<p>1.000 frascos. Laboratorio independiente. Lanzamiento el 11 de noviembre.</p>
+
+<table>
+  <tr>
+    <th>Concepto</th>
+    <th>Número</th>
+  </tr>
+  <tr>
+    <td>Precio de venta</td>
+    <td><strong>€89/frasco</strong></td>
+  </tr>
+  <tr>
+    <td>Coste de producción</td>
+    <td>€20-25/frasco</td>
+  </tr>
+  <tr>
+    <td>Margen por frasco</td>
+    <td><em>€64</em></td>
+  </tr>
+  <tr>
+    <td>Ingresos totales (1.000 u.)</td>
+    <td>€89.000</td>
+  </tr>
+  <tr>
+    <td><strong>Beneficio neto</strong></td>
+    <td><em>€64.000 por lanzamiento</em></td>
+  </tr>
+</table>
+
+<p>Si se agota en 72h (posible con 50k seguidores comprometidos), genera prensa orgánica que vale más que cualquier publicidad pagada.</p>
+
+
+<!-- PROYECCIÓN -->
+<h1>06 — Proyección financiera</h1>
+
+<div class="timeline">
+  <div class="tl-item">
+    <div style="flex-shrink:0; margin-top:5px;">
+      <div style="width:8px;height:8px;background:#c9b89a;border-radius:50%;"></div>
+    </div>
+    <div class="tl-content">
+      <div class="tl-when">Año 1</div>
+      <div class="tl-what">Afiliados + 2 brand deals/mes + guías PDF</div>
+      <div class="tl-money">€15.000 – €30.000</div>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div style="flex-shrink:0; margin-top:5px;">
+      <div style="width:8px;height:8px;background:#c9b89a;border-radius:50%;"></div>
+    </div>
+    <div class="tl-content">
+      <div class="tl-when">Año 2</div>
+      <div class="tl-what">Newsletter paga + brand deals regulares + XI N°11 primer drop</div>
+      <div class="tl-money">€80.000 – €200.000</div>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div style="flex-shrink:0; margin-top:5px;">
+      <div style="width:8px;height:8px;background:#c9b89a;border-radius:50%;"></div>
+    </div>
+    <div class="tl-content">
+      <div class="tl-when">Año 3</div>
+      <div class="tl-what">Sample box escalada + 2 drops anuales + patrocinios premium</div>
+      <div class="tl-money">€300.000 – €600.000</div>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div style="flex-shrink:0; margin-top:5px;">
+      <div style="width:8px;height:8px;background:#c9b89a;border-radius:50%;"></div>
+    </div>
+    <div class="tl-content">
+      <div class="tl-when">Año 4</div>
+      <div class="tl-what">Línea propia consolidada + vender el sistema a otras marcas</div>
+      <div class="tl-money" style="color:#c9b89a">€1.000.000+ acumulado</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- AUTOMATIZACIÓN -->
+<h1>07 — Lo que haces tú vs lo que hace el sistema</h1>
+
+<table>
+  <tr>
+    <th>Tarea</th>
+    <th>Quién lo hace</th>
+  </tr>
+  <tr>
+    <td>Escribir captions</td>
+    <td>Claude (engine)</td>
+  </tr>
+  <tr>
+    <td>Generar conceptos de posts</td>
+    <td>Claude (engine)</td>
+  </tr>
+  <tr>
+    <td>Redactar pitches a marcas</td>
+    <td>Claude (engine)</td>
+  </tr>
+  <tr>
+    <td>Programar y publicar posts</td>
+    <td>n8n (automático)</td>
+  </tr>
+  <tr>
+    <td>Analizar métricas</td>
+    <td>engine analytics</td>
+  </tr>
+  <tr>
+    <td>Decisiones estratégicas</td>
+    <td>OpenClaw Director General</td>
+  </tr>
+  <tr>
+    <td style="color:#e8e0d4"><strong>Lo que haces TÚ</strong></td>
+    <td style="color:#c9b89a"><strong>Grabar en Higgsfield 1 día/mes + aprobar borradores</strong></td>
+  </tr>
+</table>
+
+
+<!-- PRÓXIMOS PASOS -->
+<h1>08 — Próximos pasos inmediatos</h1>
+
+<div class="rule">
+  <span class="num">Esta semana</span>
+  <span class="text">Generar avatar en Higgsfield Soul 2.0 con los 26 prompts. Verificar consistencia del soul ID.</span>
+</div>
+<div class="rule">
+  <span class="num">Esta semana</span>
+  <span class="text">Registrarse en Scentbird Affiliate y FragranceX Affiliate. 10 minutos. Link activo desde el primer post.</span>
+</div>
+<div class="rule">
+  <span class="num">Antes del 11 abril</span>
+  <span class="text">Producir los 11 posts del ciclo Hawas · Rasasi. 4 WTF + 4 olfativos + 3 narrativos.</span>
+</div>
+<div class="rule">
+  <span class="num">11 abril</span>
+  <span class="text">Lanzamiento @xi.parfum. Primer post en Instagram y TikTok.</span>
+</div>
+<div class="rule">
+  <span class="num">Mes 2</span>
+  <span class="text">Abrir newsletter gratuita. Primer link de afiliado en bio.</span>
+</div>
+<div class="rule">
+  <span class="num">Mes 3</span>
+  <span class="text">Primer outreach a marca nicho. Proponer ciclo patrocinado completo de 11 días.</span>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>@xi.parfum</span>
+  <span>Antigravity · 2026</span>
+  <span>Confidencial</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "perf_001",
+    "name": "Torino 21",
+    "brand": "Xerjoff",
+    "notes": {
+      "top": [
+        "Mint",
+        "Lemon",
+        "Basil",
+        "Thyme"
+      ],
+      "middle": [
+        "Black Currant",
+        "Lavender",
+        "Rosemary",
+        "Jasmine"
+      ],
+      "base": [
+        "Musk",
+        "Vervain"
+      ]
+    },
+    "price": 320,
+    "description": "Mojito en un jardín italiano al sol. Menta abrumadora, cítricos secos, hierbas mediterráneas. Limpio y perturbador a la vez.",
+    "moods": [
+      "verano brutal",
+      "bar de lujo",
+      "jardín mediterráneo",
+      "hielo derritiéndose"
+    ],
+    "posts_generated": 6,
+    "posts_published": 0,
+    "fragrantica_url": "https://www.fragrantica.com/perfume/Xerjoff/Torino21-70424.html",
+    "affiliate_url": ""
+  }
+]

@@ -1,0 +1,9 @@
+# Copia este archivo como .dev.vars para desarrollo local
+# NUNCA commitear .dev.vars (está en .gitignore)
+#
+# Cómo usar en producción:
+#   wrangler secret put N8N_URL
+#   wrangler secret put BROKER_SECRET
+
+N8N_URL=https://n8n.lukimporta.es/webhook/broker-lead
+BROKER_SECRET=pon-aqui-un-token-aleatorio-de-minimo-32-caracteres

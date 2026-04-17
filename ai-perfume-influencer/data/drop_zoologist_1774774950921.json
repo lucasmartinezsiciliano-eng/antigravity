@@ -1,0 +1,69 @@
+{
+  "perfume": "Beaver",
+  "brand": "Zoologist",
+  "month": "Abril 2026",
+  "drop_title": "Dam Architecture Month",
+  "drop_narrative": "Una obsesión con construir lo imposible que nace del castoreum y el birch del perfume. Cada post escala desde construir en naturaleza hasta construir en lugares donde nadie debería poder construir nada.",
+  "posts": [
+    {
+      "position": 1,
+      "type": "hook_geografico",
+      "modo": "A",
+      "localizacion": "Banff National Park, Canadá",
+      "continent": "América del Norte",
+      "element_invasor": "troncos de birch que caen del cielo y se apilan solos, viene del birch en las notas",
+      "accion_protagonista": "camina entre los troncos que caen organizándolos con las manos como si dirigiera una sinfonía",
+      "frames_summary": "Frame 1: ella camina en bosque nevado. Frame 2-3: primer tronco cae cerca, ella lo toca. Frame 4-5: lluvia de troncos organizándose solos. Frame 6: ella dirigiendo el caos con gestos. Frame 7: una presa perfecta construida en segundos.",
+      "punch_line_wtf": "presa de castor de 50 metros construida instantáneamente",
+      "caption": "building season.",
+      "viral_mechanic": "la gente nunca ha visto construcción automática de presas + paisaje cinematográfico canadiense"
+    },
+    {
+      "position": 2,
+      "type": "animal",
+      "modo": "A",
+      "localizacion": "Ushuaia, Argentina",
+      "continent": "América del Sur",
+      "animal": "castor patagónico — conecta directamente con el castoreum del perfume",
+      "element_invasor": "castores construyendo una ciudad flotante de madera mientras ella perfuma cada estructura",
+      "accion_protagonista": "rocía cada construcción de castor como bendiciendo cada edificio",
+      "frames_summary": "Frame 1: ella en kayak entre construcciones de castor. Frame 2-3: castores trabajando, ella observa. Frame 4: empieza a perfumar las estructuras. Frame 5-6: castores parándose a olerla. Frame 7: castores construyendo alrededor de ella, atrapándola en el centro.",
+      "punch_line_wtf": "los castores la encierran en su propia construcción porque quieren el perfume",
+      "caption": "they hired me.",
+      "viral_mechanic": "castor real + perfume de castor + ella atrapada por sus propias creaciones"
+    },
+    {
+      "position": 3,
+      "type": "declaracion",
+      "modo": "C",
+      "localizacion": "biblioteca antigua de Trinity College, Dublín",
+      "continent": "Europa",
+      "element_invasor": "solo polvo de libros antiguos flotando — minimalismo máximo",
+      "accion_protagonista": "abre el frasco entre libros centenarios, inhala profundo tocando las páginas de cuero",
+      "frames_summary": "Frame 1: ella sentada entre libros antiguos. Frame 2: abre el frasco lentamente. Frame 3-4: inhala cerrando los ojos, toca encuadernaciones de cuero. Frame 5: presiona frasco contra su pecho. Frame 6: susurra algo al frasco. Frame 7: ha construido una pequeña presa con libros sin darse cuenta.",
+      "punch_line_wtf": "inconscientemente apiló libros formando una mini presa mientras inhalaba",
+      "caption": "i build unconsciously.",
+      "viral_mechanic": "relatabilidad de obsesiones inconscientes + bibliotecas aesthetic + comportamiento automático"
+    },
+    {
+      "position": 4,
+      "type": "cierre_wtf",
+      "modo": "B",
+      "localizacion": "Estación Espacial Internacional (simulado en centro espacial de Baikonur)",
+      "continent": "Asia",
+      "element_invasor": "herramientas de construcción flotando en gravedad cero, imposible pero construyen solos",
+      "accion_protagonista": "flota en traje espacial mientras herramientas construyen estructura orbital alrededor de ella",
+      "frames_summary": "Frame 1: ella flotando en 'zero gravity' con el frasco. Frame 2: martillos y sierras flotando. Frame 3-4: herramientas trabajando solas en el espacio. Frame 5-6: estructura creciendo alrededor de ella. Frame 7: ha construido la primera presa espacial.",
+      "punch_line_wtf": "presa funcionando en gravedad cero con agua flotante",
+      "caption": "zero gravity dam.",
+      "viral_mechanic": "imposibilidad física + final épico que deja a todos esperando qué locura hará el próximo mes"
+    }
+  ],
+  "publishing_schedule": {
+    "post_1": "semana 1 — martes (máximo impacto bosque)",
+    "post_2": "semana 2 — miércoles (mejor día para animales + sorpresa mid-week)",
+    "post_3": "semana 3 — lunes (introspección post-weekend)",
+    "post_4": "semana 4 — viernes (cierre épico de mes)"
+  },
+  "outreach_angle": "drops temáticos que conectan directamente con las notas del perfume — cada post construye obsesión literal con 'construcción' que nace del castoreum. Perfecto para Zoologist porque elevamos la animalidad de la marca a narrativa visual coherente."
+}

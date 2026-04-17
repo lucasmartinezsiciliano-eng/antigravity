@@ -1,0 +1,69 @@
+{
+  "perfume": "Hawas",
+  "brand": "Rasasi",
+  "month": "Abril 2026",
+  "drop_title": "Ocean's Calling",
+  "drop_narrative": "Hawas convierte cada lugar del mundo en un altar acuático donde el mar reclama lo que es suyo. Desde glaciares hasta submarinos, ella descubre que el océano no tiene fronteras.",
+  "posts": [
+    {
+      "position": 1,
+      "type": "hook_geografico",
+      "modo": "A",
+      "localizacion": "Laguna de los Icebergs, Jökulsárlón, Islandia",
+      "continent": "Europa",
+      "element_invasor": "agua de mar que emerge desde debajo del hielo glaciar, creando geysers salados entre los icebergs",
+      "accion_protagonista": "camina sobre el hielo negro sosteniendo el frasco, rocía el perfume hacia el aire",
+      "frames_summary": "F1: Ella en el hielo negro con icebergs de fondo. F2: Rocía Hawas al aire. F3: El perfume cristaliza en contacto con el frío. F4: Grietas aparecen en el hielo bajo sus pies. F5: Agua salada emerge por las grietas. F6: Los icebergs empiezan a moverse hacia ella. F7: Un geyser de agua de mar la eleva por los aires con el frasco en la mano.",
+      "punch_line_wtf": "Un geyser de agua salada del océano Atlántico brota desde debajo del glaciar y la eleva 10 metros en el aire",
+      "caption": "wrong ocean.",
+      "viral_mechanic": "La gente va a buscar si realmente puede haber agua de mar bajo los glaciares de Islandia"
+    },
+    {
+      "position": 2,
+      "type": "animal",
+      "modo": "A",
+      "localizacion": "Desierto de Atacama, Chile",
+      "continent": "América del Sur",
+      "animal": "ballena jorobada - conecta con ambergris y las notas acuáticas en el lugar más seco del mundo",
+      "element_invasor": "una ballena jorobada gigante que nada por las dunas como si fueran olas oceánicas",
+      "accion_protagonista": "intenta rociar Hawas en el aire mientras corre por las dunas persiguiendo a la ballena",
+      "frames_summary": "F1: Ella corriendo en las dunas con el frasco. F2: Una sombra enorme se proyecta sobre la arena. F3: La ballena emerge de una duna como del océano. F4: Ella rocía Hawas hacia la ballena. F5: El perfume crea una estela acuática en el aire del desierto. F6: La ballena se acerca y abre la boca. F7: Ella está dentro de la boca de la ballena, rodeada de agua de mar, sosteniendo tranquila el frasco de Hawas.",
+      "punch_line_wtf": "Termina dentro de la boca de la ballena llena de agua de mar en medio del desierto más árido del mundo",
+      "caption": "found you.",
+      "viral_mechanic": "Una ballena en el desierto es tan absurdo que todos van a querer saber cómo se hizo y van a etiquear a amigos"
+    },
+    {
+      "position": 3,
+      "type": "declaracion",
+      "modo": "C",
+      "localizacion": "Bañera de mármol, Hotel Burj Al Arab, Dubai",
+      "continent": "Asia",
+      "element_invasor": "pequeñas caracolas marinas que aparecen flotando en el agua de la bañera",
+      "accion_protagonista": "se baña mientras sostiene el frasco de Hawas contra su pecho, lo besa",
+      "frames_summary": "F1: Ella en la bañera con el frasco pegado al pecho. F2: Cierra los ojos y lo besa. F3: Una caracola pequeña flota cerca de ella. F4: Más caracolas aparecen en el agua. F5: Las caracolas empiezan a hacer sonido de océano. F6: Ella abre los ojos, sonríe y rocía Hawas en el agua. F7: La bañera entera se llena de arena de playa y estrellas de mar.",
+      "punch_line_wtf": "La bañera de lujo se transforma completamente en un pedazo de playa del océano con arena y estrellas de mar",
+      "caption": "i smell like home.",
+      "viral_mechanic": "Es el post más íntimo y relatable - muchas mujeres se van a identificar con esa obsesión por un perfume"
+    },
+    {
+      "position": 4,
+      "type": "cierre_wtf",
+      "modo": "B",
+      "localizacion": "Estación Espacial Internacional, órbita terrestre",
+      "continent": "Espacio",
+      "element_invasor": "el océano de la Tierra que literalmente se extiende hacia el espacio como tentáculos líquidos para alcanzar el perfume",
+      "accion_protagonista": "flota en gravedad cero sosteniendo Hawas, rocía el perfume que forma esferas flotantes",
+      "frames_summary": "F1: Ella flotando en la ISS con el frasco. F2: Rocía Hawas y las gotas forman esferas perfectas flotantes. F3: Mira por la ventana hacia la Tierra azul. F4: Los océanos terrestres empiezan a 'elevarse' hacia el espacio. F5: Tentáculos de agua marina se extienden desde la Tierra. F6: Los tentáculos atraviesan la ventana de la ISS sin romperla. F7: Está completamente rodeada de agua de mar flotante en gravedad cero, sonriendo mientras el frasco de Hawas brilla.",
+      "punch_line_wtf": "Los océanos de la Tierra se extienden como tentáculos líquidos hasta la estación espacial para reclamar su perfume",
+      "caption": "even here.",
+      "viral_mechanic": "Cierra el drop con la idea de que Hawas trasciende cualquier límite - ni siquiera el espacio puede escapar del océano"
+    }
+  ],
+  "publishing_schedule": {
+    "post_1": "semana 1 — martes (hook fuerte para empezar el mes)",
+    "post_2": "semana 2 — miércoles (la ballena en el desierto será el más viral)",
+    "post_3": "semana 3 — lunes (post íntimo para mitad de mes)",
+    "post_4": "semana 4 — viernes (cierre épico de mes)"
+  },
+  "outreach_angle": "Hawas trasciende geografías: demostramos que tu perfume acuático no necesita océano para crear obsesión global. Cada continente, cada locación imposible, se rinde ante las notas marinas de Rasasi."
+}

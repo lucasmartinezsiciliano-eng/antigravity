@@ -84,14 +84,102 @@
       }
     },
     {
+      "id": "node-notion",
+      "name": "Guardar Pieza en Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [960, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "NOTION_CREDENTIAL_ID",
+          "name": "Notion Firmax"
+        }
+      },
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "NOTION_DATABASE_ID",
+          "mode": "id"
+        },
+        "title": "={{ $json.tema }} — {{ $json.formato }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Fase",
+              "type": "select",
+              "selectValue": "={{ $json.fase }}"
+            },
+            {
+              "key": "Formato",
+              "type": "richText",
+              "textContent": "={{ $json.formato }}"
+            },
+            {
+              "key": "Estado",
+              "type": "select",
+              "selectValue": "Pendiente"
+            },
+            {
+              "key": "CTA",
+              "type": "richText",
+              "textContent": "={{ $json.cta }}"
+            },
+            {
+              "key": "Disclaimer Legal",
+              "type": "richText",
+              "textContent": "={{ $json.disclaimer_legal }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "heading_2",
+              "textContent": "🎣 HOOK"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "={{ $json.hook }}"
+            },
+            {
+              "type": "heading_2",
+              "textContent": "📝 SCRIPT"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "={{ $json.script }}"
+            },
+            {
+              "type": "heading_2",
+              "textContent": "📸 CAPTION INSTAGRAM"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "={{ $json.caption_instagram }}"
+            },
+            {
+              "type": "heading_2",
+              "textContent": "🎨 PROMPT AVATAR"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "={{ $json.prompt_avatar }}"
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "node-format-telegram",
       "name": "Formatear Mensajes Telegram",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 300],
+      "position": [1200, 300],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const items = $input.all();\nconst now = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nconst emoji = { TOFU: '🔵', MOFU: '🟡', BOFU: '🔴' };\n\nconst headerMsg = {\n  json: {\n    isHeader: true,\n    text: '📅 *PLAN DE CONTENIDO SEMANAL*\\nMediterrane Firmax SL\\n\\n' + now + '\\n\\n*Total piezas:* ' + items.length + '\\n🔵 TOFU: 4 piezas\\n🟡 MOFU: 2 piezas\\n🔴 BOFU: 1 pieza\\n\\n─────────────────────'\n  }\n};\n\nconst pieceMessages = items.map(item => {\n  const p = item.json;\n  const em = emoji[p.fase] || '⚪';\n  let text = em + ' *PIEZA ' + p.id + ' — ' + p.fase + '*\\n';\n  text += '📌 *Formato:* ' + p.formato + '\\n';\n  text += '🎯 *Tema:* ' + p.tema + '\\n\\n';\n  text += '🎣 *HOOK*\\n' + p.hook + '\\n\\n';\n  text += '📝 *SCRIPT*\\n' + p.script + '\\n\\n';\n  text += '📣 *CTA*\\n' + p.cta + '\\n\\n';\n  text += '🎨 *PROMPT AVATAR*\\n' + p.prompt_avatar + '\\n\\n';\n  text += '📸 *CAPTION INSTAGRAM*\\n' + p.caption_instagram;\n  if (p.disclaimer_legal && p.disclaimer_legal.length > 0) {\n    text += '\\n\\n⚖️ *DISCLAIMER LEGAL*\\n' + p.disclaimer_legal;\n  }\n  return { json: { isHeader: false, text: text, pieceId: p.id } };\n});\n\nreturn [headerMsg, ...pieceMessages];"
+        "jsCode": "const items = $input.all();\nconst now = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nconst emoji = { TOFU: '🔵', MOFU: '🟡', BOFU: '🔴' };\n\nconst headerMsg = {\n  json: {\n    isHeader: true,\n    text: '📅 *PLAN DE CONTENIDO SEMANAL*\\nMediterrane Firmax SL\\n\\n' + now + '\\n\\n*Total piezas:* ' + items.length + '\\n🔵 TOFU: 4 piezas\\n🟡 MOFU: 2 piezas\\n🔴 BOFU: 1 pieza\\n\\n✅ *Todo guardado en Notion*\\n\\n─────────────────────'\n  }\n};\n\nconst pieceMessages = items.map(item => {\n  const p = item.json;\n  const em = emoji[p.fase] || '⚪';\n  let text = em + ' *PIEZA ' + p.id + ' — ' + p.fase + '*\\n';\n  text += '📌 *Formato:* ' + p.formato + '\\n';\n  text += '🎯 *Tema:* ' + p.tema + '\\n\\n';\n  text += '🎣 *HOOK*\\n' + p.hook + '\\n\\n';\n  text += '📝 *SCRIPT*\\n' + p.script + '\\n\\n';\n  text += '📣 *CTA*\\n' + p.cta + '\\n\\n';\n  text += '🎨 *PROMPT AVATAR*\\n' + p.prompt_avatar + '\\n\\n';\n  text += '📸 *CAPTION INSTAGRAM*\\n' + p.caption_instagram;\n  if (p.disclaimer_legal && p.disclaimer_legal.length > 0) {\n    text += '\\n\\n⚖️ *DISCLAIMER LEGAL*\\n' + p.disclaimer_legal;\n  }\n  return { json: { isHeader: false, text: text, pieceId: p.id } };\n});\n\nreturn [headerMsg, ...pieceMessages];"
       }
     },
     {
@@ -99,7 +187,7 @@
       "name": "SplitInBatches",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [1200, 300],
+      "position": [1440, 300],
       "parameters": {
         "batchSize": 1,
         "options": {}
@@ -110,7 +198,7 @@
       "name": "Send Telegram Message",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1440, 300],
+      "position": [1680, 300],
       "credentials": {
         "telegramApi": {
           "id": "u85vcY7Rl3NpxuVQ",
@@ -120,6 +208,26 @@
       "parameters": {
         "chatId": "881434335",
         "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      }
+    },
+    {
+      "id": "node-error",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 520],
+      "credentials": {
+        "telegramApi": {
+          "id": "u85vcY7Rl3NpxuVQ",
+          "name": "Telegram Antigravity"
+        }
+      },
+      "parameters": {
+        "chatId": "881434335",
+        "text": "❌ [Broker Content] Error en generación semanal\\n\\n*Error:* {{ $json.error.message }}\\n*Nodo:* {{ $json.error.node.name }}",
         "additionalFields": {
           "parse_mode": "Markdown"
         }
@@ -137,6 +245,9 @@
       "main": [[{"node": "Parsear Respuesta OpenAI", "type": "main", "index": 0}]]
     },
     "Parsear Respuesta OpenAI": {
+      "main": [[{"node": "Guardar Pieza en Notion", "type": "main", "index": 0}]]
+    },
+    "Guardar Pieza en Notion": {
       "main": [[{"node": "Formatear Mensajes Telegram", "type": "main", "index": 0}]]
     },
     "Formatear Mensajes Telegram": {

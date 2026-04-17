@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+ai-perfume-influencer/node_modules/
+
+# Binarios y multimedia
+*.pdf
+*.docx
+*.zip
+*.jpeg
+*.jpg
+*.png
+*.mp4
+*.mp3
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Cloudflare Worker — secretos locales (NUNCA commitear)
+cloudflare-worker/.dev.vars
+cloudflare-worker/.wrangler/
+
+# Claude Code settings — puede contener tokens de MCP servers
+.claude/settings.json
+.claude/settings.local.json

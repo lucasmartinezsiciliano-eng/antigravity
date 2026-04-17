@@ -1,0 +1,14 @@
+[
+  { "id": "brand_001", "name": "Xerjoff", "instagram": "@xerjoff", "email": "", "price_range": "200-500", "followers_ig": 318000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_002", "name": "Maison Margiela Replica", "instagram": "@maisonmargiela", "email": "", "price_range": "150-300", "followers_ig": 2100000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_003", "name": "Initio Parfums", "instagram": "@initioparfumsprive", "email": "", "price_range": "300-600", "followers_ig": 95000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_004", "name": "Memo Paris", "instagram": "@memoparis", "email": "", "price_range": "250-450", "followers_ig": 48000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_005", "name": "Creed", "instagram": "@creedparfums", "email": "", "price_range": "300-600", "followers_ig": 520000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_006", "name": "Byredo", "instagram": "@byredo", "email": "", "price_range": "200-400", "followers_ig": 890000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_007", "name": "Kilian Paris", "instagram": "@kilianparis", "email": "", "price_range": "250-500", "followers_ig": 410000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_008", "name": "Juliette Has a Gun", "instagram": "@juliettehasagun", "email": "", "price_range": "100-200", "followers_ig": 220000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_009", "name": "Nishane", "instagram": "@nishaneperfumes", "email": "", "price_range": "200-400", "followers_ig": 78000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_010", "name": "Morph", "instagram": "@morphfragrance", "email": "", "price_range": "150-300", "followers_ig": 32000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_011", "name": "Zoologist", "instagram": "@zoologistperfumes", "email": "", "price_range": "100-250", "followers_ig": 55000, "has_ai_influencer": false, "status": "pending", "notes": "" },
+  { "id": "brand_012", "name": "Orto Parisi", "instagram": "@ortoparisi", "email": "", "price_range": "150-250", "followers_ig": 41000, "has_ai_influencer": false, "status": "pending", "notes": "" }
+]

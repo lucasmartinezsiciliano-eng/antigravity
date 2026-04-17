@@ -1,0 +1,12 @@
+name = "broker-lead-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-15"
+
+# Secrets (NUNCA en este archivo — configurar con CLI):
+#   wrangler secret put N8N_URL
+#   wrangler secret put BROKER_SECRET
+#
+# Para añadir el Worker a brokerhipotecario.es (una vez el dominio esté en Cloudflare):
+# [[routes]]
+# pattern = "brokerhipotecario.es/lead"
+# zone_name = "brokerhipotecario.es"

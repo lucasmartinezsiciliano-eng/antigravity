@@ -1,0 +1,36 @@
+# Binarios y multimedia — nunca útiles para Claude
+*.pdf
+*.docx
+*.zip
+*.jpeg
+*.jpg
+*.png
+*.mp4
+*.mp3
+
+# Dumps de workflows en raíz (usar los de workflows/ en su lugar)
+wf1_current.json
+wf2_clean.json
+wf2_ready.json
+wf2_test.json
+
+# Proyectos separados / no relacionados con el core
+ai-perfume-influencer/
+Firmax/
+INSTAGRAM_PERFUMES.md
+
+# Assets estáticos del broker-web (CSS, JS, imágenes)
+broker-web/img/
+broker-web/css/
+broker-web/js/
+
+# Documentos de referencia pesados (pedir explícitamente si se necesitan)
+SIM_SISTEMA_COMPLETO_REFERENCIA.md
+soul.md
+boot.md
+identity.md
+memory.md
+agents.md
+
+# Archivos del sistema
+.git/

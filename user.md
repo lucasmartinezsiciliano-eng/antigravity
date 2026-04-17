@@ -15,22 +15,24 @@ Paralelamente está arrancando un negocio de dropshipping desde cero — sin exp
 
 ## Sus negocios
 
-### Firmax — Broker Hipotecario (padre)
-- Intermediación hipotecaria: captar leads, cualificar, gestionar con bancos hasta firma
-- Lucas lleva la parte digital: automatización, captación de leads, contenido
-- Estrategia de captación: Instagram Ads + contenido orgánico TOFU/MOFU/BOFU
-- Los leads se clasifican por nivel: A (prioritario) / B / C / D (no viable)
-- **Dato crítico:** maneja datos financieros y personales de clientes reales — RGPD estricto
+### xi.parfum / vi.parfumm — Canal AI de perfumes nicho (foco actual)
 
-### Dropshipping — E-commerce propio
-- Negocio nuevo, empezando desde cero
-- Sin nicho definido todavía — fase de investigación de producto
-- Estrategia inicial: contenido orgánico (TikTok + Instagram) antes de paid media
-- Objetivo: encontrar producto ganador, validar, luego escalar
+- Canal de Instagram AI influencer de perfumes nicho (>100€)
+- Dos cuentas: xi.parfum (hombre, 27-38) y vi.parfumm (mujer, 25-40)
+- Estrategia visual: fórmula @kczco — 7 frames, elemento invasor, punch line WTF en frame 7
+- Pipeline de contenido: Iris → Nova → Pixel (Freepik) → Reel (Kling) → Kaz → Flow → IG/TikTok
+- Monetización: gifting → collabs pagas → afiliados → producto digital
+- **Regla crítica:** el avatar nunca afirma que huele el perfume (regla anti-Iris-Lane)
+
+### Firmax — Broker Hipotecario (en pausa operativa)
+
+- Negocio del padre de Lucas. Automatizaciones ya construidas.
+- Lucas no opera activamente este negocio ahora mismo.
 
 ### Antigravity — Sistema de automatización
-- Infraestructura n8n self-hosted en Oracle Cloud (Docker)
-- Es el sistema central que conecta ambos negocios
+
+- Infraestructura n8n self-hosted en Oracle Cloud (Docker, Portainer)
+- OpenClaw en PC Ubuntu local (100.119.47.93 vía Tailscale)
 - Lucas tiene conocimientos técnicos: n8n, Docker, APIs, automatizaciones
 
 ---
