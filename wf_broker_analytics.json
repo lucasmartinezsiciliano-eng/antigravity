@@ -1,0 +1,89 @@
+{
+  "name": "Broker - Analytics Web",
+  "nodes": [
+    {
+      "id": "node-webhook-analytics",
+      "name": "Webhook Analytics",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "path": "broker-analytics",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-set-analytics",
+      "name": "Preparar Datos Evento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            { "id": "a1", "name": "timestamp",    "value": "={{ $json.body.timestamp || $now }}", "type": "string" },
+            { "id": "a2", "name": "evento",        "value": "={{ $json.body.event || '' }}",       "type": "string" },
+            { "id": "a3", "name": "pagina",        "value": "={{ $json.body.url || '' }}",          "type": "string" },
+            { "id": "a4", "name": "referrer",      "value": "={{ $json.body.referrer || '' }}",     "type": "string" },
+            { "id": "a5", "name": "utm_source",    "value": "={{ $json.body.utm_source || '' }}",   "type": "string" },
+            { "id": "a6", "name": "utm_medium",    "value": "={{ $json.body.utm_medium || '' }}",   "type": "string" },
+            { "id": "a7", "name": "utm_campaign",  "value": "={{ $json.body.utm_campaign || '' }}", "type": "string" },
+            { "id": "a8", "name": "detalles",      "value": "={{ JSON.stringify($json.body.data || {}) }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-sheets-analytics",
+      "name": "Google Sheets — Registrar Evento",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [680, 300],
+      "parameters": {
+        "operation": "append",
+        "documentId": "SPREADSHEET_ID_AQUI",
+        "sheetName": "Analytics",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp":     "={{ $json.timestamp }}",
+            "Evento":        "={{ $json.evento }}",
+            "Página":        "={{ $json.pagina }}",
+            "Referrer":      "={{ $json.referrer }}",
+            "UTM Source":    "={{ $json.utm_source }}",
+            "UTM Medium":    "={{ $json.utm_medium }}",
+            "UTM Campaign":  "={{ $json.utm_campaign }}",
+            "Detalles":      "={{ $json.detalles }}"
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Analytics": {
+      "main": [[{ "node": "Preparar Datos Evento", "type": "main", "index": 0 }]]
+    },
+    "Preparar Datos Evento": {
+      "main": [[{ "node": "Google Sheets — Registrar Evento", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  }
+}

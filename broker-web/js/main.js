@@ -119,6 +119,11 @@ function initSimpleForms() {
 // ============================================
 // QUIZ WIZARD
 // ============================================
+const STEP_NAMES = [
+  'situacion_laboral', 'ingresos', 'precio_vivienda', 'ltv',
+  'estado_busqueda', 'urgencia', 'senales_positivas', 'obstaculos', 'contacto',
+];
+
 const STEP_TEXTS = [
   '⏱ 2 minutos y lo tienes',
   '🔥 Ya llevas 1 — casi en la mitad',
@@ -150,6 +155,9 @@ function initQuiz() {
     fill.style.width = pct + '%';
     ptext.textContent = STEP_TEXTS[current] || '¡Ya casi!';
     quiz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Analytics
+    if (idx === 1) window.brokerAnalytics?.sendEvent('quiz_start');
+    else if (idx > 1) window.brokerAnalytics?.sendEvent('quiz_step', { step: idx, step_name: STEP_NAMES[idx] || '' });
   }
 
   // Click en opciones
@@ -229,8 +237,16 @@ function initQuiz() {
     const msgEl = resultStep.querySelector(`[data-result="${clasificacion}"]`);
     if (msgEl) msgEl.style.display = 'block';
 
+    window.brokerAnalytics?.sendEvent('quiz_complete', { clasificacion, score });
     if (!ok) showToast('Error al enviar. Te llamaremos igualmente.', 'error');
   }
+
+  // Abandon tracking: detecta si el usuario sale a mitad del quiz
+  window.addEventListener('beforeunload', () => {
+    if (current > 0 && current < total - 1) {
+      window.brokerAnalytics?.sendEvent('quiz_abandon', { step: current, step_name: STEP_NAMES[current] || '' });
+    }
+  });
 
   // Init
   goTo(0);
