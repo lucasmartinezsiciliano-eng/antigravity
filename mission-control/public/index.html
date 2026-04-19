@@ -3,202 +3,394 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Antigravity — Mission Control</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Antigravity — Control de Captación</title>
+  <style>
+    :root {
+      --bg:      #0a0f14;
+      --surface: #111820;
+      --border:  #1e2a35;
+      --accent:  #00c2ff;
+      --green:   #22c55e;
+      --yellow:  #eab308;
+      --red:     #ef4444;
+      --purple:  #a855f7;
+      --text:    #e2e8f0;
+      --dim:     #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 13px; min-height: 100vh; }
+
+    /* HEADER */
+    .header { display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 52px; border-bottom: 1px solid var(--border);
+      background: var(--surface); position: sticky; top: 0; z-index: 100; }
+    .logo { font-weight: 800; font-size: 15px; letter-spacing: .08em; color: var(--accent); }
+    .logo-sub { color: var(--dim); font-weight: 400; font-size: 12px; margin-left: 10px; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { color: var(--dim); text-decoration: none; font-size: 12px; padding: 4px 10px;
+      border-radius: 6px; transition: .15s; }
+    .nav-link:hover, .nav-link.active { background: rgba(0,194,255,.1); color: var(--accent); }
+    .clock { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+    .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      display: inline-block; margin-right: 5px; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* LAYOUT */
+    .page { padding: 20px 24px 48px; max-width: 1400px; margin: 0 auto; }
+
+    /* METRIC CARDS */
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .metric-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: flex; align-items: center; }
+    .metric-value { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 3px; }
+    .metric-sub { font-size: 11px; color: var(--dim); }
+    .m-live .metric-value  { color: var(--green); }
+    .m-views .metric-value { color: var(--accent); }
+    .m-quiz .metric-value  { color: var(--yellow); }
+    .m-leads .metric-value { color: var(--purple); }
+
+    /* GRIDS */
+    .row { display: grid; gap: 14px; margin-bottom: 14px; }
+    .row-3-1 { grid-template-columns: 2.2fr 1fr; }
+    .row-2   { grid-template-columns: 1fr 1fr; }
+
+    /* SECTION */
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .sec-head { display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 16px; border-bottom: 1px solid var(--border); }
+    .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+    .sec-badge { font-size: 11px; background: rgba(0,194,255,.1); color: var(--accent); padding: 2px 8px; border-radius: 20px; }
+    .sec-body { padding: 12px 16px; }
+
+    /* LIVE VISITORS */
+    .v-empty { color: var(--dim); font-size: 12px; text-align: center; padding: 28px 0; }
+    .v-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .v-row:last-child { border-bottom: none; }
+    .v-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; box-shadow: 0 0 5px var(--green); }
+    .v-page { flex: 1; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .v-time { font-size: 11px; color: var(--dim); flex-shrink: 0; }
+    .v-ref { font-size: 10px; color: var(--dim); background: rgba(255,255,255,.05); padding: 1px 6px; border-radius: 4px; }
+
+    /* CHART */
+    .chart-wrap { padding: 14px 16px 6px; }
+    .chart-svg { width: 100%; display: block; }
+
+    /* FEED */
+    .feed-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .feed-row:last-child { border-bottom: none; }
+    .feed-time { font-size: 11px; color: var(--dim); flex-shrink: 0; width: 38px; font-variant-numeric: tabular-nums; }
+    .feed-icon { font-size: 13px; flex-shrink: 0; width: 18px; text-align: center; }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-evt { font-size: 12px; font-weight: 600; }
+    .feed-url { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-empty { color: var(--dim); font-size: 12px; text-align: center; padding: 24px 0; }
+
+    /* CAPTACIONES */
+    .cap-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .cap-row:last-child { border-bottom: none; }
+    .cls-badge { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+    .cls-A { background: rgba(34,197,94,.15); color: #22c55e; }
+    .cls-B { background: rgba(59,130,246,.15); color: #3b82f6; }
+    .cls-C { background: rgba(234,179,8,.15); color: #eab308; }
+    .cls-D { background: rgba(107,114,128,.15); color: #6b7280; }
+    .cap-info { flex: 1; min-width: 0; }
+    .cap-nombre { font-size: 12px; font-weight: 600; }
+    .cap-meta { font-size: 11px; color: var(--dim); }
+    .cap-right { text-align: right; flex-shrink: 0; }
+    .cap-pts { font-size: 12px; color: var(--dim); }
+    .cap-ago { font-size: 11px; color: var(--dim); }
+    .cap-empty { color: var(--dim); font-size: 12px; text-align: center; padding: 28px 0; line-height: 1.8; }
+
+    /* PAGES BAR */
+    .pg-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .pg-row:last-child { border-bottom: none; }
+    .pg-name { font-size: 11px; width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+    .pg-track { flex: 1; height: 4px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+    .pg-fill  { height: 100%; background: var(--accent); opacity: .7; border-radius: 2px; }
+    .pg-n     { font-size: 11px; color: var(--dim); width: 22px; text-align: right; flex-shrink: 0; }
+
+    /* STATUS */
+    .statusbar { position: fixed; bottom: 0; left: 0; right: 0; height: 28px;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 16px; gap: 16px; font-size: 11px; color: var(--dim); }
+    .s-ok  { color: var(--green); }
+    .s-err { color: var(--red); }
+
+    @media (max-width: 900px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .row-3-1, .row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <div class="layout">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="logo">
-        <span class="logo-icon">⚡</span>
-        <span class="logo-text">ANTIGRAVITY</span>
-      </div>
-      <nav>
-        <a href="index.html" class="nav-item active">Dashboard</a>
-      </nav>
-      <div class="sidebar-bottom">
-        <div id="clock" class="clock"></div>
-      </div>
-    </aside>
+<header class="header">
+  <div class="logo">ANTIGRAVITY <span class="logo-sub">Control de Captación</span></div>
+  <div class="header-right">
+    <a href="/" class="nav-link active">Dashboard</a>
+    <a href="/crm.html" class="nav-link">CRM Firmax</a>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
 
-    <!-- MAIN -->
-    <main class="main">
+<div class="page">
 
-      <!-- HEADER -->
-      <header class="header">
-        <div>
-          <h1 class="header-title">Mission Control</h1>
-          <p id="fecha-briefing" class="header-sub"></p>
-        </div>
-        <div class="header-status">
-          <span class="dot green"></span>
-          <span>Sistema activo</span>
-        </div>
-      </header>
-
-      <!-- BRIEFING -->
-      <section id="briefing-banner" class="briefing-banner">
-        <div class="briefing-icon">📋</div>
-        <div>
-          <div class="briefing-title">Briefing del día</div>
-          <div id="briefing-texto" class="briefing-texto"></div>
-        </div>
-      </section>
-
-      <!-- ALERTAS -->
-      <section id="alertas-section" class="alertas-section hidden"></section>
-
-      <!-- STATS -->
-      <section class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Leads</div>
-          <div id="stat-total" class="stat-value">—</div>
-        </div>
-        <div class="stat-card verde">
-          <div class="stat-label">Nuevos</div>
-          <div id="stat-nuevos" class="stat-value">—</div>
-        </div>
-        <div class="stat-card azul">
-          <div class="stat-label">En Seguimiento</div>
-          <div id="stat-seguimiento" class="stat-value">—</div>
-        </div>
-        <div class="stat-card amarillo">
-          <div class="stat-label">Reunión Agendada</div>
-          <div id="stat-reunion" class="stat-value">—</div>
-        </div>
-        <div class="stat-card morado">
-          <div class="stat-label">Cerrados ✓</div>
-          <div id="stat-cerrados" class="stat-value">—</div>
-        </div>
-        <div class="stat-card rojo">
-          <div class="stat-label">Sin Respuesta +3d</div>
-          <div id="stat-sinrespuesta" class="stat-value">—</div>
-        </div>
-      </section>
-
-      <!-- AGENTES + ACTIVIDAD -->
-      <section class="two-col">
-        <div class="card">
-          <h2 class="card-title">Agentes</h2>
-          <div id="agentes-list"></div>
-        </div>
-        <div class="card">
-          <h2 class="card-title">Actividad reciente</h2>
-          <div id="actividad-list"></div>
-        </div>
-      </section>
-
-      <!-- LEADS TABLE -->
-      <section class="card">
-        <h2 class="card-title">Pipeline Firmax</h2>
-        <table class="leads-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Estado</th>
-              <th>Origen</th>
-              <th>Zona</th>
-              <th>Score</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody id="leads-tbody"></tbody>
-        </table>
-      </section>
-
-    </main>
+  <!-- MÉTRICAS -->
+  <div class="metrics">
+    <div class="metric-card m-live">
+      <div class="metric-label"><span class="dot-live"></span>En la web ahora</div>
+      <div class="metric-value" id="m-live">0</div>
+      <div class="metric-sub">visitantes activos</div>
+    </div>
+    <div class="metric-card m-views">
+      <div class="metric-label">Vistas hoy</div>
+      <div class="metric-value" id="m-views">0</div>
+      <div class="metric-sub" id="m-views-sub">páginas vistas</div>
+    </div>
+    <div class="metric-card m-quiz">
+      <div class="metric-label">Quiz hoy</div>
+      <div class="metric-value" id="m-quiz">0</div>
+      <div class="metric-sub" id="m-quiz-sub">0 iniciados · 0 completos</div>
+    </div>
+    <div class="metric-card m-leads">
+      <div class="metric-label">Captaciones hoy</div>
+      <div class="metric-value" id="m-leads">0</div>
+      <div class="metric-sub">leads recibidos</div>
+    </div>
   </div>
 
-  <script>
-    // Clock
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('clock').textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  <!-- FILA 1: EN VIVO + PÁGINAS TOP -->
+  <div class="row row-3-1">
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title"><span class="dot-live"></span>En vivo</span>
+        <span class="sec-badge" id="live-badge">0 activos</span>
+      </div>
+      <div class="sec-body" id="live-list">
+        <div class="v-empty">Sin visitantes en este momento</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">Páginas top hoy</span>
+      </div>
+      <div class="sec-body" id="top-pages">
+        <div class="v-empty">Sin datos aún</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO HORARIO -->
+  <div class="section" style="margin-bottom:14px;">
+    <div class="sec-head">
+      <span class="sec-title">Actividad del día — por hora</span>
+      <span style="font-size:10px;color:var(--dim);">
+        <span style="color:rgba(0,194,255,.8)">▌</span> vistas &nbsp;
+        <span style="color:rgba(234,179,8,.7)">▌</span> interacciones &nbsp;
+        <span style="color:#a855f7">▌</span> captaciones
+      </span>
+    </div>
+    <div class="chart-wrap">
+      <svg class="chart-svg" id="chart" height="80" viewBox="0 0 960 80" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+
+  <!-- FILA 3: FEED + CAPTACIONES -->
+  <div class="row row-2">
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">Feed de interacciones</span>
+        <span class="sec-badge">live</span>
+      </div>
+      <div class="sec-body" id="feed-list">
+        <div class="feed-empty">Esperando actividad en la web...</div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">Captaciones recientes</span>
+        <a href="/crm.html" style="font-size:11px;color:var(--accent);text-decoration:none;">Ver CRM →</a>
+      </div>
+      <div class="sec-body" id="cap-list">
+        <div class="cap-empty">Sin captaciones aún<br><span style="font-size:11px">Los leads del quiz aparecerán aquí</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="statusbar">
+  <span id="s-dot" class="s-ok">● conectado</span>
+  <span id="s-msg">Actualizando cada 5s</span>
+  <span style="margin-left:auto" id="s-time">—</span>
+</div>
+
+<script>
+// ── RELOJ ─────────────────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function ago(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60)   return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm';
+  return Math.floor(s/3600) + 'h';
+}
+function hhmm(ts) {
+  return new Date(ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}
+function label(page) {
+  if (!page || page === '/') return 'Inicio';
+  return page.replace(/^\/|\/$/g,'').replace(/-/g,' ').slice(0,30) || page;
+}
+const EVT = {
+  page_view:     {icon:'👁', txt:'Vista de página'},
+  quiz_start:    {icon:'🧩', txt:'Quiz iniciado'},
+  quiz_step:     {icon:'➡', txt:'Quiz avanza'},
+  quiz_complete: {icon:'✅', txt:'Quiz completado'},
+  quiz_abandon:  {icon:'↩', txt:'Quiz abandonado'},
+  lead_captado:  {icon:'🎯', txt:'Lead captado'},
+};
+
+// ── LIVE ──────────────────────────────────────────────────────────────────────
+function renderLive(d) {
+  document.getElementById('m-live').textContent = d.count;
+  document.getElementById('live-badge').textContent = d.count + ' activo' + (d.count !== 1 ? 's' : '');
+  const el = document.getElementById('live-list');
+  if (!d.visitors.length) {
+    el.innerHTML = '<div class="v-empty">Sin visitantes en este momento</div>'; return;
+  }
+  el.innerHTML = d.visitors.map(v => `
+    <div class="v-row">
+      <div class="v-dot"></div>
+      <div class="v-page" title="${v.page}">${label(v.page)}</div>
+      <div class="v-time">${ago(v.last_seen)}</div>
+      ${v.referrer ? `<div class="v-ref">${v.referrer.replace(/^https?:\/\//,'').slice(0,22)}</div>` : ''}
+    </div>`).join('');
+}
+
+// ── TODAY ─────────────────────────────────────────────────────────────────────
+function renderToday(d) {
+  document.getElementById('m-views').textContent = d.totals.views;
+  document.getElementById('m-quiz').textContent  = d.quiz.starts;
+  document.getElementById('m-quiz-sub').textContent = d.quiz.starts + ' iniciados · ' + d.quiz.completes + ' completos';
+  document.getElementById('m-leads').textContent  = d.totals.leads;
+
+  // Chart
+  const W=960, H=80, now=new Date().getHours(), bw=Math.floor((W-8)/24);
+  const mx=Math.max(1,...d.hours.map(h=>h.views+h.interactions+h.leads));
+  const sc=(H-20)/mx;
+  let svg='';
+  d.hours.forEach((h,i) => {
+    const x=4+i*bw, tot=(h.views+h.interactions+h.leads)*sc;
+    if(i===now) svg+=`<rect x="${x}" y="0" width="${bw}" height="${H-14}" fill="rgba(0,194,255,.05)" rx="2"/>`;
+    if(tot>0) {
+      const hv=h.views*sc, hi=h.interactions*sc, hl=h.leads*sc;
+      let y=H-14-tot;
+      svg+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${hv}" fill="rgba(0,194,255,.75)" rx="1"/>`;
+      y+=hv;
+      svg+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${hi}" fill="rgba(234,179,8,.6)" rx="1"/>`;
+      y+=hi;
+      svg+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${hl}" fill="#a855f7" rx="1"/>`;
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+    if(i%3===0||i===now)
+      svg+=`<text x="${x+bw/2}" y="${H-1}" text-anchor="middle" font-size="9" fill="${i===now?'#00c2ff':'#4b5563'}">${i}h</text>`;
+  });
+  document.getElementById('chart').innerHTML = svg;
 
-    // Load data
-    async function loadAll() {
-      const [stats, agents, leads, activity, briefing] = await Promise.all([
-        fetch('/api/stats').then(r => r.json()),
-        fetch('/api/agents').then(r => r.json()),
-        fetch('/api/leads').then(r => r.json()),
-        fetch('/api/activity').then(r => r.json()),
-        fetch('/api/briefing').then(r => r.json())
-      ]);
+  // Top pages
+  const el=document.getElementById('top-pages');
+  if(!d.topPages.length){el.innerHTML='<div class="v-empty">Sin datos aún</div>';return;}
+  const mx2=d.topPages[0].views;
+  el.innerHTML=d.topPages.map(p=>`
+    <div class="pg-row">
+      <div class="pg-name" title="${p.page}">${label(p.page)||'/'}</div>
+      <div class="pg-track"><div class="pg-fill" style="width:${Math.round(p.views/mx2*100)}%"></div></div>
+      <div class="pg-n">${p.views}</div>
+    </div>`).join('');
+}
 
-      // Briefing
-      document.getElementById('fecha-briefing').textContent = briefing.fecha;
-      document.getElementById('briefing-texto').textContent = briefing.resumen;
+// ── FEED ──────────────────────────────────────────────────────────────────────
+let lastTs=0, feedBuf=[];
+function renderFeed(events) {
+  if(events.length) {
+    feedBuf=[...events,...feedBuf].slice(0,30);
+    lastTs=Math.max(lastTs,...events.map(e=>e.ts));
+  }
+  const el=document.getElementById('feed-list');
+  if(!feedBuf.length){el.innerHTML='<div class="feed-empty">Esperando actividad en la web...</div>';return;}
+  const rows=[...feedBuf].sort((a,b)=>b.ts-a.ts).slice(0,20);
+  el.innerHTML=rows.map(e=>{
+    const m=EVT[e.event]||{icon:'·',txt:e.event};
+    const extra=e.data?.clasificacion?' · Clase '+e.data.clasificacion+' ('+e.data.score+'pts)':'';
+    return `<div class="feed-row">
+      <div class="feed-time">${hhmm(e.ts)}</div>
+      <div class="feed-icon">${m.icon}</div>
+      <div class="feed-body">
+        <div class="feed-evt">${m.txt}${extra}</div>
+        <div class="feed-url">${e.url||'/'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-      // Stats
-      document.getElementById('stat-total').textContent = stats.total;
-      document.getElementById('stat-nuevos').textContent = stats.nuevos;
-      document.getElementById('stat-seguimiento').textContent = stats.enSeguimiento;
-      document.getElementById('stat-reunion').textContent = stats.reunionAgendada;
-      document.getElementById('stat-cerrados').textContent = stats.cerradosGanados;
-      document.getElementById('stat-sinrespuesta').textContent = stats.sinRespuesta;
+// ── CAPTACIONES ───────────────────────────────────────────────────────────────
+function renderCaptaciones(leads) {
+  const el=document.getElementById('cap-list');
+  if(!leads.length){
+    el.innerHTML='<div class="cap-empty">Sin captaciones aún<br><span style="font-size:11px">Los leads del quiz aparecerán aquí</span></div>';
+    return;
+  }
+  el.innerHTML=leads.slice(0,8).map(l=>`
+    <div class="cap-row">
+      <div class="cls-badge cls-${l.clasificacion||'D'}">${l.clasificacion||'?'}</div>
+      <div class="cap-info">
+        <div class="cap-nombre">${l.nombre||'—'}${l.apellidos?' '+l.apellidos:''}</div>
+        <div class="cap-meta">${l.origen||'—'}${l.tipo_contrato?' · '+l.tipo_contrato:''}</div>
+      </div>
+      <div class="cap-right">
+        <div class="cap-pts">${l.score||0}pts</div>
+        <div class="cap-ago">${ago(new Date(l.fecha_entrada).getTime())}</div>
+      </div>
+    </div>`).join('');
+}
 
-      // Alertas
-      if (stats.alertas && stats.alertas.length > 0) {
-        const sec = document.getElementById('alertas-section');
-        sec.classList.remove('hidden');
-        sec.innerHTML = stats.alertas.map(a => `<div class="alerta">⚠️ ${a}</div>`).join('');
-      }
+// ── POLLING ───────────────────────────────────────────────────────────────────
+async function tickLive() {
+  try {
+    const [lr, fr] = await Promise.all([
+      fetch('/api/analytics/live'),
+      fetch('/api/analytics/feed?since='+lastTs+'&limit=30')
+    ]);
+    renderLive(await lr.json());
+    renderFeed(await fr.json());
+    const dot=document.getElementById('s-dot');
+    dot.className='s-ok'; dot.textContent='● conectado';
+  } catch(e) {
+    const dot=document.getElementById('s-dot');
+    dot.className='s-err'; dot.textContent='● sin conexión';
+  }
+}
 
-      // Agentes
-      document.getElementById('agentes-list').innerHTML = agents.map(a => `
-        <div class="agent-row">
-          <span class="agent-emoji">${a.emoji}</span>
-          <div class="agent-info">
-            <div class="agent-name">${a.name} <span class="agent-role">${a.role}</span></div>
-            <div class="agent-last">Último: ${new Date(a.lastSeen).toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}</div>
-          </div>
-          <span class="badge ${a.status === 'active' ? 'badge-green' : 'badge-grey'}">${a.status === 'active' ? 'Activo' : 'Idle'}</span>
-        </div>
-      `).join('');
+async function tickStats() {
+  try {
+    const [tr, cr] = await Promise.all([
+      fetch('/api/analytics/today'),
+      fetch('/api/crm/leads')
+    ]);
+    renderToday(await tr.json());
+    renderCaptaciones(await cr.json());
+    document.getElementById('s-time').textContent =
+      'Actualizado '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  } catch(e){}
+}
 
-      // Actividad
-      document.getElementById('actividad-list').innerHTML = activity.map(a => `
-        <div class="activity-row">
-          <span class="activity-time">${new Date(a.time).toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}</span>
-          <span class="activity-agent">${a.agent}</span>
-          <span class="activity-action">${a.action}</span>
-        </div>
-      `).join('');
-
-      // Leads table
-      const estadoColors = {
-        nuevo: 'badge-green',
-        en_seguimiento: 'badge-blue',
-        reunion_agendada: 'badge-yellow',
-        sin_respuesta: 'badge-red',
-        cerrado_ganado: 'badge-purple'
-      };
-      const estadoLabels = {
-        nuevo: 'Nuevo',
-        en_seguimiento: 'En seguimiento',
-        reunion_agendada: 'Reunión agendada',
-        sin_respuesta: 'Sin respuesta',
-        cerrado_ganado: 'Cerrado ✓'
-      };
-      document.getElementById('leads-tbody').innerHTML = leads.map(l => `
-        <tr>
-          <td>${l.id}</td>
-          <td><span class="badge ${estadoColors[l.estado] || ''}">${estadoLabels[l.estado] || l.estado}</span></td>
-          <td>${l.origen}</td>
-          <td>${l.zona}</td>
-          <td><span class="score score-${l.score >= 7 ? 'high' : l.score >= 4 ? 'mid' : 'low'}">${l.score}/10</span></td>
-          <td>${new Date(l.fecha).toLocaleDateString('es-ES')}</td>
-        </tr>
-      `).join('');
-    }
-
-    loadAll();
-    setInterval(loadAll, 30000); // Refresh cada 30s
-  </script>
+tickLive(); tickStats();
+setInterval(tickLive,  5000);
+setInterval(tickStats, 30000);
+</script>
 </body>
 </html>

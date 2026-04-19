@@ -2,10 +2,22 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const app = express();
-const PORT = 9999;
+const PORT = process.env.PORT || 3333;
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── CORS — analytics desde brokerhipotecario.es ──────────────────────────────
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  if (origin.includes('brokerhipotecario.es') || origin.includes('localhost')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 
 // ─── CRM DATA PERSISTENCE ─────────────────────────────────────────────────────
 const CRM_FILE = process.env.CRM_DATA_DIR
@@ -20,106 +32,150 @@ function saveCRM(data) {
   fs.writeFileSync(CRM_FILE, JSON.stringify(data, null, 2));
 }
 
-// ─── LEGACY MOCK DATA (Mission Control Dashboard) ────────────────────────────
-const mockData = {
-  agents: [
-    { id: 'jarvis', name: 'Jarvis', role: 'Director General', status: 'active', lastSeen: new Date().toISOString(), emoji: '🤖' },
-    { id: 'rex', name: 'Rex', role: 'Broker', status: 'active', lastSeen: new Date().toISOString(), emoji: '🏠' },
-    { id: 'nova', name: 'Nova', role: 'Marketing', status: 'active', lastSeen: new Date().toISOString(), emoji: '🎬' },
-    { id: 'flow', name: 'Flow', role: 'n8n Técnico', status: 'idle', lastSeen: new Date(Date.now() - 3600000).toISOString(), emoji: '⚡' }
-  ],
-  leads: [
-    { id: 'L001', nombre: 'Lead_001', estado: 'nuevo', origen: 'Instagram', zona: 'Tarragona', fecha: new Date(Date.now() - 86400000).toISOString(), score: 8 },
-    { id: 'L002', nombre: 'Lead_002', estado: 'en_seguimiento', origen: 'Instagram', zona: 'Reus', fecha: new Date(Date.now() - 172800000).toISOString(), score: 6 },
-    { id: 'L003', nombre: 'Lead_003', estado: 'reunion_agendada', origen: 'Boca a boca', zona: 'Baix Camp', fecha: new Date(Date.now() - 259200000).toISOString(), score: 9 },
-    { id: 'L004', nombre: 'Lead_004', estado: 'en_seguimiento', origen: 'Instagram', zona: 'Tarragona', fecha: new Date(Date.now() - 432000000).toISOString(), score: 5 },
-    { id: 'L005', nombre: 'Lead_005', estado: 'sin_respuesta', origen: 'Instagram', zona: 'Reus', fecha: new Date(Date.now() - 518400000).toISOString(), score: 3 },
-    { id: 'L006', nombre: 'Lead_006', estado: 'cerrado_ganado', origen: 'Boca a boca', zona: 'Tarragona', fecha: new Date(Date.now() - 604800000).toISOString(), score: 10 }
-  ],
-  activity: [
-    { time: new Date(Date.now() - 300000).toISOString(), agent: 'Jarvis', action: 'Briefing diario generado' },
-    { time: new Date(Date.now() - 600000).toISOString(), agent: 'Rex', action: 'Lead_003 — reunión agendada para mañana' },
-    { time: new Date(Date.now() - 1800000).toISOString(), agent: 'Nova', action: 'Calendario de contenido semana 2 listo' },
-    { time: new Date(Date.now() - 3600000).toISOString(), agent: 'Flow', action: 'WF1 Instagram activado correctamente' },
-    { time: new Date(Date.now() - 7200000).toISOString(), agent: 'Rex', action: 'Lead_001 nuevo — origen: comentario FIRMAX en reel' }
-  ]
+// ─── ANALYTICS IN-MEMORY ─────────────────────────────────────────────────────
+// Se resetea al reiniciar el contenedor — solo para visualización live
+const analyticsStore = {
+  events: [],    // { ts, event, url, session_id, referrer, utm_source, data }
+  sessions: {}   // session_id → { ts, page, referrer, first_seen }
 };
 
-// ─── LEGACY ENDPOINTS (Mission Control) ──────────────────────────────────────
-app.get('/api/agents', (req, res) => res.json(mockData.agents));
-app.get('/api/leads', (req, res) => res.json(mockData.leads));
-app.get('/api/activity', (req, res) => res.json(mockData.activity));
+function pruneEvents() {
+  const cutoff = Date.now() - 86400000; // 24h
+  analyticsStore.events = analyticsStore.events.filter(e => e.ts > cutoff);
+}
 
-app.get('/api/stats', (req, res) => {
-  const leads = mockData.leads;
-  const sinRespuesta = leads.filter(l => {
-    const dias = (Date.now() - new Date(l.fecha)) / 86400000;
-    return l.estado === 'en_seguimiento' && dias > 3;
+function startOfToday() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+// ─── ANALYTICS ENDPOINTS ──────────────────────────────────────────────────────
+
+// POST /api/analytics/event — recibe eventos desde brokerhipotecario.es
+app.post('/api/analytics/event', (req, res) => {
+  const { event, url, referrer, session_id, timestamp, utm_source, data } = req.body;
+  if (!event) return res.status(400).json({ error: 'event required' });
+
+  const ts = timestamp ? new Date(timestamp).getTime() : Date.now();
+  const entry = { ts, event, url: url || '/', session_id: session_id || null,
+                  referrer: referrer || '', utm_source: utm_source || '', data: data || {} };
+
+  analyticsStore.events.push(entry);
+  if (analyticsStore.events.length > 2000) analyticsStore.events = analyticsStore.events.slice(-2000);
+
+  // Actualizar sesión activa
+  if (session_id) {
+    if (!analyticsStore.sessions[session_id]) {
+      analyticsStore.sessions[session_id] = { first_seen: ts, referrer: referrer || '' };
+    }
+    analyticsStore.sessions[session_id].ts = ts;
+    analyticsStore.sessions[session_id].page = url || '/';
+  }
+
+  // Limpiar sesiones viejas (>30min sin heartbeat)
+  const sessionCutoff = Date.now() - 1800000;
+  Object.keys(analyticsStore.sessions).forEach(id => {
+    if (analyticsStore.sessions[id].ts < sessionCutoff) delete analyticsStore.sessions[id];
   });
+
+  res.json({ ok: true });
+});
+
+// GET /api/analytics/live — visitantes activos ahora (últimos 90s)
+app.get('/api/analytics/live', (req, res) => {
+  const cutoff = Date.now() - 90000;
+  const visitors = Object.entries(analyticsStore.sessions)
+    .filter(([, s]) => s.ts > cutoff)
+    .map(([id, s]) => ({
+      id: id.slice(0, 8),
+      page: s.page || '/',
+      since: s.first_seen,
+      last_seen: s.ts,
+      referrer: s.referrer
+    }))
+    .sort((a, b) => b.last_seen - a.last_seen);
+
+  res.json({ count: visitors.length, visitors });
+});
+
+// GET /api/analytics/today — estadísticas del día (buckets por hora)
+app.get('/api/analytics/today', (req, res) => {
+  pruneEvents();
+  const start = startOfToday();
+  const todayEvents = analyticsStore.events.filter(e => e.ts >= start);
+
+  const hours = Array.from({ length: 24 }, (_, h) => ({ hour: h, views: 0, interactions: 0, leads: 0 }));
+  const pages = {};
+  let quizStarts = 0, quizCompletes = 0, quizAbandons = 0;
+
+  todayEvents.forEach(e => {
+    const h = new Date(e.ts).getHours();
+    if (e.event === 'page_view')       { hours[h].views++; pages[e.url] = (pages[e.url] || 0) + 1; }
+    else if (e.event === 'lead_submit') hours[h].leads++;
+    else                                hours[h].interactions++;
+    if (e.event === 'quiz_start')    quizStarts++;
+    if (e.event === 'quiz_complete') quizCompletes++;
+    if (e.event === 'quiz_abandon')  quizAbandons++;
+  });
+
+  const topPages = Object.entries(pages).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([p, n]) => ({ page: p, views: n }));
+
   res.json({
-    total: leads.length,
-    nuevos: leads.filter(l => l.estado === 'nuevo').length,
-    enSeguimiento: leads.filter(l => l.estado === 'en_seguimiento').length,
-    reunionAgendada: leads.filter(l => l.estado === 'reunion_agendada').length,
-    cerradosGanados: leads.filter(l => l.estado === 'cerrado_ganado').length,
-    sinRespuesta: sinRespuesta.length,
-    alertas: sinRespuesta.map(l => `${l.nombre} lleva más de 3 días sin respuesta`)
+    hours,
+    totals: {
+      views:        hours.reduce((s, h) => s + h.views, 0),
+      interactions: hours.reduce((s, h) => s + h.interactions, 0),
+      leads:        hours.reduce((s, h) => s + h.leads, 0)
+    },
+    quiz: { starts: quizStarts, completes: quizCompletes, abandons: quizAbandons },
+    topPages
   });
 });
 
-app.get('/api/briefing', (req, res) => {
-  res.json({
-    fecha: new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-    resumen: 'Pipeline activo. 2 leads en seguimiento, 1 reunión agendada para hoy. Nova tiene el calendario de la semana listo para aprobación. Flow reporta WF1 activo sin errores.',
-    prioridades: [
-      'Aprobar calendario de contenido semana 2 (Nova)',
-      'Confirmar reunión con Lead_003 — Baix Camp',
-      'Reactivar Lead_005 — 6 días sin respuesta'
-    ]
-  });
+// GET /api/analytics/feed — últimos N eventos (live stream)
+app.get('/api/analytics/feed', (req, res) => {
+  pruneEvents();
+  const since = req.query.since ? Number(req.query.since) : 0;
+  const limit = Math.min(Number(req.query.limit) || 30, 100);
+  const events = analyticsStore.events
+    .filter(e => e.ts > since && e.event !== 'heartbeat')
+    .slice(-limit);
+  res.json(events);
 });
 
 // ─── CRM ENDPOINTS ────────────────────────────────────────────────────────────
 
-// GET all leads
-app.get('/api/crm/leads', (req, res) => {
-  res.json(loadCRM().leads);
-});
+app.get('/api/crm/leads', (req, res) => res.json(loadCRM().leads));
 
-// POST create new lead
 app.post('/api/crm/leads', (req, res) => {
   const data = loadCRM();
   const now = new Date().toISOString();
-  const lead = {
-    id: 'L' + Date.now().toString().slice(-6),
-    ...req.body,
-    etapa: req.body.etapa || 'nuevo',
-    fecha_entrada: now,
-    fecha_etapa: now,
-    notas: [],
-    ultima_actividad: now
-  };
+  const lead = { id: 'L' + Date.now().toString().slice(-6), ...req.body,
+    etapa: req.body.etapa || 'nuevo', fecha_entrada: now, fecha_etapa: now,
+    notas: [], ultima_actividad: now };
   data.leads.unshift(lead);
   saveCRM(data);
+
+  // Registrar captación en analytics
+  analyticsStore.events.push({ ts: Date.now(), event: 'lead_captado', url: req.body.pagina || '/',
+    session_id: null, referrer: '', utm_source: req.body.origen || '', data: {
+      clasificacion: lead.clasificacion, score: lead.score, nombre: lead.nombre
+    }});
+
   res.status(201).json(lead);
 });
 
-// PATCH update lead fields
 app.patch('/api/crm/leads/:id', (req, res) => {
   const data = loadCRM();
   const i = data.leads.findIndex(l => l.id === req.params.id);
   if (i === -1) return res.status(404).json({ error: 'Lead no encontrado' });
-
   const updates = { ...req.body, ultima_actividad: new Date().toISOString() };
-  if (updates.etapa && updates.etapa !== data.leads[i].etapa) {
-    updates.fecha_etapa = new Date().toISOString();
-  }
+  if (updates.etapa && updates.etapa !== data.leads[i].etapa) updates.fecha_etapa = new Date().toISOString();
   data.leads[i] = { ...data.leads[i], ...updates };
   saveCRM(data);
   res.json(data.leads[i]);
 });
 
-// DELETE lead
 app.delete('/api/crm/leads/:id', (req, res) => {
   const data = loadCRM();
   data.leads = data.leads.filter(l => l.id !== req.params.id);
@@ -127,17 +183,11 @@ app.delete('/api/crm/leads/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// POST add note to lead
 app.post('/api/crm/leads/:id/notes', (req, res) => {
   const data = loadCRM();
   const i = data.leads.findIndex(l => l.id === req.params.id);
   if (i === -1) return res.status(404).json({ error: 'Lead no encontrado' });
-
-  const nota = {
-    id: 'N' + Date.now(),
-    fecha: new Date().toISOString(),
-    ...req.body
-  };
+  const nota = { id: 'N' + Date.now(), fecha: new Date().toISOString(), ...req.body };
   if (!data.leads[i].notas) data.leads[i].notas = [];
   data.leads[i].notas.push(nota);
   data.leads[i].ultima_actividad = new Date().toISOString();
@@ -145,38 +195,28 @@ app.post('/api/crm/leads/:id/notes', (req, res) => {
   res.status(201).json(nota);
 });
 
-// GET chat messages (with optional since= timestamp in ms)
 app.get('/api/crm/chat', (req, res) => {
   const data = loadCRM();
   const since = req.query.since ? Number(req.query.since) : 0;
-  const msgs = since
-    ? data.chat.filter(m => new Date(m.fecha).getTime() > since)
-    : data.chat.slice(-60);
+  const msgs = since ? data.chat.filter(m => new Date(m.fecha).getTime() > since) : data.chat.slice(-60);
   res.json(msgs);
 });
 
-// POST send chat message
 app.post('/api/crm/chat', (req, res) => {
   const data = loadCRM();
-  const msg = {
-    id: 'M' + Date.now(),
-    fecha: new Date().toISOString(),
-    ...req.body
-  };
+  const msg = { id: 'M' + Date.now(), fecha: new Date().toISOString(), ...req.body };
   data.chat.push(msg);
   if (data.chat.length > 500) data.chat = data.chat.slice(-500);
   saveCRM(data);
   res.status(201).json(msg);
 });
 
-// GET CRM stats
 app.get('/api/crm/stats', (req, res) => {
   const leads = loadCRM().leads;
   const now = Date.now();
   const stale = leads.filter(l => {
     if (['firmado', 'descartado'].includes(l.etapa)) return false;
-    const dias = (now - new Date(l.ultima_actividad)) / 86400000;
-    return dias > 3;
+    return (now - new Date(l.ultima_actividad)) / 86400000 > 3;
   });
   res.json({
     total: leads.length,
@@ -194,6 +234,5 @@ app.get('/api/crm/stats', (req, res) => {
 
 // ─── START ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 Mission Control en http://localhost:${PORT}`);
-  console.log(`📊 CRM Firmax en http://localhost:${PORT}/crm.html`);
+  console.log(`Mission Control en http://localhost:${PORT}`);
 });
