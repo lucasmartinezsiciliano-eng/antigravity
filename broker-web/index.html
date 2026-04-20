@@ -73,8 +73,11 @@
 <header>
   <div class="container header-inner">
     <a href="/" class="logo">
-      <img src="img/logo-transparent.png" alt="Broker Hipotecario Firmax" class="logo-img" />
-      <span class="logo-text">Broker<span>Hipotecario</span></span>
+      <img src="img/logo-firmax.svg" alt="Firmax" class="logo-img" />
+      <div class="logo-group">
+        <span class="logo-text">Broker<span>Hipotecario</span></span>
+        <span class="logo-byline">by Firmax</span>
+      </div>
     </a>
     <nav>
       <a href="#servicios">Servicios</a>
@@ -122,10 +125,47 @@
       </div>
     </div>
 
+    <div class="hero-card">
+      <div class="hero-card-tag">
+        <span>📋</span> Estudio gratuito sin compromiso
+      </div>
+      <h3>¿Consigo mi hipoteca?</h3>
+      <p>Cuéntanos tu caso y te respondemos en menos de 48h.</p>
+      <form id="hero-form" novalidate>
+        <input type="text" name="hp_field" style="display:none!important;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true" value="" />
+        <div class="form-group">
+          <label for="hf-nombre">Nombre</label>
+          <input type="text" id="hf-nombre" name="hf_nombre" placeholder="Tu nombre" required />
+        </div>
+        <div class="form-group">
+          <label for="hf-tel">Teléfono</label>
+          <input type="tel" id="hf-tel" name="hf_telefono" placeholder="6XX XXX XXX" required />
+        </div>
+        <button type="submit" class="btn btn-primary form-submit">Quiero que me llamen →</button>
+        <p class="form-privacy">🔒 Sin spam. Solo te llamamos si podemos ayudarte.</p>
+      </form>
+    </div>
+
   </div>
 </section>
 
-<div style="height:80px;background:linear-gradient(to bottom,#00323C,#F4F7F8);"></div>
+<!-- ============ TRUST BAR ============ -->
+<section class="trust-bar">
+  <div class="container trust-bar-inner">
+    <span class="trust-bar-label">Negociamos con +20 entidades</span>
+    <div class="trust-logos">
+      <span>Santander</span>
+      <span>BBVA</span>
+      <span>CaixaBank</span>
+      <span>Sabadell</span>
+      <span>Bankinter</span>
+      <span>ING</span>
+      <span>Kutxabank</span>
+      <span>Unicaja</span>
+      <span>+más</span>
+    </div>
+  </div>
+</section>
 
 <!-- ============ SERVICIOS ============ -->
 <section class="servicios" id="servicios">
@@ -188,8 +228,6 @@
   </div>
 </section>
 
-<div style="height:80px;background:linear-gradient(to bottom,#F4F7F8,#0D1E24);"></div>
-
 <!-- ============ POR QUÉ — DARK ============ -->
 <section class="porque" id="porque">
   <div class="container">
@@ -233,8 +271,6 @@
   </div>
 </section>
 
-<div style="height:80px;background:linear-gradient(to bottom,#0D1E24,#F4F7F8);"></div>
-
 <!-- ============ PROCESO ============ -->
 <section class="proceso" id="proceso">
   <div class="container">
@@ -273,13 +309,11 @@
   </div>
 </section>
 
-<div style="height:80px;background:linear-gradient(to bottom,#F4F7F8,#004F5E);"></div>
-
 <!-- ============ QUIZ / FILTRO ============ -->
 <section class="quiz-section" id="filtro">
   <div class="container">
     <div class="quiz-inner">
-      <span class="badge badge-dark" style="margin-bottom:16px;display:inline-block;">Calculadora hipotecaria</span>
+      <span class="badge badge-dark quiz-badge">Calculadora hipotecaria</span>
       <h2>¿Puedo conseguir mi hipoteca?</h2>
       <p>Responde 5 preguntas y te decimos exactamente dónde estás. Sin compromiso, sin trampas.</p>
 
@@ -504,7 +538,7 @@
               <div class="quiz-opt-text">Tengo otros bienes o patrimonio<small>Propiedades, inversiones, etc.</small></div>
             </div>
           </div>
-          <p style="font-size:0.82rem;margin-top:8px;">Puedes seleccionar varias opciones o ninguna.</p>
+          <p class="quiz-hint">Puedes seleccionar varias opciones o ninguna.</p>
           <div class="quiz-nav">
             <button class="quiz-back">← Atrás</button>
             <button class="btn btn-primary quiz-next">Siguiente →</button>
@@ -529,7 +563,7 @@
               <div class="quiz-opt-text">Más del 50% de mis ingresos son variables<small>Comisiones, bonus, etc.</small></div>
             </div>
           </div>
-          <p style="font-size:0.82rem;margin-top:8px;">Si no te aplica ninguna, avanza directamente.</p>
+          <p class="quiz-hint">Si no te aplica ninguna, avanza directamente.</p>
           <div class="quiz-nav">
             <button class="quiz-back">← Atrás</button>
             <button class="btn btn-primary quiz-next">Siguiente →</button>
@@ -608,9 +642,9 @@
 
             <!-- Común a todos -->
             <div class="result-common">
-              <div style="background:var(--teal-bg);border-radius:var(--radius-sm);padding:18px;margin:20px 0;border-left:4px solid var(--teal);">
-                <p style="color:var(--teal-dark);font-size:0.88rem;font-weight:500;margin:0;">
-                  💬 ¿Tienes alguna pregunta? Escríbenos a <a href="mailto:tarragona@firmax.es" style="color:var(--teal);font-weight:700;">tarragona@firmax.es</a>
+              <div class="result-contact-box">
+                <p class="result-contact-text">
+                  💬 ¿Tienes alguna pregunta? Escríbenos a <a href="mailto:tarragona@firmax.es" class="result-contact-link">tarragona@firmax.es</a>
                 </p>
               </div>
             </div>
@@ -619,6 +653,52 @@
         </div>
 
       </div><!-- /quiz -->
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIOS ============ -->
+<section class="testimonios" id="testimonios">
+  <div class="container">
+    <div class="section-header" data-reveal>
+      <span class="badge">Testimonios</span>
+      <h2>Lo que dicen nuestros clientes</h2>
+      <p>Más de 1.000 familias ya han firmado su hipoteca con nosotros.</p>
+    </div>
+    <div class="testimonios-grid">
+      <div class="testimonio-card" data-reveal>
+        <div class="testimonio-stars">★★★★★</div>
+        <p class="testimonio-text">"Llevábamos meses intentándolo solos y los bancos nos cerraban las puertas. Mariano nos consiguió la hipoteca en 3 semanas. No me lo podía creer."</p>
+        <div class="testimonio-autor">
+          <div class="testimonio-avatar">MR</div>
+          <div>
+            <strong>María R.</strong>
+            <span>Hipoteca primera vivienda · Tarragona</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonio-card" data-reveal>
+        <div class="testimonio-stars">★★★★★</div>
+        <p class="testimonio-text">"Soy autónomo y pensaba que no podría conseguir nada. Me orientaron desde el primer momento, me dijeron exactamente qué documentación preparar y al final firmamos."</p>
+        <div class="testimonio-autor">
+          <div class="testimonio-avatar">JL</div>
+          <div>
+            <strong>Jordi L.</strong>
+            <span>Autónomo · Reus</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonio-card" data-reveal>
+        <div class="testimonio-stars">★★★★★</div>
+        <p class="testimonio-text">"Conseguimos mejores condiciones de las que nos ofrecía directamente nuestro propio banco. El servicio fue impecable y muy cercano en todo momento."</p>
+        <div class="testimonio-autor">
+          <div class="testimonio-avatar">AC</div>
+          <div>
+            <strong>Ana y Carlos</strong>
+            <span>Segunda vivienda · Salou</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -641,7 +721,7 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="logo">
-          <img src="img/logo-transparent.png" alt="Broker Hipotecario Firmax" class="logo-img" />
+          <img src="img/logo-firmax.svg" alt="Broker Hipotecario Firmax" class="logo-img" />
           <span class="logo-text">Broker<span>Hipotecario</span></span>
         </div>
         <p>Tu asesor hipotecario independiente en Tarragona. Conseguimos la hipoteca que mereces.</p>
@@ -670,8 +750,8 @@
       </div>
       <div class="footer-col">
         <h4>Contacto</h4>
-                <a href="mailto:tarragona@firmax.es">tarragona@firmax.es</a>
-        <a href="#">Rambla President Francesc Macià, 10 · Tarragona</a>
+        <a href="mailto:tarragona@firmax.es">tarragona@firmax.es</a>
+        <a href="#filtro">Rambla President Francesc Macià, 10 · Tarragona</a>
       </div>
     </div>
     <div class="footer-bottom">

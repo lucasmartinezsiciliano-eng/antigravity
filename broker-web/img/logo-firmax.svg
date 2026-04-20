@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="box">
+      <rect width="100" height="100" rx="8"/>
+    </clipPath>
+  </defs>
+  <!-- Fondo gris Firmax -->
+  <rect width="100" height="100" rx="8" fill="#58595B"/>
+  <!-- Verde lima Firmax — sección superior con curva -->
+  <path clip-path="url(#box)" d="M 0,0 L 100,0 L 100,28 C 68,32 32,52 0,68 Z" fill="#8DC63F"/>
+</svg>
