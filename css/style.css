@@ -97,7 +97,7 @@ header {
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 .logo { display: flex; align-items: center; gap: 12px; }
-.logo-img { height: 44px; width: 44px; display: block; object-fit: cover; border-radius: 8px; }
+.logo-img { height: 52px; width: auto; display: block; border-radius: 8px; }
 .logo-group { display: flex; flex-direction: column; gap: 2px; }
 .logo-text { font-size: 1.05rem; font-weight: 700; color: var(--white); letter-spacing: -0.01em; line-height: 1.1; }
 .logo-text span { color: #8DC63F; }
