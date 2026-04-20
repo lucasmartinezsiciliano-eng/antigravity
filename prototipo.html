@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BrokerHipotecario — Prototipo v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* =============================================
+   DESIGN TOKENS
+   ============================================= */
+:root {
+  --teal:          #8DC63F;
+  --teal-dark:     #6A9C2E;
+  --teal-darker:   #4A7020;
+  --teal-light:    #A8D452;
+  --teal-bg:       #EEF7D4;
+  --teal-bg-deep:  #DDF0A8;
+  --gold:          #C8952A;
+  --gold-light:    #F5C842;
+  --white:         #FFFFFF;
+  --off-white:     #F6F8FA;
+  --gray-50:       #F9FAFB;
+  --gray-100:      #E8EDEF;
+  --gray-300:      #A8BCC3;
+  --gray-500:      #506870;
+  --gray-600:      #3A5560;
+  --gray-700:      #243845;
+  --gray-800:      #162830;
+  --black:         #0B1A20;
+
+  --font:         'Inter', system-ui, sans-serif;
+  --font-heading: 'DM Serif Display', Georgia, serif;
+  --radius-sm:    8px;
+  --radius:       14px;
+  --radius-lg:    22px;
+  --shadow-sm:    0 2px 8px rgba(0,75,92,0.08);
+  --shadow:       0 6px 24px rgba(0,75,92,0.12);
+  --shadow-lg:    0 20px 60px rgba(0,75,92,0.18);
+  --t:            0.22s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; display: block; }
+a { text-decoration: none; color: inherit; }
+
+/* ---- Typography ---- */
+h1 { font-family: var(--font-heading); font-size: clamp(2.4rem, 5vw, 3.7rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.015em; }
+h2 { font-family: var(--font-heading); font-size: clamp(1.8rem, 3.2vw, 2.7rem); font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+p { color: var(--gray-500); font-size: 1rem; line-height: 1.7; }
+
+/* ---- Layout ---- */
+.container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+section { padding: 100px 0; }
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; border-radius: 8px;
+  font-size: 0.92rem; font-weight: 600; cursor: pointer; font-family: var(--font);
+  border: 1.5px solid transparent; transition: var(--t); white-space: nowrap; letter-spacing: 0.01em;
+}
+.btn-primary { background: var(--teal); color: var(--white); }
+.btn-primary:hover { background: var(--teal-dark); box-shadow: 0 6px 20px rgba(141,198,63,0.35); transform: translateY(-1px); }
+.btn-ghost { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.88); border-color: rgba(255,255,255,0.22); }
+.btn-ghost:hover { background: rgba(255,255,255,0.18); color: var(--white); border-color: rgba(255,255,255,0.4); }
+
+/* ---- Badge ---- */
+.badge {
+  display: inline-block; padding: 4px 12px; border-radius: 4px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  background: var(--teal-bg); color: var(--teal);
+}
+.badge-dark { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.80); border: 1px solid rgba(255,255,255,0.12); }
+
+/* =============================================
+   HEADER
+   ============================================= */
+header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(11,26,32,0.96); backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em;
+}
+.logo-text { font-size: 1.05rem; font-weight: 700; color: var(--white); letter-spacing: -0.02em; }
+.logo-text span { color: var(--teal-light); }
+nav { display: flex; align-items: center; gap: 2px; }
+nav a { padding: 8px 14px; border-radius: 7px; font-size: 0.88rem; font-weight: 500; color: rgba(255,255,255,0.60); transition: var(--t); }
+nav a:hover { color: var(--white); background: rgba(255,255,255,0.07); }
+.header-badge {
+  display: flex; align-items: center; gap: 8px; padding: 7px 14px;
+  border-radius: 100px; border: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.65);
+}
+.header-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #34D399; flex-shrink: 0; }
+
+/* =============================================
+   HERO
+   ============================================= */
+.hero {
+  padding-top: 148px; padding-bottom: 0;
+  background: var(--black);
+  position: relative; overflow: hidden;
+}
+
+/* Noise texture */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 60% 0%, rgba(0,174,207,0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 80% at 100% 50%, rgba(141,198,63,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 80%, rgba(0,46,58,0.8) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Dot grid */
+.hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.hero-inner {
+  display: grid; grid-template-columns: 1fr 400px; gap: 80px; align-items: center;
+  position: relative; z-index: 1; padding-bottom: 72px;
+}
+
+.hero-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.hero-eyebrow-line { width: 28px; height: 2px; background: var(--teal-light); border-radius: 2px; }
+.hero-eyebrow-text { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal-light); }
+
+.hero-title { color: var(--white); margin-bottom: 22px; }
+.hero-title em { font-style: normal; color: var(--teal-light); }
+.hero-title .hero-title-serif { display: block; }
+
+.hero-subtitle { color: rgba(255,255,255,0.58); font-size: 1.1rem; line-height: 1.7; margin-bottom: 38px; max-width: 490px; }
+
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 52px; }
+
+.hero-stats { display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,0.08); }
+.stat-item { padding: 22px 32px 22px 0; flex: 1; }
+.stat-item:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.08); margin-right: 32px; }
+.stat-number { font-size: 1.9rem; font-weight: 800; color: var(--white); line-height: 1; letter-spacing: -0.02em; }
+.stat-label { font-size: 0.78rem; color: rgba(255,255,255,0.42); margin-top: 5px; font-weight: 500; }
+
+/* ---- Hero Card ---- */
+.hero-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
+  overflow: hidden; position: relative;
+}
+.hero-card-top {
+  background: linear-gradient(135deg, var(--teal-darker) 0%, var(--teal-dark) 100%);
+  padding: 22px 28px;
+  position: relative; overflow: hidden;
+}
+.hero-card-top::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+.hero-card-top-label {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 6px;
+}
+.hero-card-top h3 { color: var(--white); font-size: 1.15rem; font-weight: 700; }
+.hero-card-top p { color: rgba(255,255,255,0.65); font-size: 0.88rem; margin-top: 4px; }
+
+.hero-card-body { padding: 26px 28px 28px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--gray-600); margin-bottom: 7px; letter-spacing: 0.02em; }
+.form-group input {
+  width: 100%; padding: 13px 16px; border: 1.5px solid var(--gray-100);
+  border-radius: var(--radius-sm); font-size: 0.95rem; font-family: var(--font);
+  color: var(--gray-800); background: var(--off-white); transition: var(--t); outline: none;
+}
+.form-group input:focus { border-color: var(--teal); background: var(--white); box-shadow: 0 0 0 3px rgba(141,198,63,0.10); }
+.form-submit { width: 100%; margin-top: 6px; justify-content: center; font-size: 0.97rem; padding: 16px; border-radius: var(--radius-sm); }
+.form-privacy { font-size: 0.76rem; color: var(--gray-300); text-align: center; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+.hero-card-trust {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 28px; border-top: 1px solid var(--gray-100);
+  font-size: 0.78rem; color: var(--gray-400); font-weight: 500;
+}
+.hero-card-trust-icon { font-size: 0.9rem; }
+
+/* =============================================
+   TRUST BAR
+   ============================================= */
+.trust-bar {
+  background: var(--off-white);
+  border-bottom: 1px solid var(--gray-100);
+  padding: 18px 0;
+}
+.trust-bar-inner { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.trust-bar-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--gray-300); white-space: nowrap; flex-shrink: 0; }
+.trust-bar-divider { width: 1px; height: 20px; background: var(--gray-100); flex-shrink: 0; }
+.trust-logos { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; }
+.trust-logos span {
+  padding: 5px 11px; border-radius: 5px;
+  background: var(--white); border: 1px solid var(--gray-100);
+  font-size: 0.8rem; font-weight: 600; color: var(--gray-500);
+}
+.trust-logos span.more {
+  background: var(--teal-bg); border-color: transparent; color: var(--teal);
+}
+
+/* =============================================
+   SERVICIOS
+   ============================================= */
+.servicios { background: var(--off-white); }
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-header .badge { margin-bottom: 16px; }
+.section-header h2 { margin-bottom: 12px; }
+.section-header p { max-width: 460px; margin: 0 auto; }
+
+.servicios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.servicio-card {
+  background: var(--white); border: 1.5px solid var(--gray-100);
+  border-radius: var(--radius); padding: 26px 22px;
+  transition: var(--t); display: flex; flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+.servicio-card:hover { border-color: var(--teal); box-shadow: var(--shadow); transform: translateY(-4px); }
+.servicio-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--teal-bg); display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; font-size: 1.25rem;
+}
+.servicio-card h3 { color: var(--black); margin-bottom: 7px; font-size: 0.97rem; }
+.servicio-card p { font-size: 0.86rem; flex: 1; }
+.card-link { display: inline-flex; align-items: center; gap: 6px; color: var(--teal); font-size: 0.86rem; font-weight: 600; margin-top: 18px; transition: var(--t); }
+.servicio-card:hover .card-link { gap: 10px; }
+
+/* =============================================
+   POR QUÉ
+   ============================================= */
+.porque { background: var(--black); position: relative; overflow: hidden; }
+.porque::before {
+  content: ''; position: absolute; top: -200px; right: -200px;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,174,207,0.10) 0%, transparent 60%);
+}
+.porque::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+.porque .section-header h2 { color: var(--white); }
+.porque .section-header p { color: rgba(255,255,255,0.45); }
+.porque-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; position: relative; z-index: 1; }
+.porque-item {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius); padding: 32px; transition: var(--t);
+  position: relative; overflow: hidden;
+}
+.porque-item::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,174,207,0.4), transparent);
+  opacity: 0; transition: var(--t);
+}
+.porque-item:hover { background: rgba(0,174,207,0.06); border-color: rgba(0,174,207,0.25); }
+.porque-item:hover::before { opacity: 1; }
+.porque-num {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--teal-light); margin-bottom: 14px;
+}
+.porque-item h3 { color: var(--white); margin-bottom: 8px; }
+.porque-item p { color: rgba(255,255,255,0.45); font-size: 0.9rem; }
+
+/* =============================================
+   PROCESO
+   ============================================= */
+.proceso { background: var(--off-white); }
+.proceso-steps {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+  margin-top: 60px; position: relative;
+}
+.proceso-steps::before {
+  content: ''; position: absolute; top: 24px; left: 12%; right: 12%;
+  height: 1px; background: linear-gradient(90deg, transparent, var(--gray-100) 20%, var(--gray-100) 80%, transparent);
+}
+.step { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px; position: relative; z-index: 1; }
+.step-num {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--white); border: 1.5px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700; color: var(--gray-300);
+  margin-bottom: 20px; box-shadow: 0 0 0 5px var(--off-white);
+  transition: var(--t);
+}
+.step.active .step-num { background: var(--teal); color: var(--white); border-color: var(--teal); box-shadow: 0 0 0 5px var(--off-white), 0 0 0 8px rgba(141,198,63,0.12); }
+.step h3 { font-size: 0.88rem; color: var(--black); margin-bottom: 6px; }
+.step p { font-size: 0.8rem; }
+
+/* =============================================
+   TESTIMONIOS
+   ============================================= */
+.testimonios { background: var(--white); }
+.testimonios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.testimonio-card {
+  background: var(--off-white); border: 1.5px solid var(--gray-100);
+  border-radius: var(--radius); padding: 32px;
+  transition: var(--t); display: flex; flex-direction: column; gap: 16px;
+}
+.testimonio-card:hover { border-color: var(--teal); box-shadow: var(--shadow); transform: translateY(-3px); }
+.testimonio-stars { color: #F59E0B; font-size: 0.95rem; letter-spacing: 3px; }
+.testimonio-text { font-size: 0.93rem; line-height: 1.68; color: var(--gray-600); flex: 1; font-style: italic; }
+.testimonio-autor { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+.testimonio-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--teal-dark), var(--teal-light));
+  color: var(--white); display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700;
+}
+.testimonio-autor strong { display: block; font-size: 0.88rem; color: var(--black); font-weight: 600; }
+.testimonio-autor span { font-size: 0.78rem; color: var(--gray-400); }
+
+/* =============================================
+   QUIZ
+   ============================================= */
+.quiz-section { background: var(--teal-darker); padding: 100px 0; position: relative; overflow: hidden; }
+.quiz-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.quiz-inner { position: relative; z-index: 1; max-width: 660px; margin: 0 auto; text-align: center; }
+.quiz-inner h2 { color: var(--white); margin-bottom: 10px; }
+.quiz-inner > p { color: rgba(255,255,255,0.55); margin-bottom: 40px; }
+.quiz-badge { margin-bottom: 18px; display: inline-block; }
+
+.quiz-card { background: var(--white); border-radius: var(--radius-lg); padding: 40px; text-align: left; box-shadow: 0 32px 80px rgba(0,0,0,0.3); }
+.quiz-progress { margin-bottom: 32px; }
+.quiz-progress-bar { height: 3px; background: var(--gray-100); border-radius: 100px; margin-bottom: 10px; overflow: hidden; }
+.quiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--teal-light)); border-radius: 100px; transition: width 0.4s ease; }
+.quiz-progress-text { font-size: 0.8rem; color: var(--gray-400); font-weight: 500; }
+.quiz-step { display: none; }
+.quiz-step.active { display: block; }
+.quiz-step h3 { color: var(--black); margin-bottom: 7px; font-size: 1.2rem; }
+.quiz-step > p { font-size: 0.9rem; margin-bottom: 24px; }
+.quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.quiz-opt {
+  border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm);
+  padding: 14px 16px; cursor: pointer; transition: var(--t);
+  display: flex; align-items: center; gap: 12px;
+  font-size: 0.92rem; font-weight: 500; color: var(--gray-700); background: var(--off-white);
+}
+.quiz-opt:hover { border-color: var(--teal-light); background: var(--teal-bg); color: var(--teal-dark); }
+.quiz-opt.selected { border-color: var(--teal); background: var(--teal-bg); color: var(--teal-dark); }
+.quiz-opt-icon { font-size: 1.2rem; flex-shrink: 0; }
+.quiz-opt-text small { display: block; font-size: 0.78rem; font-weight: 400; color: var(--gray-400); margin-top: 2px; }
+.quiz-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.quiz-contact-grid .form-group { margin-bottom: 0; }
+.quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.quiz-back { background: none; border: none; color: var(--gray-400); font-size: 0.88rem; font-weight: 500; cursor: pointer; font-family: var(--font); padding: 8px 0; transition: var(--t); }
+.quiz-back:hover { color: var(--gray-700); }
+.quiz-next { flex: 1; margin-left: 16px; justify-content: center; }
+.quiz-hint { font-size: 0.8rem; margin-top: 8px; color: var(--gray-400); }
+.quiz-result { text-align: center; }
+.quiz-result-icon { font-size: 2.8rem; margin-bottom: 14px; }
+.quiz-result h3 { color: var(--black); font-size: 1.35rem; margin-bottom: 8px; }
+.result-highlight { border-radius: var(--radius-sm); padding: 16px 20px; margin: 16px 0; text-align: left; }
+.result-highlight p { margin: 0; font-size: 0.88rem; font-weight: 500; }
+.result-highlight--green { background: #ECFDF5; border-left: 3px solid #10B981; }
+.result-highlight--green p { color: #065F46; }
+.result-highlight--yellow { background: #FFFBEB; border-left: 3px solid #F59E0B; }
+.result-highlight--yellow p { color: #78350F; }
+.result-contact-box { background: var(--teal-bg); border-radius: var(--radius-sm); padding: 16px 20px; margin: 20px 0; border-left: 3px solid var(--teal); }
+.result-contact-text { color: var(--teal-dark); font-size: 0.86rem; font-weight: 500; margin: 0; }
+.result-contact-link { color: var(--teal); font-weight: 700; }
+
+/* =============================================
+   CTA BANNER
+   ============================================= */
+.cta-banner { background: var(--black); padding: 100px 0; text-align: center; position: relative; overflow: hidden; }
+.cta-banner::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 0%, rgba(0,174,207,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 100%, rgba(141,198,63,0.10) 0%, transparent 60%);
+}
+.cta-banner::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+.cta-banner .container { position: relative; z-index: 1; }
+.cta-banner h2 { color: var(--white); margin-bottom: 14px; }
+.cta-banner p { color: rgba(255,255,255,0.55); margin-bottom: 40px; max-width: 440px; margin-left: auto; margin-right: auto; }
+.cta-banner-inner { display: flex; flex-direction: column; align-items: center; }
+.cta-actions { display: flex; gap: 12px; justify-content: center; }
+
+/* =============================================
+   FOOTER
+   ============================================= */
+footer { background: var(--black); border-top: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.40); padding: 64px 0 32px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+.footer-brand p { margin-top: 14px; font-size: 0.86rem; max-width: 240px; line-height: 1.6; }
+.footer-logo-mark { width: 32px; height: 32px; border-radius: 7px; background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: var(--white); }
+.footer-col h4 { color: rgba(255,255,255,0.70); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px; }
+.footer-col a { display: block; font-size: 0.88rem; margin-bottom: 10px; transition: var(--t); }
+.footer-col a:hover { color: var(--teal-light); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+.footer-links { display: flex; gap: 20px; }
+.footer-bde {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 16px;
+  padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.74rem; color: rgba(255,255,255,0.40); font-weight: 500;
+}
+.footer-bde-dot { width: 5px; height: 5px; border-radius: 50%; background: #34D399; }
+
+/* =============================================
+   MOBILE STICKY
+   ============================================= */
+.mobile-cta-bar {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(11,26,32,0.97); backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.07); padding: 12px 20px;
+}
+.mobile-cta-bar a { width: 100%; justify-content: center; font-size: 1rem; padding: 15px; }
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 1100px) {
+  .hero-inner { grid-template-columns: 1fr 360px; gap: 52px; }
+}
+
+@media (max-width: 1024px) {
+  .servicios-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+  .testimonios-grid { grid-template-columns: repeat(2, 1fr); }
+  .porque-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  body { padding-bottom: 76px; }
+  .mobile-cta-bar { display: flex; }
+  section { padding: 64px 0; }
+  .hero { padding-top: 96px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+  .hero-content { text-align: center; }
+  .hero-eyebrow { justify-content: center; }
+  .hero-actions { justify-content: center; }
+  .hero-stats { justify-content: center; }
+  .hero-subtitle { margin-left: auto; margin-right: auto; }
+  nav { display: none; }
+  .header-badge { display: none; }
+  .servicios-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .servicio-card p, .card-link { display: none; }
+  .porque-grid { grid-template-columns: 1fr; gap: 12px; }
+  .proceso-steps { grid-template-columns: 1fr; gap: 16px; }
+  .proceso-steps::before { display: none; }
+  .step { flex-direction: row; text-align: left; gap: 16px; align-items: flex-start; }
+  .step-num { min-width: 44px; margin-bottom: 0; }
+  .testimonios-grid { grid-template-columns: 1fr; }
+  .quiz-card { padding: 24px 20px; }
+  .quiz-options { grid-template-columns: 1fr; }
+  .quiz-contact-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+  .cta-actions { flex-direction: column; align-items: center; }
+  .cta-actions .btn { width: 100%; max-width: 300px; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .hero-actions { flex-direction: column; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
+  .hero-stats { gap: 0; flex-direction: column; }
+  .stat-item:not(:last-child) { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); margin-right: 0; margin-bottom: 0; padding: 16px 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <div class="container header-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark">BH</div>
+      <span class="logo-text">Broker<span>Hipotecario</span></span>
+    </a>
+    <nav>
+      <a href="#servicios">Servicios</a>
+      <a href="#porque">Por qué nosotros</a>
+      <a href="#proceso">Cómo funciona</a>
+      <a href="#filtro">Calculadora</a>
+    </nav>
+    <div class="header-badge">
+      <span class="header-badge-dot"></span>
+      Reg. Banco de España · D219
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <div class="hero-eyebrow-line"></div>
+        <span class="hero-eyebrow-text">Broker independiente · Tarragona, Reus, Salou</span>
+      </div>
+      <h1 class="hero-title">
+        La hipoteca que<br>
+        mereces, sin ir<br>
+        <em>banco por banco</em>
+      </h1>
+      <p class="hero-subtitle">
+        Comparamos más de 20 entidades y negociamos las condiciones adaptadas a tu perfil. Sin letra pequeña. Sin sorpresas.
+      </p>
+      <div class="hero-actions">
+        <a href="#filtro" class="btn btn-primary">Analiza tu caso gratis →</a>
+        <a href="#proceso" class="btn btn-ghost">Cómo funciona</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-number">+25</div>
+          <div class="stat-label">años de experiencia</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">+1.000</div>
+          <div class="stat-label">hipotecas firmadas</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">+20</div>
+          <div class="stat-label">bancos comparados</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-card-top">
+        <div class="hero-card-top-label">Estudio inicial gratuito</div>
+        <h3>¿Consigo mi hipoteca?</h3>
+        <p>Te respondemos en menos de 48 horas.</p>
+      </div>
+      <div class="hero-card-body">
+        <form id="hero-form" novalidate>
+          <input type="text" name="hp_field" style="display:none!important;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <div class="form-group">
+            <label for="hf-nombre">Tu nombre</label>
+            <input type="text" id="hf-nombre" name="hf_nombre" placeholder="Como quieres que te llamemos" required />
+          </div>
+          <div class="form-group">
+            <label for="hf-tel">Teléfono de contacto</label>
+            <input type="tel" id="hf-tel" name="hf_telefono" placeholder="6XX XXX XXX" required />
+          </div>
+          <button type="submit" class="btn btn-primary form-submit">Quiero que me llamen →</button>
+          <p class="form-privacy">🔒 Sin spam. Solo te llamamos si podemos ayudarte.</p>
+        </form>
+      </div>
+      <div class="hero-card-trust">
+        <span class="hero-card-trust-icon">🏦</span>
+        Comparamos Santander, BBVA, Caixa, Sabadell y +17 más
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST BAR ============ -->
+<section class="trust-bar">
+  <div class="container trust-bar-inner">
+    <span class="trust-bar-label">Trabajamos con</span>
+    <div class="trust-bar-divider"></div>
+    <div class="trust-logos">
+      <span>Santander</span>
+      <span>BBVA</span>
+      <span>CaixaBank</span>
+      <span>Sabadell</span>
+      <span>Bankinter</span>
+      <span>ING</span>
+      <span>Kutxabank</span>
+      <span>Unicaja</span>
+      <span class="more">+13 más</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVICIOS ============ -->
+<section class="servicios" id="servicios">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Servicios</span>
+      <h2>Encuentra tu hipoteca ideal</h2>
+      <p>Cada situación es diferente. Trabajamos el tipo de hipoteca que mejor se adapta a ti.</p>
+    </div>
+    <div class="servicios-grid">
+      <a href="servicios/hipoteca-100.html" class="servicio-card">
+        <div class="servicio-icon">🏠</div>
+        <h3>Hipoteca 100%</h3>
+        <p>Financia el total del precio aunque no tengas ahorros.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/hipoteca-fija.html" class="servicio-card">
+        <div class="servicio-icon">📌</div>
+        <h3>Hipoteca Fija</h3>
+        <p>Cuota estable todos los meses, sin sorpresas en el Euríbor.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/hipoteca-variable.html" class="servicio-card">
+        <div class="servicio-icon">📈</div>
+        <h3>Hipoteca Variable</h3>
+        <p>Cuota inicial más baja, ideal si planeas amortizar pronto.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/funcionarios.html" class="servicio-card">
+        <div class="servicio-icon">🏛️</div>
+        <h3>Funcionarios</h3>
+        <p>Condiciones exclusivas para empleados del sector público.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/segunda-vivienda.html" class="servicio-card">
+        <div class="servicio-icon">🌊</div>
+        <h3>Segunda Vivienda</h3>
+        <p>Financia tu casa de vacaciones o inversión inmobiliaria.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/autopromotor.html" class="servicio-card">
+        <div class="servicio-icon">🏗️</div>
+        <h3>Autopromotor</h3>
+        <p>Construye tu casa desde cero con la financiación adecuada.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/reunificacion.html" class="servicio-card">
+        <div class="servicio-icon">🔄</div>
+        <h3>Reunificación</h3>
+        <p>Une todas tus deudas en una sola cuota y respira tranquilo.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+      <a href="servicios/no-residentes.html" class="servicio-card">
+        <div class="servicio-icon">✈️</div>
+        <h3>No Residentes</h3>
+        <p>Compra tu propiedad en España aunque vivas en el extranjero.</p>
+        <span class="card-link">Ver más →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ POR QUÉ ============ -->
+<section class="porque" id="porque">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge badge-dark">Por qué nosotros</span>
+      <h2>Lo que no te da tu banco</h2>
+      <p>Trabajamos para ti, no para la entidad bancaria.</p>
+    </div>
+    <div class="porque-grid">
+      <div class="porque-item">
+        <div class="porque-num">01 — Acceso total</div>
+        <h3>+20 bancos comparados</h3>
+        <p>Comparamos toda la banca para encontrarte la oferta más ventajosa, no solo las entidades con las que tienes cuenta.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">02 — Negociación</div>
+        <h3>Condiciones que no te ofrecen</h3>
+        <p>Sabemos cómo hablar con los bancos. Negociamos las condiciones que el banco no te ofrece directamente en ventanilla.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">03 — Sin riesgo</div>
+        <h3>Estudio inicial gratuito</h3>
+        <p>Analizamos tu situación de forma gratuita. Solo avanzamos cuando encontramos la hipoteca que realmente te conviene.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">04 — Velocidad</div>
+        <h3>Respuesta en 48 horas</h3>
+        <p>Analizamos tu caso y te damos una respuesta real en menos de dos días hábiles. Sin esperas, sin largas colas.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">05 — Acompañamiento</div>
+        <h3>De inicio a firma</h3>
+        <p>Desde el primer contacto hasta la firma ante notario. No estás solo en ningún momento del proceso.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-num">06 — Privacidad</div>
+        <h3>Datos 100% protegidos</h3>
+        <p>Cumplimos con el RGPD. Tu información personal y financiera siempre está segura y nunca se comparte sin tu consentimiento.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROCESO ============ -->
+<section class="proceso" id="proceso">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Proceso</span>
+      <h2>De cero a firmado en 5 pasos</h2>
+      <p>Simple, rápido y sin burocracia innecesaria.</p>
+    </div>
+    <div class="proceso-steps">
+      <div class="step active">
+        <div class="step-num">1</div>
+        <h3>Nos cuentas tu caso</h3>
+        <p>Sin papeles ni cita previa.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Analizamos tu perfil</h3>
+        <p>Estudiamos y buscamos opciones.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Negociamos</h3>
+        <p>Con las entidades más adecuadas.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Recibes las ofertas</h3>
+        <p>Propuestas reales para elegir.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <h3>Firmamos juntos</h3>
+        <p>Te acompañamos al notario.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIOS ============ -->
+<section class="testimonios" id="testimonios">
+  <div class="container">
+    <div class="section-header">
+      <span class="badge">Testimonios</span>
+      <h2>Lo que dicen nuestros clientes</h2>
+      <p>Más de 1.000 familias ya han firmado su hipoteca con nosotros.</p>
+    </div>
+    <div class="testimonios-grid">
+      <div class="testimonio-card">
+        <div class="testimonio-stars">★★★★★</div>
+        <p class="testimonio-text">"Llevábamos meses intentándolo solos y los bancos nos cerraban las puertas. Mariano nos consiguió la hipoteca en 3 semanas. No me lo podía creer."</p>
+        <div class="testimonio-autor">
+          <div class="testimonio-avatar">MR</div>
+          <div>
+            <strong>María R.</strong>
+            <span>Primera vivienda · Tarragona</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonio-card">
+        <div class="testimonio-stars">★★★★★</div>
+        <p class="testimonio-text">"Soy autónomo y pensaba que no podría conseguir nada. Me orientaron desde el primer momento y al final firmamos con mejores condiciones de las esperadas."</p>
+        <div class="testimonio-autor">
+          <div class="testimonio-avatar">JL</div>
+          <div>
+            <strong>Jordi L.</strong>
+            <span>Autónomo · Reus</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonio-card">
+        <div class="testimonio-stars">★★★★★</div>
+        <p class="testimonio-text">"Conseguimos mejores condiciones de las que nos ofrecía directamente nuestro propio banco. El servicio fue impecable y muy cercano en todo momento."</p>
+        <div class="testimonio-autor">
+          <div class="testimonio-avatar">AC</div>
+          <div>
+            <strong>Ana y Carlos</strong>
+            <span>Segunda vivienda · Salou</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section class="quiz-section" id="filtro">
+  <div class="container">
+    <div class="quiz-inner">
+      <span class="badge badge-dark quiz-badge">Calculadora hipotecaria</span>
+      <h2>¿Puedo conseguir mi hipoteca?</h2>
+      <p>Responde 9 preguntas y te decimos exactamente dónde estás. Sin compromiso.</p>
+
+      <div class="quiz-card" id="quiz">
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:0%"></div></div>
+          <span class="quiz-progress-text">Paso 1 de 9</span>
+        </div>
+
+        <div class="quiz-step active">
+          <h3>¿Cuál es tu situación laboral?</h3>
+          <p>Es el primer dato que miran los bancos al analizar una hipoteca.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="indefinido"><span class="quiz-opt-icon">💼</span><div class="quiz-opt-text">Contrato fijo<small>Empleado por cuenta ajena</small></div></div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="funcionario"><span class="quiz-opt-icon">🏛️</span><div class="quiz-opt-text">Funcionario<small>Plaza en propiedad</small></div></div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo_2plus"><span class="quiz-opt-icon">🧾</span><div class="quiz-opt-text">Autónomo consolidado<small>Más de 2 años</small></div></div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="temporal"><span class="quiz-opt-icon">📋</span><div class="quiz-opt-text">Contrato temporal<small>Obra y servicio u otros</small></div></div>
+          </div>
+          <div class="quiz-nav"><span></span><button class="btn btn-primary quiz-next">Siguiente →</button></div>
+        </div>
+
+        <div class="quiz-step">
+          <h3>¿A quién le enviamos el análisis?</h3>
+          <p>Te contactamos personalmente en menos de 24h.</p>
+          <div class="quiz-contact-grid">
+            <div class="form-group"><label>Nombre</label><input type="text" name="q_nombre" placeholder="Tu nombre" /></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" name="q_telefono" placeholder="6XX XXX XXX" /></div>
+          </div>
+          <div class="form-group"><label>Email (opcional)</label><input type="email" name="q_email" placeholder="tu@email.com" /></div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next quiz-submit">Ver mi análisis →</button>
+          </div>
+        </div>
+
+        <div class="quiz-step quiz-result-step">
+          <div class="quiz-result">
+            <div class="quiz-result-icon">🚀</div>
+            <h3>Tu perfil es excelente</h3>
+            <p>Tienes todo lo que los bancos quieren ver. Es muy probable que consigamos condiciones muy por encima de la media.</p>
+            <div class="result-highlight result-highlight--green">
+              <p>✅ Te contactamos en menos de 48h con las opciones disponibles.</p>
+            </div>
+            <div class="result-contact-box">
+              <p class="result-contact-text">💬 ¿Tienes alguna pregunta? Escríbenos a <a href="mailto:tarragona@firmax.es" class="result-contact-link">tarragona@firmax.es</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA BANNER ============ -->
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-banner-inner">
+      <h2>¿Listo para conseguir tu hipoteca?</h2>
+      <p>Cuéntanos tu situación y te damos una respuesta en menos de 48 horas. Sin compromiso.</p>
+      <div class="cta-actions">
+        <a href="#filtro" class="btn btn-primary">Hacer el análisis gratuito →</a>
+        <a href="#porque" class="btn btn-ghost">Por qué nosotros</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <div class="footer-logo-mark">BH</div>
+          <span class="logo-text">Broker<span>Hipotecario</span></span>
+        </div>
+        <p>Tu asesor hipotecario independiente en Tarragona. Conseguimos la hipoteca que mereces.</p>
+        <div class="footer-bde">
+          <span class="footer-bde-dot"></span>
+          Registro Banco de España D219
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Servicios</h4>
+        <a href="servicios/hipoteca-100.html">Hipoteca 100%</a>
+        <a href="servicios/hipoteca-fija.html">Hipoteca Fija</a>
+        <a href="servicios/hipoteca-variable.html">Hipoteca Variable</a>
+        <a href="servicios/funcionarios.html">Funcionarios</a>
+        <a href="servicios/reunificacion.html">Reunificación</a>
+      </div>
+      <div class="footer-col">
+        <h4>Zonas</h4>
+        <a href="index.html">Tarragona</a>
+        <a href="broker-hipotecario-reus.html">Reus</a>
+        <a href="broker-hipotecario-salou.html">Salou</a>
+        <a href="broker-hipotecario-cambrils.html">Cambrils</a>
+      </div>
+      <div class="footer-col">
+        <h4>Empresa</h4>
+        <a href="#porque">Por qué nosotros</a>
+        <a href="#proceso">Cómo funciona</a>
+        <a href="#filtro">Calculadora</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <a href="mailto:tarragona@firmax.es">tarragona@firmax.es</a>
+        <a href="#filtro">Rambla President Francesc Macià, 10<br>Tarragona</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 BrokerHipotecario · Mediterrane Firmax, SL · Reg. BdE D219</span>
+      <div class="footer-links">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="aviso-legal.html">Aviso legal</a>
+        <a href="cookies.html">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="mobile-cta-bar">
+  <a href="#filtro" class="btn btn-primary">Analiza tu caso gratis →</a>
+</div>
+
+</body>
+</html>
