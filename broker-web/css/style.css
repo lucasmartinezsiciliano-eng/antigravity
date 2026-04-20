@@ -142,6 +142,10 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
   pointer-events: none;
 }
 .hero-inner { display: grid; grid-template-columns: 1fr 400px; gap: 72px; align-items: center; position: relative; z-index: 1; }
+.hero-inner--centered { grid-template-columns: 1fr; max-width: 760px; margin: 0 auto; text-align: center; }
+.hero-inner--centered .hero-subtitle { max-width: 100%; margin-left: auto; margin-right: auto; }
+.hero-inner--centered .hero-actions { justify-content: center; }
+.hero-inner--centered .hero-stats { justify-content: center; }
 
 .hero-badge { margin-bottom: 18px; }
 .hero-title { color: var(--white); margin-bottom: 18px; }
@@ -230,10 +234,14 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 }
 .testimonio-autor { display: flex; align-items: center; gap: 12px; margin-top: auto; }
 .testimonio-avatar {
-  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
   background: var(--teal); color: var(--white);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.82rem; font-weight: 700; letter-spacing: 0.02em;
+}
+.testimonio-avatar--img {
+  object-fit: cover; display: block;
+  border: 2px solid var(--gray-100);
 }
 .testimonio-autor strong { display: block; font-size: 0.9rem; color: var(--black); font-weight: 600; }
 .testimonio-autor span { font-size: 0.8rem; color: var(--gray-400); }
