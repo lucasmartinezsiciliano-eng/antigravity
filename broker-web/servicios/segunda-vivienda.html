@@ -48,7 +48,356 @@
   <link rel="stylesheet" href="../css/style.css" /><link rel="stylesheet" href="landing.css" />
 </head>
 <body>
-  <header><div class="container header-inner"><a href="../index.html" class="logo"><img src="../img/logo-transparent.png" alt="Broker Hipotecario Firmax" class="logo-img" /><span class="logo-text">Broker<span>Hipotecario</span></span></a><nav><a href="../index.html#servicios">Servicios</a><a href="../index.html#porque">Por qué nosotros</a><a href="../index.html#proceso">Cómo funciona</a><a href="../index.html#filtro">Calcula tu hipoteca</a></nav><div class="hamburger"><span></span><span></span><span></span></div></div></header>
+  <header><div class="container header-inner"><a href="../index.html" class="logo"><img src="../img/firmax-icon.png" alt="Firmax" class="logo-img" /><div class="logo-group"><span class="logo-text">Broker<span>Hipotecario</span></span><span class="logo-byline">by Firmax</span></div></a><nav><a href="../index.html#servicios">Servicios</a><a href="../index.html#porque">Por qué nosotros</a><a href="../index.html#proceso">Cómo funciona</a><a href="../index.html#filtro">Calcula tu hipoteca</a></nav><div class="hamburger"><span></span><span></span><span></span></div></div></header>
+
+
+    <section id="form" class="quiz-section">
+  <div class="container">
+    <div class="quiz-inner">
+      <span class="badge badge-dark quiz-badge">Calculadora hipotecaria</span>
+      <h2>¿Puedo conseguir mi hipoteca?</h2>
+      <p>Responde 5 preguntas y te decimos exactamente dónde estás. Sin compromiso, sin trampas.</p>
+
+      <div class="quiz-card" id="quiz">
+        <!-- Progreso -->
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:0%"></div></div>
+          <span class="quiz-progress-text">Paso 1 de 9</span>
+        </div>
+
+        <!-- PASO 1: Situación laboral -->
+        <div class="quiz-step active">
+          <h3>¿Cuál es tu situación laboral?</h3>
+          <p>Es el primer dato que miran los bancos al analizar una hipoteca.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="indefinido">
+              <span class="quiz-opt-icon">💼</span>
+              <div class="quiz-opt-text">Contrato fijo indefinido<small>Empleado por cuenta ajena, sin fecha de fin</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="fijo_discontinuo">
+              <span class="quiz-opt-icon">🔄</span>
+              <div class="quiz-opt-text">Contrato fijo discontinuo<small>Temporadas o actividad estacional</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="funcionario">
+              <span class="quiz-opt-icon">🏛️</span>
+              <div class="quiz-opt-text">Funcionario<small>Plaza en propiedad en el sector público</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="interino">
+              <span class="quiz-opt-icon">🏢</span>
+              <div class="quiz-opt-text">Funcionario interino<small>Sector público sin plaza en propiedad</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo_2plus">
+              <span class="quiz-opt-icon">🧾</span>
+              <div class="quiz-opt-text">Autónomo consolidado<small>Más de 2 años de actividad</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo_nuevo">
+              <span class="quiz-opt-icon">🌱</span>
+              <div class="quiz-opt-text">Autónomo reciente<small>Menos de 2 años de actividad</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tipo_contrato" data-value="temporal">
+              <span class="quiz-opt-icon">📋</span>
+              <div class="quiz-opt-text">Contrato temporal<small>Obra y servicio u otros contratos temporales</small></div>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <span></span>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 2: Ingresos -->
+        <div class="quiz-step">
+          <h3>¿Cuáles son los ingresos netos del hogar?</h3>
+          <p>Cuenta todos los ingresos: sueldo, nómina de pareja, etc.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="ingresos" data-value="menos-1500">
+              <span class="quiz-opt-icon">📉</span>
+              <div class="quiz-opt-text">Menos de 1.500 €/mes<small>Ingresos bajos para una hipoteca estándar</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ingresos" data-value="1500-2500">
+              <span class="quiz-opt-icon">💶</span>
+              <div class="quiz-opt-text">1.500 – 2.500 €/mes<small>Rango habitual en hipotecas de entrada</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ingresos" data-value="2500-3500">
+              <span class="quiz-opt-icon">💰</span>
+              <div class="quiz-opt-text">2.500 – 3.500 €/mes<small>Perfil cómodo para la mayoría de bancos</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ingresos" data-value="3500-5000">
+              <span class="quiz-opt-icon">💵</span>
+              <div class="quiz-opt-text">3.500 – 5.000 €/mes<small>Perfil sólido, acceso a condiciones premium</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ingresos" data-value="mas-5000">
+              <span class="quiz-opt-icon">🏦</span>
+              <div class="quiz-opt-text">Más de 5.000 €/mes<small>Perfil muy atractivo para cualquier banco</small></div>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 3: Precio vivienda -->
+        <div class="quiz-step">
+          <h3>¿Cuál es el precio de la vivienda que buscas?</h3>
+          <p>Una estimación es suficiente si aún no tienes una vivienda concreta.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="precio_vivienda" data-value="menos-150">
+              <span class="quiz-opt-icon">🏠</span>
+              <div class="quiz-opt-text">Menos de 150.000 €<small>Vivienda asequible</small></div>
+            </div>
+            <div class="quiz-opt" data-key="precio_vivienda" data-value="150-250">
+              <span class="quiz-opt-icon">🏡</span>
+              <div class="quiz-opt-text">150.000 – 250.000 €<small>Rango habitual en zona Tarragona</small></div>
+            </div>
+            <div class="quiz-opt" data-key="precio_vivienda" data-value="250-300">
+              <span class="quiz-opt-icon">🏘️</span>
+              <div class="quiz-opt-text">250.000 – 300.000 €<small>Vivienda de nivel medio-alto</small></div>
+            </div>
+            <div class="quiz-opt" data-key="precio_vivienda" data-value="300-500">
+              <span class="quiz-opt-icon">🏢</span>
+              <div class="quiz-opt-text">300.000 – 500.000 €<small>Operación importante</small></div>
+            </div>
+            <div class="quiz-opt" data-key="precio_vivienda" data-value="500-750">
+              <span class="quiz-opt-icon">🏰</span>
+              <div class="quiz-opt-text">500.000 – 750.000 €<small>Perfil alto</small></div>
+            </div>
+            <div class="quiz-opt" data-key="precio_vivienda" data-value="mas-750">
+              <span class="quiz-opt-icon">🌟</span>
+              <div class="quiz-opt-text">Más de 750.000 €<small>Segmento premium</small></div>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 4: LTV / % financiación -->
+        <div class="quiz-step">
+          <h3>¿Cuánto necesitas que te financie el banco?</h3>
+          <p>Estima el porcentaje del precio total que necesitas pedir prestado.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="ltv" data-value="menos-70">
+              <span class="quiz-opt-icon">🟢</span>
+              <div class="quiz-opt-text">Menos del 70%<small>Tienes más del 30% ahorrado — perfil excelente</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ltv" data-value="70-80">
+              <span class="quiz-opt-icon">🔵</span>
+              <div class="quiz-opt-text">Entre 70% y 80%<small>El estándar de la mayoría de bancos</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ltv" data-value="80-85">
+              <span class="quiz-opt-icon">🟡</span>
+              <div class="quiz-opt-text">Entre 80% y 85%<small>Posible con buen perfil</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ltv" data-value="85-90">
+              <span class="quiz-opt-icon">🟠</span>
+              <div class="quiz-opt-text">Entre 85% y 90%<small>Requiere perfil sólido</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ltv" data-value="mas-90">
+              <span class="quiz-opt-icon">🔴</span>
+              <div class="quiz-opt-text">Más del 90%<small>Hipoteca 100% — caso especial</small></div>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 5: Estado búsqueda -->
+        <div class="quiz-step">
+          <h3>¿En qué punto estás con la vivienda?</h3>
+          <p>Nos ayuda a priorizar tu caso correctamente.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="estado" data-value="reserva">
+              <span class="quiz-opt-icon">✅</span>
+              <div class="quiz-opt-text">Ya tengo reserva firmada<small>Necesito la hipoteca sí o sí</small></div>
+            </div>
+            <div class="quiz-opt" data-key="estado" data-value="identificada">
+              <span class="quiz-opt-icon">🔍</span>
+              <div class="quiz-opt-text">Tengo la vivienda identificada<small>Estoy a punto de decidirme</small></div>
+            </div>
+            <div class="quiz-opt" data-key="estado" data-value="mirando">
+              <span class="quiz-opt-icon">👀</span>
+              <div class="quiz-opt-text">Estoy mirando opciones<small>Quiero saber mis posibilidades</small></div>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 6: Urgencia -->
+        <div class="quiz-step">
+          <h3>¿Cuándo necesitas tener la hipoteca?</h3>
+          <p>Gestionamos según prioridad para que llegues a tiempo.</p>
+          <div class="quiz-options">
+            <div class="quiz-opt" data-key="urgencia" data-value="menos-1">
+              <span class="quiz-opt-icon">🔥</span>
+              <div class="quiz-opt-text">En menos de 1 mes<small>Urgente</small></div>
+            </div>
+            <div class="quiz-opt" data-key="urgencia" data-value="1-3">
+              <span class="quiz-opt-icon">📅</span>
+              <div class="quiz-opt-text">En 1 a 3 meses<small>Tengo margen</small></div>
+            </div>
+            <div class="quiz-opt" data-key="urgencia" data-value="mas-3">
+              <span class="quiz-opt-icon">🗓️</span>
+              <div class="quiz-opt-text">Más de 3 meses<small>Me informo de cara al futuro</small></div>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 7: Señales de perfil (multi-select) -->
+        <div class="quiz-step">
+          <h3>¿Qué más describe tu situación?</h3>
+          <p>Selecciona todo lo que aplique. Cada punto suma en tu análisis.</p>
+          <div class="quiz-options quiz-multiselect">
+            <div class="quiz-opt" data-key="cotitular" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">👫</span>
+              <div class="quiz-opt-text">Voy con pareja o cotitular<small>Dos ingresos mejoran la operación</small></div>
+            </div>
+            <div class="quiz-opt" data-key="primera_vivienda" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">🗝️</span>
+              <div class="quiz-opt-text">Es mi primera vivienda<small>Accedo a condiciones especiales</small></div>
+            </div>
+            <div class="quiz-opt" data-key="cirbe_limpio" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">✔️</span>
+              <div class="quiz-opt-text">Sin deudas ni préstamos activos<small>Historial CIRBE limpio</small></div>
+            </div>
+            <div class="quiz-opt" data-key="sector_estrategico" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">🏥</span>
+              <div class="quiz-opt-text">Trabajo en sector estratégico<small>Sanidad, educación, tecnología, etc.</small></div>
+            </div>
+            <div class="quiz-opt" data-key="tiene_patrimonio" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">🏛️</span>
+              <div class="quiz-opt-text">Tengo otros bienes o patrimonio<small>Propiedades, inversiones, etc.</small></div>
+            </div>
+          </div>
+          <p class="quiz-hint">Puedes seleccionar varias opciones o ninguna.</p>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 8: Obstáculos (multi-select) -->
+        <div class="quiz-step">
+          <h3>¿Tienes alguna de estas situaciones?</h3>
+          <p>Esta información es confidencial y nos ayuda a ser honestos contigo desde el principio.</p>
+          <div class="quiz-options quiz-multiselect">
+            <div class="quiz-opt" data-key="impagos" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">⚠️</span>
+              <div class="quiz-opt-text">Estoy en ASNEF o RAI<small>Fichero de impagados</small></div>
+            </div>
+            <div class="quiz-opt" data-key="cambio_empleo" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">🔀</span>
+              <div class="quiz-opt-text">He cambiado de trabajo en los últimos 6 meses<small>Puede afectar a la estabilidad que exige el banco</small></div>
+            </div>
+            <div class="quiz-opt" data-key="ingresos_variables" data-value="si" data-multiselect="true">
+              <span class="quiz-opt-icon">📊</span>
+              <div class="quiz-opt-text">Más del 50% de mis ingresos son variables<small>Comisiones, bonus, etc.</small></div>
+            </div>
+          </div>
+          <p class="quiz-hint">Si no te aplica ninguna, avanza directamente.</p>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 9: Contacto -->
+        <div class="quiz-step">
+          <h3>¿A quién le enviamos el análisis?</h3>
+          <p>Te contactamos personalmente en menos de 24h.</p>
+          <div class="quiz-contact-grid">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" name="q_nombre" placeholder="Tu nombre" required />
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="tel" name="q_telefono" placeholder="6XX XXX XXX" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email (opcional)</label>
+            <input type="email" name="q_email" placeholder="tu@email.com" />
+          </div>
+          <p style="font-size:0.8rem;margin-bottom:16px;">🔒 <input type="text" name="q_hp" style="display:none!important;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true" value="" />
+          Tus datos están protegidos. No compartimos tu información con terceros.</p>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next quiz-submit">Ver mi análisis →</button>
+          </div>
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="quiz-step quiz-result-step">
+          <div class="quiz-result">
+
+            <!-- Resultado A -->
+            <div class="result-msg" data-result="A" style="display:none;">
+              <div class="quiz-result-icon">🚀</div>
+              <h3>Tu perfil es excelente</h3>
+              <p>Tienes todo lo que los bancos quieren ver. Es muy probable que consigamos condiciones muy por encima de la media para ti.</p>
+              <div class="result-highlight result-highlight--green">
+                <p>✅ Te contactamos en menos de 48h con las opciones disponibles y adaptadas a tu perfil. Solo tienes que elegir.</p>
+              </div>
+            </div>
+
+            <!-- Resultado B -->
+            <div class="result-msg" data-result="B" style="display:none;">
+              <div class="quiz-result-icon">💪</div>
+              <h3>Buen perfil, buenas opciones</h3>
+              <p>Tu situación es sólida. Hay varias entidades que estarían encantadas de trabajar contigo — y nosotros sabemos cuáles ofrecen las mejores condiciones.</p>
+              <div class="result-highlight result-highlight--green">
+                <p>✅ Un asesor te llamará en menos de 48h para presentarte las opciones concretas para tu caso.</p>
+              </div>
+            </div>
+
+            <!-- Resultado C -->
+            <div class="result-msg" data-result="C" style="display:none;">
+              <div class="quiz-result-icon">💡</div>
+              <h3>Hay margen para mejorar</h3>
+              <p>Tu perfil tiene potencial, pero hay algunos puntos que conviene analizar antes de llamar a los bancos. La buena noticia: con la estrategia correcta, las cosas mejoran rápido.</p>
+              <div class="result-highlight result-highlight--yellow">
+                <p>✅ Un asesor te contactará personalmente para explicarte qué pasos dar y conseguir la hipoteca en las condiciones más adecuadas a tu perfil.</p>
+              </div>
+            </div>
+
+            <!-- Resultado D -->
+            <div class="result-msg" data-result="D" style="display:none;">
+              <div class="quiz-result-icon">🤝</div>
+              <h3>Tu caso necesita estrategia</h3>
+              <p>Hay cosas que trabajar, pero eso no significa que no haya opciones. Muchos de nuestros clientes llegaron en tu misma situación y hoy tienen su hipoteca firmada.</p>
+              <div class="result-highlight result-highlight--yellow">
+                <p>✅ Te contactamos para explicarte exactamente qué caminos existen y cuál es el más rápido para ti.</p>
+              </div>
+            </div>
+
+            <!-- Común a todos -->
+            <div class="result-common">
+              <div class="result-contact-box">
+                <p class="result-contact-text">
+                  💬 ¿Tienes alguna pregunta? Escríbenos a <a href="mailto:tarragona@firmax.es" class="result-contact-link">tarragona@firmax.es</a>
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /quiz -->
+
+    </div>
+  </div>
+</section>
 
   <section class="landing-hero">
     <div class="container landing-hero-inner">
@@ -57,7 +406,7 @@
         <span class="badge" style="margin-bottom:20px;display:inline-block;">Segunda Vivienda</span>
         <h1>Ese apartamento<br>en la Costa Daurada<br><span style="color:var(--teal-light)">puede ser tuyo</span></h1>
         <p style="color:rgba(255,255,255,0.65);font-size:1.1rem;margin:20px 0 32px;max-width:440px;">Una segunda vivienda tiene condiciones distintas a la habitual. Los bancos son más exigentes, pero con el perfil correcto y bien presentado, hay muy buenas opciones en el mercado.</p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;"><a href="#form" class="btn btn-primary">Quiero mi estudio gratuito →</a><a href="../index.html#filtro" class="btn btn-ghost">Hacer el análisis</a></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;"><a href="#ventajas" class="btn btn-primary">Quiero mi estudio gratuito →</a><a href="#proceso" class="btn btn-ghost">Cómo funciona</a></div>
       </div>
       <div class="persona-card">
         <div class="persona-img"><img src="../img/persona-segunda-vivienda.png" alt="Jordi, cliente con hipoteca segunda vivienda en Costa Dorada Tarragona" style="object-position: center top;" /><span class="persona-badge-img">🏖️ Firmado en verano</span></div>
@@ -84,125 +433,16 @@
     </div>
   </section>
 
-  <section id="form" style="background:var(--off-white);padding:60px 0;">
-  <div class="container">
-    <div class="quiz-inner" style="max-width:700px;margin:0 auto;text-align:center;">
-      <span class="badge" style="margin-bottom:16px;display:inline-block;">Análisis gratuito</span>
-      <h2 style="margin-bottom:12px;">¿Puedo conseguir mi hipoteca?</h2>
-      <p style="margin-bottom:32px;color:var(--text-muted);">Responde 5 preguntas y te decimos exactamente dónde estás. Sin compromiso.</p>
-      <div class="quiz-card" id="quiz">
-        <div class="quiz-progress">
-          <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:0%"></div></div>
-          <span class="quiz-progress-text">Paso 1 de 6</span>
-        </div>
-        <div class="quiz-step active">
-          <h3>¿Cuál es tu situación laboral?</h3>
-          <p>Es el dato más importante para los bancos.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="indefinido"><span class="quiz-opt-icon">💼</span><div class="quiz-opt-text">Contrato indefinido<small>Empleado por cuenta ajena</small></div></div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="funcionario"><span class="quiz-opt-icon">🏛️</span><div class="quiz-opt-text">Funcionario / Empleado público<small>Sector público estatal o autonómico</small></div></div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo"><span class="quiz-opt-icon">🧾</span><div class="quiz-opt-text">Autónomo<small>Por cuenta propia</small></div></div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="temporal"><span class="quiz-opt-icon">📋</span><div class="quiz-opt-text">Contrato temporal<small>Fijo discontinuo u obra y servicio</small></div></div>
-          </div>
-          <div class="quiz-nav"><span></span><button class="btn btn-primary quiz-next">Siguiente →</button></div>
-        </div>
-        <div class="quiz-step">
-          <h3>¿Cuánto tienes ahorrado respecto al precio de la vivienda?</h3>
-          <p>Los bancos suelen financiar hasta el 80%. El resto lo pones tú.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="ahorros" data-value="0-5"><span class="quiz-opt-icon">😅</span><div class="quiz-opt-text">Menos del 5%<small>Poco o sin ahorros</small></div></div>
-            <div class="quiz-opt" data-key="ahorros" data-value="5-10"><span class="quiz-opt-icon">💰</span><div class="quiz-opt-text">Entre 5% y 10%<small>Algo de colchón</small></div></div>
-            <div class="quiz-opt" data-key="ahorros" data-value="10-20"><span class="quiz-opt-icon">💵</span><div class="quiz-opt-text">Entre 10% y 20%<small>Buena base</small></div></div>
-            <div class="quiz-opt" data-key="ahorros" data-value="mas-20"><span class="quiz-opt-icon">🏦</span><div class="quiz-opt-text">Más del 20%<small>Perfil muy sólido</small></div></div>
-          </div>
-          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
-        </div>
-        <div class="quiz-step">
-          <h3>¿En qué punto estás con la vivienda?</h3>
-          <p>Nos ayuda a priorizar tu caso correctamente.</p>
-          <div class="quiz-options single">
-            <div class="quiz-opt" data-key="estado" data-value="reserva"><span class="quiz-opt-icon">✅</span><div class="quiz-opt-text">Ya tengo reserva firmada<small>Necesito la hipoteca sí o sí</small></div></div>
-            <div class="quiz-opt" data-key="estado" data-value="identificada"><span class="quiz-opt-icon">🔍</span><div class="quiz-opt-text">Tengo la vivienda identificada<small>Estoy a punto de decidirme</small></div></div>
-            <div class="quiz-opt" data-key="estado" data-value="mirando"><span class="quiz-opt-icon">👀</span><div class="quiz-opt-text">Estoy mirando opciones<small>Quiero saber mis posibilidades</small></div></div>
-          </div>
-          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
-        </div>
-        <div class="quiz-step">
-          <h3>¿Cuándo necesitas tener la hipoteca?</h3>
-          <p>Gestionamos según prioridad para que llegues a tiempo.</p>
-          <div class="quiz-options single">
-            <div class="quiz-opt" data-key="urgencia" data-value="menos-1"><span class="quiz-opt-icon">🔥</span><div class="quiz-opt-text">En menos de 1 mes<small>Urgente</small></div></div>
-            <div class="quiz-opt" data-key="urgencia" data-value="1-3"><span class="quiz-opt-icon">📅</span><div class="quiz-opt-text">En 1 a 3 meses<small>Tengo margen</small></div></div>
-            <div class="quiz-opt" data-key="urgencia" data-value="mas-3"><span class="quiz-opt-icon">🗓️</span><div class="quiz-opt-text">Más de 3 meses<small>Me informo de cara al futuro</small></div></div>
-          </div>
-          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
-        </div>
-        <div class="quiz-step">
-          <h3>Una última cosa...</h3>
-          <p>Selecciona todo lo que aplique a tu caso.</p>
-          <div class="quiz-options single">
-            <div class="quiz-opt" data-key="cotitular" data-value="si"><span class="quiz-opt-icon">👫</span><div class="quiz-opt-text">Voy con pareja o cotitular<small>Dos ingresos mejoran la operación</small></div></div>
-            <div class="quiz-opt" data-key="primera_vivienda" data-value="si"><span class="quiz-opt-icon">🗝️</span><div class="quiz-opt-text">Es mi primera vivienda<small>Accedo a condiciones especiales</small></div></div>
-            <div class="quiz-opt" data-key="impagos" data-value="no"><span class="quiz-opt-icon">✔️</span><div class="quiz-opt-text">No tengo impagos ni deudas pendientes<small>Historial crediticio limpio</small></div></div>
-          </div>
-          <p style="font-size:0.82rem;margin-top:8px;">Puedes seleccionar varias opciones o ninguna.</p>
-          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next">Siguiente →</button></div>
-        </div>
-        <div class="quiz-step">
-          <h3>¿A quién le enviamos el análisis?</h3>
-          <p>Te contactamos personalmente en menos de 24h.</p>
-          <div class="quiz-contact-grid">
-            <div class="form-group"><label>Nombre</label><input type="text" name="q_nombre" placeholder="Tu nombre" required /></div>
-            <div class="form-group"><label>Teléfono</label><input type="tel" name="q_telefono" placeholder="6XX XXX XXX" required /></div>
-          </div>
-          <div class="form-group"><label>Email (opcional)</label><input type="email" name="q_email" placeholder="tu@email.com" /></div>
-          <p style="font-size:0.8rem;margin-bottom:16px;">🔒 <input type="text" name="q_hp" style="display:none!important;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true" value="" />
-          Tus datos están protegidos. No compartimos tu información con terceros.</p>
-          <div class="quiz-nav"><button class="quiz-back">← Atrás</button><button class="btn btn-primary quiz-next quiz-submit">Ver mi análisis →</button></div>
-        </div>
-        <div class="quiz-step quiz-result-step">
-          <div class="quiz-result">
-            <div class="result-msg" data-result="A" style="display:none;">
-              <div class="quiz-result-icon">🚀</div>
-              <h3>Tu perfil es excelente</h3>
-              <p>Tienes todo lo que los bancos quieren ver. Es muy probable que consigamos condiciones muy por encima de la media para ti.</p>
-              <div class="result-highlight result-highlight--green"><p>✅ Te contactamos en menos de 48h con las opciones disponibles y adaptadas a tu perfil. Solo tienes que elegir.</p></div>
-            </div>
-            <div class="result-msg" data-result="B" style="display:none;">
-              <div class="quiz-result-icon">💪</div>
-              <h3>Buen perfil, buenas opciones</h3>
-              <p>Tu situación es sólida. Hay varias entidades que estarían encantadas de trabajar contigo — y nosotros sabemos cuáles ofrecen las mejores condiciones.</p>
-              <div class="result-highlight result-highlight--green"><p>✅ Un asesor te contactará en menos de 48h para presentarte las opciones concretas para tu caso.</p></div>
-            </div>
-            <div class="result-msg" data-result="C" style="display:none;">
-              <div class="quiz-result-icon">💡</div>
-              <h3>Hay margen para mejorar</h3>
-              <p>Tu perfil tiene potencial, pero hay algunos puntos que conviene analizar. Con la estrategia correcta, las cosas mejoran rápido.</p>
-              <div class="result-highlight result-highlight--yellow"><p>✅ Un asesor te contactará personalmente para explicarte qué pasos dar y conseguir la hipoteca en las mejores condiciones.</p></div>
-            </div>
-            <div class="result-msg" data-result="D" style="display:none;">
-              <div class="quiz-result-icon">🤝</div>
-              <h3>Tu caso necesita estrategia</h3>
-              <p>Hay cosas que trabajar, pero eso no significa que no haya opciones. Muchos de nuestros clientes llegaron en tu misma situación y hoy tienen su hipoteca firmada.</p>
-              <div class="result-highlight result-highlight--yellow"><p>✅ Te contactamos para explicarte exactamente qué caminos existen y cuál es el más rápido para ti.</p></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
   <section class="faq"><div class="container"><div class="section-header" data-reveal><span class="badge">Preguntas frecuentes</span><h2>Lo que más nos preguntan</h2></div><div class="faq-list">
     <div class="faq-item"><div class="faq-q">¿Cuánto financia el banco en segunda vivienda? <span>+</span></div><div class="faq-a">Por norma general, los bancos financian hasta el 70-75% del valor de tasación o compraventa (el menor de los dos). Necesitas tener ahorros para cubrir el resto más los gastos de compra.</div></div>
     <div class="faq-item"><div class="faq-q">¿Puedo tener dos hipotecas a la vez? <span>+</span></div><div class="faq-a">Sí, siempre que tu ratio de endeudamiento total sea viable. Lo calculamos antes de presentar nada al banco.</div></div>
     <div class="faq-item"><div class="faq-q">¿Puedo alquilar la segunda vivienda? <span>+</span></div><div class="faq-a">Sí. De hecho, los ingresos por alquiler pueden ayudar a justificar la operación ante el banco. Lo contemplamos en el análisis de viabilidad.</div></div>
   </div></div></section>
 
-  <div style="height:60px;background:linear-gradient(to bottom,var(--white),#004F5E);"></div>
+  <div style="height:60px;background:linear-gradient(to bottom,var(--white),var(--teal));"></div>
   <section class="cta-banner"><div class="container"><h2>Tu segunda vivienda, a tu alcance</h2><p>Analizamos si es viable y buscamos la financiación más adecuada a tu caso para tu caso.</p><div class="cta-actions"><a href="#form" class="btn btn-white">Quiero mi estudio gratuito</a></div></div></section>
 
-  <footer><div class="container"><div class="footer-grid"><div class="footer-brand"><div class="logo"><img src="../img/logo-transparent.png" alt="Broker Hipotecario Firmax" class="logo-img" /><span class="logo-text">Broker<span>Hipotecario</span></span></div><p>Tu asesor hipotecario independiente en Tarragona.</p></div><div class="footer-col"><h4>Servicios</h4><a href="hipoteca-fija.html">Hipoteca Fija</a><a href="hipoteca-variable.html">Hipoteca Variable</a><a href="hipoteca-100.html">Hipoteca 100%</a><a href="funcionarios.html">Funcionarios</a><a href="segunda-vivienda.html">Segunda Vivienda</a><a href="autopromotor.html">Autopromotor</a><a href="reunificacion.html">Reunificación</a><a href="no-residentes.html">No Residentes</a></div><div class="footer-col"><h4>Zonas</h4><a href="../index.html">Broker en Tarragona</a><a href="../broker-hipotecario-reus.html">Broker en Reus</a><a href="../broker-hipotecario-salou.html">Broker en Salou</a><a href="../broker-hipotecario-cambrils.html">Broker en Cambrils</a></div><div class="footer-col"><h4>Empresa</h4><a href="../index.html#porque">Por qué nosotros</a><a href="../index.html#proceso">Cómo funciona</a></div><div class="footer-col"><h4>Contacto</h4><a href="mailto:tarragona@firmax.es">tarragona@firmax.es</a></div></div><div class="footer-bottom"><span>© 2025 BrokerHipotecario · Mediterrane Firmax, SL · Registro BdE: D219</span><div class="footer-links"><a href="../privacidad.html">Privacidad</a><a href="../aviso-legal.html">Aviso legal</a><a href="../cookies.html">Cookies</a><a href="../informacion-precontractual.html">Inf. precontractual</a></div></div></div></footer>
+  <footer><div class="container"><div class="footer-grid"><div class="footer-brand"><div class="logo"><img src="../img/firmax-icon.png" alt="Firmax" class="logo-img" /><div class="logo-group"><span class="logo-text">Broker<span>Hipotecario</span></span><span class="logo-byline">by Firmax</span></div></div><p>Tu asesor hipotecario independiente en Tarragona.</p></div><div class="footer-col"><h4>Servicios</h4><a href="hipoteca-fija.html">Hipoteca Fija</a><a href="hipoteca-variable.html">Hipoteca Variable</a><a href="hipoteca-100.html">Hipoteca 100%</a><a href="funcionarios.html">Funcionarios</a><a href="segunda-vivienda.html">Segunda Vivienda</a><a href="autopromotor.html">Autopromotor</a><a href="reunificacion.html">Reunificación</a><a href="no-residentes.html">No Residentes</a></div><div class="footer-col"><h4>Zonas</h4><a href="../index.html">Broker en Tarragona</a><a href="../broker-hipotecario-reus.html">Broker en Reus</a><a href="../broker-hipotecario-salou.html">Broker en Salou</a><a href="../broker-hipotecario-cambrils.html">Broker en Cambrils</a></div><div class="footer-col"><h4>Empresa</h4><a href="../index.html#porque">Por qué nosotros</a><a href="../index.html#proceso">Cómo funciona</a></div><div class="footer-col"><h4>Contacto</h4><a href="mailto:tarragona@firmax.es">tarragona@firmax.es</a></div></div><div class="footer-bottom"><span>© 2025 BrokerHipotecario · Mediterrane Firmax, SL · Registro BdE: D219</span><div class="footer-links"><a href="../privacidad.html">Privacidad</a><a href="../aviso-legal.html">Aviso legal</a><a href="../cookies.html">Cookies</a><a href="../informacion-precontractual.html">Inf. precontractual</a></div></div></div></footer>
   <script src="../js/analytics.js"></script>
   <script src="../js/main.js"></script>
   <script>document.querySelectorAll('.faq-q').forEach(q=>{q.addEventListener('click',()=>{const a=q.nextElementSibling;const o=a.style.display==='block';document.querySelectorAll('.faq-a').forEach(e=>e.style.display='none');document.querySelectorAll('.faq-q span').forEach(e=>e.textContent='+');if(!o){a.style.display='block';q.querySelector('span').textContent='−';}});});</script>
