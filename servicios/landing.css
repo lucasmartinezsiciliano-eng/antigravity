@@ -2,7 +2,7 @@
    LANDING PAGES — Shared styles
    ============================================= */
 
-.logo-img { height: 40px; width: auto; display: block; }
+.logo-img { height: 52px; width: auto; display: block; border-radius: 8px; }
 
 .persona-img img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
 
@@ -98,9 +98,7 @@
 .otro-card .icon { font-size: 1.6rem; margin-bottom: 6px; }
 .otro-card h4 { font-size: 0.85rem; color: var(--black); font-weight: 600; }
 
-/* Quiz embedded in landing pages (light background override) */
-#form .quiz-inner h2 { color: var(--black); }
-#form .quiz-inner > p { color: var(--gray-600); }
+/* Quiz in landing pages — inherits dark background colors from style.css */
 
 /* Responsive */
 @media (max-width: 768px) {
