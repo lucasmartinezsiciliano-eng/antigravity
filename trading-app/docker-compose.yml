@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+
+  # ── IB Gateway (headless IBKR connection) ──────────────────────────────────
+  ib-gateway:
+    image: ghcr.io/gnzsnz/ib-gateway:stable
+    restart: always
+    environment:
+      TWS_USERID: ${IBKR_USER}
+      TWS_PASSWORD: ${IBKR_PASS}
+      TRADING_MODE: ${TRADING_MODE:-paper}
+      READ_ONLY_API: "no"
+      VNC_SERVER_PASSWORD: ${VNC_PASSWORD:-changeme}
+    ports:
+      - "4001:4001"   # live
+      - "4002:4002"   # paper
+      - "5900:5900"   # VNC (optional — to watch IB Gateway remotely)
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "4002"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ── Redis message queue ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── FastAPI webhook receiver ───────────────────────────────────────────────
+  webhook-api:
+    build: .
+    restart: always
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Order executor ─────────────────────────────────────────────────────────
+  executor:
+    build: .
+    restart: always
+    command: python executor.py
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      IBKR_HOST: ib-gateway
+    depends_on:
+      redis:
+        condition: service_healthy
+      ib-gateway:
+        condition: service_healthy
+
+  # ── Nginx reverse proxy + SSL ──────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - webhook-api
