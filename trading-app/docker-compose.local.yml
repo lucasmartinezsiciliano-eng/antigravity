@@ -1,0 +1,52 @@
+version: "3.9"
+# ── Local beta testing — no nginx, no SSL, ports direct ──────────────────────
+# Usage: docker compose -f docker-compose.local.yml up -d
+# Webhook: http://localhost:8000/webhook  (no HTTPS needed locally)
+
+services:
+
+  ib-gateway:
+    image: ghcr.io/gnzsnz/ib-gateway:stable
+    restart: unless-stopped
+    environment:
+      TWS_USERID: ${IBKR_USER}
+      TWS_PASSWORD: ${IBKR_PASS}
+      TRADING_MODE: paper          # always paper in local beta
+      READ_ONLY_API: "no"
+      VNC_SERVER_PASSWORD: changeme
+    ports:
+      - "4002:4002"
+      - "5900:5900"                # VNC to watch IB Gateway UI
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"               # exposed so you can inspect with redis-cli
+
+  webhook-api:
+    build: .
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      IBKR_PORT: "4002"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app                    # hot reload — edit code, changes apply live
+    depends_on: [redis]
+
+  executor:
+    build: .
+    restart: unless-stopped
+    command: python executor.py
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      IBKR_HOST: ib-gateway
+      IBKR_PORT: "4002"
+    volumes:
+      - .:/app                    # shares trades.jsonl with analytics
+    depends_on: [redis, ib-gateway]
