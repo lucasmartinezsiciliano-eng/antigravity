@@ -77,23 +77,48 @@ NY=pytz.timezone("America/New_York")
 def _now_ny(): return datetime.now(NY)
 
 def kz_status()->dict:
+    """
+    Kill zones (TJR/ICT NY session):
+      Window A — NY Open:      8:30–9:00 ET  (máxima liquidez, movimientos explosivos)
+      Window B — Mid-morning: 9:30–10:30 ET  (NYSE open, continuación de sesión)
+      Silver Bullet:          10:00–11:00 ET  (setup específico TJR Day-34)
+    El scanner solo opera dentro de estas ventanas.
+    """
     import datetime as dt
     ny=_now_ny()
     t=ny.time()
-    active=(ny.weekday()<5 and dt.time(8,30)<=t<=dt.time(11,0))
+    wd=ny.weekday()
+
+    win_a = dt.time(8,30)<=t<=dt.time(9,0)
+    win_b = dt.time(9,30)<=t<=dt.time(10,30)
+    sb    = dt.time(10,0)<=t<=dt.time(11,0)
+    active= wd<5 and (win_a or win_b or sb)
+
     if active:
-        mins=( 11*60)-(t.hour*60+t.minute)
-        nxt=f"Cierra en {mins}m"
-    elif ny.weekday()>=5:
-        nxt="Abre el lunes 8:30 ET"
-    elif t.hour<8 or (t.hour==8 and t.minute<30):
-        mins=(8*60+30)-(t.hour*60+t.minute)
-        nxt=f"Abre en {mins}m"
+        if win_a: zone_name="NY Open (A)"
+        elif sb:  zone_name="Silver Bullet"
+        else:     zone_name="Mid-Morning (B)"
+        # Next close
+        if t<dt.time(9,0):   next_event=f"Ventana A cierra en {int((dt.time(9,0).hour*60+dt.time(9,0).minute)-(t.hour*60+t.minute))}m"
+        elif t<dt.time(10,30): next_event=f"Ventana B cierra en {int((dt.time(10,30).hour*60+dt.time(10,30).minute)-(t.hour*60+t.minute))}m"
+        else:                next_event=f"Silver Bullet cierra en {int((11*60)-(t.hour*60+t.minute))}m"
+        nxt=next_event
+    elif wd>=5:
+        nxt="Abre el lunes 8:30 ET"; zone_name="Weekend"
+    elif t<dt.time(8,30):
+        mins=int((8*60+30)-(t.hour*60+t.minute))
+        nxt=f"Ventana A abre en {mins}m (8:30 ET)"; zone_name="Pre-KZ"
+    elif dt.time(9,0)<t<dt.time(9,30):
+        nxt="Ventana B abre en {}m (9:30 ET)".format(int((9*60+30)-(t.hour*60+t.minute))); zone_name="Gap A→B"
     else:
-        nxt="Abre mañana 8:30 ET"
-    # Silver Bullet: 10:00-11:00 ET
-    sb=(active and dt.time(10,0)<=t<=dt.time(11,0))
-    return {"active":active,"silver_bullet":sb,"et":ny.strftime("%H:%M:%S"),"day":ny.strftime("%A"),"next":nxt}
+        nxt="Abre mañana 8:30 ET"; zone_name="Post-KZ"
+
+    return {
+        "active":active,"silver_bullet":sb,
+        "window_a":win_a,"window_b":win_b,
+        "zone_name":zone_name if active else zone_name,
+        "et":ny.strftime("%H:%M:%S"),"day":ny.strftime("%A"),"next":nxt
+    }
 
 def next_news()->dict|None:
     ny=_now_ny()
@@ -193,74 +218,238 @@ WATCH_SYMBOLS = ["NQ1!"]   # symbols to watch (configurable from UI)
 
 def detect_ifvg(candles: list) -> list:
     """
-    IFVG detection — Python port of ifvg_signal.pine.
-    candles: list of dicts {time, open, high, low, close} ordered oldest→newest.
-    Returns list of signals: [{action, close, reason, bar_index}]
-    Requires minimum 3 candles.
+    True 3-stage IFVG detection (ICT/TJR methodology):
+
+    Stage 1 — FVG creation: 3-candle imbalance (gap between c[i-2].high and c[i].low)
+    Stage 2 — Violation/Inversion: price CLOSES completely through the FVG
+               Bull FVG violated → close < fvg.bot → zone becomes RESISTANCE (IFVG bearish)
+               Bear FVG violated → close > fvg.top → zone becomes SUPPORT (IFVG bullish)
+    Stage 3 — Retest: price pulls back INTO the inverted zone → SIGNAL
+
+    This is what separates a real IFVG from a simple FVG that price touched.
     """
     signals = []
-    if len(candles) < 5:
+    if len(candles) < 10:
         return signals
 
-    # Track active FVG zones (rolling window)
-    bull_fvgs = []  # [{top, bot, bar}]
-    bear_fvgs = []  # [{top, bot, bar}]
+    ZONE_LOOKBACK = 40   # bars before a zone expires
+
+    # Active FVGs (not yet violated)
+    bull_fvgs = []   # [{top, bot, bar}]  → candidate for bearish IFVG
+    bear_fvgs = []   # [{top, bot, bar}]  → candidate for bullish IFVG
+
+    # Inverted zones (IFVGs) waiting for retest
+    ifvg_zones = []  # [{top, bot, type:'sell'/'buy', bar_inv}]
 
     for i in range(2, len(candles)):
-        c0 = candles[i]       # current (most recent closed)
-        c2 = candles[i-2]     # oldest of the 3 (middle bar not needed for FVG)
+        c0 = candles[i]
+        c2 = candles[i-2]
 
-        # ── Detect new FVGs created by candle[i-2], [i-1], [i] ──
-        # Bullish FVG: gap between c2.high and c0.low
-        if c2["high"] < c0["low"]:
-            size = c0["low"] - c2["high"]
-            if size > 0:
-                bull_fvgs.append({"top": c0["low"], "bot": c2["high"], "bar": i})
+        # ── Stage 1: detect new FVGs ──────────────────────────────────────
+        if c2["high"] < c0["low"]:          # Bullish FVG
+            bull_fvgs.append({"top": c0["low"], "bot": c2["high"], "bar": i})
 
-        # Bearish FVG: gap between c2.low and c0.high
-        if c2["low"] > c0["high"]:
-            size = c2["low"] - c0["high"]
-            if size > 0:
-                bear_fvgs.append({"top": c2["low"], "bot": c0["high"], "bar": i})
+        if c2["low"] > c0["high"]:          # Bearish FVG
+            bear_fvgs.append({"top": c2["low"], "bot": c0["high"], "bar": i})
 
-        # Prune old FVGs (only keep last 30 bars)
-        bull_fvgs = [f for f in bull_fvgs if i - f["bar"] <= 30]
-        bear_fvgs = [f for f in bear_fvgs if i - f["bar"] <= 30]
+        # Expire old zones
+        bull_fvgs  = [f for f in bull_fvgs  if i - f["bar"] <= ZONE_LOOKBACK]
+        bear_fvgs  = [f for f in bear_fvgs  if i - f["bar"] <= ZONE_LOOKBACK]
+        ifvg_zones = [z for z in ifvg_zones if i - z["bar_inv"] <= ZONE_LOOKBACK]
 
-        # ── Check IFVG on current candle ──
-        # BUY IFVG: price swept through a bearish FVG from below → close above top
-        for fvg in bear_fvgs:
-            if fvg["bar"] == i:  # FVG just created this bar, skip
+        # ── Stage 2: detect violations → create IFVG zones ────────────────
+        for fvg in bull_fvgs[:]:
+            if i - fvg["bar"] < 1:  # need at least 1 bar after creation
                 continue
-            if c0["low"] <= fvg["bot"] and c0["close"] > fvg["top"]:
-                signals.append({
-                    "action": "BUY",
-                    "close": c0["close"],
-                    "reason": f"IFVG_BULL (swp bear FVG {fvg['bot']:.0f}-{fvg['top']:.0f})",
-                    "bar_index": i,
-                    "fvg_bot": fvg["bot"],
-                    "fvg_top": fvg["top"],
-                })
-                bear_fvgs.remove(fvg)
-                break  # one signal per bar
-
-        # SELL IFVG: price swept through a bullish FVG from above → close below bot
-        for fvg in bull_fvgs:
-            if fvg["bar"] == i:
-                continue
-            if c0["high"] >= fvg["top"] and c0["close"] < fvg["bot"]:
-                signals.append({
-                    "action": "SELL",
-                    "close": c0["close"],
-                    "reason": f"IFVG_BEAR (swp bull FVG {fvg['bot']:.0f}-{fvg['top']:.0f})",
-                    "bar_index": i,
-                    "fvg_bot": fvg["bot"],
-                    "fvg_top": fvg["top"],
+            # Violation: close BELOW bottom of bullish FVG
+            if c0["close"] < fvg["bot"]:
+                ifvg_zones.append({
+                    "top": fvg["top"], "bot": fvg["bot"],
+                    "type": "sell",   # inverted bull FVG → resistance → SELL on retest
+                    "bar_inv": i,
+                    "desc": f"bull FVG [{fvg['bot']:.0f}-{fvg['top']:.0f}] invertido"
                 })
                 bull_fvgs.remove(fvg)
-                break
+
+        for fvg in bear_fvgs[:]:
+            if i - fvg["bar"] < 1:
+                continue
+            # Violation: close ABOVE top of bearish FVG
+            if c0["close"] > fvg["top"]:
+                ifvg_zones.append({
+                    "top": fvg["top"], "bot": fvg["bot"],
+                    "type": "buy",    # inverted bear FVG → support → BUY on retest
+                    "bar_inv": i,
+                    "desc": f"bear FVG [{fvg['bot']:.0f}-{fvg['top']:.0f}] invertido"
+                })
+                bear_fvgs.remove(fvg)
+
+        # ── Stage 3: retest → signal ───────────────────────────────────────
+        for zone in ifvg_zones[:]:
+            if i - zone["bar_inv"] < 1:   # at least 1 bar after inversion
+                continue
+
+            if zone["type"] == "sell":
+                # Bearish IFVG: price retests zone → SELL
+                # Price must have come from BELOW and entered the zone
+                if zone["bot"] <= c0["close"] <= zone["top"]:
+                    signals.append({
+                        "action": "SELL",
+                        "close":  c0["close"],
+                        "reason": f"IFVG SELL — {zone['desc']} → resistencia confirmada",
+                        "bar_index": i,
+                        "fvg_bot": zone["bot"], "fvg_top": zone["top"],
+                    })
+                    ifvg_zones.remove(zone)
+
+            elif zone["type"] == "buy":
+                # Bullish IFVG: price retests zone → BUY
+                if zone["bot"] <= c0["close"] <= zone["top"]:
+                    signals.append({
+                        "action": "BUY",
+                        "close":  c0["close"],
+                        "reason": f"IFVG BUY — {zone['desc']} → soporte confirmado",
+                        "bar_index": i,
+                        "fvg_bot": zone["bot"], "fvg_top": zone["top"],
+                    })
+                    ifvg_zones.remove(zone)
 
     return signals
+
+
+# ── Weekly/Daily/4H Bias Analyzer ─────────────────────────────────────────────
+BIAS_CACHE = {"result": None, "ts": None}  # cache for 30 min
+
+def analyze_bias(yf_sym: str = "^NDX") -> dict:
+    """
+    Top-down structural analysis: Weekly → Daily → 4H.
+    Returns suggested bias (BULLISH/BEARISH/NEUTRAL) with score + reasoning.
+    Score: +N = bullish evidence, -N = bearish evidence, threshold ±3 for bias.
+    """
+    import yfinance as yf
+    score = 0
+    signals = []
+
+    try:
+        # ── Weekly: is price expanding in bullish or bearish direction? ──
+        wk = yf.Ticker(yf_sym).history(period="3mo", interval="1wk", auto_adjust=True)
+        if len(wk) >= 3:
+            pw  = wk.iloc[-2]   # previous week (fully closed)
+            cw  = wk.iloc[-1]   # current week
+            ppw = wk.iloc[-3]   # 2 weeks ago
+            pdh, pdl = float(pw["High"]), float(pw["Low"])
+            pdc = float(pw["Close"])
+            cp  = float(cw["Close"])
+
+            if cp > pdh:
+                score += 2; signals.append(f"W: precio sobre máx semana previa ({pdh:.0f}) +2")
+            elif cp < pdl:
+                score -= 2; signals.append(f"W: precio bajo mín semana previa ({pdl:.0f}) -2")
+            elif cp > pdc:
+                score += 1; signals.append(f"W: cierre semanal por encima PDC ({pdc:.0f}) +1")
+            else:
+                score -= 1; signals.append(f"W: cierre semanal bajo PDC ({pdc:.0f}) -1")
+
+            # Weekly HH/HL or LH/LL
+            if float(pw["High"]) > float(ppw["High"]) and float(pw["Low"]) > float(ppw["Low"]):
+                score += 1; signals.append("W: HH+HL semanal (tendencia alcista) +1")
+            elif float(pw["High"]) < float(ppw["High"]) and float(pw["Low"]) < float(ppw["Low"]):
+                score -= 1; signals.append("W: LH+LL semanal (tendencia bajista) -1")
+
+    except Exception as e:
+        signals.append(f"W: error ({e})")
+
+    try:
+        # ── Daily: PDH, PDL, premium/discount ──
+        dy = yf.Ticker(yf_sym).history(period="10d", interval="1d", auto_adjust=True)
+        if len(dy) >= 3:
+            yd   = dy.iloc[-2]   # yesterday (fully closed)
+            td   = dy.iloc[-1]   # today so far
+            pdh  = float(yd["High"])
+            pdl  = float(yd["Low"])
+            pdc  = float(yd["Close"])
+            cp   = float(td["Close"])
+            mid  = (pdh + pdl) / 2  # equilibrium
+
+            if cp > pdh:
+                score += 2; signals.append(f"D: precio sobre PDH ({pdh:.0f}) — expansión alcista +2")
+            elif cp < pdl:
+                score -= 2; signals.append(f"D: precio bajo PDL ({pdl:.0f}) — expansión bajista -2")
+            elif cp > mid:
+                score += 1; signals.append(f"D: precio en zona premium ({mid:.0f}-{pdh:.0f}) +1")
+            else:
+                score -= 1; signals.append(f"D: precio en zona descuento ({pdl:.0f}-{mid:.0f}) -1")
+
+            # Daily trend: 3 days
+            if len(dy) >= 4:
+                d2, d3 = dy.iloc[-3], dy.iloc[-4]
+                dh = [float(d3["High"]), float(d2["High"]), float(yd["High"])]
+                dl = [float(d3["Low"]),  float(d2["Low"]),  float(yd["Low"])]
+                if dh[2]>dh[1]>dh[0] and dl[2]>dl[1]>dl[0]:
+                    score += 1; signals.append("D: HH+HL diario (tendencia alcista) +1")
+                elif dh[2]<dh[1]<dh[0] and dl[2]<dl[1]<dl[0]:
+                    score -= 1; signals.append("D: LH+LL diario (tendencia bajista) -1")
+
+    except Exception as e:
+        signals.append(f"D: error ({e})")
+
+    try:
+        # ── 4H: estructura reciente ──
+        h1 = yf.Ticker(yf_sym).history(period="10d", interval="1h", auto_adjust=True)
+        if len(h1) >= 12:
+            import pandas as pd
+            h4 = h1.resample("4h", origin="start").agg(
+                Open=("Open","first"), High=("High","max"),
+                Low=("Low","min"),   Close=("Close","last")
+            ).dropna()
+
+            if len(h4) >= 4:
+                bars = h4.iloc[-4:]
+                highs = [float(b["High"])  for _, b in bars.iterrows()]
+                lows  = [float(b["Low"])   for _, b in bars.iterrows()]
+                closes= [float(b["Close"]) for _, b in bars.iterrows()]
+
+                # Higher highs + higher lows
+                if highs[-1]>highs[-2] and lows[-1]>lows[-2]:
+                    score += 2; signals.append("4H: HH+HL → estructura alcista +2")
+                elif highs[-1]<highs[-2] and lows[-1]<lows[-2]:
+                    score -= 2; signals.append("4H: LH+LL → estructura bajista -2")
+                elif highs[-1]>highs[-2]:
+                    score += 1; signals.append("4H: higher high (momentum alcista) +1")
+                elif lows[-1]<lows[-2]:
+                    score -= 1; signals.append("4H: lower low (momentum bajista) -1")
+
+                # Price vs 4H midpoint of last completed bar
+                last_h4 = h4.iloc[-2]
+                h4_mid = (float(last_h4["High"]) + float(last_h4["Low"])) / 2
+                if closes[-1] > h4_mid:
+                    score += 1; signals.append(f"4H: cierre sobre midpoint ({h4_mid:.0f}) +1")
+                else:
+                    score -= 1; signals.append(f"4H: cierre bajo midpoint ({h4_mid:.0f}) -1")
+
+    except Exception as e:
+        signals.append(f"4H: error ({e})")
+
+    # ── Conclusion ──
+    if score >= 4:
+        suggested = "BULLISH"
+    elif score <= -4:
+        suggested = "BEARISH"
+    else:
+        suggested = "NEUTRAL"
+
+    confidence = min(abs(score) / 8 * 100, 100)
+
+    return {
+        "suggested": suggested,
+        "score": score,
+        "max_score": 10,
+        "confidence": round(confidence, 0),
+        "signals": signals,
+        "symbol": yf_sym,
+        "ts": _ts(),
+        "note": "Sugerencia automatizada — confirmar con análisis propio de Weekly+Daily+4H",
+    }
 
 
 def ifvg_scanner():
@@ -465,6 +654,24 @@ async def test_signal(symbol:str="NQ1!",action:str="BUY",price:float=19250.0):
 @app.get("/api/scanner")
 async def scanner_status():
     return {**DETECTOR_STATE, "watching": WATCH_SYMBOLS}
+
+@app.get("/api/bias-suggestion")
+async def bias_suggestion(symbol:str="NQ1!"):
+    """
+    Automated top-down analysis W/D/4H → suggests bias.
+    Cached 30 min (Yahoo Finance rate limit).
+    """
+    import time as _time
+    cached = BIAS_CACHE.get("result")
+    cached_ts = BIAS_CACHE.get("ts")
+    # Cache valid for 30 min
+    if cached and cached_ts and (_time.time() - cached_ts < 1800):
+        return cached
+    yf_sym = YF_SYMBOLS.get(symbol, "^NDX")
+    result = analyze_bias(yf_sym)
+    BIAS_CACHE["result"] = result
+    BIAS_CACHE["ts"] = _time.time()
+    return result
 
 @app.post("/api/scanner/toggle")
 async def scanner_toggle():
@@ -717,7 +924,41 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
   <!-- Right: Sidebar -->
   <div class="sidebar">
 
-    <!-- Daily Bias -->
+    <!-- Bias Sugerido W/D/4H -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Bias Sugerido</span>
+        <span style="color:var(--text2);font-size:10px">W+D+4H auto</span>
+        <button onclick="loadBiasSuggestion()" id="bias-refresh-btn"
+          style="margin-left:auto;background:var(--bg3);border:1px solid var(--border);color:var(--text2);
+                 padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit">
+          ↻
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span id="bs-badge" style="font-size:16px;font-weight:700;color:var(--text2)">—</span>
+        <div>
+          <div style="font-size:10px;color:var(--text2)">Score: <span id="bs-score">—</span> · Confianza: <span id="bs-conf">—</span></div>
+          <div style="font-size:9px;color:var(--text2)" id="bs-loading">Cargando análisis...</div>
+        </div>
+      </div>
+      <div id="bs-signals" style="font-size:9px;color:var(--text2);line-height:1.7;max-height:80px;overflow-y:auto"></div>
+      <div style="font-size:9px;color:#555;margin-top:4px">⚠ Confirma con tu propio análisis antes de operar</div>
+    </div>
+
+    <!-- Daily Bias (confirmación manual) -->
+    <div class="panel">
+      <div class="panel-title"><span>Daily Bias</span><span style="color:var(--text2);font-size:10px">TJR Day-34 · confirmar</span></div>
+      <div class="bias-btns">
+        <button class="bias-btn" id="bb-bull" onclick="setBias('BULLISH')">▲ BULLISH</button>
+        <button class="bias-btn sel-neut" id="bb-neut" onclick="setBias('NEUTRAL')">— NEUTRAL</button>
+        <button class="bias-btn" id="bb-bear" onclick="setBias('BEARISH')">▼ BEARISH</button>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:8px">
+        Sin bias claro → no operar (Fede Day-22)
+      </div>
+    </div>
+
     <!-- IFVG Scanner status -->
     <div class="panel" id="scanner-panel">
       <div class="panel-title">
@@ -730,21 +971,12 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
         </button>
       </div>
       <div style="font-size:10px;color:var(--text2);line-height:1.6" id="scanner-info">
-        Esperando kill zone (8:30 ET)...
+        Esperando kill zone...
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px" id="scanner-windows">
+        Ventanas: A 8:30-9:00 · B 9:30-10:30 · SB 10:00-11:00
       </div>
       <div style="font-size:10px;color:var(--green);margin-top:4px;min-height:14px" id="scanner-last"></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title"><span>Daily Bias</span><span style="color:var(--text2);font-size:10px">TJR Day-34</span></div>
-      <div class="bias-btns">
-        <button class="bias-btn" id="bb-bull" onclick="setBias('BULLISH')">▲ BULLISH</button>
-        <button class="bias-btn sel-neut" id="bb-neut" onclick="setBias('NEUTRAL')">— NEUTRAL</button>
-        <button class="bias-btn" id="bb-bear" onclick="setBias('BEARISH')">▼ BEARISH</button>
-      </div>
-      <div style="font-size:10px;color:var(--text2);margin-top:8px">
-        Sin bias claro → no operar (Fede Day-22)
-      </div>
     </div>
 
     <!-- Risk Calculator -->
@@ -951,7 +1183,10 @@ setInterval(()=>{
 }, 60000);
 
 // Init chart — 5m por defecto (datos más estables)
-window.addEventListener("load",()=>{ setTimeout(()=>buildTV("NQ1!","5"),400); });
+window.addEventListener("load",()=>{
+  setTimeout(()=>buildTV("NQ1!","5"),400);
+  setTimeout(()=>loadBiasSuggestion(),1500);  // load bias suggestion after chart
+});
 
 // ── Equity chart ─────────────────────────────────────────────────────────────
 const eqCanvas=document.getElementById("eq-canvas");
@@ -1098,6 +1333,27 @@ function setM(id,v,fmt,good,warn){
 
 // ── Main refresh ──────────────────────────────────────────────────────────────
 let lastLogCount=0;
+
+async function loadBiasSuggestion(){
+  const btn=document.getElementById("bias-refresh-btn");
+  btn.textContent="..."; btn.disabled=true;
+  document.getElementById("bs-loading").textContent="Analizando W+D+4H (Yahoo Finance)...";
+  try{
+    const sym=(document.getElementById("sym-sel")||{}).value||"NQ1!";
+    const d=await fetch(`/api/bias-suggestion?symbol=${encodeURIComponent(sym)}`).then(r=>r.json());
+    const badge=document.getElementById("bs-badge");
+    badge.textContent=d.suggested;
+    badge.style.color=d.suggested==="BULLISH"?"var(--green)":d.suggested==="BEARISH"?"var(--red)":"#aaa";
+    document.getElementById("bs-score").textContent=(d.score>0?"+":"")+d.score+"/"+d.max_score;
+    document.getElementById("bs-conf").textContent=d.confidence+"%";
+    document.getElementById("bs-loading").textContent=d.ts?("actualizado "+new Date(d.ts).toLocaleTimeString("es")):"";
+    document.getElementById("bs-signals").innerHTML=
+      (d.signals||[]).map(s=>`<div style="color:${s.includes("+")?"var(--green)":s.includes("-")?"var(--red)":"var(--text2)"}">· ${s}</div>`).join("")||"<div>Sin datos suficientes</div>";
+  }catch(e){
+    document.getElementById("bs-loading").textContent="Error cargando análisis";
+  }
+  btn.textContent="↻"; btn.disabled=false;
+}
 
 async function toggleScanner(){
   const d=await fetch("/api/scanner/toggle",{method:"POST"}).then(r=>r.json());
