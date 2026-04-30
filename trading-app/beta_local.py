@@ -186,6 +186,18 @@ class Signal(BaseModel):
     action:str; symbol:str; timeframe:str="1"
     close:float; time:str=""; reason:str="IFVG_manual"
 
+    # TradingView envía timenow como unix ms (ej. "1746000000000")
+    # Normalizar a ISO string al recibir
+    def iso_time(self) -> str:
+        if not self.time:
+            return _ts()
+        try:
+            ms = int(self.time)
+            from datetime import timezone as tz
+            return datetime.fromtimestamp(ms/1000, tz=tz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        except (ValueError, TypeError):
+            return self.time or _ts()
+
 class BiasUpdate(BaseModel):
     value:str  # BULLISH | NEUTRAL | BEARISH
 

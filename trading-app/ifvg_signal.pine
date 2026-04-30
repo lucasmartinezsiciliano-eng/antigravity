@@ -1,0 +1,186 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// IFVG Signal — ANTIGRAVITY Bot  (Pine Script v5)
+// Detecta Inverse Fair Value Gaps y envía alertas al webhook
+//
+// SETUP:
+//   1. Abrir chart NQ1! (o ES1!) en TradingView, timeframe 5m
+//   2. Pine Editor → New → pegar este código → Add to chart
+//   3. Crear Alert (Alt+A):
+//      Condition: IFVG Signal — ANTIGRAVITY Bot, "IFVG ALERT"
+//      Message:   dejar en blanco (se rellena desde alert() en el script)
+//      Webhook URL: https://TU-NGROK-URL/webhook
+//      Notifications: Webhook Only
+//   4. Para señales BUY y SELL crea dos alertas separadas
+// ═══════════════════════════════════════════════════════════════════════════
+//@version=5
+indicator("IFVG Signal — ANTIGRAVITY", overlay=true, max_boxes_count=100, max_lines_count=100)
+
+// ── Inputs ──────────────────────────────────────────────────────────────────
+i_fvg_min    = input.float(0.0,  "Min FVG size (puntos, 0 = cualquier tamaño)", minval=0)
+i_lookback   = input.int(30,     "Lookback FVGs (barras)", minval=5, maxval=200)
+i_show_fvg   = input.bool(true,  "Mostrar zonas FVG")
+i_show_ifvg  = input.bool(true,  "Mostrar señales IFVG")
+i_kz_filter  = input.bool(true,  "Filtro Kill Zone (8:30-11:00 ET)")
+i_rr_label   = input.float(2.0,  "RR mínimo (para label)", minval=1.0)
+
+// ── Kill Zone filter ─────────────────────────────────────────────────────────
+// Sólo operar en NY AM session (8:30-11:00 ET = 13:30-16:00 UTC en invierno)
+// TradingView usa la timezone del chart; calculamos con hora UTC del bar
+_hour_et(t) =>
+    // Ajuste manual UTC→ET: -5 en invierno, -4 en verano
+    // Pine no tiene DST automático, así que usamos exchange_timezone del símbolo
+    // Para NQ (CME) la exchange timezone ya es America/Chicago; usamos hour del bar
+    // Mejor: comparar con rango fijo y dejar que el usuario ajuste si hace falta
+    na  // placeholder — ver nota abajo
+
+// Usamos dayofweek y hour del timeframe del chart con "America/New_York" implícito
+// Para NQ1! (CME) los timestamps ya están en el horario del exchange
+// Rango kill zone: 8:30–11:00 ET → en UTC = 13:30–16:00 (invierno) / 12:30–15:00 (verano)
+// Lo más portable: dejar que el usuario active el filtro sólo si lo necesita
+// y usar el timestamp horario de TradingView con timezone="America/New_York"
+in_kz = not i_kz_filter or
+        (hour(time, "America/New_York") >= 8 and
+         (hour(time, "America/New_York") < 11 or
+          (hour(time, "America/New_York") == 11 and minute(time, "America/New_York") == 0)) and
+         (hour(time, "America/New_York") > 8 or minute(time, "America/New_York") >= 30) and
+         dayofweek(time, "America/New_York") >= 2 and
+         dayofweek(time, "America/New_York") <= 6)
+
+// ── FVG Detection ────────────────────────────────────────────────────────────
+//
+// Bullish FVG: gap entre high[2] y low[0]
+//   candle[-2].high < candle[0].low  →  zona demanda
+//
+// Bearish FVG: gap entre low[2] y high[0]
+//   candle[-2].low  > candle[0].high →  zona oferta
+//
+// IFVG: precio VIOLA la FVG opuesta (la atraviesa de vuelta)
+//   Bullish FVG violada (precio baja a través de ella) → señal SELL
+//   Bearish FVG violada (precio sube a través de ella) → señal BUY
+
+// Detectar FVGs en barra actual (usando barras ya cerradas)
+bull_fvg_here = high[2] < low[0]
+bear_fvg_here = low[2]  > high[0]
+
+bull_fvg_size = bull_fvg_here ? low[0]  - high[2] : 0.0
+bear_fvg_size = bear_fvg_here ? low[2]  - high[0] : 0.0
+
+bull_fvg_valid = bull_fvg_here and bull_fvg_size >= i_fvg_min
+bear_fvg_valid = bear_fvg_here and bear_fvg_size >= i_fvg_min
+
+// Guardar la FVG más reciente de cada tipo
+var float last_bull_top = na
+var float last_bull_bot = na
+var int   last_bull_bar = na
+
+var float last_bear_top = na
+var float last_bear_bot = na
+var int   last_bear_bar = na
+
+if bull_fvg_valid
+    last_bull_top := low[0]
+    last_bull_bot := high[2]
+    last_bull_bar := bar_index
+
+if bear_fvg_valid
+    last_bear_top := low[2]
+    last_bear_bot := high[0]
+    last_bear_bar := bar_index
+
+// ── IFVG Signals ─────────────────────────────────────────────────────────────
+//
+// BUY: precio entró en bearish FVG desde abajo Y cerró POR ENCIMA del techo
+//      → la FVG se invirtió, ahora es soporte → comprar en el retroceso
+//
+// SELL: precio entró en bullish FVG desde arriba Y cerró POR DEBAJO del suelo
+//       → la FVG se invirtió, ahora es resistencia → vender en el rebote
+
+bull_ifvg_signal = not na(last_bear_top) and
+                   in_kz and
+                   (bar_index - last_bear_bar) <= i_lookback and
+                   low  <= last_bear_bot and   // precio tocó el suelo de la bearish FVG
+                   close >  last_bear_top       // cerró por encima → inversión confirmada
+
+bear_ifvg_signal = not na(last_bull_top) and
+                   in_kz and
+                   (bar_index - last_bull_bar) <= i_lookback and
+                   high >= last_bull_top and    // precio tocó el techo de la bullish FVG
+                   close <  last_bull_bot       // cerró por debajo → inversión confirmada
+
+// Evitar señales consecutivas en la misma zona
+var bool last_was_bull = false
+var bool last_was_bear = false
+
+buy_signal  = bull_ifvg_signal and not last_was_bull
+sell_signal = bear_ifvg_signal and not last_was_bear
+
+if buy_signal
+    last_was_bull := true
+    last_was_bear := false
+
+if sell_signal
+    last_was_bear := true
+    last_was_bull := false
+
+// ── Visualización ─────────────────────────────────────────────────────────────
+// Zonas FVG activas
+if i_show_fvg and bull_fvg_valid
+    box.new(bar_index-2, last_bull_top, bar_index+5, last_bull_bot,
+            border_color=color.new(color.teal,60),
+            bgcolor=color.new(color.teal,85),
+            text="FVG+", text_color=color.teal, text_size=size.tiny)
+
+if i_show_fvg and bear_fvg_valid
+    box.new(bar_index-2, last_bear_top, bar_index+5, last_bear_bot,
+            border_color=color.new(color.red,60),
+            bgcolor=color.new(color.red,85),
+            text="FVG-", text_color=color.red, text_size=size.tiny)
+
+// Señales IFVG
+if i_show_ifvg and buy_signal
+    label.new(bar_index, low, "▲ IFVG BUY",
+              color=color.new(color.teal,20),
+              textcolor=color.white, style=label.style_label_up,
+              size=size.normal)
+
+if i_show_ifvg and sell_signal
+    label.new(bar_index, high, "▼ IFVG SELL",
+              color=color.new(color.red,20),
+              textcolor=color.white, style=label.style_label_down,
+              size=size.normal)
+
+// ── Alertas con payload JSON ──────────────────────────────────────────────────
+// El JSON va directo al /webhook — campos deben coincidir con Signal model:
+//   action, symbol, timeframe, close, time, reason
+//
+// NOTA: syminfo.ticker da "NQ1!" en CME; el bot lo acepta directamente
+
+if buy_signal
+    alert(
+        '{"action":"BUY",' +
+        '"symbol":"' + syminfo.ticker + '",' +
+        '"timeframe":"' + timeframe.period + '",' +
+        '"close":' + str.tostring(close, "#.##") + ',' +
+        '"time":"' + str.tostring(timenow) + '",' +
+        '"reason":"IFVG_BULL"}',
+        alert.freq_once_per_bar_close
+    )
+
+if sell_signal
+    alert(
+        '{"action":"SELL",' +
+        '"symbol":"' + syminfo.ticker + '",' +
+        '"timeframe":"' + timeframe.period + '",' +
+        '"close":' + str.tostring(close, "#.##") + ',' +
+        '"time":"' + str.tostring(timenow) + '",' +
+        '"reason":"IFVG_BEAR"}',
+        alert.freq_once_per_bar_close
+    )
+
+// alertcondition para el diálogo manual de alertas (alternativa)
+alertcondition(buy_signal,  title="IFVG BUY",  message="IFVG BUY detectado en {{ticker}}")
+alertcondition(sell_signal, title="IFVG SELL", message="IFVG SELL detectado en {{ticker}}")
+
+// ── Plot minimal ──────────────────────────────────────────────────────────────
+plotshape(buy_signal,  "BUY",  shape.triangleup,   location.belowbar, color.teal, size=size.small)
+plotshape(sell_signal, "SELL", shape.triangledown, location.abovebar, color.red,  size=size.small)
