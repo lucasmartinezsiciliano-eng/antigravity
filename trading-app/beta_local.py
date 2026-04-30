@@ -10,7 +10,8 @@ from collections import deque
 def install_if_missing():
     import importlib.util
     needed = {"fastapi":"fastapi","uvicorn":"uvicorn[standard]",
-              "pydantic":"pydantic","requests":"requests","pytz":"pytz"}
+              "pydantic":"pydantic","requests":"requests","pytz":"pytz",
+              "yfinance":"yfinance"}
     missing=[pkg for mod,pkg in needed.items() if importlib.util.find_spec(mod) is None]
     if missing:
         print(f"Installing: {', '.join(missing)}")
@@ -293,6 +294,37 @@ async def reset():
 @app.get("/api/tv-symbol")
 async def tv_symbol(symbol:str="NQ1!"):
     return {"tv":TV_SYMBOLS.get(symbol,symbol)}
+
+# Mapping: bot symbol → Yahoo Finance ticker
+YF_SYMBOLS = {
+    "NQ1!":"^NDX","ES1!":"^GSPC","MNQ1!":"^NDX","MES1!":"^GSPC",
+    "AAPL":"AAPL","MSFT":"MSFT","NVDA":"NVDA","TSLA":"TSLA",
+    "META":"META","AMZN":"AMZN","EURUSD":"EURUSD=X","GBPUSD":"GBPUSD=X",
+}
+YF_INTERVAL = {"1":"1m","5":"5m","15":"15m","60":"1h","1H":"1h","4H":"1h","1D":"1d","D":"1d"}
+YF_PERIOD   = {"1m":"7d","5m":"60d","15m":"60d","1h":"730d","1d":"5y"}
+
+@app.get("/api/chart-data")
+async def chart_data(symbol:str="NQ1!", interval:str="5"):
+    try:
+        import yfinance as yf
+        yf_sym  = YF_SYMBOLS.get(symbol, symbol)
+        yf_iv   = YF_INTERVAL.get(interval, "5m")
+        period  = YF_PERIOD.get(yf_iv, "60d")
+        df = yf.Ticker(yf_sym).history(period=period, interval=yf_iv, auto_adjust=True)
+        candles = []
+        for ts, row in df.iterrows():
+            candles.append({
+                "time":  int(ts.timestamp()),
+                "open":  round(float(row["Open"]),  2),
+                "high":  round(float(row["High"]),  2),
+                "low":   round(float(row["Low"]),   2),
+                "close": round(float(row["Close"]), 2),
+                "volume":int(row.get("Volume", 0)),
+            })
+        return {"symbol":symbol,"interval":interval,"candles":candles[-600:]}
+    except Exception as e:
+        return {"symbol":symbol,"interval":interval,"candles":[],"error":str(e)}
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 DASHBOARD = r"""<!DOCTYPE html>
@@ -600,47 +632,95 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
   </table>
 </div>
 
-<!-- TradingView -->
-<script src="https://s3.tradingview.com/tv.js"></script>
+<!-- Lightweight Charts — open source, sin restricciones, MIT license -->
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 
-// ── TradingView widget ────────────────────────────────────────────────────────
-// CME futures necesitan suscripción en TradingView → usamos índices gratuitos equivalentes
-// NQ1! → NASDAQ:NDX (Nasdaq 100, precio idéntico salvo prima de futuros)
-// ES1! → SP:SPX   (S&P 500)
-const TV_SYMS = {
-  "NQ1!":"NASDAQ:NDX","ES1!":"SP:SPX","MNQ1!":"NASDAQ:NDX","MES1!":"SP:SPX",
-  "AAPL":"NASDAQ:AAPL","MSFT":"NASDAQ:MSFT","NVDA":"NASDAQ:NVDA",
-  "TSLA":"NASDAQ:TSLA","META":"NASDAQ:META","AMZN":"NASDAQ:AMZN",
-  "EURUSD":"FX:EURUSD","GBPUSD":"FX:GBPUSD"
-};
-let currentSym="NQ1!", currentTF="1", tvWidget=null;
+// ── Lightweight Charts (Yahoo Finance data) ───────────────────────────────────
+let lwChart=null, candleSeries=null, volSeries=null, markerList=[];
+let currentSym="NQ1!", currentTF="5";
 
 function buildTV(sym,tf){
-  const c=document.getElementById("tv-container");
-  c.innerHTML='<div id="tv_chart" style="width:100%;height:100%"></div>';
-  if(typeof TradingView==="undefined"){
-    c.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);flex-direction:column;gap:12px"><div style="font-size:14px">📡 Conectando a TradingView...</div><div style="font-size:11px">Requiere internet. Si no carga, abre TradingView.com manualmente.</div></div>';
+  currentSym=sym; currentTF=tf;
+  const wrap=document.getElementById("tv-container");
+  wrap.innerHTML='<div id="lw_chart" style="width:100%;height:100%"></div>';
+  const el=document.getElementById("lw_chart");
+
+  if(typeof LightweightCharts==="undefined"){
+    wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2)">Cargando librería de charts...</div>';
     return;
   }
-  const tvSym = TV_SYMS[sym] || sym;
+
+  if(lwChart){ lwChart.remove(); lwChart=null; }
+
+  lwChart=LightweightCharts.createChart(el,{
+    width:el.clientWidth, height:el.clientHeight,
+    layout:{background:{color:"#0d1117"},textColor:"#c9d1d9"},
+    grid:{vertLines:{color:"#21262d"},horzLines:{color:"#21262d"}},
+    crosshair:{mode:1},
+    rightPriceScale:{borderColor:"#30363d"},
+    timeScale:{borderColor:"#30363d",timeVisible:true,secondsVisible:false},
+    handleScroll:true, handleScale:true,
+  });
+
+  candleSeries=lwChart.addCandlestickSeries({
+    upColor:"#3fb950",downColor:"#f85149",
+    borderVisible:false,
+    wickUpColor:"#3fb950",wickDownColor:"#f85149",
+  });
+
+  volSeries=lwChart.addHistogramSeries({
+    priceFormat:{type:"volume"},
+    priceScaleId:"vol",
+    scaleMargins:{top:0.82,bottom:0},
+  });
+  lwChart.priceScale("vol").applyOptions({scaleMargins:{top:0.82,bottom:0}});
+
+  // Resize observer
+  new ResizeObserver(()=>{
+    if(lwChart) lwChart.resize(el.clientWidth,el.clientHeight);
+  }).observe(el);
+
+  loadChartData(sym,tf);
+}
+
+async function loadChartData(sym,tf){
+  const wrap=document.getElementById("tv-container");
   try {
-    tvWidget=new TradingView.widget({
-      autosize:true, symbol:tvSym, interval:tf,
-      timezone:"America/New_York", theme:"dark", style:"1",
-      locale:"es", toolbar_bg:"#161b22", enable_publishing:false,
-      hide_side_toolbar:false, allow_symbol_change:true,
-      studies:["RSI@tv-basicstudies","Volume@tv-basicstudies"],
-      container_id:"tv_chart"
-    });
-  } catch(e){
-    c.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);flex-direction:column;gap:12px">
-      <div style="font-size:14px;color:#f85149">Error cargando chart</div>
-      <div style="font-size:12px">${tvSym}</div>
-      <a href="https://www.tradingview.com/chart/?symbol=${tvSym}" target="_blank"
-         style="color:#58a6ff;font-size:12px">Abrir en TradingView ↗</a>
-    </div>`;
-  }
+    const data=await fetch(`/api/chart-data?symbol=${sym}&interval=${tf}`).then(r=>r.json());
+    if(!data.candles||data.candles.length===0){
+      if(data.error) console.warn("Chart error:",data.error);
+      wrap.innerHTML+=`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text2);font-size:12px">Sin datos — ${data.error||"intenta otro símbolo"}</div>`;
+      return;
+    }
+    candleSeries.setData(data.candles);
+    volSeries.setData(data.candles.map(c=>({
+      time:c.time, value:c.volume,
+      color:c.close>=c.open?"#3fb95033":"#f8514933"
+    })));
+    addTradeMarkers(data.candles);
+    lwChart.timeScale().fitContent();
+  } catch(e){ console.error("loadChartData",e); }
+}
+
+function addTradeMarkers(candles){
+  if(!candleSeries||!markerList.length) return;
+  // Poner marcadores de nuestros trades en el chart
+  const minT=candles[0]?.time||0;
+  const markers=markerList
+    .filter(m=>m.time>=minT)
+    .sort((a,b)=>a.time-b.time);
+  candleSeries.setMarkers(markers);
+}
+
+function pushMarker(ts,action,price){
+  const t=Math.floor(new Date(ts).getTime()/1000);
+  markerList.push({
+    time:t, position:action==="BUY"?"belowBar":"aboveBar",
+    color:action==="BUY"?"#3fb950":"#f85149",
+    shape:action==="BUY"?"arrowUp":"arrowDown",
+    text:`${action} ${price}`
+  });
 }
 
 function changeSymbol(){
@@ -659,8 +739,13 @@ function setTF(tf){
   buildTV(currentSym,tf);
 }
 
-// Init chart
-window.addEventListener("load",()=>{ setTimeout(()=>buildTV("NQ1!","1"),300); });
+// Recargar datos cada 60s sin perder la vista
+setInterval(()=>{
+  if(candleSeries) loadChartData(currentSym,currentTF);
+}, 60000);
+
+// Init chart — 5m por defecto (datos más estables)
+window.addEventListener("load",()=>{ setTimeout(()=>buildTV("NQ1!","5"),400); });
 
 // ── Equity chart ─────────────────────────────────────────────────────────────
 const eqCanvas=document.getElementById("eq-canvas");
@@ -893,6 +978,8 @@ async function refresh(){
           const biasTag=ev.bias?` bias:${ev.bias}`:"";
           const sbTag=ev.kz_silver?" 🎯SB":"";
           detail=`Entry ${ev.entry} · SL ${ev.sl} · TP ${ev.tp} · x${ev.qty}${biasTag}${sbTag}`;
+          // Pintar marcador en el chart
+          if(ev.ts && ev.action && ev.entry) pushMarker(ev.ts, ev.action, ev.entry);
         } else if(ev.event==="trade_closed"){
           const w=ev.pnl>0;
           badge=`<span class="b ${w?"b-win":"b-ls"}">${w?"WIN":"LOSS"}</span>`;
