@@ -80,12 +80,14 @@ def run_backtest(symbol: str, days: int, stop_pct: float, rr: float,
             encoding="utf-8", errors="replace",
         )
         stdout = result.stdout
-        # Extract JSON — may have print lines before it
-        import re
-        m = re.search(r'(\{"metrics".*\})', stdout, re.DOTALL)
-        if m:
-            data = json.loads(m.group(1))
-            return data.get("metrics", {})
+        # Extract JSON — find first { and parse from there
+        idx = stdout.find('{')
+        if idx >= 0:
+            try:
+                data = json.loads(stdout[idx:])
+                return data.get("metrics", {})
+            except Exception:
+                pass
         return None
     except (subprocess.TimeoutExpired, Exception):
         return None
@@ -139,7 +141,7 @@ def print_table(results: list):
 
 def main():
     parser = argparse.ArgumentParser(description="IFVG Parameter Optimizer")
-    parser.add_argument("--symbol",  default="NQ1!")
+    parser.add_argument("--symbol",  default="NQ=F")
     parser.add_argument("--days",    default=60,   type=int)
     parser.add_argument("--apply",   action="store_true", help="Aplicar mejor config al bot en vivo")
     parser.add_argument("--json",    action="store_true")

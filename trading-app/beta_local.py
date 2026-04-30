@@ -743,9 +743,9 @@ async def run_optimize(symbol:str="NQ1!", days:int=60, apply:bool=False):
                 cmd, capture_output=True, text=True, timeout=600,
                 cwd=str(Path(__file__).parent), encoding="utf-8", errors="replace",
             )
-            m = re.search(r'(\{"best".*\})', result.stdout, re.DOTALL)
-            if m:
-                data = json.loads(m.group(1))
+            idx = result.stdout.find('{')
+            data = json.loads(result.stdout[idx:]) if idx >= 0 else {}
+            if data:
                 OPTIMIZE_STATE["last_result"] = data.get("best")
                 # Auto-apply best params to live CONFIG
                 if apply and data.get("best"):
