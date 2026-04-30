@@ -731,6 +731,10 @@ async def run_optimize(symbol:str="NQ1!", days:int=60, apply:bool=False):
     if OPTIMIZE_STATE["running"]:
         return {"status": "already running"}
 
+    # Reset stale result so UI shows fresh state
+    OPTIMIZE_STATE["last_result"] = None
+    OPTIMIZE_STATE["last_run"] = None
+
     def _run():
         import subprocess, sys, re
         OPTIMIZE_STATE["running"] = True
@@ -1614,6 +1618,8 @@ async function runOptimize(apply){
       document.getElementById("opt-status").textContent="corriendo"+dots;
       return;
     }
+    // Guard: keep polling if still running OR if run hasn't started yet (last_result=null, last_run=null)
+    if(st.running || (!st.last_run && !st.last_result)) return;
     clearInterval(optimizePolling); optimizePolling=null;
     const timeStr=new Date(st.last_run||Date.now()).toLocaleTimeString("es");
     const r=st.last_result;
@@ -1625,18 +1631,44 @@ async function runOptimize(apply){
       document.getElementById("opt-status").style.color="var(--green)";
       document.getElementById("opt-result").innerHTML=
         `<div style="border:1px solid var(--green);border-radius:4px;padding:6px;background:#0a1a0a">
-           <div style="color:var(--green);font-weight:bold;margin-bottom:4px">MEJOR CONFIG ENCONTRADA</div>
+           <div style="color:var(--green);font-weight:bold;margin-bottom:4px">MEJOR CONFIG — ${timeStr}</div>
            <div>Stop: <b>${r.stop_pct}%</b> &nbsp; RR: <b>${r.rr}</b> &nbsp; Score: <b>${r.score}</b></div>
            <div>WR: <b style="color:${wrColor}">${wr}%</b> &nbsp; PF: <b>${(m.profit_factor||0).toFixed(2)}</b> &nbsp; DD: <b>${(m.max_drawdown_pct||0).toFixed(1)}%</b></div>
-           ${apply?'<div style="color:var(--green);margin-top:4px">Aplicado al bot automaticamente.</div>':''}
+           ${apply?'<div style="color:var(--green);margin-top:4px">Aplicado al bot. Actualizando backtest...</div>':''}
          </div>`;
       // Flash the panel border
       const panel=document.getElementById("opt-result").closest(".panel");
       if(panel){ panel.style.boxShadow="0 0 12px var(--green)"; setTimeout(()=>panel.style.boxShadow="",4000); }
+      // Update backtest inputs with optimized params and re-run to confirm WR
+      if(apply){
+        document.getElementById("bt-stop").value=r.stop_pct;
+        document.getElementById("bt-rr").value=r.rr;
+        setTimeout(async()=>{
+          const sym=(document.getElementById("sym-sel")||{}).value||"NQ1!";
+          const days=document.getElementById("bt-days").value||"60";
+          const bias=document.getElementById("bt-bias").value||"BOTH";
+          const btResult=document.getElementById("bt-result");
+          btResult.innerHTML='<span style="color:var(--yellow)">Confirmando WR con params optimizados...</span>';
+          try{
+            const d=await fetch(`/api/backtest?symbol=${encodeURIComponent(sym)}&days=${days}&rr=${r.rr}&stop_pct=${r.stop_pct}&bias=${bias}`).then(x=>x.json());
+            const mm=d.metrics||{};
+            const ww=((mm.win_rate||0)*100).toFixed(1);
+            const wc=parseFloat(ww)>=45?"var(--green)":parseFloat(ww)>=30?"var(--yellow)":"var(--red)";
+            btResult.innerHTML=`
+              <div style="font-size:9px;color:var(--text2);margin-bottom:3px">Con params optimizados (stop=${r.stop_pct}% RR=${r.rr}):</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 10px">
+                <div>WR: <b style="color:${wc}">${ww}%</b></div>
+                <div>PF: <b>${(mm.profit_factor||0).toFixed(2)}</b></div>
+                <div>DD: <b>${(mm.max_drawdown_pct||0).toFixed(1)}%</b></div>
+                <div>Return: <b style="color:${(mm.return_pct||0)>0?"var(--green)":"var(--red)"}">${(mm.return_pct||0)>0?"+":""}${(mm.return_pct||0).toFixed(1)}%</b></div>
+              </div>`;
+          }catch(e){}
+        },1000);
+      }
     } else {
       document.getElementById("opt-status").textContent="sin resultados "+timeStr;
       document.getElementById("opt-status").style.color="var(--red)";
-      document.getElementById("opt-result").textContent=r?.error||"Ninguna combinacion paso los constraints.";
+      document.getElementById("opt-result").textContent=r?.error||"Ninguna combinacion paso los constraints. Prueba mas dias.";
     }
   },3000);
 }
