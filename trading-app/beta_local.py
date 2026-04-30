@@ -177,7 +177,7 @@ def simulated_executor():
 app=FastAPI(title="IFVG Trading Bot",version="2.0.0-beta")
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=["*"],allow_headers=["*"])
 
-TV_SYMBOLS={"NQ1!":"CME_MINI:NQ1!","ES1!":"CME_MINI:ES1!","MNQ1!":"CME_MINI:MNQ1!",
+TV_SYMBOLS={"NQ1!":"NASDAQ:NDX","ES1!":"SP:SPX","MNQ1!":"NASDAQ:NDX","MES1!":"SP:SPX",
             "AAPL":"NASDAQ:AAPL","MSFT":"NASDAQ:MSFT","NVDA":"NASDAQ:NVDA",
             "TSLA":"NASDAQ:TSLA","META":"NASDAQ:META","AMZN":"NASDAQ:AMZN",
             "EURUSD":"FX:EURUSD","GBPUSD":"FX:GBPUSD"}
@@ -605,10 +605,14 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
 <script>
 
 // ── TradingView widget ────────────────────────────────────────────────────────
+// CME futures necesitan suscripción en TradingView → usamos índices gratuitos equivalentes
+// NQ1! → NASDAQ:NDX (Nasdaq 100, precio idéntico salvo prima de futuros)
+// ES1! → SP:SPX   (S&P 500)
 const TV_SYMS = {
-  "NQ1!":"CME_MINI:NQ1!","ES1!":"CME_MINI:ES1!","AAPL":"NASDAQ:AAPL",
-  "MSFT":"NASDAQ:MSFT","NVDA":"NASDAQ:NVDA","TSLA":"NASDAQ:TSLA",
-  "META":"NASDAQ:META","EURUSD":"FX:EURUSD","GBPUSD":"FX:GBPUSD"
+  "NQ1!":"NASDAQ:NDX","ES1!":"SP:SPX","MNQ1!":"NASDAQ:NDX","MES1!":"SP:SPX",
+  "AAPL":"NASDAQ:AAPL","MSFT":"NASDAQ:MSFT","NVDA":"NASDAQ:NVDA",
+  "TSLA":"NASDAQ:TSLA","META":"NASDAQ:META","AMZN":"NASDAQ:AMZN",
+  "EURUSD":"FX:EURUSD","GBPUSD":"FX:GBPUSD"
 };
 let currentSym="NQ1!", currentTF="1", tvWidget=null;
 
@@ -619,14 +623,24 @@ function buildTV(sym,tf){
     c.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);flex-direction:column;gap:12px"><div style="font-size:14px">📡 Conectando a TradingView...</div><div style="font-size:11px">Requiere internet. Si no carga, abre TradingView.com manualmente.</div></div>';
     return;
   }
-  tvWidget=new TradingView.widget({
-    autosize:true, symbol:TV_SYMS[sym]||sym, interval:tf,
-    timezone:"America/New_York", theme:"dark", style:"1",
-    locale:"es", toolbar_bg:"#161b22", enable_publishing:false,
-    hide_side_toolbar:false, allow_symbol_change:false,
-    studies:["RSI@tv-basicstudies","Volume@tv-basicstudies"],
-    container_id:"tv_chart"
-  });
+  const tvSym = TV_SYMS[sym] || sym;
+  try {
+    tvWidget=new TradingView.widget({
+      autosize:true, symbol:tvSym, interval:tf,
+      timezone:"America/New_York", theme:"dark", style:"1",
+      locale:"es", toolbar_bg:"#161b22", enable_publishing:false,
+      hide_side_toolbar:false, allow_symbol_change:true,
+      studies:["RSI@tv-basicstudies","Volume@tv-basicstudies"],
+      container_id:"tv_chart"
+    });
+  } catch(e){
+    c.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);flex-direction:column;gap:12px">
+      <div style="font-size:14px;color:#f85149">Error cargando chart</div>
+      <div style="font-size:12px">${tvSym}</div>
+      <a href="https://www.tradingview.com/chart/?symbol=${tvSym}" target="_blank"
+         style="color:#58a6ff;font-size:12px">Abrir en TradingView ↗</a>
+    </div>`;
+  }
 }
 
 function changeSymbol(){
