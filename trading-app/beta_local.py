@@ -174,6 +174,185 @@ def simulated_executor():
             "result":"WIN" if win else "LOSS","balance_after":round(ACCOUNT["balance"],2)})
         print(f"  [{'WIN ' if win else 'LOSS'}] {signal['symbol']} ${pnl:+.2f} bal ${ACCOUNT['balance']:,.0f}")
 
+# ── IFVG Detector (autonomous signal generation) ─────────────────────────────
+# Runs every ~60s in background. Downloads 5m bars from Yahoo Finance,
+# detects IFVGs in Python (same logic as Pine Script), auto-queues signals.
+# User only needs to set Daily Bias once in the morning.
+
+DETECTOR_STATE = {
+    "last_run": None,       # datetime of last scan
+    "last_candle": None,    # last bar timestamp processed (avoid duplicates)
+    "signals_today": 0,
+    "status": "idle",       # idle | scanning | paused
+    "last_signal": None,
+    "enabled": True,
+}
+
+YF_SYMBOLS_DETECT = {"NQ1!":"^NDX","ES1!":"^GSPC","AAPL":"AAPL","MSFT":"MSFT"}
+WATCH_SYMBOLS = ["NQ1!"]   # symbols to watch (configurable from UI)
+
+def detect_ifvg(candles: list) -> list:
+    """
+    IFVG detection — Python port of ifvg_signal.pine.
+    candles: list of dicts {time, open, high, low, close} ordered oldest→newest.
+    Returns list of signals: [{action, close, reason, bar_index}]
+    Requires minimum 3 candles.
+    """
+    signals = []
+    if len(candles) < 5:
+        return signals
+
+    # Track active FVG zones (rolling window)
+    bull_fvgs = []  # [{top, bot, bar}]
+    bear_fvgs = []  # [{top, bot, bar}]
+
+    for i in range(2, len(candles)):
+        c0 = candles[i]       # current (most recent closed)
+        c2 = candles[i-2]     # oldest of the 3 (middle bar not needed for FVG)
+
+        # ── Detect new FVGs created by candle[i-2], [i-1], [i] ──
+        # Bullish FVG: gap between c2.high and c0.low
+        if c2["high"] < c0["low"]:
+            size = c0["low"] - c2["high"]
+            if size > 0:
+                bull_fvgs.append({"top": c0["low"], "bot": c2["high"], "bar": i})
+
+        # Bearish FVG: gap between c2.low and c0.high
+        if c2["low"] > c0["high"]:
+            size = c2["low"] - c0["high"]
+            if size > 0:
+                bear_fvgs.append({"top": c2["low"], "bot": c0["high"], "bar": i})
+
+        # Prune old FVGs (only keep last 30 bars)
+        bull_fvgs = [f for f in bull_fvgs if i - f["bar"] <= 30]
+        bear_fvgs = [f for f in bear_fvgs if i - f["bar"] <= 30]
+
+        # ── Check IFVG on current candle ──
+        # BUY IFVG: price swept through a bearish FVG from below → close above top
+        for fvg in bear_fvgs:
+            if fvg["bar"] == i:  # FVG just created this bar, skip
+                continue
+            if c0["low"] <= fvg["bot"] and c0["close"] > fvg["top"]:
+                signals.append({
+                    "action": "BUY",
+                    "close": c0["close"],
+                    "reason": f"IFVG_BULL (swp bear FVG {fvg['bot']:.0f}-{fvg['top']:.0f})",
+                    "bar_index": i,
+                    "fvg_bot": fvg["bot"],
+                    "fvg_top": fvg["top"],
+                })
+                bear_fvgs.remove(fvg)
+                break  # one signal per bar
+
+        # SELL IFVG: price swept through a bullish FVG from above → close below bot
+        for fvg in bull_fvgs:
+            if fvg["bar"] == i:
+                continue
+            if c0["high"] >= fvg["top"] and c0["close"] < fvg["bot"]:
+                signals.append({
+                    "action": "SELL",
+                    "close": c0["close"],
+                    "reason": f"IFVG_BEAR (swp bull FVG {fvg['bot']:.0f}-{fvg['top']:.0f})",
+                    "bar_index": i,
+                    "fvg_bot": fvg["bot"],
+                    "fvg_top": fvg["top"],
+                })
+                bull_fvgs.remove(fvg)
+                break
+
+    return signals
+
+
+def ifvg_scanner():
+    """Background thread: scans for IFVGs every ~60s on bar close."""
+    import yfinance as yf
+
+    print("[SCANNER] IFVG detector started — watching:", WATCH_SYMBOLS)
+
+    last_processed = {}  # sym → last bar unix timestamp processed
+
+    while True:
+        time.sleep(55)   # ~1 min loop
+
+        if not DETECTOR_STATE["enabled"]:
+            DETECTOR_STATE["status"] = "paused"
+            continue
+
+        kz = kz_status()
+        if not kz["active"]:
+            DETECTOR_STATE["status"] = "idle"
+            DETECTOR_STATE["last_run"] = _ts()
+            continue
+
+        if DAILY_BIAS["value"] == "NEUTRAL":
+            DETECTOR_STATE["status"] = "idle"
+            continue
+
+        DETECTOR_STATE["status"] = "scanning"
+        DETECTOR_STATE["last_run"] = _ts()
+
+        for sym in WATCH_SYMBOLS:
+            yf_sym = YF_SYMBOLS_DETECT.get(sym, sym)
+            try:
+                df = yf.Ticker(yf_sym).history(period="5d", interval="5m", auto_adjust=True)
+                if df.empty or len(df) < 5:
+                    continue
+
+                candles = []
+                for ts, row in df.iterrows():
+                    candles.append({
+                        "time":  int(ts.timestamp()),
+                        "open":  float(row["Open"]),
+                        "high":  float(row["High"]),
+                        "low":   float(row["Low"]),
+                        "close": float(row["Close"]),
+                    })
+
+                # Only process if we have a NEW closed bar
+                last_bar_ts = candles[-1]["time"]
+                if last_processed.get(sym) == last_bar_ts:
+                    continue  # same bar, skip
+                last_processed[sym] = last_bar_ts
+
+                # Run detector on last 50 bars
+                detected = detect_ifvg(candles[-50:])
+                if not detected:
+                    continue
+
+                # Take the LAST signal (most recent bar)
+                sig = detected[-1]
+                action = sig["action"]
+                close  = sig["close"]
+                reason = sig["reason"]
+
+                # Bias filter
+                bias = DAILY_BIAS["value"]
+                if (action == "BUY" and bias == "BEARISH") or \
+                   (action == "SELL" and bias == "BULLISH"):
+                    print(f"[SCANNER] IFVG {action} on {sym} — filtered (contra bias {bias})")
+                    continue
+
+                # Skip if already have active position
+                if ACTIVE_POSITION:
+                    print(f"[SCANNER] IFVG {action} on {sym} — filtered (position open)")
+                    continue
+
+                payload = {
+                    "action": action, "symbol": sym,
+                    "close": close, "timeframe": "5",
+                    "time": _ts(), "reason": reason,
+                }
+                SIGNALS_QUEUE.append(payload)
+                DETECTOR_STATE["last_signal"] = f"{action} {sym} @ {close:.0f} — {reason}"
+                DETECTOR_STATE["signals_today"] += 1
+                print(f"[SCANNER] >>> {action} {sym} @ {close:.0f} | {reason}")
+
+            except Exception as e:
+                print(f"[SCANNER] Error {sym}: {e}")
+
+        DETECTOR_STATE["status"] = "idle"
+
+
 # ── FastAPI ───────────────────────────────────────────────────────────────────
 app=FastAPI(title="IFVG Trading Bot",version="2.0.0-beta")
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=["*"],allow_headers=["*"])
@@ -283,11 +462,21 @@ async def test_signal(symbol:str="NQ1!",action:str="BUY",price:float=19250.0):
     SIGNALS_QUEUE.append(sig)
     return {"status":"queued","signal":sig}
 
+@app.get("/api/scanner")
+async def scanner_status():
+    return {**DETECTOR_STATE, "watching": WATCH_SYMBOLS}
+
+@app.post("/api/scanner/toggle")
+async def scanner_toggle():
+    DETECTOR_STATE["enabled"] = not DETECTOR_STATE["enabled"]
+    return {"enabled": DETECTOR_STATE["enabled"]}
+
 @app.post("/api/reset")
 async def reset():
     TRADES_LOG.clear(); EQUITY_CURVE.clear(); SIGNALS_QUEUE.clear(); ACTIVE_POSITION.clear()
     ACCOUNT.update({"balance":ACCOUNT["start"],"peak":ACCOUNT["start"]})
     DAILY_BIAS["value"]="NEUTRAL"
+    DETECTOR_STATE.update({"signals_today":0,"last_signal":None})
     if LOG_FILE.exists(): LOG_FILE.unlink()
     return {"status":"reset"}
 
@@ -529,6 +718,23 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
   <div class="sidebar">
 
     <!-- Daily Bias -->
+    <!-- IFVG Scanner status -->
+    <div class="panel" id="scanner-panel">
+      <div class="panel-title">
+        <span>Auto Scanner</span>
+        <span id="scanner-dot" style="width:8px;height:8px;border-radius:50%;background:#555;display:inline-block;margin-left:6px"></span>
+        <button onclick="toggleScanner()" id="scanner-btn"
+          style="margin-left:auto;background:var(--bg3);border:1px solid var(--border);color:var(--text2);
+                 padding:3px 10px;border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit">
+          PAUSE
+        </button>
+      </div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.6" id="scanner-info">
+        Esperando kill zone (8:30 ET)...
+      </div>
+      <div style="font-size:10px;color:var(--green);margin-top:4px;min-height:14px" id="scanner-last"></div>
+    </div>
+
     <div class="panel">
       <div class="panel-title"><span>Daily Bias</span><span style="color:var(--text2);font-size:10px">TJR Day-34</span></div>
       <div class="bias-btns">
@@ -893,15 +1099,41 @@ function setM(id,v,fmt,good,warn){
 // ── Main refresh ──────────────────────────────────────────────────────────────
 let lastLogCount=0;
 
+async function toggleScanner(){
+  const d=await fetch("/api/scanner/toggle",{method:"POST"}).then(r=>r.json());
+  document.getElementById("scanner-btn").textContent=d.enabled?"PAUSE":"RESUME";
+}
+
 async function refresh(){
   try{
-    const [s,a,eq,t,pos]=await Promise.all([
+    const [s,a,eq,t,pos,sc]=await Promise.all([
       fetch("/status").then(r=>r.json()),
       fetch("/api/analytics").then(r=>r.json()),
       fetch("/api/equity").then(r=>r.json()),
       fetch("/api/trades?limit=30").then(r=>r.json()),
       fetch("/api/position").then(r=>r.json()),
+      fetch("/api/scanner").then(r=>r.json()),
     ]);
+
+    // Scanner widget
+    const dot=document.getElementById("scanner-dot");
+    const info=document.getElementById("scanner-info");
+    const last=document.getElementById("scanner-last");
+    const btn=document.getElementById("scanner-btn");
+    if(!sc.enabled){
+      dot.style.background="#555"; info.textContent="Scanner pausado";
+      btn.textContent="RESUME";
+    } else if(sc.status==="scanning"){
+      dot.style.background="#d29922"; info.textContent="Escaneando IFVGs...";
+    } else if(sc.status==="idle"){
+      const kz=s.kill_zone||{};
+      dot.style.background=kz.active?"#3fb950":"#555";
+      info.textContent=kz.active
+        ? `Activo · NQ/ES 5m · próximo scan ~1m`
+        : `En espera — ${kz.next||"fuera de KZ"}`;
+      btn.textContent="PAUSE";
+    }
+    if(sc.last_signal) last.textContent="Última señal: "+sc.last_signal;
 
     // Header
     const kz=s.kill_zone||{};
@@ -1019,5 +1251,6 @@ if __name__=="__main__":
     print("  Ctrl+C para parar")
     print("="*55+"\n")
     threading.Thread(target=simulated_executor,daemon=True).start()
+    threading.Thread(target=ifvg_scanner,daemon=True).start()
     threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
     uvicorn.run(app,host="0.0.0.0",port=8000,log_level="warning")
