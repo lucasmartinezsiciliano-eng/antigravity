@@ -678,7 +678,7 @@ async def scanner_status():
     return {**DETECTOR_STATE, "watching": WATCH_SYMBOLS}
 
 @app.get("/api/backtest")
-async def run_backtest(symbol:str="NQ1!", days:int=60, rr:float=2.0, stop_pct:float=0.5):
+async def run_backtest(symbol:str="NQ1!", days:int=60, rr:float=2.0, stop_pct:float=0.5, bias:str="BOTH"):
     """Run backtest from dashboard — returns metrics + last 20 trades."""
     import subprocess, sys
     try:
@@ -686,6 +686,7 @@ async def run_backtest(symbol:str="NQ1!", days:int=60, rr:float=2.0, stop_pct:fl
             [sys.executable, "backtest.py",
              "--symbol", symbol, "--days", str(days),
              "--rr", str(rr), "--stop-pct", str(stop_pct),
+             "--bias", bias,
              "--json"],
             capture_output=True, text=True, timeout=120,
             cwd=str(Path(__file__).parent)
@@ -1096,6 +1097,50 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
       </div>
     </div>
 
+    <!-- Backtest -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Backtest</span>
+        <span id="bt-status" style="font-size:10px;color:var(--text2)">listo</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px">
+        <div>
+          <div style="font-size:9px;color:var(--text2);margin-bottom:2px">Stop %</div>
+          <input id="bt-stop" type="number" value="0.5" step="0.1" min="0.1" max="2"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text1);
+                   padding:4px;border-radius:3px;font-size:10px;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text2);margin-bottom:2px">RR</div>
+          <input id="bt-rr" type="number" value="2.0" step="0.5" min="1" max="5"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text1);
+                   padding:4px;border-radius:3px;font-size:10px;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text2);margin-bottom:2px">Dias</div>
+          <input id="bt-days" type="number" value="60" step="10" min="10" max="730"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text1);
+                   padding:4px;border-radius:3px;font-size:10px;font-family:inherit">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text2);margin-bottom:2px">Bias</div>
+          <select id="bt-bias"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text1);
+                   padding:4px;border-radius:3px;font-size:10px;font-family:inherit">
+            <option value="BOTH">BOTH</option>
+            <option value="BULLISH">BULLISH</option>
+            <option value="BEARISH">BEARISH</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="runBacktest()"
+        style="width:100%;background:#1a2a3a;border:1px solid #2a6aaa;color:#6aadee;
+               padding:6px;border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit;font-weight:bold">
+        Correr Backtest + Self-Improve
+      </button>
+      <div id="bt-result" style="font-size:10px;color:var(--text2);margin-top:8px;min-height:40px;line-height:1.7"></div>
+    </div>
+
     <!-- Self-Improve Optimizer -->
     <div class="panel">
       <div class="panel-title">
@@ -1104,12 +1149,13 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
       </div>
       <div style="font-size:10px;color:var(--text2);margin-bottom:8px">
         Testea 24 combinaciones de params y aplica la mejor configuracion.
+        <span style="color:var(--yellow)"> Se lanza automaticamente tras cada backtest.</span>
       </div>
       <div style="display:flex;gap:6px">
         <button onclick="runOptimize(false)"
           style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text2);
                  padding:6px;border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit">
-          Analizar
+          Solo analizar
         </button>
         <button onclick="runOptimize(true)"
           style="flex:1;background:#1a3a1a;border:1px solid var(--green);color:var(--green);
@@ -1497,6 +1543,52 @@ async function loadNews(){
   }catch(e){
     const el=document.getElementById("news-list");
     if(el) el.innerHTML='<span style="color:#555">Sin conexion a ForexFactory</span>';
+  }
+}
+
+// ── Backtest ──────────────────────────────────────────────────────────────────
+async function runBacktest(){
+  const sym=(document.getElementById("sym-sel")||{}).value||"NQ1!";
+  const stop=document.getElementById("bt-stop").value||"0.5";
+  const rr=document.getElementById("bt-rr").value||"2.0";
+  const days=document.getElementById("bt-days").value||"60";
+  const bias=document.getElementById("bt-bias").value||"BOTH";
+  const btStatus=document.getElementById("bt-status");
+  const btResult=document.getElementById("bt-result");
+  btStatus.textContent="corriendo...";
+  btStatus.style.color="var(--yellow)";
+  btResult.innerHTML='<span style="color:var(--yellow)">Descargando datos y detectando IFVGs...</span>';
+  try{
+    const url=`/api/backtest?symbol=${encodeURIComponent(sym)}&days=${days}&rr=${rr}&stop_pct=${stop}&bias=${bias}`;
+    const d=await fetch(url).then(r=>r.json());
+    if(d.error){
+      btResult.innerHTML=`<span style="color:var(--red)">Error: ${d.error}</span>`;
+      btStatus.textContent="error"; btStatus.style.color="var(--red)";
+      return;
+    }
+    const m=d.metrics||{};
+    const wr=((m.win_rate||0)*100).toFixed(1);
+    const pf=(m.profit_factor||0).toFixed(2);
+    const dd=(m.max_drawdown_pct||0).toFixed(1);
+    const ret=(m.return_pct||0).toFixed(1);
+    const n=m.trades_taken||0;
+    const wrColor=parseFloat(wr)>=45?"var(--green)":parseFloat(wr)>=30?"var(--yellow)":"var(--red)";
+    btResult.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 10px">
+        <div>WR: <b style="color:${wrColor}">${wr}%</b></div>
+        <div>PF: <b style="color:${parseFloat(pf)>=1.5?"var(--green)":"var(--yellow)"}">${pf}</b></div>
+        <div>DD: <b style="color:${parseFloat(dd)>15?"var(--red)":"var(--text1)"}">${dd}%</b></div>
+        <div>Return: <b style="color:${parseFloat(ret)>0?"var(--green)":"var(--red)"}">${ret>0?"+":""}${ret}%</b></div>
+        <div>Trades: <b>${n}</b></div>
+      </div>
+      <div style="color:var(--yellow);margin-top:6px">Lanzando Self-Improve...</div>`;
+    btStatus.textContent="listo "+new Date().toLocaleTimeString("es");
+    btStatus.style.color="var(--text2)";
+    // Auto-launch optimizer with apply=true after backtest
+    setTimeout(()=>runOptimize(true), 500);
+  }catch(e){
+    btResult.innerHTML=`<span style="color:var(--red)">Error: ${e.message}</span>`;
+    btStatus.textContent="error"; btStatus.style.color="var(--red)";
   }
 }
 
