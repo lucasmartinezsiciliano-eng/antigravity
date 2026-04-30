@@ -144,6 +144,8 @@ def download_data(symbol: str, days: int = 180) -> list:
 def build_news_blackout_set(days: int, blackout_min: int = 15) -> set:
     """
     Construye un set de timestamps (minuto exacto) en blackout de noticias.
+    NOTA: ForexFactory solo provee la semana actual (7 días). Para backtests
+    históricos el filtro solo cubre eventos de esta semana que caigan en el rango.
     Usa news_calendar.py si disponible; si no, devuelve set vacío.
     """
     try:
@@ -152,13 +154,19 @@ def build_news_blackout_set(days: int, blackout_min: int = 15) -> set:
         now_unix = __import__("time").time()
         cutoff   = now_unix - days * 86400
         blackout_ts = set()
+        week_events = 0
         for ev in events:
             ts = ev.get("ts_unix", 0)
-            if ts < cutoff or ev.get("all_day"):
+            if ev.get("all_day"):
                 continue
+            if ts < cutoff:
+                continue  # fuera de ventana del backtest
+            week_events += 1
             # Mark every minute in ±blackout_min window
             for delta in range(-blackout_min * 60, blackout_min * 60 + 60, 60):
                 blackout_ts.add(ts + delta - (ts % 60))
+        if week_events == 0:
+            print(f"[NEWS] Sin eventos esta semana en rango (ForexFactory solo provee 7d actuales)")
         return blackout_ts
     except Exception:
         return set()

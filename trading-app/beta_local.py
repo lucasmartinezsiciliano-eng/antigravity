@@ -481,9 +481,16 @@ def ifvg_scanner():
     print("[SCANNER] IFVG detector started — watching:", WATCH_SYMBOLS)
 
     last_processed = {}  # sym → last bar unix timestamp processed
+    last_reset_day = None
 
     while True:
         time.sleep(55)   # ~1 min loop
+
+        # Reset daily counters on new trading day
+        today = _now_ny().date()
+        if last_reset_day != today:
+            DETECTOR_STATE["signals_today"] = 0
+            last_reset_day = today
 
         if not DETECTOR_STATE["enabled"]:
             DETECTOR_STATE["status"] = "paused"
@@ -689,19 +696,21 @@ async def run_backtest(symbol:str="NQ1!", days:int=60, rr:float=2.0, stop_pct:fl
              "--bias", bias,
              "--json"],
             capture_output=True, text=True, timeout=120,
-            cwd=str(Path(__file__).parent)
+            cwd=str(Path(__file__).parent),
+            encoding="utf-8", errors="replace",
         )
         if result.returncode != 0:
             return {"error": result.stderr[-500:] if result.stderr else "backtest failed"}
-        # Extract JSON from stdout (may have print lines before it)
-        import re
-        m = re.search(r'(\{.*\})', result.stdout, re.DOTALL)
-        if m:
-            data = json.loads(m.group(1))
-            # Only return last 20 trades to keep response small
-            if "trades" in data:
-                data["trades"] = data["trades"][-20:]
-            return data
+        # Extract JSON — use raw_decode to stop at first complete object
+        idx = result.stdout.find('{')
+        if idx >= 0:
+            try:
+                data, _ = json.JSONDecoder().raw_decode(result.stdout, idx)
+                if "trades" in data:
+                    data["trades"] = data["trades"][-20:]
+                return data
+            except Exception as e:
+                return {"error": f"JSON parse: {e}", "stdout": result.stdout[-300:]}
         return {"error": "no JSON in output", "stdout": result.stdout[-300:]}
     except subprocess.TimeoutExpired:
         return {"error": "timeout (>120s) — reduce --days"}
@@ -731,13 +740,13 @@ async def run_optimize(symbol:str="NQ1!", days:int=60, apply:bool=False):
     if OPTIMIZE_STATE["running"]:
         return {"status": "already running"}
 
-    # Reset stale result so UI shows fresh state
+    # Reset stale result so UI shows fresh state; set running BEFORE thread to avoid race
     OPTIMIZE_STATE["last_result"] = None
     OPTIMIZE_STATE["last_run"] = None
+    OPTIMIZE_STATE["running"] = True
 
     def _run():
         import subprocess, sys, re
-        OPTIMIZE_STATE["running"] = True
         try:
             cmd = [sys.executable, "optimize.py",
                    "--symbol", symbol, "--days", str(days), "--json"]

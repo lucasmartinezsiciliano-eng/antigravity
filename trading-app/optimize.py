@@ -221,9 +221,9 @@ def main():
             # Log optimization result
             log_path = Path("optimize_history.jsonl")
             with open(log_path, "a", encoding="utf-8") as f:
-                from datetime import datetime
+                from datetime import datetime, timezone as _tz
                 entry = {
-                    "ts": datetime.utcnow().isoformat() + "Z",
+                    "ts": datetime.now(_tz.utc).isoformat().replace("+00:00", "Z"),
                     "symbol": args.symbol, "days": args.days,
                     "applied": {"stop_pct": best["stop_pct"], "rr": best["rr"]},
                     "score": best["score"],
