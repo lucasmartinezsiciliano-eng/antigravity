@@ -1603,21 +1603,37 @@ async function runOptimize(apply){
   if(optimizePolling) clearInterval(optimizePolling);
   optimizePolling=setInterval(async()=>{
     const st=await fetch("/api/optimize").then(r=>r.json());
-    if(!st.running){
-      clearInterval(optimizePolling); optimizePolling=null;
-      document.getElementById("opt-status").textContent="listo "+new Date(st.last_run||Date.now()).toLocaleTimeString("es");
-      const r=st.last_result;
-      if(r&&r.score){
-        const m=r.metrics||{};
-        document.getElementById("opt-result").innerHTML=
-          `<div style="color:var(--green)">Mejor: stop=${r.stop_pct}% RR=${r.rr} score=${r.score}</div>
-           <div>WR=${((m.win_rate||0)*100).toFixed(1)}% PF=${m.profit_factor||0} DD=${m.max_drawdown_pct||0}%</div>
-           ${apply?'<div style="color:var(--green)">Aplicado al bot.</div>':''}`;
-      } else {
-        document.getElementById("opt-result").textContent=r?.error||"Sin resultados validos";
-      }
+    // Animate dots while running
+    if(st.running){
+      const dots=".".repeat((Math.floor(Date.now()/800)%3)+1);
+      document.getElementById("opt-status").textContent="corriendo"+dots;
+      return;
     }
-  },5000);
+    clearInterval(optimizePolling); optimizePolling=null;
+    const timeStr=new Date(st.last_run||Date.now()).toLocaleTimeString("es");
+    const r=st.last_result;
+    if(r&&r.score){
+      const m=r.metrics||{};
+      const wr=((m.win_rate||0)*100).toFixed(1);
+      const wrColor=parseFloat(wr)>=45?"var(--green)":parseFloat(wr)>=30?"var(--yellow)":"var(--red)";
+      document.getElementById("opt-status").textContent="listo "+timeStr;
+      document.getElementById("opt-status").style.color="var(--green)";
+      document.getElementById("opt-result").innerHTML=
+        `<div style="border:1px solid var(--green);border-radius:4px;padding:6px;background:#0a1a0a">
+           <div style="color:var(--green);font-weight:bold;margin-bottom:4px">MEJOR CONFIG ENCONTRADA</div>
+           <div>Stop: <b>${r.stop_pct}%</b> &nbsp; RR: <b>${r.rr}</b> &nbsp; Score: <b>${r.score}</b></div>
+           <div>WR: <b style="color:${wrColor}">${wr}%</b> &nbsp; PF: <b>${(m.profit_factor||0).toFixed(2)}</b> &nbsp; DD: <b>${(m.max_drawdown_pct||0).toFixed(1)}%</b></div>
+           ${apply?'<div style="color:var(--green);margin-top:4px">Aplicado al bot automaticamente.</div>':''}
+         </div>`;
+      // Flash the panel border
+      const panel=document.getElementById("opt-result").closest(".panel");
+      if(panel){ panel.style.boxShadow="0 0 12px var(--green)"; setTimeout(()=>panel.style.boxShadow="",4000); }
+    } else {
+      document.getElementById("opt-status").textContent="sin resultados "+timeStr;
+      document.getElementById("opt-status").style.color="var(--red)";
+      document.getElementById("opt-result").textContent=r?.error||"Ninguna combinacion paso los constraints.";
+    }
+  },3000);
 }
 
 async function loadBiasSuggestion(){

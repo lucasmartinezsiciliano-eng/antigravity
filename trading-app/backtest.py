@@ -141,6 +141,37 @@ def download_data(symbol: str, days: int = 180) -> list:
 
 
 # ── Trade simulator ───────────────────────────────────────────────────────────
+def build_news_blackout_set(days: int, blackout_min: int = 15) -> set:
+    """
+    Construye un set de timestamps (minuto exacto) en blackout de noticias.
+    Usa news_calendar.py si disponible; si no, devuelve set vacío.
+    """
+    try:
+        from news_calendar import fetch_calendar
+        events = fetch_calendar()
+        now_unix = __import__("time").time()
+        cutoff   = now_unix - days * 86400
+        blackout_ts = set()
+        for ev in events:
+            ts = ev.get("ts_unix", 0)
+            if ts < cutoff or ev.get("all_day"):
+                continue
+            # Mark every minute in ±blackout_min window
+            for delta in range(-blackout_min * 60, blackout_min * 60 + 60, 60):
+                blackout_ts.add(ts + delta - (ts % 60))
+        return blackout_ts
+    except Exception:
+        return set()
+
+
+def is_news_blackout(ts_unix: int, blackout_set: set) -> bool:
+    """True si el timestamp cae en ventana de blackout de noticias."""
+    if not blackout_set:
+        return False
+    ts_rounded = ts_unix - (ts_unix % 60)
+    return ts_rounded in blackout_set
+
+
 def simulate_trades(
     candles: list,
     signals: list,
@@ -150,17 +181,22 @@ def simulate_trades(
     risk_pct: float = 0.01,
     kz_filter: bool = True,
     max_per_day: int = 2,
+    news_filter: bool = True,
+    blackout_set: set = None,
 ) -> list:
     """
     Simula ejecución de señales sobre datos históricos.
     Entrada en el cierre de la vela de señal.
     SL = stop_pct% del precio. TP = SL * rr.
     Gestión: break-even a 1:1.
+    news_filter=True omite trades en ventana ±15min de eventos HIGH impact.
     """
     trades = []
     open_pos = None
     day_count  = {}   # date -> count
     last_bar_traded = -1  # one trade per bar max
+    if blackout_set is None:
+        blackout_set = set()
 
     for sig in signals:
         bar_idx = sig["bar_index"]
@@ -176,6 +212,10 @@ def simulate_trades(
 
         # Kill zone filter
         if kz_filter and not is_in_kill_zone(bar_time):
+            continue
+
+        # News blackout filter
+        if news_filter and is_news_blackout(bar_time, blackout_set):
             continue
 
         # Daily limit
@@ -415,6 +455,7 @@ def main():
     parser.add_argument("--risk-pct", default=1.0, type=float, help="Riesgo %% por trade (default 1.0)")
     parser.add_argument("--account",  default=50000.0, type=float, help="Cuenta inicial USD")
     parser.add_argument("--no-kz",    action="store_true", help="Ignorar filtro kill zone")
+    parser.add_argument("--no-news",  action="store_true", help="Ignorar blackout de noticias")
     parser.add_argument("--bias",     default="BOTH",      help="BULLISH | BEARISH | BOTH (default: BOTH)")
     parser.add_argument("--json",     action="store_true", help="Output JSON")
     parser.add_argument("--plot",     action="store_true", help="Mostrar equity curve ASCII")
@@ -449,13 +490,22 @@ def main():
         print("\n[WARN] Sin senales -- prueba con mas dias o sin filtro KZ (--no-kz)")
         sys.exit(0)
 
-    # 3. Simulate trades
+    # 3. Build news blackout set
+    blackout_set = set()
+    if not getattr(args, "no_news", False):
+        print(f"[NEWS] Cargando blackout de noticias (ForexFactory)...")
+        blackout_set = build_news_blackout_set(args.days)
+        print(f"[NEWS] {len(blackout_set)} minutos en blackout en {args.days}d")
+
+    # 4. Simulate trades
     print(f"[SIM] Simulando trades...")
     trades = simulate_trades(
         candles, all_signals,
         rr=args.rr, stop_pct=args.stop_pct,
         account=args.account, risk_pct=args.risk_pct / 100,
         kz_filter=not args.no_kz,
+        news_filter=not getattr(args, "no_news", False),
+        blackout_set=blackout_set,
         max_per_day=2,
     )
     print(f"[SIM] {len(trades)} trades ejecutados")

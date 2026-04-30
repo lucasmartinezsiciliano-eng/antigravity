@@ -19,14 +19,10 @@ Uso standalone:
     python news_calendar.py --json       # output JSON
 """
 
-import io
-import sys
 import json
 import pytz
 from datetime import datetime
 from pathlib import Path
-
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 NY = pytz.timezone("America/New_York")
 CACHE_FILE = Path("news_cache.json")
@@ -225,7 +221,8 @@ def print_events(events: list, label: str = "Eventos"):
 
 
 def main():
-    import argparse
+    import io, sys, argparse
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser()
     parser.add_argument("--week",   action="store_true", help="Semana completa")
     parser.add_argument("--all",    action="store_true", help="Todos los impactos")
