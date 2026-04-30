@@ -1,24 +1,22 @@
 """
-Beta local — servidor standalone para Windows sin Docker ni Redis.
-Ejecutar: python beta_local.py
-Dashboard: http://localhost:8000/dashboard
+Beta local — Trading cockpit completo.
+python beta_local.py → http://localhost:8000/dashboard
 """
-
 import json, os, sys, webbrowser, threading, time, random
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import deque
 
 def install_if_missing():
     import importlib.util
-    needed = {"fastapi": "fastapi", "uvicorn": "uvicorn[standard]",
-              "pydantic": "pydantic", "requests": "requests"}
-    missing = [pkg for mod, pkg in needed.items() if importlib.util.find_spec(mod) is None]
+    needed = {"fastapi":"fastapi","uvicorn":"uvicorn[standard]",
+              "pydantic":"pydantic","requests":"requests","pytz":"pytz"}
+    missing=[pkg for mod,pkg in needed.items() if importlib.util.find_spec(mod) is None]
     if missing:
         print(f"Installing: {', '.join(missing)}")
         import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", *missing, "-q"])
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+        subprocess.check_call([sys.executable,"-m","pip","install",*missing,"-q"])
+        os.execv(sys.executable,[sys.executable]+sys.argv)
 
 install_if_missing()
 
@@ -26,595 +24,887 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import uvicorn
+import uvicorn, pytz
 
 # ── State ─────────────────────────────────────────────────────────────────────
 SIGNALS_QUEUE: deque = deque(maxlen=100)
 TRADES_LOG: list     = []
-EQUITY_CURVE: list   = []          # [{ts, balance}]
+EQUITY_CURVE: list   = []
 LOG_FILE = Path("trades.jsonl")
-ACCOUNT  = {"balance": 50_000.0, "start": 50_000.0, "peak": 50_000.0}
 
-def _ts() -> str:
-    # Plain UTC ISO — JS new Date() can parse this fine
-    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+ACCOUNT = {"balance":50_000.0,"start":50_000.0,"peak":50_000.0}
 
-def log_event(event: str, data: dict):
-    record = {"ts": _ts(), "event": event, **data}
-    TRADES_LOG.append(record)
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record) + "\n")
-    return record
+ACTIVE_POSITION: dict = {}   # {} = flat; else {symbol,action,qty,entry,sl,tp,open_pnl}
+
+DAILY_BIAS = {"value": "NEUTRAL"}  # BULLISH | NEUTRAL | BEARISH — set from UI
+
+CONFIG = {
+    "MAX_RISK_PCT":          0.01,
+    "MIN_RR":                2.0,
+    "STOP_TICKS":            10,
+    "STOP_PCT":              0.5,
+    "MAX_TRADES_SESSION":    2,
+    "MAX_DAILY_LOSS_PCT":    0.03,
+    "WIN_PROB":              0.60,   # simulation win probability
+}
+
+# Upcoming high-impact news (static schedule — real app uses ForexFactory)
+NEWS_SCHEDULE = [
+    {"name":"NFP",  "day":"first_friday", "hour":8,"min":30,"impact":"HIGH"},
+    {"name":"CPI",  "day":"variable",     "hour":8,"min":30,"impact":"HIGH"},
+    {"name":"FOMC", "day":"variable",     "hour":14,"min":0, "impact":"HIGH"},
+]
+
+def _ts():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+"Z"
+
+def log_event(event:str, data:dict):
+    rec={"ts":_ts(),"event":event,**data}
+    TRADES_LOG.append(rec)
+    with open(LOG_FILE,"a",encoding="utf-8") as f:
+        f.write(json.dumps(rec)+"\n")
+    return rec
 
 def push_equity():
-    ACCOUNT["peak"] = max(ACCOUNT["peak"], ACCOUNT["balance"])
-    dd = (ACCOUNT["peak"] - ACCOUNT["balance"]) / ACCOUNT["peak"] * 100
-    EQUITY_CURVE.append({
-        "ts": _ts(),
-        "balance": round(ACCOUNT["balance"], 2),
-        "drawdown_pct": round(dd, 2),
-    })
+    ACCOUNT["peak"]=max(ACCOUNT["peak"],ACCOUNT["balance"])
+    dd=(ACCOUNT["peak"]-ACCOUNT["balance"])/ACCOUNT["peak"]*100
+    EQUITY_CURVE.append({"ts":_ts(),"balance":round(ACCOUNT["balance"],2),"dd":round(dd,2)})
 
-# ── Kill zone helpers ─────────────────────────────────────────────────────────
-import pytz
+# ── Kill zone ─────────────────────────────────────────────────────────────────
+NY=pytz.timezone("America/New_York")
 
-def _now_ny():
-    return datetime.now(pytz.timezone("America/New_York"))
+def _now_ny(): return datetime.now(NY)
 
-def kill_zone_status() -> dict:
-    try:
-        ny = _now_ny()
-        t = ny.time()
-        import datetime as dt
-        in_kz = (ny.weekday() < 5 and
-                 dt.time(8, 30) <= t <= dt.time(11, 0))
-        # minutes until next kill zone open
-        if in_kz:
-            close_h, close_m = 11, 0
-            mins_left = (close_h * 60 + close_m) - (t.hour * 60 + t.minute)
-            next_msg = f"Closes in {mins_left}m"
-        else:
-            if ny.weekday() >= 5:
-                next_msg = "Weekend — opens Monday 8:30 ET"
-            elif t.hour < 8 or (t.hour == 8 and t.minute < 30):
-                mins_until = (8 * 60 + 30) - (t.hour * 60 + t.minute)
-                next_msg = f"Opens in {mins_until}m"
-            else:
-                next_msg = "Opens tomorrow 8:30 ET"
-        return {
-            "active": in_kz,
-            "et_time": ny.strftime("%H:%M:%S ET"),
-            "weekday": ny.strftime("%A"),
-            "next": next_msg,
-        }
-    except Exception:
-        return {"active": True, "et_time": "??:?? ET", "weekday": "?", "next": "pytz not installed"}
+def kz_status()->dict:
+    import datetime as dt
+    ny=_now_ny()
+    t=ny.time()
+    active=(ny.weekday()<5 and dt.time(8,30)<=t<=dt.time(11,0))
+    if active:
+        mins=( 11*60)-(t.hour*60+t.minute)
+        nxt=f"Cierra en {mins}m"
+    elif ny.weekday()>=5:
+        nxt="Abre el lunes 8:30 ET"
+    elif t.hour<8 or (t.hour==8 and t.minute<30):
+        mins=(8*60+30)-(t.hour*60+t.minute)
+        nxt=f"Abre en {mins}m"
+    else:
+        nxt="Abre mañana 8:30 ET"
+    # Silver Bullet: 10:00-11:00 ET
+    sb=(active and dt.time(10,0)<=t<=dt.time(11,0))
+    return {"active":active,"silver_bullet":sb,"et":ny.strftime("%H:%M:%S"),"day":ny.strftime("%A"),"next":nxt}
+
+def next_news()->dict|None:
+    ny=_now_ny()
+    # NFP: first Friday
+    if ny.weekday()==4 and ny.day<=7:
+        event_t=ny.replace(hour=8,minute=30,second=0,microsecond=0)
+        delta=(event_t-ny).total_seconds()/60
+        if -15<=delta<=240:
+            return {"name":"NFP","mins":int(delta),"blackout":abs(delta)<=15}
+    return None
 
 # ── Simulated executor ────────────────────────────────────────────────────────
 def simulated_executor():
+    session_count=0
+    session_date=None
+
     while True:
         time.sleep(0.3)
-        if not SIGNALS_QUEUE:
-            continue
-        signal = SIGNALS_QUEUE.popleft()
+        if not SIGNALS_QUEUE: continue
+        signal=SIGNALS_QUEUE.popleft()
 
-        kz = kill_zone_status()
+        ny=_now_ny(); today=ny.date()
+        if session_date!=today:
+            session_date=today; session_count=0
+
+        kz=kz_status()
         if not kz["active"]:
-            log_event("skip", {"reason": f"Outside kill zone — {kz['next']}", "signal": signal})
-            continue
+            log_event("skip",{"reason":f"Fuera de kill zone — {kz['next']}","signal":signal}); continue
 
-        entry  = signal["close"]
-        action = signal["action"]
-        stop_d = entry * 0.005
-        rr     = 2.0
-        sl  = round(entry - stop_d, 4) if action == "BUY" else round(entry + stop_d, 4)
-        tp  = round(entry + stop_d * rr, 4) if action == "BUY" else round(entry - stop_d * rr, 4)
-        qty = max(1, int(ACCOUNT["balance"] * 0.01 / (stop_d or 1)))
+        if DAILY_BIAS["value"]=="NEUTRAL":
+            log_event("skip",{"reason":"Daily Bias NEUTRAL — no operar hoy","signal":signal}); continue
 
-        log_event("order_placed", {
-            "symbol": signal["symbol"], "action": action,
-            "qty": qty, "entry": entry, "sl": sl, "tp": tp, "rr": rr,
-            "risk_usd": round(ACCOUNT["balance"] * 0.01, 2),
-            "reason": signal.get("reason", ""),
-        })
-        print(f"  [ORDER] {action} {qty}x {signal['symbol']} @ {entry} | SL {sl} TP {tp}")
+        bias=DAILY_BIAS["value"]
+        action=signal["action"]
+        if (action=="BUY" and bias=="BEARISH") or (action=="SELL" and bias=="BULLISH"):
+            log_event("skip",{"reason":f"Señal {action} contra bias {bias}","signal":signal}); continue
 
-        time.sleep(random.uniform(1.5, 4))
-        win = random.random() < 0.60
-        pnl = round(stop_d * qty * rr if win else -stop_d * qty, 2)
-        ACCOUNT["balance"] += pnl
+        if session_count>=CONFIG["MAX_TRADES_SESSION"]:
+            log_event("skip",{"reason":f"Max {CONFIG['MAX_TRADES_SESSION']} trades/sesión alcanzado","signal":signal}); continue
+
+        news=next_news()
+        if news and news["blackout"]:
+            log_event("skip",{"reason":f"Blackout noticias: {news['name']} en {news['mins']}m","signal":signal}); continue
+
+        # Sizing
+        entry=signal["close"]; act=signal["action"]
+        sd=entry*CONFIG["STOP_PCT"]/100
+        rr=CONFIG["MIN_RR"]
+        sl=round(entry-sd,4) if act=="BUY" else round(entry+sd,4)
+        tp=round(entry+sd*rr,4) if act=="BUY" else round(entry-sd*rr,4)
+        qty=max(1,int(ACCOUNT["balance"]*CONFIG["MAX_RISK_PCT"]/(sd or 1)))
+
+        ACTIVE_POSITION.update({"symbol":signal["symbol"],"action":act,"qty":qty,
+                                 "entry":entry,"sl":sl,"tp":tp,"open_pnl":0.0,
+                                 "ts":_ts()})
+        session_count+=1
+        log_event("order_placed",{"symbol":signal["symbol"],"action":act,"qty":qty,
+            "entry":entry,"sl":sl,"tp":tp,"rr":rr,
+            "risk_usd":round(ACCOUNT["balance"]*CONFIG["MAX_RISK_PCT"],2),
+            "reason":signal.get("reason",""),"bias":bias,"kz_silver":kz["silver_bullet"]})
+        print(f"  [ORDER] {act} {qty}x {signal['symbol']} @ {entry} SL {sl} TP {tp}")
+
+        # Simulate fill
+        hold=random.uniform(2,8)
+        for _ in range(int(hold*2)):
+            time.sleep(0.5)
+            drift=random.uniform(-sd*0.5,sd*0.5)
+            cur=entry+(drift if act=="BUY" else -drift)
+            ACTIVE_POSITION["open_pnl"]=round((cur-entry)*qty if act=="BUY" else (entry-cur)*qty,2)
+
+        ACTIVE_POSITION.clear()
+        win=random.random()<CONFIG["WIN_PROB"]
+        pnl=round(sd*qty*rr if win else -sd*qty,2)
+        ACCOUNT["balance"]+=pnl
         push_equity()
-
-        rr_got = rr if win else round(random.uniform(0.3, 0.9), 1)
-        log_event("trade_closed", {
-            "symbol": signal["symbol"], "pnl": pnl,
-            "rr_achieved": rr_got, "result": "WIN" if win else "LOSS",
-            "balance_after": round(ACCOUNT["balance"], 2),
-        })
-        print(f"  [{'WIN ' if win else 'LOSS'}] {signal['symbol']} ${pnl:+.2f} | Balance ${ACCOUNT['balance']:,.0f}")
+        rr_got=rr if win else round(random.uniform(0.2,0.9),1)
+        log_event("trade_closed",{"symbol":signal["symbol"],"pnl":pnl,"rr_achieved":rr_got,
+            "result":"WIN" if win else "LOSS","balance_after":round(ACCOUNT["balance"],2)})
+        print(f"  [{'WIN ' if win else 'LOSS'}] {signal['symbol']} ${pnl:+.2f} bal ${ACCOUNT['balance']:,.0f}")
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
-app = FastAPI(title="IFVG Trading Bot", version="1.0.0-beta")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app=FastAPI(title="IFVG Trading Bot",version="2.0.0-beta")
+app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=["*"],allow_headers=["*"])
+
+TV_SYMBOLS={"NQ1!":"CME_MINI:NQ1!","ES1!":"CME_MINI:ES1!","MNQ1!":"CME_MINI:MNQ1!",
+            "AAPL":"NASDAQ:AAPL","MSFT":"NASDAQ:MSFT","NVDA":"NASDAQ:NVDA",
+            "TSLA":"NASDAQ:TSLA","META":"NASDAQ:META","AMZN":"NASDAQ:AMZN",
+            "EURUSD":"FX:EURUSD","GBPUSD":"FX:GBPUSD"}
 
 class Signal(BaseModel):
-    action: str; symbol: str; timeframe: str = "1"
-    close: float; time: str = ""; reason: str = "IFVG_manual"
+    action:str; symbol:str; timeframe:str="1"
+    close:float; time:str=""; reason:str="IFVG_manual"
+
+class BiasUpdate(BaseModel):
+    value:str  # BULLISH | NEUTRAL | BEARISH
+
+class ConfigUpdate(BaseModel):
+    key:str; value:float
 
 @app.post("/webhook")
-async def webhook(signal: Signal, x_api_key: str = Header(None)):
-    key = os.getenv("WEBHOOK_API_KEY", "")
-    if key and x_api_key != key:
-        raise HTTPException(403, "Unauthorized")
+async def webhook(signal:Signal, x_api_key:str=Header(None)):
+    key=os.getenv("WEBHOOK_API_KEY","")
+    if key and x_api_key!=key: raise HTTPException(403,"Unauthorized")
     SIGNALS_QUEUE.append(signal.model_dump())
-    print(f"  [WEBHOOK] {signal.action} {signal.symbol} @ {signal.close}")
-    return {"status": "queued", "action": signal.action, "symbol": signal.symbol}
+    return {"status":"queued","action":signal.action,"symbol":signal.symbol}
 
 @app.get("/status")
 async def status():
-    kz = kill_zone_status()
-    return {"status": "online", "redis": "in-memory", "mode": "LOCAL BETA",
-            "kill_zone": kz, "version": "1.0.0-beta"}
+    return {"status":"online","mode":"LOCAL BETA","kill_zone":kz_status(),
+            "daily_bias":DAILY_BIAS["value"],"news":next_news(),"version":"2.0.0-beta"}
 
 @app.get("/api/trades")
-async def trades_api(limit: int = 60):
-    return {"trades": TRADES_LOG[-limit:], "total": len(TRADES_LOG)}
+async def trades_api(limit:int=60):
+    return {"trades":TRADES_LOG[-limit:],"total":len(TRADES_LOG)}
 
 @app.get("/api/equity")
 async def equity_api():
-    start = ACCOUNT["start"]
-    peak  = ACCOUNT["peak"]
-    dd    = (peak - ACCOUNT["balance"]) / peak * 100 if peak > 0 else 0
-    return {
-        "curve": EQUITY_CURVE[-100:],
-        "balance": round(ACCOUNT["balance"], 2),
-        "start": start,
-        "peak": round(peak, 2),
-        "max_drawdown_pct": round(dd, 2),
-    }
+    p=ACCOUNT["peak"]; dd=(p-ACCOUNT["balance"])/p*100 if p else 0
+    return {"curve":EQUITY_CURVE[-120:],"balance":round(ACCOUNT["balance"],2),
+            "start":ACCOUNT["start"],"peak":round(p,2),"max_drawdown_pct":round(dd,2)}
 
 @app.get("/api/analytics")
 async def analytics_api():
-    closed = [t for t in TRADES_LOG if t.get("event") == "trade_closed"]
-    orders = [t for t in TRADES_LOG if t.get("event") == "order_placed"]
-    skips  = [t for t in TRADES_LOG if t.get("event") == "skip"]
-    wins   = [t for t in closed if t.get("pnl", 0) > 0]
-    losses = [t for t in closed if t.get("pnl", 0) <= 0]
-    tw = sum(t.get("pnl", 0) for t in wins)
-    tl = abs(sum(t.get("pnl", 0) for t in losses))
-    aw = tw / len(wins) if wins else 0
-    al = tl / len(losses) if losses else 0
-    peak = ACCOUNT["peak"]
-    dd   = (peak - ACCOUNT["balance"]) / peak * 100 if peak > 0 else 0
-
-    # Skip reason breakdown
-    skip_reasons: dict[str, int] = {}
+    closed=[t for t in TRADES_LOG if t.get("event")=="trade_closed"]
+    orders=[t for t in TRADES_LOG if t.get("event")=="order_placed"]
+    skips =[t for t in TRADES_LOG if t.get("event")=="skip"]
+    wins  =[t for t in closed if t.get("pnl",0)>0]
+    losses=[t for t in closed if t.get("pnl",0)<=0]
+    tw=sum(t.get("pnl",0) for t in wins)
+    tl=abs(sum(t.get("pnl",0) for t in losses))
+    aw=tw/len(wins) if wins else 0
+    al=tl/len(losses) if losses else 0
+    p=ACCOUNT["peak"]; dd=(p-ACCOUNT["balance"])/p*100 if p else 0
+    sr:dict[str,int]={}
     for s in skips:
-        r = s.get("reason", "unknown").split("—")[0].strip()
-        skip_reasons[r] = skip_reasons.get(r, 0) + 1
+        r=s.get("reason","?").split("—")[0].strip()[:40]
+        sr[r]=sr.get(r,0)+1
+    return {"orders_placed":len(orders),"trades_closed":len(closed),
+            "signals_skipped":len(skips),"wins":len(wins),"losses":len(losses),
+            "win_rate":round(len(wins)/len(closed),3) if closed else None,
+            "profit_factor":round(tw/tl,2) if tl>0 else None,
+            "avg_rr":round(aw/al,2) if al>0 else None,
+            "total_pnl":round(tw-tl,2),"balance":round(ACCOUNT["balance"],2),
+            "max_drawdown_pct":round(dd,2),"skip_reasons":sr}
 
-    return {
-        "orders_placed": len(orders), "trades_closed": len(closed),
-        "signals_skipped": len(skips), "wins": len(wins), "losses": len(losses),
-        "win_rate":      round(len(wins)/len(closed), 3) if closed else None,
-        "profit_factor": round(tw/tl, 2) if tl > 0 else None,
-        "avg_rr":        round(aw/al, 2) if al > 0 else None,
-        "total_pnl":     round(tw - tl, 2),
-        "balance":       round(ACCOUNT["balance"], 2),
-        "max_drawdown_pct": round(dd, 2),
-        "skip_reasons":  skip_reasons,
-    }
+@app.get("/api/position")
+async def position_api():
+    return {"position":ACTIVE_POSITION or None}
+
+@app.get("/api/config")
+async def config_get():
+    return CONFIG
+
+@app.post("/api/config")
+async def config_set(u:ConfigUpdate):
+    BOUNDS={"MAX_RISK_PCT":(0.003,0.015),"MIN_RR":(1.5,4.0),"STOP_TICKS":(3,30),
+            "STOP_PCT":(0.2,2.0),"MAX_TRADES_SESSION":(1,4),
+            "MAX_DAILY_LOSS_PCT":(0.01,0.06),"WIN_PROB":(0.1,0.9)}
+    if u.key not in CONFIG: raise HTTPException(400,f"Unknown key: {u.key}")
+    lo,hi=BOUNDS.get(u.key,(0,1e9))
+    if not (lo<=u.value<=hi): raise HTTPException(400,f"{u.key} must be {lo}–{hi}")
+    CONFIG[u.key]=u.value
+    return {"key":u.key,"value":u.value,"status":"applied"}
+
+@app.post("/api/bias")
+async def bias_set(b:BiasUpdate):
+    if b.value not in ("BULLISH","NEUTRAL","BEARISH"):
+        raise HTTPException(400,"value must be BULLISH|NEUTRAL|BEARISH")
+    DAILY_BIAS["value"]=b.value
+    return {"bias":b.value}
 
 @app.post("/api/test-signal")
-async def test_signal(symbol: str = "NQ1!", action: str = "BUY", price: float = 19250.0):
-    sig = {"action": action, "symbol": symbol, "close": price,
-           "timeframe": "1", "time": "", "reason": "IFVG_test"}
+async def test_signal(symbol:str="NQ1!",action:str="BUY",price:float=19250.0):
+    sig={"action":action,"symbol":symbol,"close":price,"timeframe":"1","time":"","reason":"IFVG_test"}
     SIGNALS_QUEUE.append(sig)
-    return {"status": "queued", "signal": sig}
+    return {"status":"queued","signal":sig}
 
 @app.post("/api/reset")
 async def reset():
-    TRADES_LOG.clear(); EQUITY_CURVE.clear(); SIGNALS_QUEUE.clear()
-    ACCOUNT["balance"] = ACCOUNT["start"]; ACCOUNT["peak"] = ACCOUNT["start"]
+    TRADES_LOG.clear(); EQUITY_CURVE.clear(); SIGNALS_QUEUE.clear(); ACTIVE_POSITION.clear()
+    ACCOUNT.update({"balance":ACCOUNT["start"],"peak":ACCOUNT["start"]})
+    DAILY_BIAS["value"]="NEUTRAL"
     if LOG_FILE.exists(): LOG_FILE.unlink()
-    return {"status": "reset"}
+    return {"status":"reset"}
+
+@app.get("/api/tv-symbol")
+async def tv_symbol(symbol:str="NQ1!"):
+    return {"tv":TV_SYMBOLS.get(symbol,symbol)}
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
-DASHBOARD_HTML = r"""<!DOCTYPE html>
+DASHBOARD = r"""<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IFVG Bot — Beta</title>
+<title>IFVG Bot</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0d1117;color:#c9d1d9;font-family:'SF Mono','Consolas',monospace;font-size:14px}
-.header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 24px;display:flex;align-items:center;gap:10px}
-.header h1{font-size:17px;color:#e6edf3;font-weight:600;flex:1}
-.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px}
-.badge-paper{background:#1a3a2a;color:#3fb950;border:1px solid #2ea043}
-.badge-kz-on{background:#1f3a5f;color:#58a6ff;border:1px solid #388bfd}
-.badge-kz-off{background:#2d2d2d;color:#8b949e;border:1px solid #30363d}
-.dot{width:9px;height:9px;border-radius:50%;background:#3fb950;animation:pulse 2s infinite;flex-shrink:0}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--border:#30363d;--border2:#21262d;
+  --text:#c9d1d9;--text2:#8b949e;--text3:#e6edf3;--green:#3fb950;--yellow:#d29922;
+  --red:#f85149;--blue:#58a6ff;--purple:#bc8cff}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',monospace;
+  font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Header */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:44px}
+.hdr h1{font-size:15px;color:var(--text3);font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.et-clock{font-size:13px;color:#8b949e;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:16px 24px}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px}
-.card-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.card-value{font-size:24px;font-weight:700;color:#e6edf3}
-.card-value.g{color:#3fb950}.card-value.y{color:#d29922}.card-value.r{color:#f85149}
-.sub{font-size:11px;color:#555;margin-top:3px}
-.pb{height:3px;background:#21262d;border-radius:2px;margin-top:7px;overflow:hidden}
-.pb-fill{height:100%;border-radius:2px;transition:width .6s,background .6s}
-.chart-wrap{padding:0 24px 16px}
-.chart-title{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-canvas{width:100%;border-radius:6px;background:#161b22;border:1px solid #21262d}
-.section{padding:0 24px 16px}
-.sec-head{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;
-  padding-bottom:7px;border-bottom:1px solid #21262d;display:flex;justify-content:space-between;align-items:center}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;font-size:10px;color:#8b949e;padding:5px 10px;text-transform:uppercase}
-td{padding:7px 10px;border-top:1px solid #21262d;font-size:12px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-tr:hover td{background:#1c2128}
-.b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-.b-order{background:#1f3a5f;color:#58a6ff}.b-skip{background:#2d2d2d;color:#8b949e}
-.b-win{background:#1a3a2a;color:#3fb950}.b-loss{background:#3a1a1a;color:#f85149}
-.b-buy{background:#1a3a2a;color:#3fb950}.b-sell{background:#3a1a1a;color:#f85149}
-.controls{padding:0 24px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{padding:7px 14px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;
-  cursor:pointer;font-size:13px;font-family:inherit;transition:background .15s}
-.btn:hover{background:#30363d}
-.btn-g{background:#1a3a2a;border-color:#2ea043;color:#3fb950}.btn-g:hover{background:#2ea043;color:#fff}
-.btn-r{background:#3a1a1a;border-color:#f85149;color:#f85149}.btn-r:hover{background:#f85149;color:#fff}
-.btn-dim{background:#161b22;border-color:#30363d;color:#555}.btn-dim:hover{background:#21262d;color:#8b949e}
-select{padding:7px 12px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;font-family:inherit}
-.skip-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.skip-pill{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:3px 10px;font-size:11px;color:#8b949e}
-.sbar{background:#161b22;padding:8px 24px;font-size:11px;color:#8b949e;border-top:1px solid #21262d;display:flex;gap:16px;flex-wrap:wrap}
-.sig-fb{font-size:12px;transition:color .3s}
+.badge{padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.4px;border:1px solid}
+.b-paper{background:#1a2e1a;color:var(--green);border-color:#2ea043}
+.b-kz-on{background:#1a2a3a;color:var(--blue);border-color:#388bfd}
+.b-kz-off{background:#222;color:var(--text2);border-color:var(--border)}
+.b-sb{background:#2a1a3a;color:var(--purple);border-color:#7c4dff}
+.b-bias-bull{background:#1a3a1a;color:var(--green);border-color:#2ea043}
+.b-bias-bear{background:#3a1a1a;color:var(--red);border-color:#da3633}
+.b-bias-neut{background:#222;color:var(--text2);border-color:var(--border)}
+.et{font-size:12px;color:var(--text2);margin-left:4px}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.news-pill{background:#3a2a1a;color:var(--yellow);border:1px solid #bb8009;
+  padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* Symbol bar */
+.symbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 16px;
+  display:flex;align-items:center;gap:8px;flex-shrink:0}
+.symbar select,.symbar button{background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;padding:4px 10px}
+.symbar button:hover,.symbar button.act{background:#388bfd;border-color:#58a6ff;color:#fff}
+.symbar button.act{font-weight:700}
+.sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* Main layout */
+.main{display:flex;flex:1;min-height:0}
+.chart-col{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--border)}
+
+/* TradingView chart */
+#tv-container{flex:1;min-height:0}
+#tv-container iframe{width:100%;height:100%;border:none}
+
+/* Equity mini chart */
+.equity-bar{height:90px;background:var(--bg2);border-top:1px solid var(--border);padding:8px 12px;flex-shrink:0}
+.equity-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+#eq-canvas{width:100%;height:52px;display:block}
+
+/* Sidebar */
+.sidebar{width:300px;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+
+/* Sidebar panels */
+.panel{border-bottom:1px solid var(--border);padding:12px 14px}
+.panel-title{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+/* Bias */
+.bias-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.bias-btn{padding:8px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);
+  color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;
+  text-align:center;transition:all .15s}
+.bias-btn.sel-bull{background:#1a3a1a;border-color:var(--green);color:var(--green)}
+.bias-btn.sel-neut{background:#2a2a2a;border-color:#555;color:#aaa}
+.bias-btn.sel-bear{background:#3a1a1a;border-color:var(--red);color:var(--red)}
+.bias-btn:hover{border-color:var(--text2)}
+
+/* Risk calc */
+.rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.rc-label{font-size:10px;color:var(--text2);margin-bottom:3px}
+.rc-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text3);font-family:inherit;font-size:12px;padding:5px 8px}
+.rc-input:focus{outline:none;border-color:var(--blue)}
+.rc-result{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;
+  padding:8px 10px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.rc-r-label{font-size:10px;color:var(--text2)}
+.rc-r-val{font-size:14px;font-weight:700;color:var(--text3)}
+
+/* Signal */
+.sig-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.btn-long{padding:10px;border-radius:6px;border:1px solid #2ea043;background:#1a3a1a;
+  color:var(--green);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:all .15s}
+.btn-long:hover{background:#2ea043;color:#fff}
+.btn-short{padding:10px;border-radius:6px;border:1px solid #da3633;background:#3a1a1a;
+  color:var(--red);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:all .15s}
+.btn-short:hover{background:#da3633;color:#fff}
+.sig-sel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-family:inherit;font-size:12px;padding:5px 8px;margin-bottom:6px}
+.sig-fb{font-size:11px;min-height:16px;text-align:center}
+
+/* Position */
+.pos-empty{color:var(--text2);font-size:12px;text-align:center;padding:8px 0}
+.pos-card{background:var(--bg3);border-radius:6px;border:1px solid var(--border2);padding:10px}
+.pos-sym{font-size:14px;font-weight:700;color:var(--text3)}
+.pos-dir{font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px;display:inline-block}
+.pos-dir-long{background:#1a3a1a;color:var(--green)}
+.pos-dir-short{background:#3a1a1a;color:var(--red)}
+.pos-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-top:4px}
+.pos-pnl{font-size:18px;font-weight:700;margin-top:6px}
+
+/* Metrics */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.m-card{background:var(--bg3);border-radius:6px;border:1px solid var(--border2);padding:8px 10px}
+.m-label{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.m-val{font-size:16px;font-weight:700;color:var(--text3)}
+.m-val.g{color:var(--green)}.m-val.y{color:var(--yellow)}.m-val.r{color:var(--red)}
+.m-sub{font-size:9px;color:#444;margin-top:2px}
+
+/* Config */
+.cfg-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cfg-label{flex:1;font-size:11px;color:var(--text2)}
+.cfg-input{width:70px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text3);font-family:inherit;font-size:12px;padding:3px 6px;text-align:right}
+.cfg-input:focus{outline:none;border-color:var(--blue)}
+.cfg-apply{padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);
+  color:var(--text2);cursor:pointer;font-size:11px;font-family:inherit}
+.cfg-apply:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Trade log */
+.log-wrap{border-top:1px solid var(--border)}
+.log-hdr{background:var(--bg2);padding:7px 16px;font-size:10px;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between}
+.log-table{width:100%;border-collapse:collapse;font-size:11px}
+.log-table td{padding:5px 16px;border-top:1px solid var(--border2)}
+.log-table tr:hover td{background:var(--bg3)}
+.b{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:600}
+.b-ord{background:#1f3a5f;color:var(--blue)}.b-sk{background:#222;color:var(--text2)}
+.b-win{background:#1a3a1a;color:var(--green)}.b-ls{background:#3a1a1a;color:var(--red)}
+.b-buy{background:#1a3a1a;color:var(--green)}.b-sell{background:#3a1a1a;color:var(--red)}
+
+/* Reset btn */
+.btn-reset{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--bg3);
+  color:var(--text2);cursor:pointer;font-size:11px;font-family:inherit}
+.btn-reset:hover{border-color:var(--red);color:var(--red)}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:var(--bg)}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
 <body>
-<div class="header">
+
+<!-- Header -->
+<div class="hdr">
   <div class="dot" id="dot"></div>
-  <h1>IFVG Trading Bot</h1>
-  <span class="badge badge-paper">PAPER BETA</span>&nbsp;
-  <span class="badge badge-kz-off" id="kz-badge">KZ OFF</span>
-  <span class="et-clock" id="et-clock" style="margin-left:8px">--:-- ET</span>
-</div>
-
-<!-- Metrics grid -->
-<div class="grid">
-  <div class="card">
-    <div class="card-label">Balance</div>
-    <div class="card-value g" id="m-bal">$50,000</div>
-    <div class="pb"><div class="pb-fill" id="pb-bal" style="width:100%;background:#3fb950"></div></div>
-  </div>
-  <div class="card">
-    <div class="card-label">Win Rate</div>
-    <div class="card-value" id="m-wr">—</div>
-    <div class="sub">target ≥50%</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Profit Factor</div>
-    <div class="card-value" id="m-pf">—</div>
-    <div class="sub">target ≥1.5</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Avg RR</div>
-    <div class="card-value" id="m-rr">—</div>
-    <div class="sub">target ≥2:1</div>
-  </div>
-  <div class="card">
-    <div class="card-label">PnL Total</div>
-    <div class="card-value" id="m-pnl">—</div>
-    <div class="sub" id="m-dd">DD: 0%</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Órdenes</div>
-    <div class="card-value" id="m-ord">0</div>
-    <div class="sub" id="m-fil">Filtradas: 0</div>
-  </div>
-  <div class="card">
-    <div class="card-label">W / L</div>
-    <div class="card-value" id="m-wl">—</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Max DD</div>
-    <div class="card-value" id="m-mdd">0%</div>
-    <div class="sub">límite: 20%</div>
+  <h1>IFVG Bot</h1>
+  <span class="badge b-paper">PAPER BETA</span>
+  <span class="badge b-kz-off" id="kz-badge">KZ OFF</span>
+  <span class="badge b-bias-neut" id="bias-badge">NEUTRAL</span>
+  <span id="news-pill" style="display:none" class="news-pill">⚠ NFP</span>
+  <span class="et" id="et-clock">--:-- ET</span>
+  <div class="hdr-right">
+    <button class="btn-reset" onclick="doReset()">↺ Reset</button>
   </div>
 </div>
 
-<!-- Equity curve -->
-<div class="chart-wrap">
-  <div class="chart-title">Curva de equity</div>
-  <canvas id="equity-chart" height="110"></canvas>
-</div>
-
-<!-- Send signal -->
-<div class="section">
-  <div class="sec-head"><span>Enviar señal de test</span><span class="sig-fb" id="sig-fb"></span></div>
-</div>
-<div class="controls">
-  <select id="sym">
+<!-- Symbol / TF bar -->
+<div class="symbar">
+  <select id="sym-sel" onchange="changeSymbol()">
     <option value="NQ1!">NQ (Nasdaq Fut.)</option>
-    <option value="ES1!">ES (S&P Fut.)</option>
+    <option value="ES1!">ES (S&P500 Fut.)</option>
     <option value="AAPL">AAPL</option>
     <option value="MSFT">MSFT</option>
     <option value="NVDA">NVDA</option>
     <option value="TSLA">TSLA</option>
     <option value="EURUSD">EURUSD</option>
   </select>
-  <select id="px">
-    <option value="19250">NQ @ 19,250</option>
-    <option value="5300">ES @ 5,300</option>
-    <option value="172.5">AAPL @ 172.5</option>
-    <option value="415">MSFT @ 415</option>
-    <option value="875">NVDA @ 875</option>
-    <option value="180">TSLA @ 180</option>
-    <option value="1.085">EURUSD @ 1.085</option>
-  </select>
-  <button class="btn btn-g" onclick="fire('BUY')">▲ LONG</button>
-  <button class="btn btn-r" onclick="fire('SELL')">▼ SHORT</button>
-  <button class="btn btn-dim" onclick="doReset()" title="Clear all trades and reset balance">↺ Reset</button>
+  <div class="sep"></div>
+  <button onclick="setTF('1')"  id="tf-1"  class="act">1m</button>
+  <button onclick="setTF('5')"  id="tf-5" >5m</button>
+  <button onclick="setTF('15')" id="tf-15">15m</button>
+  <button onclick="setTF('60')" id="tf-60">1H</button>
+  <button onclick="setTF('240')"id="tf-240">4H</button>
+  <button onclick="setTF('D')"  id="tf-D" >1D</button>
+  <div class="sep"></div>
+  <span style="font-size:11px;color:var(--text2)">Kill zone: 8:30-11:00 ET &nbsp;|&nbsp; Silver Bullet: 10:00-11:00 ET</span>
 </div>
 
-<!-- Skip breakdown -->
-<div class="section" id="skip-section" style="display:none">
-  <div class="sec-head"><span>Señales filtradas</span></div>
-  <div class="skip-grid" id="skip-pills"></div>
-</div>
+<!-- Main -->
+<div class="main">
 
-<!-- Events table -->
-<div class="section">
-  <div class="sec-head">
-    <span>Eventos recientes</span>
-    <span id="ts-note" style="font-size:11px;color:#555"></span>
+  <!-- Left: Chart + Equity -->
+  <div class="chart-col">
+    <div id="tv-container"></div>
+    <div class="equity-bar">
+      <div class="equity-label">Equity curve &nbsp;<span id="eq-stats" style="color:var(--text2)"></span></div>
+      <canvas id="eq-canvas"></canvas>
+    </div>
   </div>
-  <table>
-    <thead><tr><th>Hora ET</th><th>Evento</th><th>Símbolo</th><th>Lado</th><th>Detalle</th></tr></thead>
-    <tbody id="tbody">
-      <tr><td colspan="5" style="color:#8b949e;padding:24px;text-align:center">
-        Pulsa ▲ LONG o ▼ SHORT para simular una señal IFVG
+
+  <!-- Right: Sidebar -->
+  <div class="sidebar">
+
+    <!-- Daily Bias -->
+    <div class="panel">
+      <div class="panel-title"><span>Daily Bias</span><span style="color:var(--text2);font-size:10px">TJR Day-34</span></div>
+      <div class="bias-btns">
+        <button class="bias-btn" id="bb-bull" onclick="setBias('BULLISH')">▲ BULLISH</button>
+        <button class="bias-btn sel-neut" id="bb-neut" onclick="setBias('NEUTRAL')">— NEUTRAL</button>
+        <button class="bias-btn" id="bb-bear" onclick="setBias('BEARISH')">▼ BEARISH</button>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:8px">
+        Sin bias claro → no operar (Fede Day-22)
+      </div>
+    </div>
+
+    <!-- Risk Calculator -->
+    <div class="panel">
+      <div class="panel-title"><span>Risk Calculator</span><span style="color:var(--text2);font-size:10px">1% rule</span></div>
+      <div class="rc-grid">
+        <div>
+          <div class="rc-label">Entry price</div>
+          <input class="rc-input" id="rc-entry" type="number" value="19250" oninput="calcRisk()">
+        </div>
+        <div>
+          <div class="rc-label">SL ticks</div>
+          <input class="rc-input" id="rc-sl" type="number" value="10" oninput="calcRisk()">
+        </div>
+        <div>
+          <div class="rc-label">Account $</div>
+          <input class="rc-input" id="rc-acc" type="number" value="50000" oninput="calcRisk()">
+        </div>
+        <div>
+          <div class="rc-label">Risk %</div>
+          <input class="rc-input" id="rc-risk" type="number" value="1" step="0.1" oninput="calcRisk()">
+        </div>
+      </div>
+      <div class="rc-result" id="rc-result">
+        <div><div class="rc-r-label">Position size</div><div class="rc-r-val" id="rc-size">—</div></div>
+        <div><div class="rc-r-label">Risk $</div><div class="rc-r-val" id="rc-riskusd">—</div></div>
+        <div><div class="rc-r-label">SL</div><div class="rc-r-val" id="rc-slpx">—</div></div>
+        <div><div class="rc-r-label">TP (2:1)</div><div class="rc-r-val" id="rc-tppx">—</div></div>
+      </div>
+    </div>
+
+    <!-- Send signal -->
+    <div class="panel">
+      <div class="panel-title"><span>Enviar señal</span></div>
+      <select class="sig-sel" id="sig-sym">
+        <option value="NQ1!">NQ1! — Nasdaq</option>
+        <option value="ES1!">ES1! — S&P500</option>
+        <option value="AAPL">AAPL</option>
+        <option value="MSFT">MSFT</option>
+        <option value="NVDA">NVDA</option>
+        <option value="TSLA">TSLA</option>
+        <option value="EURUSD">EURUSD</option>
+      </select>
+      <div class="sig-btns">
+        <button class="btn-long"  onclick="fire('BUY')">▲ LONG</button>
+        <button class="btn-short" onclick="fire('SELL')">▼ SHORT</button>
+      </div>
+      <div class="sig-fb" id="sig-fb"></div>
+    </div>
+
+    <!-- Active position -->
+    <div class="panel">
+      <div class="panel-title"><span>Posición activa</span><span id="pos-badge"></span></div>
+      <div id="pos-body"><div class="pos-empty">Flat — sin posición abierta</div></div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="panel">
+      <div class="panel-title"><span>Métricas</span></div>
+      <div class="metrics-grid">
+        <div class="m-card"><div class="m-label">Win Rate</div><div class="m-val" id="m-wr">—</div><div class="m-sub">target ≥50%</div></div>
+        <div class="m-card"><div class="m-label">Profit Factor</div><div class="m-val" id="m-pf">—</div><div class="m-sub">target ≥1.5</div></div>
+        <div class="m-card"><div class="m-label">Avg RR</div><div class="m-val" id="m-rr">—</div><div class="m-sub">target ≥2:1</div></div>
+        <div class="m-card"><div class="m-label">Max DD</div><div class="m-val" id="m-dd">0%</div><div class="m-sub">límite 20%</div></div>
+        <div class="m-card"><div class="m-label">Balance</div><div class="m-val" id="m-bal">$50k</div><div class="m-sub" id="m-pnl">PnL: —</div></div>
+        <div class="m-card"><div class="m-label">W / L</div><div class="m-val" id="m-wl">—</div><div class="m-sub" id="m-skip">Filtradas: 0</div></div>
+      </div>
+    </div>
+
+    <!-- Bot Config -->
+    <div class="panel">
+      <div class="panel-title"><span>Parámetros</span><span style="color:var(--text2);font-size:10px">editable</span></div>
+      <div id="cfg-rows"></div>
+    </div>
+
+  </div><!-- /sidebar -->
+</div><!-- /main -->
+
+<!-- Trade log -->
+<div class="log-wrap">
+  <div class="log-hdr">
+    <span>Eventos recientes</span>
+    <span id="log-ts" style="font-size:10px;color:#444"></span>
+  </div>
+  <table class="log-table">
+    <tbody id="log-body">
+      <tr><td colspan="5" style="color:var(--text2);padding:14px;text-align:center">
+        Configura el Daily Bias y pulsa ▲ LONG o ▼ SHORT
       </td></tr>
     </tbody>
   </table>
 </div>
 
-<div class="sbar">
-  <span>Modo: <b style="color:#d29922">LOCAL BETA</b> (sin IBKR real)</span>
-  <span id="s-kz">Kill zone: —</span>
-  <span id="s-queue">Cola: 0</span>
-  <span style="margin-left:auto">Webhook: <code>POST http://localhost:8000/webhook</code></span>
-</div>
-
+<!-- TradingView -->
+<script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-// ── Equity chart ─────────────────────────────────────────────────────────────
-const canvas = document.getElementById('equity-chart');
-const ctx = canvas.getContext('2d');
-let curveData = [];
 
-function drawChart(points, start) {
-  const W = canvas.offsetWidth; const H = 110;
-  canvas.width = W; canvas.height = H;
-  ctx.fillStyle = '#161b22'; ctx.fillRect(0, 0, W, H);
-  if (points.length < 2) {
-    ctx.fillStyle = '#8b949e'; ctx.font = '12px Consolas,monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('Envía señales para ver la curva de equity', W/2, H/2);
+// ── TradingView widget ────────────────────────────────────────────────────────
+const TV_SYMS = {
+  "NQ1!":"CME_MINI:NQ1!","ES1!":"CME_MINI:ES1!","AAPL":"NASDAQ:AAPL",
+  "MSFT":"NASDAQ:MSFT","NVDA":"NASDAQ:NVDA","TSLA":"NASDAQ:TSLA",
+  "META":"NASDAQ:META","EURUSD":"FX:EURUSD","GBPUSD":"FX:GBPUSD"
+};
+let currentSym="NQ1!", currentTF="1", tvWidget=null;
+
+function buildTV(sym,tf){
+  const c=document.getElementById("tv-container");
+  c.innerHTML='<div id="tv_chart" style="width:100%;height:100%"></div>';
+  if(typeof TradingView==="undefined"){
+    c.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);flex-direction:column;gap:12px"><div style="font-size:14px">📡 Conectando a TradingView...</div><div style="font-size:11px">Requiere internet. Si no carga, abre TradingView.com manualmente.</div></div>';
     return;
   }
-  const vals = points.map(p => p.balance);
-  const mn = Math.min(...vals, start * 0.97);
-  const mx = Math.max(...vals, start * 1.03);
-  const pad = {t:10,b:24,l:60,r:12};
-  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
-  const sx = i => pad.l + (i / (points.length-1)) * cw;
-  const sy = v => pad.t + (1 - (v - mn) / (mx - mn)) * ch;
-
-  // Zero line (start balance)
-  const y0 = sy(start);
-  ctx.strokeStyle='#30363d'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
-  ctx.beginPath(); ctx.moveTo(pad.l, y0); ctx.lineTo(W-pad.r, y0); ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, pad.t, 0, H-pad.b);
-  const lastVal = vals[vals.length-1];
-  const isUp = lastVal >= start;
-  grad.addColorStop(0, isUp ? 'rgba(63,185,80,.35)' : 'rgba(248,81,73,.35)');
-  grad.addColorStop(1, 'rgba(22,27,34,0)');
-  ctx.beginPath();
-  points.forEach((p, i) => i===0 ? ctx.moveTo(sx(i), sy(p.balance)) : ctx.lineTo(sx(i), sy(p.balance)));
-  ctx.lineTo(sx(points.length-1), H-pad.b);
-  ctx.lineTo(pad.l, H-pad.b);
-  ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
-
-  // Line
-  ctx.beginPath(); ctx.strokeStyle = isUp ? '#3fb950' : '#f85149'; ctx.lineWidth=2;
-  points.forEach((p,i) => i===0 ? ctx.moveTo(sx(i),sy(p.balance)) : ctx.lineTo(sx(i),sy(p.balance)));
-  ctx.stroke();
-
-  // Y labels
-  ctx.fillStyle='#555'; ctx.font='10px Consolas'; ctx.textAlign='right';
-  [mn, (mn+mx)/2, mx].forEach(v => {
-    const y = sy(v);
-    ctx.fillText('$'+Math.round(v).toLocaleString('es'), pad.l-4, y+3);
+  tvWidget=new TradingView.widget({
+    autosize:true, symbol:TV_SYMS[sym]||sym, interval:tf,
+    timezone:"America/New_York", theme:"dark", style:"1",
+    locale:"es", toolbar_bg:"#161b22", enable_publishing:false,
+    hide_side_toolbar:false, allow_symbol_change:false,
+    studies:["RSI@tv-basicstudies","Volume@tv-basicstudies"],
+    container_id:"tv_chart"
   });
 }
 
-// ── Kill zone & clock ─────────────────────────────────────────────────────────
-function updateKZ(kz) {
-  const badge = document.getElementById('kz-badge');
-  const clock = document.getElementById('et-clock');
-  const sKz   = document.getElementById('s-kz');
-  clock.textContent = kz.et_time || '--:-- ET';
-  if (kz.active) {
-    badge.textContent = 'KZ ACTIVA'; badge.className='badge badge-kz-on';
-    sKz.innerHTML = `Kill zone: <b style="color:#58a6ff">ACTIVA</b> · ${kz.next}`;
-  } else {
-    badge.textContent = 'KZ OFF'; badge.className='badge badge-kz-off';
-    sKz.innerHTML = `Kill zone: <span style="color:#8b949e">INACTIVA</span> · ${kz.next}`;
+function changeSymbol(){
+  currentSym=document.getElementById("sym-sel").value;
+  buildTV(currentSym,currentTF);
+  document.getElementById("sig-sym").value=currentSym;
+  calcRisk();
+}
+
+function setTF(tf){
+  currentTF=tf;
+  ["1","5","15","60","240","D"].forEach(t=>{
+    const el=document.getElementById("tf-"+t);
+    if(el) el.classList.toggle("act",t===tf);
+  });
+  buildTV(currentSym,tf);
+}
+
+// Init chart
+window.addEventListener("load",()=>{ setTimeout(()=>buildTV("NQ1!","1"),300); });
+
+// ── Equity chart ─────────────────────────────────────────────────────────────
+const eqCanvas=document.getElementById("eq-canvas");
+const eqCtx=eqCanvas.getContext("2d");
+let eqData=[],eqStart=50000;
+
+function drawEq(pts,start){
+  const W=eqCanvas.parentElement.offsetWidth-24, H=52;
+  eqCanvas.width=W; eqCanvas.height=H;
+  eqCtx.fillStyle="#161b22"; eqCtx.fillRect(0,0,W,H);
+  if(pts.length<2){
+    eqCtx.fillStyle="#30363d"; eqCtx.font="10px Consolas"; eqCtx.textAlign="center";
+    eqCtx.fillText("Curva de equity — realiza trades para verla",W/2,H/2+4); return;
+  }
+  const vals=pts.map(p=>p.balance);
+  const mn=Math.min(...vals,start*.97), mx=Math.max(...vals,start*1.03);
+  const px=i=>Math.round((i/(pts.length-1))*W);
+  const py=v=>Math.round(H-((v-mn)/(mx-mn))*H);
+  const last=vals[vals.length-1], isUp=last>=start;
+  const col=isUp?"#3fb950":"#f85149";
+  // zero line
+  const y0=py(start);
+  eqCtx.strokeStyle="#30363d"; eqCtx.lineWidth=1; eqCtx.setLineDash([3,3]);
+  eqCtx.beginPath(); eqCtx.moveTo(0,y0); eqCtx.lineTo(W,y0); eqCtx.stroke();
+  eqCtx.setLineDash([]);
+  // fill
+  const grad=eqCtx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,isUp?"rgba(63,185,80,.3)":"rgba(248,81,73,.3)");
+  grad.addColorStop(1,"rgba(13,17,23,0)");
+  eqCtx.beginPath();
+  pts.forEach((p,i)=>i===0?eqCtx.moveTo(px(i),py(p.balance)):eqCtx.lineTo(px(i),py(p.balance)));
+  eqCtx.lineTo(W,H); eqCtx.lineTo(0,H); eqCtx.closePath();
+  eqCtx.fillStyle=grad; eqCtx.fill();
+  // line
+  eqCtx.beginPath(); eqCtx.strokeStyle=col; eqCtx.lineWidth=2;
+  pts.forEach((p,i)=>i===0?eqCtx.moveTo(px(i),py(p.balance)):eqCtx.lineTo(px(i),py(p.balance)));
+  eqCtx.stroke();
+}
+
+// ── Risk calculator ───────────────────────────────────────────────────────────
+function calcRisk(){
+  const entry=parseFloat(document.getElementById("rc-entry").value)||0;
+  const slTicks=parseFloat(document.getElementById("rc-sl").value)||10;
+  const acc=parseFloat(document.getElementById("rc-acc").value)||50000;
+  const riskPct=parseFloat(document.getElementById("rc-risk").value)||1;
+  // Use 0.25pt tick for NQ/ES, 0.5% for stocks
+  const isFut=["NQ1!","ES1!","MNQ1!","MES1!"].includes(currentSym);
+  const tickSz=isFut?0.25:0.01;
+  const tickVal=currentSym.startsWith("NQ")?5:currentSym.startsWith("ES")?12.5:1;
+  const riskUsd=acc*riskPct/100;
+  const riskPerCont=slTicks*tickVal;
+  const size=Math.max(1,Math.floor(riskUsd/riskPerCont));
+  const slDist=slTicks*tickSz;
+  const sl=isFut?(entry-slDist).toFixed(2):(entry*(1-riskPct/100)).toFixed(2);
+  const tp=isFut?(entry+slDist*2).toFixed(2):(entry*(1+riskPct/100*2)).toFixed(2);
+  document.getElementById("rc-size").textContent=isFut?size+"x":"—";
+  document.getElementById("rc-riskusd").textContent="$"+riskUsd.toFixed(0);
+  document.getElementById("rc-slpx").textContent=sl;
+  document.getElementById("rc-tppx").textContent=tp;
+}
+calcRisk();
+
+// ── Config panel ──────────────────────────────────────────────────────────────
+const CFG_LABELS={
+  "MAX_RISK_PCT":["Riesgo/trade","0.01 = 1%"],
+  "MIN_RR":["Min RR","≥1.5"],
+  "STOP_PCT":["Stop % (stocks)","0.5%"],
+  "MAX_TRADES_SESSION":["Max trades/sesión","1-4"],
+  "MAX_DAILY_LOSS_PCT":["Daily loss limit","0.03 = 3%"],
+  "WIN_PROB":["Win prob (sim)","0.6 = 60%"],
+};
+
+async function loadConfig(){
+  const cfg=await fetch("/api/config").then(r=>r.json());
+  const rows=document.getElementById("cfg-rows");
+  rows.innerHTML="";
+  for(const [k,v] of Object.entries(cfg)){
+    const [label,hint]=CFG_LABELS[k]||[k,""];
+    rows.innerHTML+=`<div class="cfg-row">
+      <div class="cfg-label">${label}<br><span style="font-size:9px;color:#444">${hint}</span></div>
+      <input class="cfg-input" id="cfg-${k}" type="number" step="0.001" value="${v}">
+      <button class="cfg-apply" onclick="applyConfig('${k}')">✓</button>
+    </div>`;
   }
 }
 
-// ── Metric helpers ────────────────────────────────────────────────────────────
-function setMetric(id, val, fmt, good, warn) {
-  const el = document.getElementById(id);
-  el.textContent = val == null ? '—' : fmt(val);
-  el.className = 'card-value ' + (val==null ? '' : val>=good?'g':val>=warn?'y':'r');
+async function applyConfig(key){
+  const val=parseFloat(document.getElementById("cfg-"+key).value);
+  const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({key,value:val})});
+  const d=await r.json();
+  const el=document.getElementById("cfg-"+key);
+  if(r.ok){ el.style.borderColor="var(--green)"; setTimeout(()=>el.style.borderColor="",1500); }
+  else{ el.style.borderColor="var(--red)"; alert(d.detail||"Error"); }
 }
 
-// ── Main refresh ──────────────────────────────────────────────────────────────
-let lastCount = 0;
+loadConfig();
 
-async function refresh() {
-  try {
-    const [s, a, eq, t] = await Promise.all([
-      fetch('/status').then(r=>r.json()),
-      fetch('/api/analytics').then(r=>r.json()),
-      fetch('/api/equity').then(r=>r.json()),
-      fetch('/api/trades?limit=40').then(r=>r.json()),
-    ]);
+// ── Daily Bias ────────────────────────────────────────────────────────────────
+async function setBias(val){
+  await fetch("/api/bias",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({value:val})});
+  updateBiasUI(val);
+}
 
-    // Kill zone
-    if (s.kill_zone) updateKZ(s.kill_zone);
-
-    // Balance card
-    const bal = eq.balance, start = eq.start;
-    document.getElementById('m-bal').textContent = '$'+bal.toLocaleString('es',{maximumFractionDigits:0});
-    const pct = Math.max(5, Math.min(100, (bal/start)*100));
-    const bc = bal >= start ? '#3fb950' : bal >= start*0.95 ? '#d29922' : '#f85149';
-    document.getElementById('m-bal').className = 'card-value ' + (bal>=start?'g':bal>=start*.95?'y':'r');
-    document.getElementById('pb-bal').style.cssText = `width:${pct}%;background:${bc}`;
-
-    // Metrics
-    setMetric('m-wr', a.win_rate,      v=>(v*100).toFixed(0)+'%', 0.5, 0.4);
-    setMetric('m-pf', a.profit_factor, v=>v.toFixed(2),            2.0, 1.5);
-    setMetric('m-rr', a.avg_rr,        v=>v.toFixed(1)+':1',       2.0, 1.5);
-
-    const pnl = a.total_pnl;
-    const pnlEl = document.getElementById('m-pnl');
-    pnlEl.textContent = pnl !== 0 ? (pnl>0?'+':'')+'$'+pnl.toFixed(0) : '—';
-    pnlEl.className = 'card-value '+(pnl>0?'g':pnl<0?'r':'');
-
-    document.getElementById('m-dd').textContent = `DD actual: ${(a.max_drawdown_pct||0).toFixed(1)}%`;
-    document.getElementById('m-ord').textContent = a.orders_placed||'0';
-    document.getElementById('m-fil').textContent = `Filtradas: ${a.signals_skipped||0}`;
-    document.getElementById('m-wl').textContent = `${a.wins||0} / ${a.losses||0}`;
-
-    const mdd = eq.max_drawdown_pct||0;
-    const mddEl = document.getElementById('m-mdd');
-    mddEl.textContent = mdd.toFixed(1)+'%';
-    mddEl.className = 'card-value '+(mdd<10?'g':mdd<20?'y':'r');
-
-    // Equity curve
-    curveData = eq.curve || [];
-    drawChart(curveData, start);
-
-    // Skip breakdown
-    const sr = a.skip_reasons||{};
-    const skSec = document.getElementById('skip-section');
-    const skPills = document.getElementById('skip-pills');
-    if (Object.keys(sr).length > 0) {
-      skSec.style.display = 'block';
-      skPills.innerHTML = Object.entries(sr).map(([r,n])=>
-        `<span class="skip-pill">${r}: <b>${n}</b></span>`).join('');
-    }
-
-    // Trades table
-    if (t.total !== lastCount || t.total === 0) {
-      lastCount = t.total;
-      const rows = t.trades.slice().reverse().map(ev => {
-        let tsStr = '—';
-        try {
-          const d = new Date(ev.ts);
-          tsStr = isNaN(d) ? ev.ts.slice(11,19) :
-            d.toLocaleTimeString('es', {timeZone:'America/New_York',
-              hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' ET';
-        } catch(_) {}
-
-        let badge='', sym=ev.symbol||'—', side='—', detail='';
-        if (ev.event==='order_placed') {
-          badge=`<span class="b b-order">ORDEN</span>`;
-          side=`<span class="b b-${(ev.action||'').toLowerCase()}">${ev.action||''}</span>`;
-          detail=`Entry ${ev.entry} | SL ${ev.sl} | TP ${ev.tp} | x${ev.qty} | RR ${ev.rr}`;
-        } else if (ev.event==='trade_closed') {
-          const w=ev.pnl>0;
-          badge=`<span class="b ${w?'b-win':'b-loss'}">${w?'WIN':'LOSS'}</span>`;
-          const c=w?'#3fb950':'#f85149';
-          const pnlStr=`<span style="color:${c}">${ev.pnl>0?'+':''}$${(ev.pnl||0).toFixed(2)}</span>`;
-          detail=`PnL: ${pnlStr} | RR: ${ev.rr_achieved} | Balance: $${(ev.balance_after||0).toLocaleString('es',{maximumFractionDigits:0})}`;
-        } else if (ev.event==='skip') {
-          badge=`<span class="b b-skip">SKIP</span>`;
-          sym=ev.signal?.symbol||'—'; detail=ev.reason||'';
-        } else {
-          badge=`<span class="b b-skip">${ev.event}</span>`;
-          detail=ev.msg||'';
-        }
-        return `<tr><td>${tsStr}</td><td>${badge}</td><td>${sym}</td><td>${side}</td><td style="color:#8b949e">${detail}</td></tr>`;
-      }).join('');
-      document.getElementById('tbody').innerHTML = rows ||
-        '<tr><td colspan="5" style="color:#8b949e;padding:24px;text-align:center">Pulsa ▲ LONG o ▼ SHORT para simular una señal IFVG</td></tr>';
-    }
-
-    document.getElementById('ts-note').textContent = 'Auto-refresh · '+new Date().toLocaleTimeString('es');
-    document.getElementById('dot').style.background = '#3fb950';
-    document.getElementById('s-queue').textContent = 'Cola: 0';
-  } catch(e) {
-    document.getElementById('dot').style.background = '#f85149';
-    console.error(e);
-  }
+function updateBiasUI(val){
+  ["bull","neut","bear"].forEach(b=>{
+    document.getElementById("bb-"+b).className="bias-btn";
+  });
+  const map={"BULLISH":"bb-bull sel-bull","NEUTRAL":"bb-neut sel-neut","BEARISH":"bb-bear sel-bear"};
+  const bid={"BULLISH":"bb-bull","NEUTRAL":"bb-neut","BEARISH":"bb-bear"};
+  if(bid[val]) document.getElementById(bid[val]).className="bias-btn "+map[val];
+  const badge=document.getElementById("bias-badge");
+  badge.textContent=val;
+  badge.className="badge "+{"BULLISH":"b-bias-bull","NEUTRAL":"b-bias-neut","BEARISH":"b-bias-bear"}[val];
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
-async function fire(action) {
-  const sym = document.getElementById('sym').value;
-  const price = parseFloat(document.getElementById('px').value);
-  const fb = document.getElementById('sig-fb');
-  fb.style.color = '#d29922'; fb.textContent = `Enviando ${action} ${sym}...`;
-  try {
-    const r = await fetch(`/api/test-signal?symbol=${sym}&action=${action}&price=${price}`, {method:'POST'});
-    const d = await r.json();
-    fb.style.color = '#3fb950';
-    fb.textContent = `✓ Señal en cola — el executor procesará en ~2s`;
-    setTimeout(()=>{ fb.textContent=''; }, 5000);
-    setTimeout(refresh, 500);
-  } catch(e) {
-    fb.style.color='#f85149'; fb.textContent='Error: '+e.message;
-  }
+async function fire(action){
+  const sym=document.getElementById("sig-sym").value;
+  const PRICES={"NQ1!":19250,"ES1!":5300,"AAPL":172.5,"MSFT":415,"NVDA":875,"TSLA":180,"EURUSD":1.085};
+  const price=PRICES[sym]||100;
+  const fb=document.getElementById("sig-fb");
+  fb.style.color="var(--yellow)"; fb.textContent=`Enviando ${action} ${sym}...`;
+  const r=await fetch(`/api/test-signal?symbol=${sym}&action=${action}&price=${price}`,{method:"POST"});
+  const d=await r.json();
+  fb.style.color="var(--green)"; fb.textContent="✓ En cola — procesando...";
+  setTimeout(()=>{fb.textContent="";},4000);
+  setTimeout(refresh,600);
 }
 
-async function doReset() {
-  if (!confirm('¿Resetear todas las trades y el balance? (no se puede deshacer)')) return;
-  await fetch('/api/reset', {method:'POST'});
-  lastCount = 0;
+async function doReset(){
+  if(!confirm("¿Resetear todas las trades y el balance?")) return;
+  await fetch("/api/reset",{method:"POST"});
   await refresh();
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Metric helpers ────────────────────────────────────────────────────────────
+function setM(id,v,fmt,good,warn){
+  const el=document.getElementById(id);
+  el.textContent=v==null?"—":fmt(v);
+  el.className="m-val "+(v==null?"":v>=good?"g":v>=warn?"y":"r");
+}
+
+// ── Main refresh ──────────────────────────────────────────────────────────────
+let lastLogCount=0;
+
+async function refresh(){
+  try{
+    const [s,a,eq,t,pos]=await Promise.all([
+      fetch("/status").then(r=>r.json()),
+      fetch("/api/analytics").then(r=>r.json()),
+      fetch("/api/equity").then(r=>r.json()),
+      fetch("/api/trades?limit=30").then(r=>r.json()),
+      fetch("/api/position").then(r=>r.json()),
+    ]);
+
+    // Header
+    const kz=s.kill_zone||{};
+    document.getElementById("et-clock").textContent=kz.et||"--:--";
+    const kzBadge=document.getElementById("kz-badge");
+    if(kz.active){
+      kzBadge.className=kz.silver_bullet?"badge b-sb":"badge b-kz-on";
+      kzBadge.textContent=kz.silver_bullet?"SILVER BULLET":"KZ ACTIVA";
+    } else {
+      kzBadge.className="badge b-kz-off";
+      kzBadge.textContent="KZ OFF";
+    }
+    updateBiasUI(s.daily_bias||"NEUTRAL");
+
+    // News
+    const news=s.news;
+    const np=document.getElementById("news-pill");
+    if(news){ np.style.display="inline-block"; np.textContent=`⚠ ${news.name} ${news.mins>0?`en ${news.mins}m`:"AHORA"}`; }
+    else { np.style.display="none"; }
+
+    // Metrics
+    setM("m-wr",a.win_rate,v=>(v*100).toFixed(0)+"%",0.5,0.4);
+    setM("m-pf",a.profit_factor,v=>v.toFixed(2),2.0,1.5);
+    setM("m-rr",a.avg_rr,v=>v.toFixed(1)+":1",2.0,1.5);
+    const dd=a.max_drawdown_pct||0;
+    const ddEl=document.getElementById("m-dd");
+    ddEl.textContent=dd.toFixed(1)+"%"; ddEl.className="m-val "+(dd<10?"g":dd<20?"y":"r");
+    const bal=eq.balance,start=eq.start,pnl=a.total_pnl;
+    const balEl=document.getElementById("m-bal");
+    balEl.textContent="$"+(bal/1000).toFixed(1)+"k";
+    balEl.className="m-val "+(bal>=start?"g":bal>=start*.95?"y":"r");
+    document.getElementById("m-pnl").textContent="PnL: "+(pnl>0?"+":"")+"$"+(pnl||0).toFixed(0);
+    document.getElementById("m-wl").textContent=(a.wins||0)+" / "+(a.losses||0);
+    document.getElementById("m-skip").textContent="Filtradas: "+(a.signals_skipped||0);
+
+    // Equity
+    eqData=eq.curve||[]; eqStart=eq.start;
+    drawEq(eqData,eqStart);
+    const eqStats=`$${bal.toLocaleString("es",{maximumFractionDigits:0})} · DD ${dd.toFixed(1)}%`;
+    document.getElementById("eq-stats").textContent=eqStats;
+
+    // Position
+    const pb=document.getElementById("pos-body");
+    if(pos.position){
+      const p=pos.position, pnlc=p.open_pnl>=0?"var(--green)":"var(--red)";
+      pb.innerHTML=`<div class="pos-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span class="pos-sym">${p.symbol}</span>
+          <span class="pos-dir pos-dir-${p.action==='BUY'?'long':'short'}">${p.action==='BUY'?'LONG':'SHORT'}</span>
+        </div>
+        <div class="pos-row"><span>Qty</span><span>${p.qty}x</span></div>
+        <div class="pos-row"><span>Entry</span><span>${p.entry}</span></div>
+        <div class="pos-row"><span>SL</span><span style="color:var(--red)">${p.sl}</span></div>
+        <div class="pos-row"><span>TP</span><span style="color:var(--green)">${p.tp}</span></div>
+        <div class="pos-pnl" style="color:${pnlc}">${p.open_pnl>=0?"+":""}$${(p.open_pnl||0).toFixed(2)}</div>
+      </div>`;
+    } else {
+      pb.innerHTML='<div class="pos-empty">Flat — sin posición abierta</div>';
+    }
+
+    // Trade log
+    if(t.total!==lastLogCount){
+      lastLogCount=t.total;
+      const rows=t.trades.slice().reverse().map(ev=>{
+        let tsStr="—";
+        try{
+          const d=new Date(ev.ts);
+          tsStr=d.toLocaleTimeString("es",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",second:"2-digit"})+" ET";
+        }catch(_){}
+        let badge="",sym=ev.symbol||"—",side="—",detail="";
+        if(ev.event==="order_placed"){
+          badge=`<span class="b b-ord">ORDEN</span>`;
+          side=`<span class="b b-${(ev.action||"").toLowerCase()}">${ev.action||""}</span>`;
+          const biasTag=ev.bias?` bias:${ev.bias}`:"";
+          const sbTag=ev.kz_silver?" 🎯SB":"";
+          detail=`Entry ${ev.entry} · SL ${ev.sl} · TP ${ev.tp} · x${ev.qty}${biasTag}${sbTag}`;
+        } else if(ev.event==="trade_closed"){
+          const w=ev.pnl>0;
+          badge=`<span class="b ${w?"b-win":"b-ls"}">${w?"WIN":"LOSS"}</span>`;
+          const c=w?"var(--green)":"var(--red)";
+          detail=`<span style="color:${c}">${ev.pnl>0?"+":""}$${(ev.pnl||0).toFixed(2)}</span> · RR ${ev.rr_achieved} · Bal $${(ev.balance_after||0).toLocaleString("es",{maximumFractionDigits:0})}`;
+        } else if(ev.event==="skip"){
+          badge=`<span class="b b-sk">SKIP</span>`; sym=ev.signal?.symbol||"—"; detail=ev.reason||"";
+        }
+        return `<tr><td style="color:var(--text2);white-space:nowrap">${tsStr}</td><td>${badge}</td><td>${sym}</td><td>${side}</td><td style="color:var(--text2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${detail}</td></tr>`;
+      }).join("");
+      document.getElementById("log-body").innerHTML=rows||
+        '<tr><td colspan="5" style="color:var(--text2);padding:14px;text-align:center">Configura el Daily Bias y pulsa ▲ LONG o ▼ SHORT</td></tr>';
+    }
+    document.getElementById("log-ts").textContent="Auto-refresh · "+new Date().toLocaleTimeString("es");
+    document.getElementById("dot").style.background="var(--green)";
+  }catch(e){ document.getElementById("dot").style.background="var(--red)"; console.error(e); }
+}
+
 refresh();
-setInterval(refresh, 3000);
-window.addEventListener('resize', () => drawChart(curveData, 50000));
+setInterval(refresh,3000);
+window.addEventListener("resize",()=>drawEq(eqData,eqStart));
 </script>
 </body>
 </html>"""
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard():
-    return DASHBOARD_HTML
+@app.get("/dashboard",response_class=HTMLResponse)
+async def dashboard(): return DASHBOARD
 
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    return HTMLResponse('<meta http-equiv="refresh" content="0;url=/dashboard">', 302)
+@app.get("/",response_class=HTMLResponse)
+async def root(): return HTMLResponse('<meta http-equiv="refresh" content="0;url=/dashboard">',302)
 
 # ── Main ──────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    print("\n" + "="*55)
-    print("  IFVG Trading Bot — Beta Local")
+if __name__=="__main__":
+    print("\n"+"="*55)
+    print("  IFVG Trading Cockpit — v2")
     print("  Dashboard: http://localhost:8000/dashboard")
     print("  Ctrl+C para parar")
-    print("="*55 + "\n")
-    threading.Thread(target=simulated_executor, daemon=True).start()
-    threading.Thread(target=lambda: (time.sleep(1.5), webbrowser.open("http://localhost:8000/dashboard")), daemon=True).start()
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")
+    print("="*55+"\n")
+    threading.Thread(target=simulated_executor,daemon=True).start()
+    threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
+    uvicorn.run(app,host="0.0.0.0",port=8000,log_level="warning")
