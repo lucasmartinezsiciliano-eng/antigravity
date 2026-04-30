@@ -49,12 +49,25 @@ CONFIG = {
     "WIN_PROB":              0.60,   # simulation win probability
 }
 
-# Upcoming high-impact news (static schedule — real app uses ForexFactory)
-NEWS_SCHEDULE = [
-    {"name":"NFP",  "day":"first_friday", "hour":8,"min":30,"impact":"HIGH"},
-    {"name":"CPI",  "day":"variable",     "hour":8,"min":30,"impact":"HIGH"},
-    {"name":"FOMC", "day":"variable",     "hour":14,"min":0, "impact":"HIGH"},
-]
+# News calendar loaded lazily from ForexFactory (via news_calendar.py)
+_TODAY_EVENTS: list = []   # cached today's events
+_TODAY_DATE: str   = ""    # date string of last fetch
+
+def _get_today_events() -> list:
+    """Returns today's HIGH-impact USD events, refreshed once per day."""
+    global _TODAY_EVENTS, _TODAY_DATE
+    today = _now_ny().strftime("%Y-%m-%d")
+    if _TODAY_DATE == today:
+        return _TODAY_EVENTS
+    try:
+        from news_calendar import get_today_events
+        _TODAY_EVENTS = get_today_events("HIGH")
+        _TODAY_DATE   = today
+        print(f"[NEWS] {len(_TODAY_EVENTS)} eventos HIGH hoy: {[e['short'] for e in _TODAY_EVENTS]}")
+    except Exception as e:
+        print(f"[NEWS] Error cargando calendario: {e}")
+        _TODAY_EVENTS = []
+    return _TODAY_EVENTS
 
 def _ts():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+"Z"
@@ -121,13 +134,22 @@ def kz_status()->dict:
     }
 
 def next_news()->dict|None:
-    ny=_now_ny()
-    # NFP: first Friday
-    if ny.weekday()==4 and ny.day<=7:
-        event_t=ny.replace(hour=8,minute=30,second=0,microsecond=0)
-        delta=(event_t-ny).total_seconds()/60
-        if -15<=delta<=240:
-            return {"name":"NFP","mins":int(delta),"blackout":abs(delta)<=15}
+    """Próximo evento HIGH-impact del día. Usa ForexFactory via news_calendar.py."""
+    try:
+        from news_calendar import next_event_status
+        events = _get_today_events()
+        status = next_event_status(events)
+        if status:
+            return {
+                "name":    status["name"],
+                "mins":    int(status["delta_min"]),
+                "blackout":status["blackout"],
+                "time_et": status["time_et"],
+                "forecast":status.get("forecast",""),
+                "previous":status.get("previous",""),
+            }
+    except Exception:
+        pass
     return None
 
 # ── Simulated executor ────────────────────────────────────────────────────────
@@ -655,6 +677,90 @@ async def test_signal(symbol:str="NQ1!",action:str="BUY",price:float=19250.0):
 async def scanner_status():
     return {**DETECTOR_STATE, "watching": WATCH_SYMBOLS}
 
+@app.get("/api/backtest")
+async def run_backtest(symbol:str="NQ1!", days:int=60, rr:float=2.0, stop_pct:float=0.5):
+    """Run backtest from dashboard — returns metrics + last 20 trades."""
+    import subprocess, sys
+    try:
+        result = subprocess.run(
+            [sys.executable, "backtest.py",
+             "--symbol", symbol, "--days", str(days),
+             "--rr", str(rr), "--stop-pct", str(stop_pct),
+             "--json"],
+            capture_output=True, text=True, timeout=120,
+            cwd=str(Path(__file__).parent)
+        )
+        if result.returncode != 0:
+            return {"error": result.stderr[-500:] if result.stderr else "backtest failed"}
+        # Extract JSON from stdout (may have print lines before it)
+        import re
+        m = re.search(r'(\{.*\})', result.stdout, re.DOTALL)
+        if m:
+            data = json.loads(m.group(1))
+            # Only return last 20 trades to keep response small
+            if "trades" in data:
+                data["trades"] = data["trades"][-20:]
+            return data
+        return {"error": "no JSON in output", "stdout": result.stdout[-300:]}
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout (>120s) — reduce --days"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/news")
+async def news_today():
+    """Today's HIGH-impact economic events from ForexFactory."""
+    try:
+        from news_calendar import get_today_events, get_week_events, next_event_status
+        today  = get_today_events("HIGH")
+        status = next_event_status(today)
+        return {"today": today, "next": status, "blackout": status["blackout"] if status else False}
+    except Exception as e:
+        return {"today": [], "next": None, "blackout": False, "error": str(e)}
+
+OPTIMIZE_STATE = {"running": False, "last_result": None, "last_run": None}
+
+@app.get("/api/optimize")
+async def get_optimize():
+    return OPTIMIZE_STATE
+
+@app.post("/api/optimize")
+async def run_optimize(symbol:str="NQ1!", days:int=60, apply:bool=False):
+    """Launch parameter optimizer in background thread. Returns immediately."""
+    if OPTIMIZE_STATE["running"]:
+        return {"status": "already running"}
+
+    def _run():
+        import subprocess, sys, re
+        OPTIMIZE_STATE["running"] = True
+        try:
+            cmd = [sys.executable, "optimize.py",
+                   "--symbol", symbol, "--days", str(days), "--json"]
+            if apply:
+                cmd.append("--apply")
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=600,
+                cwd=str(Path(__file__).parent), encoding="utf-8", errors="replace",
+            )
+            m = re.search(r'(\{"best".*\})', result.stdout, re.DOTALL)
+            if m:
+                data = json.loads(m.group(1))
+                OPTIMIZE_STATE["last_result"] = data.get("best")
+                # Auto-apply best params to live CONFIG
+                if apply and data.get("best"):
+                    b = data["best"]
+                    CONFIG["STOP_PCT"] = b["stop_pct"]
+                    CONFIG["MIN_RR"]   = b["rr"]
+                    print(f"[OPTIMIZE] Applied: STOP_PCT={b['stop_pct']} MIN_RR={b['rr']} score={b['score']}")
+        except Exception as e:
+            OPTIMIZE_STATE["last_result"] = {"error": str(e)}
+        finally:
+            OPTIMIZE_STATE["running"] = False
+            OPTIMIZE_STATE["last_run"] = _ts()
+
+    threading.Thread(target=_run, daemon=True).start()
+    return {"status": "started", "symbol": symbol, "days": days}
+
 @app.get("/api/bias-suggestion")
 async def bias_suggestion(symbol:str="NQ1!"):
     """
@@ -979,6 +1085,41 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
       <div style="font-size:10px;color:var(--green);margin-top:4px;min-height:14px" id="scanner-last"></div>
     </div>
 
+    <!-- News Calendar -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Noticias Hoy</span>
+        <span style="color:var(--text2);font-size:10px">ForexFactory</span>
+      </div>
+      <div id="news-list" style="font-size:10px;line-height:1.9;color:var(--text2)">
+        Cargando calendario...
+      </div>
+    </div>
+
+    <!-- Self-Improve Optimizer -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Self-Improve</span>
+        <span id="opt-status" style="font-size:10px;color:var(--text2)">listo</span>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-bottom:8px">
+        Testea 24 combinaciones de params y aplica la mejor configuracion.
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="runOptimize(false)"
+          style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text2);
+                 padding:6px;border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit">
+          Analizar
+        </button>
+        <button onclick="runOptimize(true)"
+          style="flex:1;background:#1a3a1a;border:1px solid var(--green);color:var(--green);
+                 padding:6px;border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit">
+          Analizar + Aplicar
+        </button>
+      </div>
+      <div id="opt-result" style="font-size:10px;color:var(--text2);margin-top:8px;min-height:32px"></div>
+    </div>
+
     <!-- Risk Calculator -->
     <div class="panel">
       <div class="panel-title"><span>Risk Calculator</span><span style="color:var(--text2);font-size:10px">1% rule</span></div>
@@ -1185,7 +1326,8 @@ setInterval(()=>{
 // Init chart — 5m por defecto (datos más estables)
 window.addEventListener("load",()=>{
   setTimeout(()=>buildTV("NQ1!","5"),400);
-  setTimeout(()=>loadBiasSuggestion(),1500);  // load bias suggestion after chart
+  setTimeout(()=>loadBiasSuggestion(),1500);
+  setTimeout(()=>loadNews(),2000);
 });
 
 // ── Equity chart ─────────────────────────────────────────────────────────────
@@ -1333,6 +1475,58 @@ function setM(id,v,fmt,good,warn){
 
 // ── Main refresh ──────────────────────────────────────────────────────────────
 let lastLogCount=0;
+
+// ── News calendar ─────────────────────────────────────────────────────────────
+async function loadNews(){
+  try{
+    const d=await fetch("/api/news").then(r=>r.json());
+    const el=document.getElementById("news-list");
+    if(!d.today||d.today.length===0){
+      el.innerHTML='<span style="color:#555">Sin eventos HIGH impact hoy</span>';
+      return;
+    }
+    el.innerHTML=d.today.map(ev=>{
+      const isNext=d.next&&d.next.name===ev.short;
+      const bk=d.blackout&&isNext;
+      const col=bk?"var(--red)":isNext?"var(--yellow)":"var(--text2)";
+      const tag=bk?' <span style="color:var(--red)">[BLACKOUT]</span>':
+                 isNext?' <span style="color:var(--yellow)">[PROXIMO]</span>':"";
+      return `<div style="color:${col}">${ev.time_et} ET &nbsp;<b>${ev.short}</b>&nbsp;
+        prev=${ev.previous||"—"} fcst=${ev.forecast||"—"}${tag}</div>`;
+    }).join("");
+  }catch(e){
+    const el=document.getElementById("news-list");
+    if(el) el.innerHTML='<span style="color:#555">Sin conexion a ForexFactory</span>';
+  }
+}
+
+// ── Self-Improve Optimizer ────────────────────────────────────────────────────
+let optimizePolling=null;
+async function runOptimize(apply){
+  const sym=(document.getElementById("sym-sel")||{}).value||"NQ1!";
+  const res=await fetch(`/api/optimize?symbol=${sym}&days=60&apply=${apply}`,{method:"POST"}).then(r=>r.json());
+  document.getElementById("opt-status").textContent="corriendo...";
+  document.getElementById("opt-result").textContent="Testando 24 configuraciones (~3-5 min)...";
+  // Poll for result
+  if(optimizePolling) clearInterval(optimizePolling);
+  optimizePolling=setInterval(async()=>{
+    const st=await fetch("/api/optimize").then(r=>r.json());
+    if(!st.running){
+      clearInterval(optimizePolling); optimizePolling=null;
+      document.getElementById("opt-status").textContent="listo "+new Date(st.last_run||Date.now()).toLocaleTimeString("es");
+      const r=st.last_result;
+      if(r&&r.score){
+        const m=r.metrics||{};
+        document.getElementById("opt-result").innerHTML=
+          `<div style="color:var(--green)">Mejor: stop=${r.stop_pct}% RR=${r.rr} score=${r.score}</div>
+           <div>WR=${((m.win_rate||0)*100).toFixed(1)}% PF=${m.profit_factor||0} DD=${m.max_drawdown_pct||0}%</div>
+           ${apply?'<div style="color:var(--green)">Aplicado al bot.</div>':''}`;
+      } else {
+        document.getElementById("opt-result").textContent=r?.error||"Sin resultados validos";
+      }
+    }
+  },5000);
+}
 
 async function loadBiasSuggestion(){
   const btn=document.getElementById("bias-refresh-btn");
@@ -1488,6 +1682,7 @@ async function refresh(){
 
 refresh();
 setInterval(refresh,3000);
+setInterval(loadNews,300000);   // news refresh every 5 min (cached 1h on server)
 window.addEventListener("resize",()=>drawEq(eqData,eqStart));
 </script>
 </body>
