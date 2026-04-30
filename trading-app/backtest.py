@@ -180,6 +180,9 @@ def is_news_blackout(ts_unix: int, blackout_set: set) -> bool:
     return ts_rounded in blackout_set
 
 
+BE_TRIGGER_RR = 1.0   # mueve SL a entry cuando precio alcanza 1:1
+BE_BUFFER_R   = 0.08  # SL va a entry + 8% del stop (pequeña ganancia garantizada, no $0 exacto)
+
 def simulate_trades(
     candles: list,
     signals: list,
@@ -196,7 +199,7 @@ def simulate_trades(
     Simula ejecución de señales sobre datos históricos.
     Entrada en el cierre de la vela de señal.
     SL = stop_pct% del precio. TP = SL * rr.
-    Gestión: break-even a 1:1.
+    Gestión: BE a 1:1 con buffer +8% del stop — convierte cierres $0 en pequeña ganancia.
     news_filter=True omite trades en ventana ±15min de eventos HIGH impact.
     """
     trades = []
@@ -255,21 +258,23 @@ def simulate_trades(
         for future_bar in candles[bar_idx + 1:bar_idx + 200]:
             h, l = future_bar["high"], future_bar["low"]
 
-            # Break-even at 1:1
+            # Break-even at 1:1 with small buffer (converts $0 closes into tiny gain)
             if not open_pos["be_triggered"]:
-                if action == "BUY"  and h >= entry + stop_d:
-                    open_pos["sl"] = entry; open_pos["be_triggered"] = True
-                elif action == "SELL" and l <= entry - stop_d:
-                    open_pos["sl"] = entry; open_pos["be_triggered"] = True
+                if action == "BUY"  and h >= entry + stop_d * BE_TRIGGER_RR:
+                    open_pos["sl"] = entry + stop_d * BE_BUFFER_R
+                    open_pos["be_triggered"] = True
+                elif action == "SELL" and l <= entry - stop_d * BE_TRIGGER_RR:
+                    open_pos["sl"] = entry - stop_d * BE_BUFFER_R
+                    open_pos["be_triggered"] = True
 
             # Check SL
             if action == "BUY"  and l <= open_pos["sl"]:
                 pnl = (open_pos["sl"] - entry) * qty
-                result = {"exit": open_pos["sl"], "reason": "SL", "pnl": pnl}
+                result = {"exit": open_pos["sl"], "reason": "BE" if open_pos["be_triggered"] else "SL", "pnl": pnl}
                 break
             elif action == "SELL" and h >= open_pos["sl"]:
                 pnl = (entry - open_pos["sl"]) * qty
-                result = {"exit": open_pos["sl"], "reason": "SL", "pnl": pnl}
+                result = {"exit": open_pos["sl"], "reason": "BE" if open_pos["be_triggered"] else "SL", "pnl": pnl}
                 break
 
             # Check TP
@@ -343,7 +348,8 @@ def compute_metrics(trades: list, start_balance: float = 50_000.0) -> dict:
         sharpe = None
 
     # Consecutive losses
-    max_consec_loss = cur_l = 0
+    max_consec_loss = 0
+    cur_l = 0
     for t in trades:
         if t["pnl"] <= 0:
             cur_l += 1; max_consec_loss = max(max_consec_loss, cur_l)

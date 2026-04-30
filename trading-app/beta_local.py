@@ -474,6 +474,52 @@ def analyze_bias(yf_sym: str = "^NDX") -> dict:
     }
 
 
+def _15m_structure(yf_sym: str, action: str) -> tuple[bool, str]:
+    """
+    Confluencia de timeframe superior (15m).
+    Verifica que la estructura de las últimas 4 velas de 15m
+    coincida con la dirección de la señal de 5m.
+    Returns (ok, reason_string).
+    """
+    try:
+        import yfinance as yf
+        df = yf.Ticker(yf_sym).history(period="5d", interval="15m", auto_adjust=True)
+        if df.empty or len(df) < 5:
+            return True, "15m: sin datos (pass)"  # no bloquear si no hay datos
+
+        bars = list(df.iloc[-5:].itertuples())
+        highs  = [b.High  for b in bars]
+        lows   = [b.Low   for b in bars]
+        closes = [b.Close for b in bars]
+
+        # Structure: últimas 3 velas
+        hh = highs[-1]  > highs[-2]   # higher high
+        hl = lows[-1]   > lows[-2]    # higher low
+        lh = highs[-1]  < highs[-2]   # lower high
+        ll = lows[-1]   < lows[-2]    # lower low
+
+        # Precio vs midpoint de la vela anterior
+        prev_mid = (highs[-2] + lows[-2]) / 2
+        above_mid = closes[-1] > prev_mid
+
+        if action == "BUY":
+            if (hh or hl) and above_mid:
+                return True, f"15m: estructura alcista (HH={hh} HL={hl} > mid={prev_mid:.0f})"
+            elif ll and not hl:
+                return False, f"15m: estructura bajista — señal BUY contra tendencia"
+            else:
+                return True, "15m: estructura mixta (pass)"
+        else:  # SELL
+            if (lh or ll) and not above_mid:
+                return True, f"15m: estructura bajista (LH={lh} LL={ll} < mid={prev_mid:.0f})"
+            elif hh and not lh:
+                return False, f"15m: estructura alcista — señal SELL contra tendencia"
+            else:
+                return True, "15m: estructura mixta (pass)"
+    except Exception as e:
+        return True, f"15m: error ({e}) — pass"
+
+
 def ifvg_scanner():
     """Background thread: scans for IFVGs every ~60s on bar close."""
     import yfinance as yf
@@ -555,6 +601,14 @@ def ifvg_scanner():
                     print(f"[SCANNER] IFVG {action} on {sym} — filtered (position open)")
                     continue
 
+                # 15m confluence filter
+                ok_15m, reason_15m = _15m_structure(yf_sym, action)
+                if not ok_15m:
+                    print(f"[SCANNER] IFVG {action} on {sym} — filtered ({reason_15m})")
+                    DETECTOR_STATE["last_signal"] = f"FILTRADO 15m: {action} {sym} — {reason_15m}"
+                    continue
+                print(f"[SCANNER] 15m OK: {reason_15m}")
+
                 payload = {
                     "action": action, "symbol": sym,
                     "close": close, "timeframe": "5",
@@ -569,6 +623,40 @@ def ifvg_scanner():
                 print(f"[SCANNER] Error {sym}: {e}")
 
         DETECTOR_STATE["status"] = "idle"
+
+
+def morning_bias_scheduler():
+    """
+    Auto-refresh bias a las 8:25 ET cada día de mercado.
+    Corre analyze_bias() y actualiza BIAS_CACHE + sugiere al dashboard.
+    El usuario sigue confirmando manualmente, pero ya tiene el análisis listo.
+    """
+    import datetime as _dt
+    print("[SCHEDULER] Morning bias scheduler started (8:25 ET daily)")
+    last_triggered = None
+
+    while True:
+        time.sleep(30)   # check every 30s
+        now = _now_ny()
+        if now.weekday() >= 5:  # skip weekend
+            continue
+        today = now.date()
+        if last_triggered == today:
+            continue
+        # Trigger at 8:25 ET ±1 min
+        if now.hour == 8 and 24 <= now.minute <= 26:
+            last_triggered = today
+            try:
+                sym = "^NDX"
+                print(f"[SCHEDULER] 8:25 ET — auto-calculando bias W/D/4H...")
+                result = analyze_bias(sym)
+                BIAS_CACHE["result"] = result
+                BIAS_CACHE["ts"] = time.time()
+                suggested = result["suggested"]
+                conf = result["confidence"]
+                print(f"[SCHEDULER] Bias sugerido: {suggested} ({conf:.0f}% conf) — confirmar en dashboard")
+            except Exception as e:
+                print(f"[SCHEDULER] Error calculando bias: {e}")
 
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
@@ -1857,5 +1945,6 @@ if __name__=="__main__":
     print("="*55+"\n")
     threading.Thread(target=simulated_executor,daemon=True).start()
     threading.Thread(target=ifvg_scanner,daemon=True).start()
+    threading.Thread(target=morning_bias_scheduler,daemon=True).start()
     threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
     uvicorn.run(app,host="0.0.0.0",port=8000,log_level="warning")
