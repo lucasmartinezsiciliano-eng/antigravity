@@ -84,7 +84,7 @@ def run_backtest(symbol: str, days: int, stop_pct: float, rr: float,
         idx = stdout.find('{')
         if idx >= 0:
             try:
-                data = json.loads(stdout[idx:])
+                data, _ = json.JSONDecoder().raw_decode(stdout, idx)
                 return data.get("metrics", {})
             except Exception:
                 pass

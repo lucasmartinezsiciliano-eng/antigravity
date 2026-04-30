@@ -744,7 +744,12 @@ async def run_optimize(symbol:str="NQ1!", days:int=60, apply:bool=False):
                 cwd=str(Path(__file__).parent), encoding="utf-8", errors="replace",
             )
             idx = result.stdout.find('{')
-            data = json.loads(result.stdout[idx:]) if idx >= 0 else {}
+            data = {}
+            if idx >= 0:
+                try:
+                    data, _ = json.JSONDecoder().raw_decode(result.stdout, idx)
+                except Exception:
+                    pass
             if data:
                 OPTIMIZE_STATE["last_result"] = data.get("best")
                 # Auto-apply best params to live CONFIG
