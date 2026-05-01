@@ -112,11 +112,9 @@ def download_data(symbol: str, days: int = 180) -> list:
     import yfinance as yf
     yf_sym = YF_MAP.get(symbol, symbol)
 
-    # Yahoo Finance limita 5m a ~60 días, 1h a ~730 días
     if days <= 60:
         interval, period = "5m", f"{days}d"
     else:
-        # Para backtest largo: usar 1h y simular señales en cada barra
         print(f"[INFO] >60 dias -> usando 1h (Yahoo Finance limita 5m a 60d)")
         interval, period = "1h", f"{min(days, 730)}d"
 
@@ -138,6 +136,63 @@ def download_data(symbol: str, days: int = 180) -> list:
 
     print(f"[DATA] {len(candles)} velas descargadas")
     return candles
+
+
+def download_15m(symbol: str, days: int = 60) -> list:
+    """Descarga velas 15m para filtro de confluencia."""
+    import yfinance as yf
+    yf_sym = YF_MAP.get(symbol, symbol)
+    days_capped = min(days, 60)
+    df = yf.Ticker(yf_sym).history(period=f"{days_capped}d", interval="15m", auto_adjust=True)
+    if df.empty:
+        return []
+    candles = []
+    for ts, row in df.iterrows():
+        candles.append({
+            "time":  int(ts.timestamp()),
+            "high":  float(row["High"]),
+            "low":   float(row["Low"]),
+            "close": float(row["Close"]),
+        })
+    return candles
+
+
+def check_15m_confluence(signal_ts: int, action: str, candles_15m: list) -> tuple[bool, str]:
+    """
+    Confluencia 15m para señales IFVG.
+
+    IFVG es una entrada contra el movimiento INMEDIATO (bounce hacia la zona),
+    así que no se puede mirar la estructura de las últimas 2-3 velas — esas
+    muestran el bounce y confunden el filtro.
+
+    En cambio: mirar la TENDENCIA GLOBAL de las últimas 8 velas de 15m
+    (excluyendo la más reciente que es el bounce).
+    Si el 15m en conjunto es bajista → favorecer SELLs.
+    Si el 15m en conjunto es alcista → favorecer BUYs.
+    Si mixto → pass (no bloquear).
+    """
+    if not candles_15m:
+        return True, "15m: sin datos (pass)"
+
+    # Velas 15m antes del momento de la señal (excluir el bounce más reciente)
+    prev = [c for c in candles_15m if c["time"] <= signal_ts]
+    if len(prev) < 9:
+        return True, "15m: datos insuficientes (pass)"
+
+    # Últimas 8 velas excluyendo la más reciente (el bounce)
+    bars = prev[-9:-1]
+    closes = [b["close"] for b in bars]
+
+    # Tendencia: precio inicial vs precio final del bloque
+    trend_pct = (closes[-1] - closes[0]) / closes[0] * 100
+
+    # Solo bloquear si la tendencia es FUERTEMENTE contraria (>0.3%)
+    if action == "SELL" and trend_pct > 0.3:
+        return False, f"15m: tendencia alcista fuerte ({trend_pct:+.2f}%) — contra SELL"
+    if action == "BUY"  and trend_pct < -0.3:
+        return False, f"15m: tendencia bajista fuerte ({trend_pct:+.2f}%) — contra BUY"
+
+    return True, f"15m: tendencia {trend_pct:+.2f}% OK para {action}"
 
 
 # ── Trade simulator ───────────────────────────────────────────────────────────
@@ -468,8 +523,10 @@ def main():
     parser.add_argument("--stop-pct", default=0.5, type=float, help="Stop %% del precio (default 0.5)")
     parser.add_argument("--risk-pct", default=1.0, type=float, help="Riesgo %% por trade (default 1.0)")
     parser.add_argument("--account",  default=50000.0, type=float, help="Cuenta inicial USD")
-    parser.add_argument("--no-kz",    action="store_true", help="Ignorar filtro kill zone")
-    parser.add_argument("--no-news",  action="store_true", help="Ignorar blackout de noticias")
+    parser.add_argument("--no-kz",       action="store_true", help="Ignorar filtro kill zone")
+    parser.add_argument("--no-news",     action="store_true", help="Ignorar blackout de noticias")
+    parser.add_argument("--no-15m",      action="store_true", help="Ignorar filtro confluencia 15m")
+    parser.add_argument("--max-per-day", default=1, type=int, help="Max trades por día (default: 1)")
     parser.add_argument("--bias",     default="BOTH",      help="BULLISH | BEARISH | BOTH (default: BOTH)")
     parser.add_argument("--json",     action="store_true", help="Output JSON")
     parser.add_argument("--plot",     action="store_true", help="Mostrar equity curve ASCII")
@@ -500,6 +557,9 @@ def main():
     kz_signals = [s for s in all_signals if is_in_kill_zone(candles[s["bar_index"]]["time"])]
     print(f"[DETECT] {len(kz_signals)} senales dentro de kill zone")
 
+    # Gap filter descartado: señales de gaps pequeños tienen mejor WR en IFVG
+    # (IFVG es counter-trend — el gap grande = movimiento extremo = retest más difícil)
+
     if not all_signals:
         print("\n[WARN] Sin senales -- prueba con mas dias o sin filtro KZ (--no-kz)")
         sys.exit(0)
@@ -520,7 +580,7 @@ def main():
         kz_filter=not args.no_kz,
         news_filter=not getattr(args, "no_news", False),
         blackout_set=blackout_set,
-        max_per_day=2,
+        max_per_day=args.max_per_day,
     )
     print(f"[SIM] {len(trades)} trades ejecutados")
 

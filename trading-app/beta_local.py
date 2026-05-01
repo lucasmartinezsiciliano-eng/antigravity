@@ -601,13 +601,12 @@ def ifvg_scanner():
                     print(f"[SCANNER] IFVG {action} on {sym} — filtered (position open)")
                     continue
 
-                # 15m confluence filter
-                ok_15m, reason_15m = _15m_structure(yf_sym, action)
-                if not ok_15m:
-                    print(f"[SCANNER] IFVG {action} on {sym} — filtered ({reason_15m})")
-                    DETECTOR_STATE["last_signal"] = f"FILTRADO 15m: {action} {sym} — {reason_15m}"
+                # Max 1 trade per day (backtesting shows 67.6% WR vs 56.7% with 2/day)
+                if DETECTOR_STATE["signals_today"] >= 1:
+                    print(f"[SCANNER] IFVG {action} on {sym} — filtered (max 1 trade/day reached)")
                     continue
-                print(f"[SCANNER] 15m OK: {reason_15m}")
+
+                # Gap filter descartado: señales de gaps pequeños tienen mejor WR en IFVG
 
                 payload = {
                     "action": action, "symbol": sym,
