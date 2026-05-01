@@ -2,7 +2,7 @@
 Beta local — Trading cockpit completo.
 python beta_local.py → http://localhost:8000/dashboard
 """
-import json, os, sys, webbrowser, threading, time, random
+import json, os, sys, webbrowser, threading, time
 from pathlib import Path
 from datetime import datetime, timezone
 from collections import deque
@@ -31,11 +31,67 @@ import uvicorn, pytz
 SIGNALS_QUEUE: deque = deque(maxlen=100)
 TRADES_LOG: list     = []
 EQUITY_CURVE: list   = []
-LOG_FILE = Path("trades.jsonl")
+LOG_FILE      = Path("trades.jsonl")
+PAPER_LOG     = Path("paper_trading.jsonl")
 
 ACCOUNT = {"balance":50_000.0,"start":50_000.0,"peak":50_000.0}
 
-ACTIVE_POSITION: dict = {}   # {} = flat; else {symbol,action,qty,entry,sl,tp,open_pnl}
+ACTIVE_POSITION: dict  = {}   # {} = flat; else {symbol,action,qty,entry,sl,tp,open_pnl}
+PAPER_POSITIONS: dict  = {}   # symbol -> open paper trade tracking real outcome
+
+# ── Circuit breaker / Daily state ─────────────────────────────────────────────
+CIRCUIT_BREAKER_LIMIT = -800.0   # halt trading if daily PnL drops below this ($)
+DAILY_STATE = {
+    "date":            "",
+    "pnl":             0.0,
+    "trades":          0,
+    "circuit_breaker": False,
+}
+
+def _reset_daily_if_needed():
+    """Reset daily counters on new NY trading day."""
+    today = _now_ny().strftime("%Y-%m-%d")
+    if DAILY_STATE["date"] != today:
+        DAILY_STATE.update({"date": today, "pnl": 0.0, "trades": 0, "circuit_breaker": False})
+        print(f"[DAILY] Nuevo día {today} — contadores reseteados")
+
+def _record_paper_outcome(symbol, action, entry, sl, tp, pnl, result, exit_price, rr_got):
+    """Persist paper trade result to disk and update daily state."""
+    _reset_daily_if_needed()
+    DAILY_STATE["pnl"]    = round(DAILY_STATE["pnl"] + pnl, 2)
+    DAILY_STATE["trades"] += 1
+    if DAILY_STATE["pnl"] <= CIRCUIT_BREAKER_LIMIT and not DAILY_STATE["circuit_breaker"]:
+        DAILY_STATE["circuit_breaker"] = True
+        print(f"[CIRCUIT BREAKER] PnL diario ${DAILY_STATE['pnl']:.0f} < ${CIRCUIT_BREAKER_LIMIT:.0f} — scanner detenido hoy")
+
+    ACCOUNT["balance"] += pnl
+    push_equity()
+
+    log_event("trade_closed", {
+        "symbol": symbol, "pnl": pnl, "rr_achieved": round(rr_got, 2),
+        "result": result, "exit": exit_price,
+        "balance_after": round(ACCOUNT["balance"], 2),
+        "daily_pnl": DAILY_STATE["pnl"],
+    })
+
+    rec = {
+        "date":      DAILY_STATE["date"],
+        "ts":        _ts(),
+        "symbol":    symbol,
+        "action":    action,
+        "entry":     entry,
+        "sl":        sl,
+        "tp":        tp,
+        "exit":      exit_price,
+        "pnl":       pnl,
+        "result":    result,
+        "rr":        round(rr_got, 2),
+        "daily_pnl": DAILY_STATE["pnl"],
+        "balance":   round(ACCOUNT["balance"], 2),
+    }
+    with open(PAPER_LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec) + "\n")
+    print(f"  [PAPER {'WIN ' if pnl>0 else 'LOSS'}] {symbol} ${pnl:+.2f} | día ${DAILY_STATE['pnl']:+.0f} | bal ${ACCOUNT['balance']:,.0f}")
 
 DAILY_BIAS = {"value": "NEUTRAL"}  # BULLISH | NEUTRAL | BEARISH — set from UI
 
@@ -152,8 +208,9 @@ def next_news()->dict|None:
         pass
     return None
 
-# ── Simulated executor ────────────────────────────────────────────────────────
+# ── Paper executor — real price outcome tracking ───────────────────────────────
 def simulated_executor():
+    """Processes signals queue. Registers real paper positions — outcome determined by price."""
     session_count=0
     session_date=None
 
@@ -165,6 +222,11 @@ def simulated_executor():
         ny=_now_ny(); today=ny.date()
         if session_date!=today:
             session_date=today; session_count=0
+
+        # Circuit breaker check
+        _reset_daily_if_needed()
+        if DAILY_STATE["circuit_breaker"]:
+            log_event("skip",{"reason":f"Circuit breaker activo — PnL día ${DAILY_STATE['pnl']:.0f}","signal":signal}); continue
 
         kz=kz_status()
         if not kz["active"]:
@@ -179,11 +241,14 @@ def simulated_executor():
             log_event("skip",{"reason":f"Señal {action} contra bias {bias}","signal":signal}); continue
 
         if session_count>=CONFIG["MAX_TRADES_SESSION"]:
-            log_event("skip",{"reason":f"Max {CONFIG['MAX_TRADES_SESSION']} trades/sesión alcanzado","signal":signal}); continue
+            log_event("skip",{"reason":f"Max trades/sesión alcanzado","signal":signal}); continue
 
         news=next_news()
         if news and news["blackout"]:
             log_event("skip",{"reason":f"Blackout noticias: {news['name']} en {news['mins']}m","signal":signal}); continue
+
+        if ACTIVE_POSITION:
+            log_event("skip",{"reason":"Posición ya abierta","signal":signal}); continue
 
         # Sizing
         entry=signal["close"]; act=signal["action"]
@@ -192,34 +257,123 @@ def simulated_executor():
         sl=round(entry-sd,4) if act=="BUY" else round(entry+sd,4)
         tp=round(entry+sd*rr,4) if act=="BUY" else round(entry-sd*rr,4)
         qty=max(1,int(ACCOUNT["balance"]*CONFIG["MAX_RISK_PCT"]/(sd or 1)))
+        risk_usd=round(sd*qty,2)
 
         ACTIVE_POSITION.update({"symbol":signal["symbol"],"action":act,"qty":qty,
-                                 "entry":entry,"sl":sl,"tp":tp,"open_pnl":0.0,
-                                 "ts":_ts()})
+                                 "entry":entry,"sl":sl,"tp":tp,"open_pnl":0.0,"ts":_ts()})
+        # Register for real-price outcome tracking
+        PAPER_POSITIONS[signal["symbol"]] = {
+            "action":act,"entry":entry,"sl":sl,"tp":tp,"qty":qty,
+            "sd":sd,"rr":rr,"risk_usd":risk_usd,
+            "entry_ts": int(datetime.now(timezone.utc).timestamp()),
+            "be_triggered": False,
+        }
         session_count+=1
         log_event("order_placed",{"symbol":signal["symbol"],"action":act,"qty":qty,
-            "entry":entry,"sl":sl,"tp":tp,"rr":rr,
-            "risk_usd":round(ACCOUNT["balance"]*CONFIG["MAX_RISK_PCT"],2),
+            "entry":entry,"sl":sl,"tp":tp,"rr":rr,"risk_usd":risk_usd,
             "reason":signal.get("reason",""),"bias":bias,"kz_silver":kz["silver_bullet"]})
-        print(f"  [ORDER] {act} {qty}x {signal['symbol']} @ {entry} SL {sl} TP {tp}")
+        print(f"  [ORDER] {act} {qty}x {signal['symbol']} @ {entry:.2f} SL {sl:.2f} TP {tp:.2f} | risk ${risk_usd:.0f}")
 
-        # Simulate fill
-        hold=random.uniform(2,8)
-        for _ in range(int(hold*2)):
-            time.sleep(0.5)
-            drift=random.uniform(-sd*0.5,sd*0.5)
-            cur=entry+(drift if act=="BUY" else -drift)
-            ACTIVE_POSITION["open_pnl"]=round((cur-entry)*qty if act=="BUY" else (entry-cur)*qty,2)
 
-        ACTIVE_POSITION.clear()
-        win=random.random()<CONFIG["WIN_PROB"]
-        pnl=round(sd*qty*rr if win else -sd*qty,2)
-        ACCOUNT["balance"]+=pnl
-        push_equity()
-        rr_got=rr if win else round(random.uniform(0.2,0.9),1)
-        log_event("trade_closed",{"symbol":signal["symbol"],"pnl":pnl,"rr_achieved":rr_got,
-            "result":"WIN" if win else "LOSS","balance_after":round(ACCOUNT["balance"],2)})
-        print(f"  [{'WIN ' if win else 'LOSS'}] {signal['symbol']} ${pnl:+.2f} bal ${ACCOUNT['balance']:,.0f}")
+def paper_position_tracker():
+    """
+    Background thread: checks open paper positions against real 5m bars.
+    Determines SL/TP hit using same BE-at-1R logic as backtest.
+    Runs every 60s. Max tracking: 200 bars (~16h) then closes at market.
+    """
+    import yfinance as yf
+    BE_TRIGGER = 1.0   # move SL to entry+buffer at 1R (matches backtest)
+    BE_BUFFER  = 0.08  # SL → entry + 8% of stop
+
+    while True:
+        time.sleep(60)
+        if not PAPER_POSITIONS:
+            continue
+
+        for sym, pos in list(PAPER_POSITIONS.items()):
+            yf_sym = YF_SYMBOLS_DETECT.get(sym, sym)
+            try:
+                df = yf.Ticker(yf_sym).history(period="2d", interval="5m", auto_adjust=True)
+                if df.empty:
+                    continue
+
+                entry     = pos["entry"]
+                act       = pos["action"]
+                qty       = pos["qty"]
+                sd        = pos["sd"]
+                entry_ts  = pos["entry_ts"]
+                sl        = pos["sl"]
+                tp        = pos["tp"]
+                be_done   = pos["be_triggered"]
+
+                outcome   = None
+                bars_seen = 0
+
+                for ts, row in df.iterrows():
+                    bar_unix = int(ts.timestamp())
+                    if bar_unix <= entry_ts:
+                        continue
+                    bars_seen += 1
+                    h, l = float(row["High"]), float(row["Low"])
+
+                    # Update open_pnl for dashboard
+                    mid = (h + l) / 2
+                    opnl = round((mid - entry)*qty if act=="BUY" else (entry - mid)*qty, 2)
+                    if sym in PAPER_POSITIONS:
+                        PAPER_POSITIONS[sym]["open_pnl"] = opnl
+                    if ACTIVE_POSITION.get("symbol") == sym:
+                        ACTIVE_POSITION["open_pnl"] = opnl
+
+                    # Break-even logic (mirrors backtest)
+                    if not be_done:
+                        if act=="BUY"  and h >= entry + sd * BE_TRIGGER:
+                            sl = entry + sd * BE_BUFFER; be_done = True
+                            PAPER_POSITIONS[sym]["sl"] = sl
+                            PAPER_POSITIONS[sym]["be_triggered"] = True
+                        elif act=="SELL" and l <= entry - sd * BE_TRIGGER:
+                            sl = entry - sd * BE_BUFFER; be_done = True
+                            PAPER_POSITIONS[sym]["sl"] = sl
+                            PAPER_POSITIONS[sym]["be_triggered"] = True
+
+                    # Check SL
+                    if act=="BUY"  and l <= sl:
+                        exit_price = sl
+                        pnl = round((sl - entry) * qty, 2)
+                        outcome = ("BE" if be_done else "LOSS", exit_price, pnl)
+                        break
+                    elif act=="SELL" and h >= sl:
+                        exit_price = sl
+                        pnl = round((entry - sl) * qty, 2)
+                        outcome = ("BE" if be_done else "LOSS", exit_price, pnl)
+                        break
+
+                    # Check TP
+                    if act=="BUY"  and h >= tp:
+                        pnl = round((tp - entry) * qty, 2)
+                        outcome = ("WIN", tp, pnl)
+                        break
+                    elif act=="SELL" and l <= tp:
+                        pnl = round((entry - tp) * qty, 2)
+                        outcome = ("WIN", tp, pnl)
+                        break
+
+                    # Timeout: 200 bars ≈ 16h — close at last price
+                    if bars_seen >= 200:
+                        exit_price = (h + l) / 2
+                        pnl = round((exit_price - entry)*qty if act=="BUY" else (entry - exit_price)*qty, 2)
+                        outcome = ("WIN" if pnl > 0 else "LOSS", round(exit_price, 2), pnl)
+                        break
+
+                if outcome:
+                    result_tag, exit_price, pnl = outcome
+                    result = "WIN" if pnl > 0 else "LOSS"
+                    rr_got = round(abs(pnl) / (sd * qty), 2) if sd * qty > 0 else 0
+                    del PAPER_POSITIONS[sym]
+                    ACTIVE_POSITION.clear()
+                    _record_paper_outcome(sym, act, entry, sl, tp, pnl, result, exit_price, rr_got)
+
+            except Exception as e:
+                print(f"[PAPER TRACKER] Error {sym}: {e}")
 
 # ── IFVG Detector (autonomous signal generation) ─────────────────────────────
 # Runs every ~60s in background. Downloads 5m bars from Yahoo Finance,
@@ -739,6 +893,54 @@ async def analytics_api():
 async def position_api():
     return {"position":ACTIVE_POSITION or None}
 
+@app.get("/api/daily-state")
+async def daily_state_api():
+    _reset_daily_if_needed()
+    return {**DAILY_STATE, "circuit_breaker_limit": CIRCUIT_BREAKER_LIMIT}
+
+@app.get("/api/paper-report")
+async def paper_report_api():
+    """Returns daily P&L summary for the paper trading period."""
+    if not PAPER_LOG.exists():
+        return {"days": [], "total_trades": 0, "total_pnl": 0.0, "win_rate": 0}
+    try:
+        trades = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+    except Exception:
+        return {"days": [], "error": "No se pudo leer el log"}
+
+    from collections import defaultdict
+    by_day: dict = defaultdict(list)
+    for t in trades:
+        by_day[t["date"]].append(t)
+
+    days = []
+    for date in sorted(by_day.keys()):
+        ts = by_day[date]
+        wins   = [t for t in ts if t["result"] == "WIN"]
+        losses = [t for t in ts if t["result"] == "LOSS"]
+        pnl    = round(sum(t["pnl"] for t in ts), 2)
+        days.append({
+            "date":   date,
+            "trades": len(ts),
+            "wins":   len(wins),
+            "losses": len(losses),
+            "pnl":    pnl,
+            "wr":     round(len(wins)/len(ts)*100, 1) if ts else 0,
+        })
+
+    total_pnl = round(sum(d["pnl"] for d in days), 2)
+    total_t   = sum(d["trades"] for d in days)
+    total_w   = sum(d["wins"]   for d in days)
+    return {
+        "days":         days,
+        "total_trades": total_t,
+        "total_wins":   total_w,
+        "total_pnl":    total_pnl,
+        "win_rate":     round(total_w / total_t * 100, 1) if total_t else 0,
+        "target_pnl":   3000.0,   # prop firm $50k target
+        "progress_pct": round(total_pnl / 3000 * 100, 1) if total_pnl > 0 else 0,
+    }
+
 @app.get("/api/config")
 async def config_get():
     return CONFIG
@@ -1081,6 +1283,86 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
 .sidebar::-webkit-scrollbar{width:4px}
 .sidebar::-webkit-scrollbar-track{background:var(--bg)}
 .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Mobile responsive ────────────────────────────────────────────── */
+@media (max-width:768px){
+  body{overflow-y:auto;overflow-x:hidden;height:auto}
+
+  /* Header compacto en 2 filas */
+  .hdr{flex-wrap:wrap;gap:5px;padding:8px 10px;min-height:auto}
+  .hdr h1{font-size:14px}
+  .hdr-right{margin-left:auto}
+  .et{font-size:11px}
+
+  /* Symbar: scroll horizontal, ocultar texto largo */
+  .symbar{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 10px;gap:5px}
+  .symbar>span:last-child{display:none}
+  .symbar select{max-width:130px}
+  .sep{display:none}
+
+  /* Layout principal: apilado vertical */
+  .main{flex-direction:column;flex:none}
+  .chart-col{border-right:none;border-bottom:1px solid var(--border);flex:none}
+
+  /* Chart más pequeño en móvil */
+  #tv-container{height:220px}
+
+  /* Equity mini más compacto */
+  .equity-bar{height:60px;padding:5px 10px}
+  #eq-canvas{height:30px}
+
+  /* Sidebar ocupa todo el ancho */
+  .sidebar{width:100%;overflow-y:visible;max-height:none}
+
+  /* Panels: padding más cómodo para touch */
+  .panel{padding:12px 12px}
+  .panel-title{margin-bottom:8px}
+
+  /* Botones touch-friendly */
+  .btn-long,.btn-short{padding:14px;font-size:14px}
+  .bias-btn{padding:10px 4px;font-size:12px}
+  .btn-reset{padding:6px 12px;font-size:12px}
+
+  /* Inputs más grandes para touch */
+  .rc-input,.cfg-input,.sig-sel{padding:8px;font-size:13px}
+  .rc-input:focus,.cfg-input:focus{font-size:16px} /* evita zoom automático iOS */
+
+  /* Métricas: grid 2 cols (ya lo es, pero ajustar tamaños) */
+  .m-val{font-size:18px}
+  .metrics-grid{gap:8px}
+  .m-card{padding:10px 12px}
+
+  /* Risk calc: 2 cols siguen bien */
+  .rc-grid{gap:8px}
+  .rc-result{padding:10px 12px;gap:6px}
+  .rc-r-val{font-size:16px}
+
+  /* Trade log: scroll horizontal en tabla */
+  .log-wrap{overflow-x:auto}
+  .log-table{min-width:560px}
+  .log-table td{padding:6px 12px}
+
+  /* Config rows */
+  .cfg-row{gap:6px}
+  .cfg-label{font-size:12px}
+  .cfg-input{width:80px;font-size:13px}
+
+  /* Scanner / backtest */
+  #scanner-info,#scanner-windows{font-size:11px}
+  #bt-result{font-size:11px}
+
+  /* Pos card */
+  .pos-pnl{font-size:20px}
+  .pos-sym{font-size:15px}
+}
+
+/* Pantallas muy pequeñas (< 380px) */
+@media (max-width:380px){
+  .hdr h1{font-size:13px}
+  .badge{font-size:9px;padding:2px 6px}
+  #tv-container{height:180px}
+  .m-val{font-size:15px}
+}
 </style>
 </head>
 <body>
@@ -1335,6 +1617,75 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
         <div class="m-card"><div class="m-label">Max DD</div><div class="m-val" id="m-dd">0%</div><div class="m-sub">límite 20%</div></div>
         <div class="m-card"><div class="m-label">Balance</div><div class="m-val" id="m-bal">$50k</div><div class="m-sub" id="m-pnl">PnL: —</div></div>
         <div class="m-card"><div class="m-label">W / L</div><div class="m-val" id="m-wl">—</div><div class="m-sub" id="m-skip">Filtradas: 0</div></div>
+      </div>
+    </div>
+
+    <!-- Circuit Breaker + Daily P&L -->
+    <div class="panel" id="cb-panel">
+      <div class="panel-title">
+        <span>Hoy</span>
+        <span id="cb-badge" style="font-size:10px;padding:2px 8px;border-radius:8px;background:#222;color:var(--text2);border:1px solid var(--border)">ACTIVO</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div class="m-card">
+          <div class="m-label">PnL hoy</div>
+          <div class="m-val" id="cb-pnl">$0</div>
+          <div class="m-sub">límite $-800</div>
+        </div>
+        <div class="m-card">
+          <div class="m-label">Trades hoy</div>
+          <div class="m-val" id="cb-trades">0</div>
+          <div class="m-sub">max 1/día</div>
+        </div>
+      </div>
+      <div id="cb-msg" style="font-size:10px;color:var(--text2)">Scanner activo — circuit breaker en $-800</div>
+    </div>
+
+    <!-- Paper Trading — 2 semanas -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Paper Trading</span>
+        <span style="font-size:10px;color:var(--text2)" id="pt-period">—</span>
+      </div>
+      <!-- Progress bar hacia $3k target -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px">
+          <span>Progreso hacia $3k (prop target)</span>
+          <span id="pt-pct">0%</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:3px;height:6px;overflow:hidden">
+          <div id="pt-bar" style="height:100%;background:var(--green);width:0%;border-radius:3px;transition:width .5s"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px">
+        <div class="m-card" style="padding:6px 8px">
+          <div class="m-label">PnL total</div>
+          <div class="m-val" id="pt-pnl" style="font-size:14px">$0</div>
+        </div>
+        <div class="m-card" style="padding:6px 8px">
+          <div class="m-label">Win Rate</div>
+          <div class="m-val" id="pt-wr" style="font-size:14px">—</div>
+        </div>
+        <div class="m-card" style="padding:6px 8px">
+          <div class="m-label">Trades</div>
+          <div class="m-val" id="pt-trades" style="font-size:14px">0</div>
+        </div>
+      </div>
+      <!-- Daily table -->
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:10px" id="pt-table">
+          <thead>
+            <tr style="color:var(--text2);border-bottom:1px solid var(--border)">
+              <td style="padding:3px 4px">Fecha</td>
+              <td style="padding:3px 4px;text-align:center">Trades</td>
+              <td style="padding:3px 4px;text-align:center">WR%</td>
+              <td style="padding:3px 4px;text-align:right">PnL</td>
+            </tr>
+          </thead>
+          <tbody id="pt-body">
+            <tr><td colspan="4" style="color:var(--text2);padding:8px 4px;text-align:center">Sin datos aún — empezando hoy</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1921,9 +2272,63 @@ async function refresh(){
   }catch(e){ document.getElementById("dot").style.background="var(--red)"; console.error(e); }
 }
 
+// ── Circuit breaker + Daily state ─────────────────────────────────────────────
+async function refreshDaily(){
+  try{
+    const [ds, pr] = await Promise.all([
+      fetch("/api/daily-state").then(r=>r.json()),
+      fetch("/api/paper-report").then(r=>r.json()),
+    ]);
+
+    // Circuit breaker panel
+    const pnl = ds.pnl||0;
+    const cb  = ds.circuit_breaker;
+    document.getElementById("cb-pnl").textContent = (pnl>=0?"+":"")+"$"+pnl.toFixed(0);
+    document.getElementById("cb-pnl").style.color  = pnl>=0?"var(--green)":pnl<-400?"var(--red)":"var(--yellow)";
+    document.getElementById("cb-trades").textContent = ds.trades||0;
+    const badge = document.getElementById("cb-badge");
+    const msg   = document.getElementById("cb-msg");
+    if(cb){
+      badge.textContent="DETENIDO"; badge.style.background="#3a1a1a"; badge.style.color="var(--red)"; badge.style.borderColor="#da3633";
+      msg.textContent="⛔ Circuit breaker activo — límite $-800 alcanzado. Reanuda mañana.";
+      msg.style.color="var(--red)";
+    } else {
+      badge.textContent="ACTIVO"; badge.style.background="#1a2e1a"; badge.style.color="var(--green)"; badge.style.borderColor="#2ea043";
+      const rem = Math.abs(ds.circuit_breaker_limit||800) + pnl;
+      msg.textContent=`Scanner activo · Margen hasta circuit breaker: $${rem.toFixed(0)}`;
+      msg.style.color="var(--text2)";
+    }
+
+    // Paper trading report
+    if(pr.days && pr.days.length>0){
+      document.getElementById("pt-pnl").textContent   = (pr.total_pnl>=0?"+":"")+"$"+pr.total_pnl.toFixed(0);
+      document.getElementById("pt-pnl").style.color   = pr.total_pnl>=0?"var(--green)":"var(--red)";
+      document.getElementById("pt-wr").textContent    = pr.win_rate+"%";
+      document.getElementById("pt-wr").style.color    = pr.win_rate>=60?"var(--green)":pr.win_rate>=50?"var(--yellow)":"var(--red)";
+      document.getElementById("pt-trades").textContent= pr.total_trades;
+      const pct = Math.min(100, pr.progress_pct||0);
+      document.getElementById("pt-bar").style.width   = pct+"%";
+      document.getElementById("pt-pct").textContent   = pct.toFixed(1)+"%";
+      document.getElementById("pt-period").textContent= pr.days.length+" días";
+      const tbody = document.getElementById("pt-body");
+      tbody.innerHTML = pr.days.slice().reverse().slice(0,14).map(d=>{
+        const c = d.pnl>=0?"var(--green)":"var(--red)";
+        return `<tr style="border-top:1px solid var(--border2)">
+          <td style="padding:3px 4px;color:var(--text2)">${d.date.slice(5)}</td>
+          <td style="padding:3px 4px;text-align:center">${d.trades}</td>
+          <td style="padding:3px 4px;text-align:center;color:${d.wr>=60?"var(--green)":d.wr>=50?"var(--yellow)":"var(--red)"}">${d.wr}%</td>
+          <td style="padding:3px 4px;text-align:right;color:${c};font-weight:600">${d.pnl>=0?"+":""}$${d.pnl.toFixed(0)}</td>
+        </tr>`;
+      }).join("");
+    }
+  }catch(e){ console.warn("refreshDaily",e); }
+}
+
 refresh();
+refreshDaily();
 setInterval(refresh,3000);
-setInterval(loadNews,300000);   // news refresh every 5 min (cached 1h on server)
+setInterval(refreshDaily,30000);  // daily state + paper report every 30s
+setInterval(loadNews,300000);     // news refresh every 5 min (cached 1h on server)
 window.addEventListener("resize",()=>drawEq(eqData,eqStart));
 </script>
 </body>
@@ -1943,6 +2348,7 @@ if __name__=="__main__":
     print("  Ctrl+C para parar")
     print("="*55+"\n")
     threading.Thread(target=simulated_executor,daemon=True).start()
+    threading.Thread(target=paper_position_tracker,daemon=True).start()
     threading.Thread(target=ifvg_scanner,daemon=True).start()
     threading.Thread(target=morning_bias_scheduler,daemon=True).start()
     threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
