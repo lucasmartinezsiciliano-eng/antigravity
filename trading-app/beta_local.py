@@ -925,6 +925,158 @@ def morning_bias_scheduler():
                 print(f"[SCHEDULER] Error calculando bias: {e}")
 
 
+# ── Telegram ─────────────────────────────────────────────────────────────────
+TELEGRAM_TOKEN   = "8683889993:AAEe9Va_TCaReMWkg3T4vfBjY6fH2aQSWCs"
+TELEGRAM_CHAT_ID = "5631114912"
+
+def send_telegram(msg: str, parse_mode: str = "Markdown") -> bool:
+    """Envía un mensaje de Telegram. Retorna True si OK."""
+    import urllib.request, urllib.parse
+    try:
+        body = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": parse_mode}).encode()
+        req  = urllib.request.Request(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            data=body, headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return json.loads(r.read()).get("ok", False)
+    except Exception as e:
+        print(f"[TELEGRAM] Error: {e}")
+        return False
+
+
+def _build_daily_report() -> str:
+    """Construye el mensaje del reporte diario en Markdown para Telegram."""
+    now_ny = _now_ny()
+    date_str = now_ny.strftime("%d/%m/%Y")
+
+    # Bias
+    bias_result = BIAS_CACHE.get("result") or {}
+    suggested   = bias_result.get("suggested", "—")
+    score       = bias_result.get("score", 0)
+    max_score   = bias_result.get("max_score", 10)
+    conf        = bias_result.get("confidence", 0)
+    signals_b   = bias_result.get("signals", [])
+
+    bias_icon = {"BULLISH": "📈", "BEARISH": "📉", "NEUTRAL": "➡️"}.get(suggested, "—")
+
+    # Daily state
+    daily_pnl    = DAILY_STATE.get("pnl", 0.0)
+    daily_trades = DAILY_STATE.get("trades", 0)
+    cb_active    = DAILY_STATE.get("circuit_breaker", False)
+    scanner_sigs = DETECTOR_STATE.get("signals_today", 0)
+
+    # Closed trades today from log
+    today_str  = now_ny.strftime("%Y-%m-%d")
+    closed_today = [t for t in TRADES_LOG
+                    if t.get("event") == "trade_closed"
+                    and t.get("ts", "").startswith(today_str[:7])]  # same month fallback
+    # More precise: filter by daily state date
+
+    # Paper trading cumulative
+    total_pnl = 0.0; total_t = 0; total_w = 0
+    if PAPER_LOG.exists():
+        try:
+            recs = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+            total_pnl = round(sum(r["pnl"] for r in recs), 2)
+            total_t   = len(recs)
+            total_w   = sum(1 for r in recs if r["result"] == "WIN")
+        except Exception:
+            pass
+
+    wr_cum  = round(total_w / total_t * 100, 1) if total_t else 0
+    progress= round(total_pnl / 3000 * 100, 1) if total_pnl > 0 else 0
+
+    # Signals breakdown
+    sig_lines = "\n".join(f"  • {s}" for s in signals_b) if signals_b else "  • Sin datos"
+
+    # Trade details today
+    if daily_trades > 0:
+        trade_lines = ""
+        for t in closed_today[-3:]:
+            sym    = t.get("symbol","?")
+            res    = "✅" if t.get("pnl",0)>0 else "❌"
+            pnl_t  = t.get("pnl",0)
+            rr_t   = t.get("rr_achieved","?")
+            trade_lines += f"\n  {res} {sym} ${pnl_t:+.0f} (RR {rr_t})"
+        trades_section = f"*Operaciones:*{trade_lines}"
+    else:
+        trades_section = "*Operaciones:* Ninguna hoy — sin señales válidas en kill zone"
+
+    cb_line = "⛔ *Circuit breaker activado* — pérdida diaria $800+" if cb_active else ""
+
+    msg = f"""🤖 *IFVG Bot — Informe {date_str}*
+
+{bias_icon} *Bias del día: {suggested}* ({score}/{max_score} pts, {conf:.0f}% confianza)
+{sig_lines}
+
+📊 *Sesión de hoy:*
+  • Señales detectadas: {scanner_sigs}
+  • PnL día: {'+'if daily_pnl>=0 else''}${daily_pnl:.0f}
+  • {trades_section}
+{cb_line}
+
+📈 *Acumulado paper trading:*
+  • Trades: {total_t} | WR: {wr_cum}% | PnL: {'+'if total_pnl>=0 else''}${total_pnl:.0f}
+  • Progreso hacia $3k prop target: {progress}%
+
+_Bot activo · Max 1 trade/día · Circuit breaker $-800_"""
+
+    return msg.strip()
+
+
+def daily_report_scheduler():
+    """
+    Envía reporte de fin de día por Telegram a las 16:15 ET (tras cierre de mercado).
+    También envía alerta matutina a las 8:20 ET con el bias sugerido.
+    """
+    print("[TELEGRAM] Daily report scheduler started (8:20 + 16:15 ET)")
+    sent_morning = None
+    sent_eod     = None
+
+    while True:
+        time.sleep(30)
+        now = _now_ny()
+        if now.weekday() >= 5:  # skip weekend
+            continue
+        today = now.date()
+
+        # 8:20 ET — alerta matutina con bias
+        if now.hour == 8 and 19 <= now.minute <= 21 and sent_morning != today:
+            sent_morning = today
+            try:
+                bias_result = BIAS_CACHE.get("result") or {}
+                suggested   = bias_result.get("suggested", "calculando...")
+                conf        = bias_result.get("confidence", 0)
+                icon        = {"BULLISH":"📈","BEARISH":"📉","NEUTRAL":"➡️"}.get(suggested,"—")
+                news_today  = _get_today_events()
+                news_str    = "\n".join(f"  ⚠️ {e['time_et']} ET — {e['short']}" for e in news_today) \
+                              if news_today else "  Sin noticias HIGH impact"
+                msg = f"""{icon} *IFVG Bot — Buenos días {now.strftime('%d/%m')}*
+
+*Bias sugerido: {suggested}* ({conf:.0f}% confianza)
+Kill zone abre en ~10 min (8:30 ET)
+
+*Noticias hoy:*
+{news_str}
+
+_Confirma el bias en el dashboard antes de operar_"""
+                if send_telegram(msg):
+                    print(f"[TELEGRAM] Alerta matutina enviada")
+            except Exception as e:
+                print(f"[TELEGRAM] Error alerta matutina: {e}")
+
+        # 16:15 ET — reporte fin de día
+        if now.hour == 16 and 14 <= now.minute <= 16 and sent_eod != today:
+            sent_eod = today
+            try:
+                report = _build_daily_report()
+                if send_telegram(report):
+                    print(f"[TELEGRAM] Reporte diario enviado")
+            except Exception as e:
+                print(f"[TELEGRAM] Error reporte EOD: {e}")
+
+
 # ── FastAPI ───────────────────────────────────────────────────────────────────
 app=FastAPI(title="IFVG Trading Bot",version="2.0.0-beta")
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=["*"],allow_headers=["*"])
@@ -1204,6 +1356,16 @@ async def bias_suggestion(symbol:str="NQ1!"):
 async def scanner_toggle():
     DETECTOR_STATE["enabled"] = not DETECTOR_STATE["enabled"]
     return {"enabled": DETECTOR_STATE["enabled"]}
+
+@app.post("/api/send-report")
+async def send_report_now():
+    """Fuerza el envío del reporte diario ahora (para testing)."""
+    try:
+        report = _build_daily_report()
+        ok = send_telegram(report)
+        return {"sent": ok, "preview": report[:300]+"..."}
+    except Exception as e:
+        return {"sent": False, "error": str(e)}
 
 @app.post("/api/reset")
 async def reset():
@@ -2485,5 +2647,6 @@ if __name__=="__main__":
     threading.Thread(target=paper_position_tracker,daemon=True).start()
     threading.Thread(target=ifvg_scanner,daemon=True).start()
     threading.Thread(target=morning_bias_scheduler,daemon=True).start()
+    threading.Thread(target=daily_report_scheduler,daemon=True).start()
     threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
     uvicorn.run(app,host="0.0.0.0",port=8000,log_level="warning")
