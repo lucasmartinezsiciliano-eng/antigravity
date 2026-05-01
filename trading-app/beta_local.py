@@ -55,7 +55,95 @@ def _reset_daily_if_needed():
         DAILY_STATE.update({"date": today, "pnl": 0.0, "trades": 0, "circuit_breaker": False})
         print(f"[DAILY] Nuevo día {today} — contadores reseteados")
 
-def _record_paper_outcome(symbol, action, entry, sl, tp, pnl, result, exit_price, rr_got):
+def _build_trade_explanation(symbol, act, entry, sl, tp, sd, rr, qty, risk_usd, bias, kz, news, reason):
+    """Genera explicación legible del setup en el momento de la entrada."""
+    now_ny   = _now_ny()
+    time_str = now_ny.strftime("%H:%M ET")
+    dir_str  = "LARGO (BUY)" if act == "BUY" else "CORTO (SELL)"
+    dir_why  = "esperando subida" if act == "BUY" else "esperando bajada"
+
+    # Zona de kill zone
+    if kz.get("silver_bullet"):
+        kz_name = "Silver Bullet (10:00-11:00 ET) — ventana de máxima precisión ICT"
+    elif kz.get("window_a"):
+        kz_name = "Ventana A (8:30-9:00 ET) — apertura de mercado NY"
+    elif kz.get("window_b"):
+        kz_name = "Ventana B (9:30-10:30 ET) — segunda oportunidad de sesión"
+    else:
+        kz_name = "Kill Zone activa"
+
+    # Noticias
+    news_str = "Sin noticias de alto impacto próximas." if not news else \
+               f"Próxima noticia: {news.get('name','?')} en {news.get('mins','?')} min."
+
+    # Bias
+    bias_map = {"BULLISH": "alcista (favorece LONG)", "BEARISH": "bajista (favorece SHORT)", "NEUTRAL": "neutral"}
+    bias_str = bias_map.get(bias, bias)
+
+    # Niveles en puntos NQ (1 punto = $20 NQ)
+    stop_pts   = round(sd, 1)
+    target_pts = round(sd * rr, 1)
+
+    lines = [
+        f"📍 SETUP — {time_str} · {symbol}",
+        f"",
+        f"Dirección: {dir_str}",
+        f"  El detector IFVG encontró un Fair Value Gap violado y retestado {dir_why}.",
+        f"  Señal técnica: {reason}",
+        f"",
+        f"Contexto de mercado:",
+        f"  • Kill Zone: {kz_name}",
+        f"  • Bias del día: {bias_str}",
+        f"  • {news_str}",
+        f"",
+        f"Niveles de la operación:",
+        f"  • Entrada:  {entry:.2f}",
+        f"  • Stop:     {sl:.2f}  ({stop_pts:.1f} pts de riesgo, ${risk_usd:.0f})",
+        f"  • Target:   {tp:.2f}  ({target_pts:.1f} pts, RR {rr}:1)",
+        f"  • Tamaño:   {qty} contrato{'s' if qty>1 else ''}",
+        f"",
+        f"Reglas aplicadas: kill zone ✓ · bias confirmado ✓ · sin blackout noticias ✓ · 1ª operación del día ✓",
+    ]
+    return "\n".join(lines)
+
+
+def _build_outcome_explanation(setup_explanation, exit_price,
+                                pnl, result, rr_got, be_triggered, bars_seen):
+    """Añade el resultado al final de la explicación del setup."""
+    mins_in_trade = bars_seen * 5
+    hours = mins_in_trade // 60
+    mins  = mins_in_trade % 60
+    time_str = f"{hours}h {mins}m" if hours else f"{mins}m"
+
+    if result == "WIN":
+        if rr_got >= 1.4:
+            outcome_detail = f"✅ TARGET alcanzado a {rr_got:.1f}R. El precio se movió directamente hacia el objetivo sin rebotar."
+        else:
+            outcome_detail = f"✅ WIN con RR {rr_got:.1f}R."
+    else:
+        if be_triggered:
+            outcome_detail = (f"🔶 BREAKEVEN — El precio llegó a 1R favorable (trigger BE), "
+                              f"el stop se movió a entrada+buffer. Luego el mercado revirtió y "
+                              f"cerró en pequeña ganancia/pérdida mínima.")
+        else:
+            outcome_detail = (f"❌ STOP LOSS — El precio no llegó a 1R antes de revertir. "
+                              f"Pérdida completa de {rr_got:.1f}R.")
+
+    result_lines = [
+        f"",
+        f"─" * 40,
+        f"📊 RESULTADO — {result}",
+        f"",
+        f"  Salida: {exit_price:.2f}  |  PnL: {'+'if pnl>=0 else ''}{pnl:.0f}$  |  RR: {rr_got:.2f}",
+        f"  Tiempo en trade: {time_str}",
+        f"  BE activado: {'Sí' if be_triggered else 'No'}",
+        f"",
+        f"  {outcome_detail}",
+    ]
+    return setup_explanation + "\n".join(result_lines)
+
+
+def _record_paper_outcome(symbol, action, entry, sl, tp, pnl, result, exit_price, rr_got, explanation=""):
     """Persist paper trade result to disk and update daily state."""
     _reset_daily_if_needed()
     DAILY_STATE["pnl"]    = round(DAILY_STATE["pnl"] + pnl, 2)
@@ -72,26 +160,37 @@ def _record_paper_outcome(symbol, action, entry, sl, tp, pnl, result, exit_price
         "result": result, "exit": exit_price,
         "balance_after": round(ACCOUNT["balance"], 2),
         "daily_pnl": DAILY_STATE["pnl"],
+        "explanation": explanation,
     })
 
     rec = {
-        "date":      DAILY_STATE["date"],
-        "ts":        _ts(),
-        "symbol":    symbol,
-        "action":    action,
-        "entry":     entry,
-        "sl":        sl,
-        "tp":        tp,
-        "exit":      exit_price,
-        "pnl":       pnl,
-        "result":    result,
-        "rr":        round(rr_got, 2),
-        "daily_pnl": DAILY_STATE["pnl"],
-        "balance":   round(ACCOUNT["balance"], 2),
+        "date":        DAILY_STATE["date"],
+        "ts":          _ts(),
+        "symbol":      symbol,
+        "action":      action,
+        "entry":       entry,
+        "sl":          sl,
+        "tp":          tp,
+        "exit":        exit_price,
+        "pnl":         pnl,
+        "result":      result,
+        "rr":          round(rr_got, 2),
+        "daily_pnl":   DAILY_STATE["pnl"],
+        "balance":     round(ACCOUNT["balance"], 2),
+        "explanation": explanation,
     }
     with open(PAPER_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(rec) + "\n")
+
+    # Also write human-readable log
+    readable_log = Path("paper_trading_readable.txt")
+    with open(readable_log, "a", encoding="utf-8") as f:
+        f.write(f"\n{'='*60}\n")
+        f.write(explanation + "\n")
+
     print(f"  [PAPER {'WIN ' if pnl>0 else 'LOSS'}] {symbol} ${pnl:+.2f} | día ${DAILY_STATE['pnl']:+.0f} | bal ${ACCOUNT['balance']:,.0f}")
+    if explanation:
+        print(explanation)
 
 DAILY_BIAS = {"value": "NEUTRAL"}  # BULLISH | NEUTRAL | BEARISH — set from UI
 
@@ -259,19 +358,28 @@ def simulated_executor():
         qty=max(1,int(ACCOUNT["balance"]*CONFIG["MAX_RISK_PCT"]/(sd or 1)))
         risk_usd=round(sd*qty,2)
 
+        # Build setup explanation
+        explanation = _build_trade_explanation(
+            signal["symbol"], act, entry, sl, tp, sd, rr, qty, risk_usd,
+            bias, kz, news, signal.get("reason", "IFVG retest detectado")
+        )
+        print(f"\n{explanation}\n")
+
         ACTIVE_POSITION.update({"symbol":signal["symbol"],"action":act,"qty":qty,
                                  "entry":entry,"sl":sl,"tp":tp,"open_pnl":0.0,"ts":_ts()})
         # Register for real-price outcome tracking
         PAPER_POSITIONS[signal["symbol"]] = {
             "action":act,"entry":entry,"sl":sl,"tp":tp,"qty":qty,
             "sd":sd,"rr":rr,"risk_usd":risk_usd,
-            "entry_ts": int(datetime.now(timezone.utc).timestamp()),
+            "entry_ts":    int(datetime.now(timezone.utc).timestamp()),
             "be_triggered": False,
+            "explanation":  explanation,
         }
         session_count+=1
         log_event("order_placed",{"symbol":signal["symbol"],"action":act,"qty":qty,
             "entry":entry,"sl":sl,"tp":tp,"rr":rr,"risk_usd":risk_usd,
-            "reason":signal.get("reason",""),"bias":bias,"kz_silver":kz["silver_bullet"]})
+            "reason":signal.get("reason",""),"bias":bias,"kz_silver":kz["silver_bullet"],
+            "explanation": explanation})
         print(f"  [ORDER] {act} {qty}x {signal['symbol']} @ {entry:.2f} SL {sl:.2f} TP {tp:.2f} | risk ${risk_usd:.0f}")
 
 
@@ -366,11 +474,16 @@ def paper_position_tracker():
 
                 if outcome:
                     result_tag, exit_price, pnl = outcome
-                    result = "WIN" if pnl > 0 else "LOSS"
-                    rr_got = round(abs(pnl) / (sd * qty), 2) if sd * qty > 0 else 0
+                    result   = "WIN" if pnl > 0 else "LOSS"
+                    rr_got   = round(abs(pnl) / (sd * qty), 2) if sd * qty > 0 else 0
+                    be_done  = pos.get("be_triggered", False)
+                    setup_ex = pos.get("explanation", "")
+                    full_ex  = _build_outcome_explanation(
+                        setup_ex, exit_price, pnl, result, rr_got, be_done, bars_seen
+                    )
                     del PAPER_POSITIONS[sym]
                     ACTIVE_POSITION.clear()
-                    _record_paper_outcome(sym, act, entry, sl, tp, pnl, result, exit_price, rr_got)
+                    _record_paper_outcome(sym, act, entry, sl, tp, pnl, result, exit_price, rr_got, full_ex)
 
             except Exception as e:
                 print(f"[PAPER TRACKER] Error {sym}: {e}")
@@ -2146,6 +2259,11 @@ async function toggleScanner(){
   document.getElementById("scanner-btn").textContent=d.enabled?"PAUSE":"RESUME";
 }
 
+function toggleEx(id){
+  const el=document.getElementById(id);
+  if(el) el.style.display=el.style.display==="none"?"table-row":"none";
+}
+
 async function refresh(){
   try{
     const [s,a,eq,t,pos,sc]=await Promise.all([
@@ -2239,7 +2357,7 @@ async function refresh(){
     // Trade log
     if(t.total!==lastLogCount){
       lastLogCount=t.total;
-      const rows=t.trades.slice().reverse().map(ev=>{
+      const rows=t.trades.slice().reverse().map((ev,i)=>{
         let tsStr="—";
         try{
           const d=new Date(ev.ts);
@@ -2258,7 +2376,23 @@ async function refresh(){
           const w=ev.pnl>0;
           badge=`<span class="b ${w?"b-win":"b-ls"}">${w?"WIN":"LOSS"}</span>`;
           const c=w?"var(--green)":"var(--red)";
-          detail=`<span style="color:${c}">${ev.pnl>0?"+":""}$${(ev.pnl||0).toFixed(2)}</span> · RR ${ev.rr_achieved} · Bal $${(ev.balance_after||0).toLocaleString("es",{maximumFractionDigits:0})}`;
+          const pnlStr=`<span style="color:${c}">${ev.pnl>0?"+":""}$${(ev.pnl||0).toFixed(2)}</span>`;
+          const explId=`ex-${i}`;
+          const hasEx=ev.explanation&&ev.explanation.length>0;
+          const exBtn=hasEx?`<button onclick="toggleEx('${explId}')"
+            style="margin-left:6px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);
+                   padding:1px 6px;border-radius:3px;font-size:9px;cursor:pointer;font-family:inherit">
+            📋 análisis</button>`:"";
+          detail=`${pnlStr} · RR ${ev.rr_achieved} · Bal $${(ev.balance_after||0).toLocaleString("es",{maximumFractionDigits:0})}${exBtn}`;
+          if(hasEx){
+            const escaped=ev.explanation.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+            return `<tr><td style="color:var(--text2);white-space:nowrap">${tsStr}</td><td>${badge}</td><td>${sym}</td><td>${side}</td>
+              <td style="color:var(--text2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${detail}</td></tr>
+              <tr id="${explId}" style="display:none"><td colspan="5" style="padding:0">
+                <pre style="background:var(--bg3);border-left:3px solid ${c};margin:0;padding:10px 14px;
+                     font-size:10px;line-height:1.6;white-space:pre-wrap;color:var(--text2);overflow-x:auto">${escaped}</pre>
+              </td></tr>`;
+          }
         } else if(ev.event==="skip"){
           badge=`<span class="b b-sk">SKIP</span>`; sym=ev.signal?.symbol||"—"; detail=ev.reason||"";
         }
