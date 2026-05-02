@@ -491,10 +491,11 @@ def simulated_executor():
         if DAILY_STATE["circuit_breaker"]:
             log_event("skip",{"reason":f"Circuit breaker activo — PnL día ${DAILY_STATE['pnl']:.0f}","signal":signal}); continue
 
-        # Day-of-week filter: skip Mon(0) and Tue(1) — worst WR days per backtest analysis
+        # Day-of-week filter: usa LIVE_FILTERS (vacío = opera todos los días, bias controla)
         _wd = ny.weekday()
-        if _wd in (0, 1):
-            log_event("skip",{"reason":f"Día de baja WR ({ny.strftime('%A')}) — saltar Mon/Tue","signal":signal}); continue
+        _skip_days = LIVE_FILTERS.get("skip_weekdays", ())
+        if _skip_days and _wd in _skip_days:
+            log_event("skip",{"reason":f"Día filtrado ({ny.strftime('%A')})","signal":signal}); continue
 
         kz=kz_status()
         if not kz["active"]:
@@ -982,9 +983,10 @@ def ifvg_scanner():
             DETECTOR_STATE["status"] = "paused"
             continue
 
-        # Day-of-week filter: Mon(0) and Tue(1) have worst WR per data — skip entirely
+        # Day-of-week filter: usa LIVE_FILTERS (vacío = todos los días, bias controla dirección)
         _now = _now_ny()
-        if _now.weekday() in (0, 1):
+        _skip = LIVE_FILTERS.get("skip_weekdays", ())
+        if _skip and _now.weekday() in _skip:
             DETECTOR_STATE["status"] = "idle"
             continue
 
