@@ -51,17 +51,19 @@ DAILY_STATE = {
 # ── Multi-account prop firm tracker ───────────────────────────────────────────
 # Cada cuenta tiene balance, DD, profit target y estado de evaluación propios.
 # Todas reciben las mismas señales (misma estrategia, misma ejecución).
+# Cuentas en modo SIMULACIÓN — mismas reglas reales, sin dinero real todavía.
+# Cuando vayamos live: cambiar "sim": True → False y conectar broker.
 PROP_ACCOUNTS = [
     {
         "id":           1,
-        "name":         "Cuenta 1",
-        "firm":         "Evaluación",
+        "name":         "Apex #1",
+        "firm":         "Apex Trader Funding",
         "balance":      50_000.0,
         "start":        50_000.0,
         "peak":         50_000.0,
         "profit_target":5_000.0,    # 10% de $50k
-        "max_dd_pct":   10.0,       # 10% DD máximo
-        "daily_dd_pct": 5.0,        # 5% DD diario
+        "max_dd_pct":   10.0,       # trailing DD máximo
+        "daily_dd_pct": 5.0,        # DD diario máximo
         "daily_pnl":    0.0,
         "daily_date":   "",
         "trades":       0,
@@ -69,17 +71,19 @@ PROP_ACCOUNTS = [
         "losses":       0,
         "status":       "EVAL",     # EVAL | PASSED | FAILED | FUNDED
         "start_date":   "",
+        "sim":          True,       # True = simulación, False = real
+        "payout_pct":   90,         # % de profits para el trader
     },
     {
         "id":           2,
-        "name":         "Cuenta 2",
-        "firm":         "Evaluación",
+        "name":         "Topstep #1",
+        "firm":         "Topstep",
         "balance":      50_000.0,
         "start":        50_000.0,
         "peak":         50_000.0,
-        "profit_target":5_000.0,
-        "max_dd_pct":   10.0,
-        "daily_dd_pct": 5.0,
+        "profit_target":3_000.0,    # 6% de $50k (Topstep es más bajo)
+        "max_dd_pct":   8.0,        # Topstep: 8% max trailing DD
+        "daily_dd_pct": 4.0,
         "daily_pnl":    0.0,
         "daily_date":   "",
         "trades":       0,
@@ -87,11 +91,13 @@ PROP_ACCOUNTS = [
         "losses":       0,
         "status":       "EVAL",
         "start_date":   "",
+        "sim":          True,
+        "payout_pct":   90,
     },
     {
         "id":           3,
-        "name":         "Cuenta 3",
-        "firm":         "Evaluación",
+        "name":         "Apex #2",
+        "firm":         "Apex Trader Funding",
         "balance":      50_000.0,
         "start":        50_000.0,
         "peak":         50_000.0,
@@ -105,16 +111,18 @@ PROP_ACCOUNTS = [
         "losses":       0,
         "status":       "EVAL",
         "start_date":   "",
+        "sim":          True,
+        "payout_pct":   90,
     },
     {
         "id":           4,
-        "name":         "Cuenta 4",
-        "firm":         "Evaluación",
+        "name":         "FTMO #1",
+        "firm":         "FTMO",
         "balance":      50_000.0,
         "start":        50_000.0,
         "peak":         50_000.0,
-        "profit_target":5_000.0,
-        "max_dd_pct":   10.0,
+        "profit_target":5_000.0,    # 10% FTMO fase 1
+        "max_dd_pct":   10.0,       # 10% max DD relativo
         "daily_dd_pct": 5.0,
         "daily_pnl":    0.0,
         "daily_date":   "",
@@ -123,6 +131,8 @@ PROP_ACCOUNTS = [
         "losses":       0,
         "status":       "EVAL",
         "start_date":   "",
+        "sim":          True,
+        "payout_pct":   80,         # FTMO da 80% (vs 90% Apex)
     },
 ]
 
@@ -3004,6 +3014,124 @@ async def dashboard(): return DASHBOARD
 @app.get("/",response_class=HTMLResponse)
 async def root(): return HTMLResponse('<meta http-equiv="refresh" content="0;url=/dashboard">',302)
 
+# ── Paper Trading Review Scheduler (4 semanas) ───────────────────────────────
+
+PAPER_START_FILE = Path("paper_start_date.txt")
+
+def _get_or_set_paper_start() -> str:
+    """Devuelve la fecha de inicio del paper trading. La crea si no existe."""
+    if PAPER_START_FILE.exists():
+        return PAPER_START_FILE.read_text(encoding="utf-8").strip()
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    PAPER_START_FILE.write_text(today, encoding="utf-8")
+    print(f"[PAPER-REVIEW] Inicio paper trading registrado: {today}")
+    return today
+
+def _build_4week_report() -> str:
+    """Construye el informe completo de 4 semanas para Telegram."""
+    if not PAPER_LOG.exists():
+        return "*Sin trades paper en 4 semanas*"
+
+    trades = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if not trades:
+        return "*Sin trades paper registrados aún*"
+
+    wins   = [t for t in trades if t.get("result") == "WIN"]
+    losses = [t for t in trades if t.get("result") == "LOSS"]
+    total_pnl = sum(t.get("pnl", 0) for t in trades)
+    wr    = len(wins) / len(trades) * 100 if trades else 0
+    avg_rr = sum(t.get("rr", 0) for t in wins) / len(wins) if wins else 0
+
+    # Drawdown máximo
+    bal = ACCOUNT["start"]
+    peak, max_dd = bal, 0.0
+    for t in trades:
+        bal += t.get("pnl", 0)
+        peak = max(peak, bal)
+        dd   = (peak - bal) / ACCOUNT["start"] * 100
+        max_dd = max(max_dd, dd)
+
+    balance_final = ACCOUNT["start"] + total_pnl
+    return_pct    = total_pnl / ACCOUNT["start"] * 100
+
+    # Estado de cuentas simuladas
+    acc_lines = []
+    for a in PROP_ACCOUNTS:
+        icon = {"EVAL":"🔄","PASSED":"✅","FAILED":"❌","FUNDED":"💰"}.get(a["status"],"—")
+        pct  = (a["balance"] - a["start"]) / a["start"] * 100
+        target_pct = a["profit_target"] / a["start"] * 100
+        acc_lines.append(
+            f"{icon} *{a['name']}* ({a['firm']})\n"
+            f"   Balance: ${a['balance']:,.0f} ({pct:+.1f}%) | Target: +{target_pct:.0f}% | DD max: {a['max_dd_pct']}%"
+        )
+
+    # Veredicto
+    if return_pct >= 8 and max_dd < 8:
+        verdict = "SISTEMA LISTO para challenge real"
+        verdict_icon = "LISTO"
+    elif return_pct >= 4 and max_dd < 10:
+        verdict = "Resultados prometedores — continuar 2 semanas mas"
+        verdict_icon = "EN PROGRESO"
+    elif return_pct < 0 or max_dd >= 10:
+        verdict = "Revisar sistema antes de ir live"
+        verdict_icon = "REVISAR"
+    else:
+        verdict = "Muestra inicial positiva — continuar observando"
+        verdict_icon = "OK"
+
+    lines = [
+        "*INFORME 4 SEMANAS — Paper Trading IFVG*",
+        f"_{datetime.now(timezone.utc).strftime('%d/%m/%Y')}_",
+        "",
+        "*Resumen de operaciones:*",
+        f"  Trades: {len(trades)} ({len(wins)}W / {len(losses)}L)",
+        f"  Win Rate: {wr:.1f}%",
+        f"  Avg RR ganador: {avg_rr:.2f}x",
+        f"  PnL total: ${total_pnl:+,.0f}",
+        f"  Retorno: {return_pct:+.1f}%",
+        f"  Max Drawdown: {max_dd:.1f}%",
+        f"  Balance final: ${balance_final:,.0f}",
+        "",
+        "*Cuentas simuladas:*",
+        *acc_lines,
+        "",
+        f"*Veredicto: {verdict_icon}*",
+        f"_{verdict}_",
+        "",
+        "_Bot activo · Sin BE · RR 2.5 · Riesgo 1.3% · Bias auto_",
+    ]
+    return "\n".join(lines)
+
+
+def paper_review_scheduler():
+    """
+    A las 4 semanas exactas del inicio del paper trading, envía un informe
+    completo por Telegram con los resultados y un veredicto sobre si el sistema
+    está listo para el challenge real.
+    """
+    start_date_str = _get_or_set_paper_start()
+    from datetime import timedelta
+    start_dt  = datetime.strptime(start_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    target_dt = start_dt + timedelta(weeks=4)
+    sent      = False
+
+    print(f"[PAPER-REVIEW] Informe de 4 semanas programado para {target_dt.strftime('%Y-%m-%d')}")
+
+    while True:
+        time.sleep(3600)  # comprobar cada hora
+        now = datetime.now(timezone.utc)
+
+        if not sent and now >= target_dt:
+            print("[PAPER-REVIEW] Generando informe de 4 semanas...")
+            report = _build_4week_report()
+            if send_telegram(report):
+                print("[PAPER-REVIEW] Informe enviado por Telegram")
+            else:
+                print("[PAPER-REVIEW] Error enviando Telegram — guardando en paper_review_4w.txt")
+                Path("paper_review_4w.txt").write_text(report, encoding="utf-8")
+            sent = True
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__=="__main__":
     print("\n"+"="*55)
@@ -3016,5 +3144,6 @@ if __name__=="__main__":
     threading.Thread(target=ifvg_scanner,daemon=True).start()
     threading.Thread(target=morning_bias_scheduler,daemon=True).start()
     threading.Thread(target=daily_report_scheduler,daemon=True).start()
+    threading.Thread(target=paper_review_scheduler,daemon=True).start()
     threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
     uvicorn.run(app,host="0.0.0.0",port=8000,log_level="warning")
