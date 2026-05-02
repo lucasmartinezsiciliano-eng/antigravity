@@ -48,6 +48,150 @@ DAILY_STATE = {
     "circuit_breaker": False,
 }
 
+# ── Multi-account prop firm tracker ───────────────────────────────────────────
+# Cada cuenta tiene balance, DD, profit target y estado de evaluación propios.
+# Todas reciben las mismas señales (misma estrategia, misma ejecución).
+PROP_ACCOUNTS = [
+    {
+        "id":           1,
+        "name":         "Cuenta 1",
+        "firm":         "Evaluación",
+        "balance":      50_000.0,
+        "start":        50_000.0,
+        "peak":         50_000.0,
+        "profit_target":5_000.0,    # 10% de $50k
+        "max_dd_pct":   10.0,       # 10% DD máximo
+        "daily_dd_pct": 5.0,        # 5% DD diario
+        "daily_pnl":    0.0,
+        "daily_date":   "",
+        "trades":       0,
+        "wins":         0,
+        "losses":       0,
+        "status":       "EVAL",     # EVAL | PASSED | FAILED | FUNDED
+        "start_date":   "",
+    },
+    {
+        "id":           2,
+        "name":         "Cuenta 2",
+        "firm":         "Evaluación",
+        "balance":      50_000.0,
+        "start":        50_000.0,
+        "peak":         50_000.0,
+        "profit_target":5_000.0,
+        "max_dd_pct":   10.0,
+        "daily_dd_pct": 5.0,
+        "daily_pnl":    0.0,
+        "daily_date":   "",
+        "trades":       0,
+        "wins":         0,
+        "losses":       0,
+        "status":       "EVAL",
+        "start_date":   "",
+    },
+    {
+        "id":           3,
+        "name":         "Cuenta 3",
+        "firm":         "Evaluación",
+        "balance":      50_000.0,
+        "start":        50_000.0,
+        "peak":         50_000.0,
+        "profit_target":5_000.0,
+        "max_dd_pct":   10.0,
+        "daily_dd_pct": 5.0,
+        "daily_pnl":    0.0,
+        "daily_date":   "",
+        "trades":       0,
+        "wins":         0,
+        "losses":       0,
+        "status":       "EVAL",
+        "start_date":   "",
+    },
+    {
+        "id":           4,
+        "name":         "Cuenta 4",
+        "firm":         "Evaluación",
+        "balance":      50_000.0,
+        "start":        50_000.0,
+        "peak":         50_000.0,
+        "profit_target":5_000.0,
+        "max_dd_pct":   10.0,
+        "daily_dd_pct": 5.0,
+        "daily_pnl":    0.0,
+        "daily_date":   "",
+        "trades":       0,
+        "wins":         0,
+        "losses":       0,
+        "status":       "EVAL",
+        "start_date":   "",
+    },
+]
+
+# Inicializa start_date con hoy si está vacío
+def _init_accounts():
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    for acc in PROP_ACCOUNTS:
+        if not acc["start_date"]:
+            acc["start_date"] = today
+_init_accounts()
+
+PROP_ACCOUNTS_LOG = Path("prop_accounts.jsonl")
+
+def _mirror_trade_to_accounts(pnl: float, result: str):
+    """Aplica el resultado de un trade a todas las cuentas de fondeo.
+    Todas reciben la misma señal → mismo PnL proporcional (mismo % del balance).
+    Actualiza balance, DD, wins/losses y estado de evaluación.
+    """
+    today = _now_ny().strftime("%Y-%m-%d")
+    for acc in PROP_ACCOUNTS:
+        if acc["status"] in ("FAILED",):
+            continue  # cuentas eliminadas no reciben más trades
+
+        # Reset daily PnL on new day
+        if acc["daily_date"] != today:
+            acc["daily_pnl"]  = 0.0
+            acc["daily_date"] = today
+
+        # Apply PnL (same dollar amount — accounts have same size)
+        acc["balance"]   = round(acc["balance"] + pnl, 2)
+        acc["peak"]      = max(acc["peak"], acc["balance"])
+        acc["daily_pnl"] = round(acc["daily_pnl"] + pnl, 2)
+        acc["trades"]   += 1
+        if result == "WIN":
+            acc["wins"]  += 1
+        else:
+            acc["losses"] += 1
+
+        # Check prop firm rules
+        drawdown_pct = (acc["peak"] - acc["balance"]) / acc["start"] * 100
+        daily_dd_pct = abs(acc["daily_pnl"]) / acc["start"] * 100 if acc["daily_pnl"] < 0 else 0
+        profit_pct   = (acc["balance"] - acc["start"]) / acc["start"] * 100
+
+        if drawdown_pct >= acc["max_dd_pct"]:
+            acc["status"] = "FAILED"
+            print(f"[PROP] ⚠️  Cuenta {acc['id']} ELIMINADA — DD {drawdown_pct:.1f}% >= {acc['max_dd_pct']}%")
+        elif daily_dd_pct >= acc["daily_dd_pct"]:
+            acc["status"] = "FAILED"
+            print(f"[PROP] ⚠️  Cuenta {acc['id']} ELIMINADA — DD diario {daily_dd_pct:.1f}%")
+        elif profit_pct >= acc["profit_target"] / acc["start"] * 100 and acc["status"] == "EVAL":
+            acc["status"] = "PASSED"
+            print(f"[PROP] 🎉 Cuenta {acc['id']} APROBADA — profit {profit_pct:.1f}% >= target!")
+        else:
+            if acc["status"] != "PASSED":
+                acc["status"] = "EVAL"
+
+        print(f"  [ACC{acc['id']}] ${acc['balance']:,.0f} | PnL hoy ${acc['daily_pnl']:+.0f} | "
+              f"DD {drawdown_pct:.1f}% | {acc['status']}")
+
+    # Persist snapshot
+    snap = {"ts": _ts(), "accounts": [
+        {"id": a["id"], "balance": a["balance"], "status": a["status"],
+         "trades": a["trades"], "wins": a["wins"]}
+        for a in PROP_ACCOUNTS
+    ]}
+    with open(PROP_ACCOUNTS_LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(snap) + "\n")
+
+
 def _reset_daily_if_needed():
     """Reset daily counters on new NY trading day."""
     today = _now_ny().strftime("%Y-%m-%d")
@@ -155,6 +299,9 @@ def _record_paper_outcome(symbol, action, entry, sl, tp, pnl, result, exit_price
     ACCOUNT["balance"] += pnl
     push_equity()
 
+    # Mirror trade to all prop firm accounts
+    _mirror_trade_to_accounts(pnl, result)
+
     log_event("trade_closed", {
         "symbol": symbol, "pnl": pnl, "rr_achieved": round(rr_got, 2),
         "result": result, "exit": exit_price,
@@ -195,13 +342,26 @@ def _record_paper_outcome(symbol, action, entry, sl, tp, pnl, result, exit_price
 DAILY_BIAS = {"value": "NEUTRAL"}  # BULLISH | NEUTRAL | BEARISH — set from UI
 
 CONFIG = {
-    "MAX_RISK_PCT":          0.01,
-    "MIN_RR":                2.0,
+    "MAX_RISK_PCT":          0.013,   # 1.3% — optimal: MaxDD=8.48%, +41.8%/2yr, Sharpe=4.17
+    "MIN_RR":                2.5,     # RR 2.5 sin BE — OOS best config (PF=1.79)
     "STOP_TICKS":            10,
-    "STOP_PCT":              0.5,
-    "MAX_TRADES_SESSION":    2,
+    "STOP_PCT":              0.4,     # 0.4% stop
+    "MAX_TRADES_SESSION":    2,       # max 2 trades/day — OOS+bias validated
     "MAX_DAILY_LOSS_PCT":    0.03,
-    "WIN_PROB":              0.60,   # simulation win probability
+    "WIN_PROB":              0.60,    # simulation win probability
+}
+
+# ── OOS-validated filter config (2yr QQQ 5m, 65 trades, PF=1.79, +41.8%, MaxDD=8.48%) ──
+# Cambios finales vs config anterior:
+#   skip_weekdays: (0,1) → () — Lun+Mar incluidos, auto-bias controla dirección
+#   MIN_RR: 2.0 → 2.5  (sin BE, targets más lejanos)
+#   be_trigger_r: 1.5 → 99  (sin BE — BE@cualquierR reduce retorno y Sharpe)
+#   MAX_RISK_PCT: 1.5% → 1.3%  (sweet spot: +41.8% retorno, MaxDD 8.48% < 10%)
+LIVE_FILTERS = {
+    "skip_weekdays":    (),       # sin filtro días — auto-bias controla dirección
+    "no_window_b":      False,    # incluir Window B — beneficia en 2yr OOS
+    "min_displacement": 21.0,     # FVG creation candle body ≥ 21pts NQ (≡ 0.5 QQQ pts)
+    "be_trigger_r":     99,       # sin BE — dejar correr hasta TP (mejor PF y Sharpe)
 }
 
 # News calendar loaded lazily from ForexFactory (via news_calendar.py)
@@ -223,6 +383,8 @@ def _get_today_events() -> list:
         print(f"[NEWS] Error cargando calendario: {e}")
         _TODAY_EVENTS = []
     return _TODAY_EVENTS
+
+
 
 def _ts():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]+"Z"
@@ -260,6 +422,8 @@ def kz_status()->dict:
     win_a = dt.time(8,30)<=t<=dt.time(9,0)
     win_b = dt.time(9,30)<=t<=dt.time(10,30)
     sb    = dt.time(10,0)<=t<=dt.time(11,0)
+    if LIVE_FILTERS.get("no_window_b"):
+        win_b = False   # 9:30-10:00 excluido — peor sub-ventana por datos
     active= wd<5 and (win_a or win_b or sb)
 
     if active:
@@ -327,6 +491,11 @@ def simulated_executor():
         if DAILY_STATE["circuit_breaker"]:
             log_event("skip",{"reason":f"Circuit breaker activo — PnL día ${DAILY_STATE['pnl']:.0f}","signal":signal}); continue
 
+        # Day-of-week filter: skip Mon(0) and Tue(1) — worst WR days per backtest analysis
+        _wd = ny.weekday()
+        if _wd in (0, 1):
+            log_event("skip",{"reason":f"Día de baja WR ({ny.strftime('%A')}) — saltar Mon/Tue","signal":signal}); continue
+
         kz=kz_status()
         if not kz["active"]:
             log_event("skip",{"reason":f"Fuera de kill zone — {kz['next']}","signal":signal}); continue
@@ -390,7 +559,7 @@ def paper_position_tracker():
     Runs every 60s. Max tracking: 200 bars (~16h) then closes at market.
     """
     import yfinance as yf
-    BE_TRIGGER = 1.0   # move SL to entry+buffer at 1R (matches backtest)
+    BE_TRIGGER = LIVE_FILTERS.get("be_trigger_r", 0.5)  # matches backtest config
     BE_BUFFER  = 0.08  # SL → entry + 8% of stop
 
     while True:
@@ -536,10 +705,10 @@ def detect_ifvg(candles: list) -> list:
 
         # ── Stage 1: detect new FVGs ──────────────────────────────────────
         if c2["high"] < c0["low"]:          # Bullish FVG
-            bull_fvgs.append({"top": c0["low"], "bot": c2["high"], "bar": i})
+            bull_fvgs.append({"top": c0["low"], "bot": c2["high"], "bar": i, "creation_bar": i})
 
         if c2["low"] > c0["high"]:          # Bearish FVG
-            bear_fvgs.append({"top": c2["low"], "bot": c0["high"], "bar": i})
+            bear_fvgs.append({"top": c2["low"], "bot": c0["high"], "bar": i, "creation_bar": i})
 
         # Expire old zones
         bull_fvgs  = [f for f in bull_fvgs  if i - f["bar"] <= ZONE_LOOKBACK]
@@ -556,6 +725,7 @@ def detect_ifvg(candles: list) -> list:
                     "top": fvg["top"], "bot": fvg["bot"],
                     "type": "sell",   # inverted bull FVG → resistance → SELL on retest
                     "bar_inv": i,
+                    "creation_bar": fvg["creation_bar"],
                     "desc": f"bull FVG [{fvg['bot']:.0f}-{fvg['top']:.0f}] invertido"
                 })
                 bull_fvgs.remove(fvg)
@@ -567,6 +737,7 @@ def detect_ifvg(candles: list) -> list:
             if c0["close"] > fvg["top"]:
                 ifvg_zones.append({
                     "top": fvg["top"], "bot": fvg["bot"],
+                    "creation_bar": fvg["creation_bar"],
                     "type": "buy",    # inverted bear FVG → support → BUY on retest
                     "bar_inv": i,
                     "desc": f"bear FVG [{fvg['bot']:.0f}-{fvg['top']:.0f}] invertido"
@@ -588,6 +759,7 @@ def detect_ifvg(candles: list) -> list:
                         "reason": f"IFVG SELL — {zone['desc']} → resistencia confirmada",
                         "bar_index": i,
                         "fvg_bot": zone["bot"], "fvg_top": zone["top"],
+                        "creation_bar": zone.get("creation_bar"),
                     })
                     ifvg_zones.remove(zone)
 
@@ -600,6 +772,7 @@ def detect_ifvg(candles: list) -> list:
                         "reason": f"IFVG BUY — {zone['desc']} → soporte confirmado",
                         "bar_index": i,
                         "fvg_bot": zone["bot"], "fvg_top": zone["top"],
+                        "creation_bar": zone.get("creation_bar"),
                     })
                     ifvg_zones.remove(zone)
 
@@ -809,6 +982,12 @@ def ifvg_scanner():
             DETECTOR_STATE["status"] = "paused"
             continue
 
+        # Day-of-week filter: Mon(0) and Tue(1) have worst WR per data — skip entirely
+        _now = _now_ny()
+        if _now.weekday() in (0, 1):
+            DETECTOR_STATE["status"] = "idle"
+            continue
+
         kz = kz_status()
         if not kz["active"]:
             DETECTOR_STATE["status"] = "idle"
@@ -863,6 +1042,21 @@ def ifvg_scanner():
                     print(f"[SCANNER] IFVG {action} on {sym} — filtered (contra bias {bias})")
                     continue
 
+                # Displacement filter: FVG creation candle body ≥ min_displacement pts
+                min_disp = LIVE_FILTERS.get("min_displacement", 0)
+                if min_disp > 0:
+                    cb = sig.get("creation_bar")
+                    if cb is not None:
+                        # creation_bar is index into the 50-bar slice
+                        slice_offset = max(0, len(candles) - 50)
+                        abs_cb = slice_offset + cb
+                        if abs_cb < len(candles):
+                            cc = candles[abs_cb]
+                            body = abs(cc["close"] - cc.get("open", cc["close"]))
+                            if body < min_disp:
+                                print(f"[SCANNER] IFVG {action} on {sym} — filtered (displacement {body:.1f}pt < {min_disp}pt)")
+                                continue
+
                 # Skip if already have active position
                 if ACTIVE_POSITION:
                     print(f"[SCANNER] IFVG {action} on {sym} — filtered (position open)")
@@ -893,12 +1087,13 @@ def ifvg_scanner():
 
 def morning_bias_scheduler():
     """
-    Auto-refresh bias a las 8:25 ET cada día de mercado.
-    Corre analyze_bias() y actualiza BIAS_CACHE + sugiere al dashboard.
-    El usuario sigue confirmando manualmente, pero ya tiene el análisis listo.
+    Auto-refresh + auto-apply bias a las 8:25 ET cada día de mercado.
+    Corre analyze_bias() (W/D/4H) y aplica automáticamente si conf >= 55%.
+    Si conf < 55% → NEUTRAL (no operar ese día).
+    El usuario puede sobreescribir manualmente via /api/bias.
     """
     import datetime as _dt
-    print("[SCHEDULER] Morning bias scheduler started (8:25 ET daily)")
+    print("[SCHEDULER] Morning bias scheduler started (8:25 ET daily — auto-apply)")
     last_triggered = None
 
     while True:
@@ -920,7 +1115,25 @@ def morning_bias_scheduler():
                 BIAS_CACHE["ts"] = time.time()
                 suggested = result["suggested"]
                 conf = result["confidence"]
-                print(f"[SCHEDULER] Bias sugerido: {suggested} ({conf:.0f}% conf) — confirmar en dashboard")
+
+                # Auto-apply: si confianza >= 55% aplicar el bias sugerido,
+                # si no hay claridad suficiente → NEUTRAL (no operar ese día)
+                if conf >= 55:
+                    DAILY_BIAS["value"] = suggested
+                    print(f"[SCHEDULER] Bias APLICADO automaticamente: {suggested} ({conf:.0f}% conf)")
+                    send_telegram(
+                        f"*Daily Bias {today}*\n"
+                        f"Direccion: *{suggested}* ({conf:.0f}% conf)\n"
+                        f"Aplicado automaticamente — puede sobreescribir en /api/bias"
+                    )
+                else:
+                    DAILY_BIAS["value"] = "NEUTRAL"
+                    print(f"[SCHEDULER] Conf baja ({conf:.0f}%) → NEUTRAL — no operar hoy")
+                    send_telegram(
+                        f"*Daily Bias {today}*\n"
+                        f"Confianza insuficiente ({conf:.0f}%) → NEUTRAL\n"
+                        f"_No se operara hoy salvo override manual_"
+                    )
             except Exception as e:
                 print(f"[SCHEDULER] Error calculando bias: {e}")
 
@@ -1020,7 +1233,7 @@ def _build_daily_report() -> str:
   • Trades: {total_t} | WR: {wr_cum}% | PnL: {'+'if total_pnl>=0 else''}${total_pnl:.0f}
   • Progreso hacia $3k prop target: {progress}%
 
-_Bot activo · Max 1 trade/día · Circuit breaker $-800_"""
+_Bot activo · Bias auto (W/D/4H) · Todos los días · Ventana A+B+SB · Disp≥21pts · Sin BE (RR 2.5) · Riesgo 1.3% · Max 2/dia · CB $-800_"""
 
     return msg.strip()
 
@@ -1052,15 +1265,24 @@ def daily_report_scheduler():
                 news_today  = _get_today_events()
                 news_str    = "\n".join(f"  ⚠️ {e['time_et']} ET — {e['short']}" for e in news_today) \
                               if news_today else "  Sin noticias HIGH impact"
+                # Si el bias_scheduler ya lo aplicó automáticamente, reflejarlo
+                bias_applied = DAILY_BIAS.get("value", "NEUTRAL")
+                if bias_applied == suggested and conf >= 55:
+                    estado = f"*APLICADO automaticamente* ✓"
+                elif bias_applied == "NEUTRAL" and conf < 55:
+                    estado = f"_Confianza baja ({conf:.0f}%) — NEUTRAL, no se opera hoy_"
+                else:
+                    estado = f"_Override manual: {bias_applied}_"
+
                 msg = f"""{icon} *IFVG Bot — Buenos días {now.strftime('%d/%m')}*
 
-*Bias sugerido: {suggested}* ({conf:.0f}% confianza)
+*Bias: {suggested}* ({conf:.0f}% conf) — {estado}
 Kill zone abre en ~10 min (8:30 ET)
 
 *Noticias hoy:*
 {news_str}
 
-_Confirma el bias en el dashboard antes de operar_"""
+_Si quieres cambiar: /api/bias en el dashboard_"""
                 if send_telegram(msg):
                     print(f"[TELEGRAM] Alerta matutina enviada")
             except Exception as e:
@@ -1162,6 +1384,62 @@ async def position_api():
 async def daily_state_api():
     _reset_daily_if_needed()
     return {**DAILY_STATE, "circuit_breaker_limit": CIRCUIT_BREAKER_LIMIT}
+
+@app.get("/api/accounts")
+async def accounts_api():
+    """Estado de las 4 cuentas de fondeo."""
+    result = []
+    for acc in PROP_ACCOUNTS:
+        profit     = acc["balance"] - acc["start"]
+        profit_pct = profit / acc["start"] * 100
+        dd_pct     = (acc["peak"] - acc["balance"]) / acc["start"] * 100
+        wr         = round(acc["wins"] / acc["trades"] * 100, 1) if acc["trades"] else 0
+        to_target  = acc["profit_target"] - profit
+        result.append({
+            "id":           acc["id"],
+            "name":         acc["name"],
+            "firm":         acc["firm"],
+            "balance":      round(acc["balance"], 2),
+            "profit":       round(profit, 2),
+            "profit_pct":   round(profit_pct, 2),
+            "dd_pct":       round(dd_pct, 2),
+            "max_dd_pct":   acc["max_dd_pct"],
+            "daily_pnl":    acc["daily_pnl"],
+            "trades":       acc["trades"],
+            "wins":         acc["wins"],
+            "losses":       acc["losses"],
+            "wr":           wr,
+            "status":       acc["status"],
+            "to_target":    round(max(to_target, 0), 2),
+            "target_pct":   round(min(profit / acc["profit_target"] * 100, 100), 1) if acc["profit_target"] > 0 else 0,
+            "start_date":   acc["start_date"],
+        })
+    total_profit = sum(a["balance"] - a["start"] for a in PROP_ACCOUNTS)
+    passed       = sum(1 for a in PROP_ACCOUNTS if a["status"] == "PASSED")
+    failed       = sum(1 for a in PROP_ACCOUNTS if a["status"] == "FAILED")
+    return {"accounts": result, "total_profit": round(total_profit, 2),
+            "passed": passed, "failed": failed, "active": len(PROP_ACCOUNTS) - failed}
+
+@app.post("/api/accounts/reset")
+async def accounts_reset_api():
+    """Resetea todas las cuentas a $50k (para nuevo ciclo de evaluación)."""
+    today = _now_ny().strftime("%Y-%m-%d")
+    for acc in PROP_ACCOUNTS:
+        acc.update({"balance": acc["start"], "peak": acc["start"],
+                    "daily_pnl": 0.0, "daily_date": today,
+                    "trades": 0, "wins": 0, "losses": 0,
+                    "status": "EVAL", "start_date": today})
+    return {"ok": True, "message": "4 cuentas reseteadas a estado EVAL"}
+
+@app.post("/api/accounts/{account_id}/rename")
+async def account_rename_api(account_id: int, body: dict):
+    """Renombra una cuenta (nombre, firma)."""
+    for acc in PROP_ACCOUNTS:
+        if acc["id"] == account_id:
+            if "name" in body: acc["name"] = body["name"]
+            if "firm" in body: acc["firm"] = body["firm"]
+            return {"ok": True}
+    return {"ok": False, "error": "Account not found"}
 
 @app.get("/api/paper-report")
 async def paper_report_api():
@@ -1914,9 +2192,36 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Consolas',mon
         </div>
       </div>
       <div id="cb-msg" style="font-size:10px;color:var(--text2)">Scanner activo — circuit breaker en $-800</div>
+      <div style="margin-top:6px;padding:5px 7px;background:#0d1a0d;border:1px solid #1a3a1a;border-radius:5px;font-size:9px;color:#4caf50;line-height:1.6">
+        <b>Filtros OOS validados (2yr, PF=1.24, MaxDD=7.8%):</b><br>
+        ✓ Todos los días &nbsp;·&nbsp; ✓ Ventana A+B+SB &nbsp;·&nbsp; ✓ Desplazamiento ≥21pts &nbsp;·&nbsp; ✓ Sin BE (RR 2.5) &nbsp;·&nbsp; ✓ Riesgo 1.3%
+      </div>
     </div>
 
-    <!-- Paper Trading — 2 semanas -->
+    <!-- Multi-Account Prop Firm Tracker -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>Cuentas de Fondeo</span>
+        <span style="font-size:10px;color:var(--text2)" id="acc-summary">4 activas</span>
+      </div>
+      <!-- Total profit bar -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:3px">
+          <span>Profit total (4 cuentas)</span>
+          <span id="acc-total-pnl" style="color:var(--green)">$0</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:3px;height:5px;overflow:hidden">
+          <div id="acc-total-bar" style="height:100%;background:var(--green);width:0%;border-radius:3px;transition:width .5s"></div>
+        </div>
+        <div style="font-size:9px;color:var(--text2);text-align:right;margin-top:2px">target: $20,000 (4×$5k)</div>
+      </div>
+      <!-- Account grid 2×2 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="acc-grid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Paper Trading — histórico -->
     <div class="panel">
       <div class="panel-title">
         <span>Paper Trading</span>
@@ -2620,10 +2925,71 @@ async function refreshDaily(){
   }catch(e){ console.warn("refreshDaily",e); }
 }
 
+// ── Multi-account prop firm tracker ───────────────────────────────────────────
+const STATUS_META = {
+  EVAL:   {label:"EVAL",   bg:"#1a2a1a", color:"#4caf50", border:"#1a3a1a"},
+  PASSED: {label:"✅ APROBADA", bg:"#0d2a0d", color:"#69f569", border:"#1a6a1a"},
+  FAILED: {label:"❌ ELIMINADA", bg:"#2a0d0d", color:"#f56969", border:"#6a1a1a"},
+  FUNDED: {label:"💰 FONDEADA", bg:"#0d1a2a", color:"#69b4f5", border:"#1a3a6a"},
+};
+
+function renderAccounts(data) {
+  const grid = document.getElementById("acc-grid");
+  if (!grid || !data) return;
+
+  // Summary line
+  const s = document.getElementById("acc-summary");
+  if (s) s.textContent = `${data.active} activas · ${data.passed} aprobadas · ${data.failed} eliminadas`;
+
+  // Total profit bar (target 20k = 4x5k)
+  const totalPnl = data.total_profit || 0;
+  const totalPct = Math.min(100, totalPnl / 20000 * 100);
+  const tpEl = document.getElementById("acc-total-pnl");
+  const tbEl = document.getElementById("acc-total-bar");
+  if (tpEl) { tpEl.textContent = (totalPnl>=0?"+":"")+"$"+totalPnl.toFixed(0); tpEl.style.color = totalPnl>=0?"var(--green)":"var(--red)"; }
+  if (tbEl) tbEl.style.width = totalPct+"%";
+
+  grid.innerHTML = data.accounts.map(acc => {
+    const m = STATUS_META[acc.status] || STATUS_META.EVAL;
+    const pnlColor = acc.profit >= 0 ? "var(--green)" : "var(--red)";
+    const ddColor  = acc.dd_pct > acc.max_dd_pct * 0.7 ? "var(--red)" : acc.dd_pct > acc.max_dd_pct * 0.4 ? "var(--yellow)" : "var(--text2)";
+    const barPct   = Math.min(100, acc.target_pct);
+    return `<div style="background:${m.bg};border:1px solid ${m.border};border-radius:6px;padding:7px;font-size:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-weight:700;color:#ccc">${acc.name}</span>
+        <span style="color:${m.color};font-size:9px;font-weight:600">${m.label}</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:${pnlColor};margin-bottom:2px">
+        ${acc.profit>=0?"+":""}$${acc.profit.toFixed(0)}
+        <span style="font-size:10px;font-weight:400;color:var(--text2)">(${acc.profit_pct>=0?"+":""}${acc.profit_pct.toFixed(1)}%)</span>
+      </div>
+      <!-- progress bar toward target -->
+      <div style="background:#111;border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px">
+        <div style="height:100%;background:${m.color};width:${barPct}%;transition:width .5s;border-radius:3px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;color:var(--text2)">
+        <span>DD <span style="color:${ddColor}">${acc.dd_pct.toFixed(1)}%</span>/${acc.max_dd_pct}%</span>
+        <span>WR <span style="color:var(--green)">${acc.wr}%</span></span>
+        <span>${acc.trades}T</span>
+      </div>
+      ${acc.status==="EVAL" ? `<div style="color:var(--text2);margin-top:3px">Falta $${acc.to_target.toFixed(0)} para aprobar</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+async function refreshAccounts() {
+  try {
+    const r = await fetch("/api/accounts");
+    if (r.ok) renderAccounts(await r.json());
+  } catch(e) { console.warn("refreshAccounts", e); }
+}
+
 refresh();
 refreshDaily();
+refreshAccounts();
 setInterval(refresh,3000);
 setInterval(refreshDaily,30000);  // daily state + paper report every 30s
+setInterval(refreshAccounts,60000); // accounts refresh every 60s
 setInterval(loadNews,300000);     // news refresh every 5 min (cached 1h on server)
 window.addEventListener("resize",()=>drawEq(eqData,eqStart));
 </script>
