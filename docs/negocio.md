@@ -4,7 +4,7 @@
 
 - **Plataforma**: TikTok Shop + Shopify
 - **Producto**: e-commerce con proveedor chino (DDP)
-- **Contenido**: vídeos automatizados con IA — ElevenLabs (voz) + Creatomate (render)
+- **Contenido**: vídeos automatizados con IA — Chatterbox TTS (voz, local+gratis) + Creatomate (render)
 - **Operaciones**: procesamiento de pedidos, contabilidad básica, alertas de stock
 - **Flujos típicos**: `Ecom - Process New Order`, `Ecom - Generate TikTok Video`
 

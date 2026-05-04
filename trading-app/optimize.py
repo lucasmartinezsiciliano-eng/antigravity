@@ -62,15 +62,21 @@ def score(m: dict) -> float:
 
 def run_backtest(symbol: str, days: int, stop_pct: float, rr: float,
                  bias: str, risk_pct: float) -> dict | None:
-    """Lanza backtest.py como subprocess y parsea el JSON de salida."""
+    """Lanza backtest.py como subprocess y parsea el JSON de salida.
+    Usa el mismo set de filtros que el bot en vivo (LIVE_FILTERS) — OOS validated:
+    day-filter Mon+Tue, Window A+B+SB, displacement≥21pts NQ, BE@1.5R.
+    """
     cmd = [
         sys.executable, "backtest.py",
-        "--symbol",   symbol,
-        "--days",     str(days),
-        "--stop-pct", str(stop_pct),
-        "--rr",       str(rr),
-        "--bias",     bias,
-        "--risk-pct", str(risk_pct),
+        "--symbol",           symbol,
+        "--days",             str(days),
+        "--stop-pct",         str(stop_pct),
+        "--rr",               str(rr),
+        "--bias",             bias,
+        "--risk-pct",         str(risk_pct),
+        # no --no-window-b: OOS shows Window B helps, don't exclude it
+        "--min-displacement", "21",    # body ≥ 21pts NQ (≡ 0.5 QQQ pts) — OOS validated
+        "--be-trigger",       "1.5",   # BE a 1.5R — OOS validated (0.5R destroys PF)
         "--json",
     ]
     try:

@@ -1,0 +1,54 @@
+version: '3.8'
+
+# Deploy en Oracle Cloud (mismo Swarm que n8n)
+# Acceso público: https://crm.lukimporta.es
+# Acceso interno n8n:  http://mission-control_app:9999
+#
+# Despliegue:
+#   1. Subir imagen al servidor (ver deploy.sh)
+#   2. docker stack deploy -c docker-stack.yml mission-control
+#
+# DNS: añadir en Nominalia/Cloudflare:
+#   crm.lukimporta.es  →  A  <IP Oracle Cloud>
+
+services:
+  app:
+    image: mission-control:latest
+    build: .
+    networks:
+      - traefik-public
+      - n8n-internal
+    volumes:
+      - crm-data:/data
+    environment:
+      - CRM_DATA_DIR=/data
+      - NODE_ENV=production
+      - OPENCLAW_URL=https://openclaw.lukimporta.es
+      - OPENCLAW_TOKEN=centrum2026gw
+      - PORTAINER_URL=https://portainer.lukimporta.es
+      - PORTAINER_USER=lucasmartinez
+      - PORTAINER_PASS=Barker2013mtz@
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        # ─── Ruta pública HTTPS ───────────────────────────────────────────────
+        - traefik.http.routers.crm.rule=Host(`crm.lukimporta.es`)
+        - traefik.http.routers.crm.entrypoints=websecure
+        - traefik.http.routers.crm.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.crm.service=crm
+        - traefik.http.services.crm.loadbalancer.server.port=9999
+
+volumes:
+  crm-data:
+    driver: local
+
+networks:
+  traefik-public:
+    external: true
+  n8n-internal:
+    external: true
+    name: n8n_default

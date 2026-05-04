@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Briefing de Agentes — Centrum de la Vivienda</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; max-width: 960px; margin: 40px auto; padding: 0 30px; color: #1a1a1a; line-height: 1.7; background: #fff; }
+
+  .header-box { background: #1a1a2e; color: white; padding: 35px; border-radius: 10px; margin-bottom: 50px; }
+  .header-box h1 { font-size: 2em; color: white; border-bottom: 2px solid #e63946; padding-bottom: 10px; margin-bottom: 10px; }
+  .tagline { font-size: 1.2em; color: #e63946; font-style: italic; margin: 10px 0; }
+  .header-box p { color: #ccc; margin: 4px 0; font-size: 0.9em; }
+  .intro { background: #f0f4f8; border-radius: 8px; padding: 25px 30px; margin-bottom: 40px; border-left: 4px solid #457b9d; }
+  .intro p { margin-bottom: 8px; }
+
+  h2.bloque { font-size: 1.5em; color: #1a1a2e; margin-top: 60px; margin-bottom: 25px; border-bottom: 3px solid #e63946; padding-bottom: 8px; }
+  h3.director { font-size: 1.15em; color: #457b9d; margin-top: 35px; margin-bottom: 15px; background: #eef2f7; padding: 10px 15px; border-radius: 6px; }
+
+  .agent-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px 25px; margin: 15px 0; background: #fff; }
+  .agent-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .agent-name { font-size: 1em; font-weight: bold; color: #1a1a2e; font-family: monospace; background: #1a1a2e; color: #7dd3fc; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-bottom: 12px; }
+  .agent-def { margin-bottom: 14px; }
+  .agent-def strong { color: #1a1a2e; }
+  .agent-def p { margin: 4px 0; font-size: 0.92em; }
+  .def-label { font-size: 0.78em; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px; margin-bottom: 2px; }
+
+  .preguntas { background: #fff8e1; border-left: 3px solid #ffc107; padding: 14px 18px; border-radius: 0 6px 6px 0; margin-top: 14px; }
+  .preguntas-title { font-size: 0.82em; font-weight: bold; color: #b8860b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .preguntas ol { padding-left: 18px; }
+  .preguntas li { font-size: 0.91em; margin-bottom: 6px; color: #4a3800; }
+
+  .orchestrator-card { background: #1a1a2e; color: white; border-radius: 10px; padding: 25px 30px; margin: 20px 0 40px 0; }
+  .orchestrator-card .agent-name { background: #e63946; color: white; }
+  .orchestrator-card .agent-def p { color: #ddd; font-size: 0.92em; }
+  .orchestrator-card .def-label { color: #aaa; }
+  .orchestrator-card .preguntas { background: rgba(255,255,255,0.08); border-left: 3px solid #e63946; }
+  .orchestrator-card .preguntas-title { color: #ffc107; }
+  .orchestrator-card .preguntas li { color: #f5f5dc; }
+
+  .intel-group { background: #f8f0ff; border: 1px solid #d4b8f0; border-radius: 8px; padding: 18px 22px; margin: 15px 0; }
+  .intel-group .agent-name { background: #6a0dad; color: #e8d5f5; }
+
+  .stats { display: flex; gap: 15px; margin: 20px 0 40px 0; flex-wrap: wrap; }
+  .stat-box { background: #e63946; color: white; padding: 12px 20px; border-radius: 6px; text-align: center; flex: 1; min-width: 120px; }
+  .stat-box .num { font-size: 1.8em; font-weight: bold; display: block; }
+  .stat-box .label { font-size: 0.75em; }
+
+  .nota-rgpd { background: #fff0f0; border: 1px solid #ffaaaa; border-radius: 6px; padding: 12px 16px; font-size: 0.85em; color: #8b0000; margin: 8px 0; }
+
+  .footer { margin-top: 70px; padding-top: 20px; border-top: 1px solid #ddd; color: #888; font-size: 0.82em; text-align: center; }
+
+  @media print {
+    @page { size: A4; margin: 18mm 20mm 18mm 20mm; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body {
+      margin: 0; padding: 0;
+      font-family: Georgia, serif;
+      font-size: 9.5pt;
+      color: #000;
+      max-width: 100%;
+      line-height: 1.55;
+    }
+
+    /* ─── Cabecera ─── */
+    .header-box {
+      background: #fff !important;
+      color: #000 !important;
+      border: 2px solid #1a1a2e;
+      border-radius: 0;
+      padding: 15px 20px;
+      margin-bottom: 18pt;
+      page-break-inside: avoid;
+    }
+    .header-box h1 { font-size: 16pt; color: #1a1a2e !important; border-bottom: 1.5px solid #1a1a2e; }
+    .tagline { color: #1a1a2e !important; font-size: 11pt; }
+    .header-box p { color: #333 !important; font-size: 8.5pt; }
+
+    /* ─── Intro ─── */
+    .intro { background: #f5f5f5 !important; border-left: 3px solid #1a1a2e; border-radius: 0; padding: 10px 15px; margin-bottom: 15pt; page-break-inside: avoid; }
+    .intro p { font-size: 9pt; }
+
+    /* ─── Stats ─── */
+    .stats { display: flex; gap: 8px; margin: 10pt 0 18pt 0; }
+    .stat-box { background: #1a1a2e !important; color: #fff !important; padding: 8px 10px; border-radius: 0; flex: 1; min-width: 0; }
+    .stat-box .num { font-size: 14pt; }
+    .stat-box .label { font-size: 7pt; }
+
+    /* ─── Títulos de bloque ─── */
+    h2.bloque {
+      font-size: 13pt;
+      color: #000;
+      border-bottom: 2px solid #1a1a2e;
+      padding-bottom: 4px;
+      margin-top: 22pt;
+      margin-bottom: 10pt;
+      page-break-after: avoid;
+    }
+    h3.director {
+      font-size: 10.5pt;
+      color: #000;
+      background: #ebebeb !important;
+      border-left: 3px solid #1a1a2e;
+      border-radius: 0;
+      padding: 5px 10px;
+      margin: 12pt 0 6pt 0;
+      page-break-after: avoid;
+    }
+
+    /* ─── Tarjetas de agente ─── */
+    .agent-card, .intel-group, .orchestrator-card {
+      background: #fff !important;
+      color: #000 !important;
+      border: 1px solid #bbb;
+      border-radius: 0;
+      padding: 10px 14px;
+      margin: 8pt 0;
+      page-break-inside: avoid;
+    }
+
+    /* ─── Nombre del agente ─── */
+    .agent-name {
+      background: #1a1a2e !important;
+      color: #fff !important;
+      font-size: 9pt;
+      padding: 2px 8px;
+      border-radius: 0;
+      display: inline-block;
+      margin-bottom: 8px;
+      font-family: monospace;
+    }
+    .orchestrator-card .agent-name, .intel-group .agent-name {
+      background: #1a1a2e !important;
+      color: #fff !important;
+    }
+
+    /* ─── Definiciones ─── */
+    .agent-def p { font-size: 9pt; color: #000 !important; margin: 2px 0; }
+    .def-label { font-size: 7.5pt; font-weight: bold; color: #444 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 5px; margin-bottom: 1px; }
+    .orchestrator-card .def-label { color: #444 !important; }
+    .orchestrator-card .agent-def p { color: #000 !important; }
+
+    /* ─── Bloque de preguntas ─── */
+    .preguntas {
+      background: #f9f9f9 !important;
+      border-left: 2.5px solid #1a1a2e;
+      border-radius: 0;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+    .preguntas-title { font-size: 7.5pt; font-weight: bold; color: #000 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .preguntas ol { padding-left: 16px; }
+    .preguntas li { font-size: 8.5pt; color: #000 !important; margin-bottom: 4px; line-height: 1.4; }
+
+    /* ─── Líneas de respuesta bajo cada pregunta ─── */
+    .preguntas li::after {
+      content: "";
+      display: block;
+      border-bottom: 1px solid #ccc;
+      margin-top: 3px;
+      margin-bottom: 6px;
+      height: 14px;
+    }
+
+    /* ─── RGPD ─── */
+    .nota-rgpd { background: #f5f5f5 !important; border: 1px solid #bbb; color: #000 !important; font-size: 8pt; padding: 6px 10px; border-radius: 0; }
+
+    /* ─── Cierre ─── */
+    .footer { color: #555 !important; font-size: 8pt; border-top: 1px solid #bbb; margin-top: 20pt; padding-top: 8px; }
+
+    /* ─── Saltos de página ─── */
+    h2.bloque { page-break-before: always; }
+    h2.bloque:first-of-type { page-break-before: avoid; }
+    .orchestrator-card { page-break-before: avoid; }
+
+    /* ─── Hover no aplica en impresión ─── */
+    .agent-card:hover { box-shadow: none; }
+
+    /* ─── Sección de cierre oscura ─── */
+    div[style*="background:#1a1a2e"] {
+      background: #fff !important;
+      color: #000 !important;
+      border: 1.5px solid #1a1a2e;
+      border-radius: 0 !important;
+      page-break-inside: avoid;
+    }
+    div[style*="background:#1a1a2e"] h2 { color: #1a1a2e !important; }
+    div[style*="background:#1a1a2e"] p,
+    div[style*="background:#1a1a2e"] li { color: #222 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header-box">
+  <h1>Briefing de Agentes — Centrum de la Vivienda</h1>
+  <div class="tagline">"Salvamos Tu Vivienda"</div>
+  <p>Documento de definición y validación — Para Mariano</p>
+  <p style="margin-top:12px; font-size:0.85em;">Mariano | Mediterránea Firmax SL | Registro Banco de España: D219 | Abril 2026</p>
+</div>
+
+<div class="intro">
+  <p><strong>Para qué sirve este documento:</strong> Cada agente del sistema está definido con precisión técnica. Debajo de cada definición hay 2–3 preguntas dirigidas a ti. Solo tú puedes responderlas — son decisiones de negocio basadas en tus 20 años de experiencia, no decisiones técnicas.</p>
+  <p><strong>Qué hacer:</strong> Lee la definición de cada agente. Si estás de acuerdo, responde las preguntas debajo. Si la definición está mal enfocada, corrígela con tus propias palabras. Al final valoramos juntos qué ajustar antes de construir.</p>
+  <p><strong>No necesitas saber de tecnología.</strong> Habla como si le explicaras a un empleado nuevo cómo quieres que funcione cada tarea.</p>
+</div>
+
+<div class="stats">
+  <div class="stat-box"><span class="num">1</span><span class="label">Orquestador central</span></div>
+  <div class="stat-box"><span class="num">6</span><span class="label">Agentes de inteligencia</span></div>
+  <div class="stat-box"><span class="num">10</span><span class="label">Directores de bloque</span></div>
+  <div class="stat-box"><span class="num">~67</span><span class="label">Agentes especializados</span></div>
+  <div class="stat-box"><span class="num">84</span><span class="label">Total componentes</span></div>
+</div>
+
+
+<!-- ============================== -->
+<!-- ORQUESTADOR CENTRAL            -->
+<!-- ============================== -->
+
+<h2 class="bloque">Orquestador Central</h2>
+
+<div class="orchestrator-card">
+  <div class="agent-name">centrum-orchestrator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Es el director general del sistema. Recibe eventos del exterior (nuevo lead, alerta judicial, solicitud de contenido) y decide qué director activa, en qué orden, con qué prioridad. No ejecuta tareas directamente — delega siempre. Mantiene el estado global de todos los casos activos y detecta cuando un caso pasa de un bloque al siguiente (ej: lead analizado → pasa a soluciones).</p>
+    <div class="def-label">Lo que no hace</div>
+    <p>No redacta, no analiza, no llama a nadie. Solo coordina y da órdenes a los directores.</p>
+    <div class="def-label">Cuándo te avisa a ti</div>
+    <p>Cuando hay una decisión que supera sus reglas: caso inusual, conflicto entre directores, o acción que requiere tu aprobación explícita.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay situaciones en las que quieres que te avisen INMEDIATAMENTE, sin que el sistema intente gestionarlo solo primero? (ej: alguien que tiene la subasta en 3 días, alguien conocido, un caso con abogado implicado)</li>
+      <li>¿Qué información mínima necesitas ver tú personalmente antes de que el sistema empiece a actuar con un nuevo lead? ¿O prefieres que actúe solo y te informe después?</li>
+      <li>¿Tienes casos que quieres gestionar tú directamente sin que el sistema interfiera? ¿Cómo los identificamos?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- INTELIGENCIA EXTERNA           -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 0 — Inteligencia Externa</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Estos agentes monitorean el mundo exterior de forma continua — mercado, legislación, noticias, competencia. Alimentan a todos los demás bloques con contexto actualizado. Trabajan en segundo plano, sin que nadie los llame.</p>
+
+<div class="intel-group">
+  <div class="agent-name">market-watcher</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Monitorea diariamente el mercado hipotecario español: tipos de interés (Euribor, TIN, TAE), volumen de ejecuciones hipotecarias, estadísticas de impago publicadas por Banco de España e INE, tendencias de precios de vivienda en Cataluña. Genera un resumen semanal con los datos que cambian tu forma de asesorar.</p>
+    <div class="def-label">Salida</div>
+    <p>Informe semanal de mercado + alertas puntuales si algo cambia bruscamente (ej: Euribor sube 0.5 puntos en una semana).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué indicador de mercado te parece más importante vigilar para tu trabajo diario? ¿El Euribor, el número de ejecuciones, los precios de vivienda, o algún otro?</li>
+      <li>¿Cuándo cambia algo en el mercado (ej: sube el Euribor), cambias tu discurso con los clientes? ¿Cómo?</li>
+      <li>¿Hay alguna fuente que ya consultas habitualmente y que este agente debería cubrir sí o sí?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="intel-group">
+  <div class="agent-name">law-tracker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Rastrea cambios legislativos relevantes para el negocio: BOE, normativa hipotecaria, jurisprudencia del Tribunal Supremo sobre cláusulas abusivas, moratorias, plazos de ejecución, ley segunda oportunidad. Cuando se publica algo relevante, lo resume y alerta al sistema.</p>
+    <div class="def-label">Salida</div>
+    <p>Alerta con: qué cambió, qué artículo/sentencia, cómo afecta a los casos activos, acción recomendada.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué cambio legal en los últimos 5 años te ha afectado más en el día a día con clientes? (Para que el sistema sepa qué tipo de cambios son críticos para ti)</li>
+      <li>¿Tienes abogado de confianza al que consultas cuando hay dudas legales? ¿Queremos que el sistema le alerte directamente a él también cuando detecte algo relevante?</li>
+      <li>¿Hay algún tema legal que el sistema NO debería gestionar solo y que siempre debe pasarte a ti primero?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="intel-group">
+  <div class="agent-name">news-scanner</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Escanea noticias de prensa generalista y especializada (Expansión, Idealista, Fotocasa, El País, La Vanguardia) buscando historias sobre deuda hipotecaria, ejecuciones, rescates de vivienda. Identifica las noticias que podrían usarse como base para contenido en TikTok/Meta o como argumento en conversaciones con clientes.</p>
+    <div class="def-label">Salida</div>
+    <p>Lista semanal de 3-5 noticias con: titular, por qué es relevante, uso potencial (contenido / argumentario / alerta).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Lees algún medio o newsletter habitualmente relacionado con tu trabajo? ¿Cuál no debería faltar?</li>
+      <li>Cuando ves una noticia sobre hipotecas en el telediario, ¿piensas "esto lo puedo usar con clientes" o "esto confunde a la gente"? ¿Tienes ejemplos?</li>
+      <li>¿Quieres recibir este resumen de noticias por WhatsApp/Telegram o prefieres que esté en un panel y lo mires cuando quieras?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="intel-group">
+  <div class="agent-name">competitor-spy</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Monitorea competidores directos en el espacio de deudores hipotecarios: gestoras de deuda, abogados especializados en segunda oportunidad, brokers con presencia en Cataluña. Analiza sus webs, redes sociales, anuncios de Google/Meta y propuestas de valor. Detecta si alguno lanza algo nuevo o cambia su discurso.</p>
+    <div class="def-label">Salida</div>
+    <p>Informe mensual de competencia + alerta si detecta movimiento relevante (nuevo anuncio, nuevo servicio, nueva web).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿A quién consideras tu competencia directa ahora mismo? ¿Nombres de empresas, despachos o personas concretas?</li>
+      <li>¿Qué es lo que te diferencia de ellos que no han sabido copiar? (Eso es lo que el sistema debe proteger y potenciar)</li>
+      <li>¿Hay algo que algún competidor hace bien y que tú quisiera hacer mejor o diferente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="intel-group">
+  <div class="agent-name">avatar-researcher</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Investiga continuamente el perfil del cliente objetivo: quién es la persona que tiene deuda hipotecaria, qué busca en Google cuando empieza a angustiarse, qué le da vergüenza preguntar, qué miedos tiene, qué lenguaje usa, en qué momento del proceso está cuando busca ayuda. Usa Reddit España, foros jurídicos, comentarios en redes, grupos de Facebook.</p>
+    <div class="def-label">Salida</div>
+    <p>Actualización mensual del perfil de cliente con nuevas frases, miedos, preguntas frecuentes detectadas online.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo te llama alguien por primera vez, cuál es la frase o el miedo que repiten casi todos? ¿Qué dicen exactamente?</li>
+      <li>¿Hay un perfil de cliente que te llega más: familias con hijos, parejas separadas, personas mayores, autónomos arruinados...? ¿Cómo los describirías con tus palabras?</li>
+      <li>¿Hay algo que los clientes NUNCA dicen en la primera llamada pero que siempre aparece después? (Lo que no cuentan hasta que confían)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="intel-group">
+  <div class="agent-name">trend-exploiter</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Detecta tendencias de búsqueda y redes sociales que se pueden aprovechar para contenido orgánico o anuncios. Vigila Google Trends, TikTok Discover y Twitter/X buscando conversaciones sobre hipotecas, desahucios, deudas, bancos. Cuando detecta un tema "caliente" avisa a content-director para actuar rápido.</p>
+    <div class="def-label">Salida</div>
+    <p>Alerta inmediata cuando hay un tema viral relevante + propuesta de ángulo de contenido para Centrum.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Recuerdas algún momento en que las noticias o la actualidad trajeron un pico de llamadas de clientes? ¿Qué había pasado en ese momento?</li>
+      <li>¿Quieres que el sistema publique contenido rápido cuando hay un tema caliente, o prefieres revisarlo tú primero aunque se pierda algo de rapidez?</li>
+      <li>¿Hay temas de actualidad que NUNCA quieres usar para hacer contenido aunque sean virales? (Por ejemplo: casos muy mediáticos, ciertos tipos de desahucio, etc.)</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 1: PRODUCCIÓN           -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 1 — Producción de Contenido</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Genera el contenido de captación en los 3 canales: TikTok, Meta (Facebook/Instagram) y Google Ads. El content-director coordina a todos los agentes del bloque y recibe instrucciones del centrum-orchestrator.</p>
+
+<h3 class="director">content-director</h3>
+<div class="agent-card">
+  <div class="agent-name">content-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Recibe la orden de producir contenido (semanal o por alerta de trend-exploiter) y decide qué tipo de pieza crear, para qué canal, con qué ángulo. Distribuye el trabajo entre los 11 agentes del bloque. Revisa que la producción final sea coherente entre canales y esté alineada con los valores de Centrum.</p>
+    <div class="def-label">Lo que no hace</div>
+    <p>No escribe ni diseña nada directamente. Solo decide y coordina.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con qué frecuencia quieres que el sistema genere nuevo contenido? ¿Una vez por semana es suficiente o necesitas más ritmo al principio?</li>
+      <li>¿Quieres revisar cada pieza de contenido antes de publicarla o prefieres que el sistema publique directamente y tú revisas después?</li>
+      <li>¿Hay mensajes que quieres repetir siempre en todo el contenido? (ej: "consulta gratuita", "20 años de experiencia", "Tarragona y Cataluña")</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">tiktok-scriptwriter</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Escribe el guión completo de un vídeo TikTok de 60-90 segundos para Centrum. El guión incluye: segundo a segundo qué dice Mariano, qué aparece en pantalla, subtítulos de apoyo, tono (cercano, directo, sin jerga técnica). Cada guión parte de un tema asignado por content-director.</p>
+    <div class="def-label">Formato de salida</div>
+    <p>[00-03s: GANCHO] texto hablado + texto en pantalla / [03-20s: DESARROLLO] / [20-55s: HISTORIA O DATO] / [55-65s: CTA]</p>
+    <div class="def-label">Límite</div>
+    <p>No decide el tema. No produce el vídeo. Solo el guión.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo hablas tú normalmente cuando explicas un caso a alguien de confianza — formal, coloquial, directo? ¿Hay frases tuyas que te gustaría que aparecieran en los guiones?</li>
+      <li>¿Prefieres hablar tú a cámara en los vídeos, usar solo texto/imágenes, o una mezcla? Esto define cómo escribimos el guión.</li>
+      <li>¿Hay algo que digas habitualmente que sabes que impacta a la gente? Una frase, un dato, una historia de ejemplo.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">tiktok-hook-specialist</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Se especializa únicamente en los primeros 3 segundos del vídeo TikTok — el gancho. Genera 3 variantes del gancho para cada guión: una basada en miedo, una en promesa, una en dato sorprendente. El content-director elige cuál usar. Si en 3 segundos el espectador no se queda, el vídeo no funciona.</p>
+    <div class="def-label">Salida</div>
+    <p>3 opciones de gancho: texto hablado (máx 8 palabras) + texto en pantalla (máx 5 palabras). Siempre diferentes en tono.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuál crees que es el mayor miedo que tiene alguien con una hipoteca sin pagar? ¿Lo perder la casa, el juicio, el qué dirán, la deuda que queda después?</li>
+      <li>Si pudieras decirle algo en 3 segundos a alguien que no sabe que puedes ayudarle, ¿qué le dirías?</li>
+      <li>¿Hay algo que te parezca demasiado alarmista para decir en un vídeo? (La línea entre captar atención y asustar demasiado)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">tiktok-cta-writer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Escribe el call to action final del vídeo TikTok — los últimos 5-10 segundos. El CTA debe ser claro, sin fricción, con una sola acción: "Escríbeme por WhatsApp", "Rellena el formulario", "Llámame gratis". Adapta el CTA al estado de urgencia del cliente (diferente CTA si el caso es urgente vs. exploratorio).</p>
+    <div class="def-label">Salida</div>
+    <p>2 variantes de CTA: una directa (para quien tiene urgencia) y una suave (para quien está explorando).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo prefieres que te contacten los clientes que vienen por TikTok: WhatsApp, llamada, formulario web, o Telegram? ¿Tienes preferencia?</li>
+      <li>¿Qué ofreces como primer paso — consulta gratuita, análisis del caso gratis, primera llamada sin compromiso? ¿Cómo lo llamas tú exactamente?</li>
+      <li>¿Hay algo que NO quieres prometer en los vídeos aunque sea tentador para captar clientes?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">meta-copywriter</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Escribe el texto completo del anuncio de Facebook/Instagram para Centrum. El copy incluye: titular principal (máx 40 caracteres), texto del cuerpo (2-3 párrafos), descripción del enlace. El tono es más emocional y directo que TikTok. Audiencia objetivo: 40-65 años con hipoteca en situación de impago en Cataluña.</p>
+    <div class="def-label">Límite</div>
+    <p>No diseña el visual del anuncio. No configura la campaña. Solo el texto.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué tipo de persona de 50 años con problemas de hipoteca te llama más: uno que lleva meses buscando solución, o uno que acaba de recibir la primera carta del banco y entra en pánico? ¿Con cuál trabajas mejor?</li>
+      <li>En tus anuncios, ¿quieres que salga tu nombre y cara o prefieres que sea más anónimo ("equipo de especialistas")? Esto define mucho el copy.</li>
+      <li>¿Qué frase o promesa crees que te haría diferente de cualquier otro anuncio de abogados o gestoras que aparece en Facebook?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">meta-audience-builder</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Define la audiencia exacta para cada anuncio de Meta: edad, ubicación, intereses, comportamientos. No lanza la campaña — entrega a meta-copywriter los parámetros de audiencia para que el copy esté calibrado, y genera el documento de configuración de audiencia para que el gestor de campañas lo implemente.</p>
+    <div class="def-label">Salida</div>
+    <p>Ficha de audiencia: rango de edad, provincias, intereses (ej: "propietarios", "hipotecas", "deuda"), exclusiones, tamaño estimado de audiencia.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tus clientes son principalmente de Tarragona capital, o también del Baix Camp (Reus, Cambrils, Salou)? ¿Hay zonas donde has tenido más casos?</li>
+      <li>¿Los clientes que más te han costado resolver — los que tenían el perfil más complicado — cómo eran? (Para entender qué audiencia NO queremos atraer si no podemos ayudarla)</li>
+      <li>¿Cuánto presupuesto mensual tienes pensado para anuncios de Meta como punto de partida?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">meta-headline-tester</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Genera 5 titulares distintos para el mismo anuncio con ángulos diferentes (miedo, esperanza, autoridad, urgencia, curiosidad). Están diseñados para hacer A/B test: Meta testea todos y el sistema registra cuál convierte mejor. El ganador se convierte en titular principal durante 2 semanas.</p>
+    <div class="def-label">Salida</div>
+    <p>5 titulares de máx 40 caracteres, cada uno con etiqueta de ángulo emocional.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuál de estas frases te parece más honesta con lo que haces: "Paramos tu desahucio", "Negociamos con tu banco", "Salvamos tu vivienda", "Te ayudamos a salir sin deuda"? ¿O ninguna?</li>
+      <li>¿Hay titulares que hayas visto de competidores que te parezcan deshonestos o exagerados? (Para evitar ese tono)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">google-keyword-researcher</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Investiga y actualiza mensualmente las palabras clave de Google Search para Centrum. Clasifica por intención: alta urgencia ("me van a quitar el piso"), media urgencia ("qué hacer si no pago hipoteca"), informacional ("qué es ejecución hipotecaria"). Estima coste por clic y volumen de búsqueda en Cataluña.</p>
+    <div class="def-label">Salida</div>
+    <p>Lista de palabras clave ordenadas por prioridad con: volumen mensual, CPC estimado, nivel de urgencia del buscador.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo crees que busca en Google alguien que está en apuros con su hipoteca? ¿Qué palabras exactas crees que escribiría?</li>
+      <li>¿Tienes budget mensual pensado para Google Ads o todavía no lo has definido?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">google-ad-writer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Escribe los textos de los anuncios de Google Ads (formato Responsive Search Ad): 15 titulares (máx 30 caracteres cada uno) y 4 descripciones (máx 90 caracteres cada una). Google los combina automáticamente. Los textos están calibrados para las palabras clave de alta urgencia.</p>
+    <div class="def-label">Límite</div>
+    <p>No configura la campaña. No elige pujas. Solo textos.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Quieres que los anuncios de Google incluyan tu nombre, el nombre "Centrum de la Vivienda", o "Mediterránea Firmax SL"? ¿O los tres según el caso?</li>
+      <li>¿Qué diferenciador quieres que aparezca siempre en los anuncios? Ejemplos posibles: "20 años de experiencia", "Consulta gratis", "Registro Banco de España", "Resultado garantizado". ¿Cuál es el tuyo?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">google-negative-manager</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Gestiona la lista de palabras clave negativas en Google Ads — las búsquedas para las que NO queremos aparecer. Evita que el presupuesto se gaste en clics irrelevantes (ej: alguien buscando "hipoteca nueva", "simulador hipoteca", "cómo contratar hipoteca"). Revisa cada semana las búsquedas que han activado el anuncio y añade negativas si procede.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay perfiles de cliente que vengan a ti pero que realmente NO puedes ayudar? (Por ejemplo: alguien que no tiene hipoteca, alguien fuera de Cataluña sin excepción, alguien con deuda de coche en vez de vivienda)</li>
+      <li>¿Hay servicios relacionados que podrían confundirse con el tuyo pero que NO ofreces? (Ej: alquiler social, gestión de herencias, etc.)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">content-scheduler</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Planifica el calendario de publicación de los 3 canales (TikTok, Meta, Google) para las próximas 4 semanas. Decide qué piezas se publican en qué fecha y hora, distribuyendo la carga uniformemente y evitando solapamientos. Tiene en cuenta días especiales (inicio de mes, fin de año fiscal, etc.) donde el volumen de búsquedas puede subir.</p>
+    <div class="def-label">Salida</div>
+    <p>Calendario mensual en tabla: fecha, canal, tipo de pieza, tema, estado (pendiente/listo/publicado).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay épocas del año en que recibes más consultas? (Ej: enero tras las navidades, septiembre al volver del verano, antes del verano cuando la gente se agobia)</li>
+      <li>¿Hay días de la semana en que estás más disponible para atender llamadas? El sistema puede coordinar los anuncios para que los leads lleguen esos días.</li>
+      <li>¿Cuántas piezas de contenido nuevo a la semana te parece un ritmo sostenible para empezar?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">content-repurposer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Convierte una pieza de contenido en 3 formatos distintos sin trabajo extra. Ejemplo: un vídeo TikTok de 60s se convierte en (1) post de texto para Facebook con el mismo mensaje, (2) anuncio de Meta con el gancho del vídeo como imagen+texto, (3) artículo corto para la web. Maximiza el trabajo hecho.</p>
+    <div class="def-label">Límite</div>
+    <p>No graba ni diseña. Solo adapta textos y estructura de guiones existentes.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes ya una web activa para Centrum de la Vivienda donde podríamos publicar artículos? ¿O solo tenemos redes sociales de momento?</li>
+      <li>¿El perfil de quien te sigue en Facebook es diferente al de TikTok? ¿Cómo lo ves tú?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 2: CONVERSIÓN           -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 2 — Conversión Web</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Gestiona lo que ocurre desde que alguien rellena el formulario hasta que Mariano tiene la llamada preparada. Todo ocurre en minutos, de forma automática.</p>
+
+<h3 class="director">conversion-director</h3>
+<div class="agent-card">
+  <div class="agent-name">conversion-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Recibe los leads entrantes del formulario web y coordina el pipeline de conversión. Asigna el lead a form-analyzer, recibe la puntuación de lead-scorer, la clasificación de lead-classifier, y activa lead-notifier + auto-responder + lead-router. Registra cada paso en el CRM. Si hay un lead urgente, salta el pipeline normal y notifica a Mariano directamente.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿En qué tiempo máximo quieres recibir la notificación de un nuevo lead tras rellenar el formulario? ¿Inmediatamente, en 5 minutos, o es suficiente con un resumen cada hora?</li>
+      <li>¿Quieres una puntuación del 1 al 10 de cada lead o prefieres categorías simples (urgente / normal / no cualificado)?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">form-analyzer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Lee las 4 respuestas del formulario y extrae la información clave de forma estructurada: meses sin pagar, fase procesal actual, objetivo del cliente, ubicación del inmueble. Detecta inconsistencias (ej: "0 meses sin pagar" pero "ya tengo demanda") y las marca para revisión.</p>
+    <div class="def-label">Salida</div>
+    <p>Ficha estructurada del lead con todos los campos extraídos y una nota si hay inconsistencias.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay respuestas en el formulario que te hayan sorprendido o que no encajan con lo que esperas? (Ej: gente que pone 0 meses pero tiene demanda, o que dice no saber en qué fase está)</li>
+      <li>¿Quieres añadir alguna pregunta al formulario actual para que el análisis inicial sea mejor?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">lead-scorer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Puntúa el lead del 1 al 10 basándose en: urgencia del caso (subasta inminente = 10), viabilidad de solución (¿hay margen de maniobra?), capacidad del cliente de colaborar (tiene documentación, tiene familia que puede ayudar), y proximidad geográfica. La puntuación guía la prioridad de llamada de Mariano.</p>
+    <div class="def-label">Escala orientativa</div>
+    <p>8-10: llamar hoy. 5-7: llamar en 24h. 1-4: derivar o descartar.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Para ti qué es un lead urgente de verdad? ¿Cuándo sientes que hay que actuar ese mismo día?</li>
+      <li>¿Hay perfiles de cliente que a priori sabes que no puedes ayudar aunque quieran tu ayuda? (Para que el sistema no les puntúe alto)</li>
+      <li>¿Aceptas casos fuera de Cataluña? ¿Hay alguna excepción geográfica que el sistema deba conocer?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">lead-classifier</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Clasifica el lead en una de 4 categorías con acción definida: (A) URGENTE — subasta/demanda activa, llamar hoy; (B) NORMAL — sin demanda, seguimiento en 24h; (C) NO CUALIFICADO — no hay hipoteca, fuera de zona, caso imposible; (D) DERIVAR ABOGADO — fase judicial avanzada que necesita defensa legal antes del broker.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes abogado/s de confianza a quienes derivas los casos que necesitan defensa legal? ¿Cómo funciona esa derivación — tú lo presentas, o el cliente va solo?</li>
+      <li>¿Hay alguna categoría de lead que el sistema aún no contempla y que tú atiendes de forma diferente?</li>
+      <li>¿Cuándo dices que un caso es "imposible", qué características tiene normalmente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">lead-notifier</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Envía a Mariano (WhatsApp o Telegram, según preferencia) un resumen del nuevo lead. El mensaje incluye: nombre, situación en una línea, puntuación, clasificación, y enlace a la ficha completa. El formato es breve — máx 5 líneas — para que Mariano pueda decidir qué hacer en 10 segundos.</p>
+    <div class="def-label">Formato de mensaje</div>
+    <p>🔴 [URGENTE] Juan García, Tarragona — 8 meses sin pagar, demanda recibida. Puntuación: 9/10. Quiere quedarse en el piso. → [Ver ficha]</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Por dónde quieres recibir estas notificaciones — WhatsApp personal, Telegram, email, o un número distinto para el negocio?</li>
+      <li>¿Quieres recibir TODOS los leads o solo los urgentes y normales (excluyendo los no cualificados)?</li>
+      <li>¿Hay horario en que no quieres recibir notificaciones? (Por la noche, fines de semana, etc.)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">lead-router</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Decide a qué flujo va el lead después de clasificarlo: (A) urgente → activa intake-director inmediatamente; (B) normal → pone el lead en la cola de intake para las próximas 24h; (C) no cualificado → activa auto-responder con mensaje de disculpa; (D) derivar → activa comms-director para contactar al abogado asociado.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>Cuando un lead no cualificado llega, ¿quieres que el sistema le diga algo específico o solo un mensaje genérico de que no podéis ayudarle?</li>
+      <li>¿Tienes alguna red de referidos — otros profesionales a quienes puedas derivar casos que no son para ti?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">auto-responder</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Envía automáticamente un mensaje al lead justo después de rellenar el formulario. El mensaje confirma que se ha recibido su caso, que Mariano le llamará en menos de 24 horas, y da una pequeña señal de esperanza. Tono: humano, cálido, cercano — nada de respuestas robóticas de sistema.</p>
+    <div class="def-label">Canales</div>
+    <p>Email principal + WhatsApp si dejó número. Si el lead es urgente (score 8+), el mensaje menciona que le llaman "hoy".</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué quieres que sienta la persona cuando recibe ese primer mensaje automático? ¿Que está en buenas manos, que no está sola, que hay solución...? Con tus palabras, ¿cómo empezarías ese mensaje?</li>
+      <li>¿Quieres firmar ese mensaje como "Mariano" o como "El equipo de Centrum de la Vivienda"?</li>
+      <li>¿Hay algo que NO quieras prometer en ese primer mensaje automático? (Ej: no decir "solucionaremos tu caso" si no sabemos aún si podemos)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">conversion-optimizer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Analiza semanalmente el rendimiento del embudo de conversión: de X visitas a la web, cuántos rellenan el formulario; de X formularios, cuántos son cualificados; de X cualificados, cuántos se convierten en clientes. Detecta dónde se pierde gente y propone cambios concretos (ej: cambiar texto del formulario, añadir prueba social, simplificar las preguntas).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes ya datos de cuánta gente visita tu web actual y cuántos contactan? (Para tener una línea base con la que comparar)</li>
+      <li>¿Cuál es la tasa de cierre que tienes actualmente — de cada 10 personas que te llaman, cuántas se convierten en clientes de pago?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 3: CONTACTO INICIAL     -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 3 — Primer Contacto</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Prepara a Mariano para cada llamada y captura todo lo que sale de ella. El objetivo es que Mariano entre en cada llamada con la ficha preparada y salga con el caso documentado.</p>
+
+<h3 class="director">intake-director</h3>
+<div class="agent-card">
+  <div class="agent-name">intake-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Coordina el bloque de primer contacto. Recibe el lead cualificado de conversion-director, activa la preparación de la llamada (call-prep, question-suggester, solution-previewer), y tras la llamada activa la documentación (call-transcriber, missing-data-detector, ficha-builder, ficha-saver). Gestiona el orden y tiempos.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con cuánta antelación quieres recibir la ficha de preparación antes de llamar? ¿5 minutos antes, 30 minutos, o la noche anterior?</li>
+      <li>¿Sueles llamar desde un número fijo o móvil? ¿Tienes número específico para el negocio?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">call-prep</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Prepara una ficha de 1 página para Mariano antes de cada llamada. Incluye: resumen del caso en 3 líneas, datos clave del formulario, puntuación y clasificación del lead, posibles soluciones aplicables, alertas de urgencia (fechas próximas, situación judicial). Diseñada para leer en 60 segundos.</p>
+    <div class="def-label">Salida</div>
+    <p>PDF o mensaje formateado con: [QUIÉN ES] [SITUACIÓN] [URGENCIA] [POSIBLES SOLUCIONES] [PREGUNTAS CLAVE A HACERLE]</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué información es la primera que necesitas saber de un caso antes de llamar? ¿El número de meses de impago, si tiene demanda, el valor del piso...?</li>
+      <li>¿Prefieres recibir esta ficha por WhatsApp, Telegram, o que esté en un panel que tú abres?</li>
+      <li>¿Hay algo que te haya faltado saber antes de una llamada y que después has pensado "ojalá lo hubiera sabido"?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">question-suggester</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Genera las 5 preguntas más importantes que Mariano debe hacer en esa llamada específica, basándose en el perfil del lead. Si hay demanda judicial, las preguntas son diferentes a si solo hay impago. Si el cliente quiere vender, las preguntas son diferentes a si quiere quedarse. Las preguntas están ordenadas por importancia.</p>
+    <div class="def-label">Límite</div>
+    <p>Mariano puede usarlas o no. Son sugerencias, no un guión rígido.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuál es la pregunta que siempre haces en la primera llamada, sin excepción? (Es la que siempre debe aparecer)</li>
+      <li>¿Hay preguntas que normalmente guardas para más adelante porque en la primera llamada asustan al cliente? (Para que el sistema las ponga en fase 2)</li>
+      <li>¿Cómo detectas tú si un cliente te está ocultando algo importante? ¿Hay señales que el sistema debería marcarte?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">solution-previewer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Antes de la llamada, hace un mapeo preliminar de qué soluciones podrían aplicar al caso con los datos del formulario. No es un análisis definitivo — es un anticipo para que Mariano vaya orientado. Ejemplo: "Dado que lleva 8 meses sin pagar y tiene demanda, las soluciones más probables son venta o negociación con quita."</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con los datos del formulario (meses sin pagar, fase procesal, objetivo) ya puedes intuir cuál es la solución más probable? ¿O necesitas hablar con el cliente primero?</li>
+      <li>¿Hay combinaciones de datos que casi siempre apuntan a la misma solución? Eso nos ayuda a programar el agente.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">call-transcriber</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Después de la llamada, Mariano le dicta (por WhatsApp de voz o texto) lo que ha averiguado. call-transcriber estructura esa información en campos concretos: situación real del inmueble, deuda total aproximada, situación laboral del cliente, acuerdos tomados, próximos pasos. Convierte el dictado informal de Mariano en datos estructurados.</p>
+    <div class="def-label">Input</div>
+    <p>Audio o texto dictado por Mariano. Output: ficha estructurada lista para ficha-builder.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo tomas notas ahora después de hablar con un cliente? ¿Papel, móvil, memoria...? ¿Hay un formato que ya uses que podamos replicar?</li>
+      <li>¿Cómo de cómodo te sentirías dictando por voz lo que has averiguado en la llamada? ¿O prefieres escribirlo?</li>
+      <li>¿Después de la llamada, qué es lo primero que anotas? Eso es lo más importante para el sistema.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">missing-data-detector</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Compara la ficha resultante de la llamada con la lista de datos mínimos necesarios para avanzar el caso. Si faltan datos clave (valor del inmueble, número de hipoteca, titular/s, nombre del banco, fecha de última cuota pagada), genera una lista de lo que falta y avisa a Mariano para que lo solicite en el próximo contacto o lo añada en el formulario de docs.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuáles son los 3 datos sin los que no puedes avanzar un caso? (Los más críticos, los que siempre necesitas)</li>
+      <li>¿Hay datos que siempre olvidas pedir y luego tienes que volver a llamar al cliente? El sistema puede marcártelos.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">ficha-builder</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Construye la ficha estandarizada del caso con todos los datos recogidos hasta el momento: datos del cliente, datos del inmueble, situación de la deuda, situación procesal, objetivo del cliente, acuerdos de la primera llamada, próximos pasos. Es el documento maestro del caso que todos los agentes posteriores consultan.</p>
+    <div class="def-label">Salida</div>
+    <p>Ficha en formato estructurado (JSON para el sistema + versión legible para Mariano). Incluye ID único del caso.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes ya un formato de ficha que uses para tus casos, en papel o Excel? Si existe, lo usamos como base.</li>
+      <li>¿Qué campos son los que más consultas cuando retomas un caso después de unos días? Eso va primero en la ficha.</li>
+      <li>¿Quieres que la ficha tenga un campo de "notas personales" donde puedas escribir cosas que no son datos formales pero que importan? (Ej: "el cliente está muy nervioso", "tiene exmujer que complica la gestión")</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">ficha-saver</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Guarda la ficha en los sistemas de registro: Notion (para consulta y seguimiento) y Google Sheets (para reporting y métricas). Crea el registro del caso con ID, fecha de alta, estado inicial y datos completos. Actualiza el registro cada vez que haya cambios en el caso.</p>
+    <div class="def-label">Integración RGPD</div>
+    <p>Los datos del cliente se guardan con cifrado y acceso restringido. Ver rgpd-guardian.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Usas Notion actualmente o prefieres tener todo en una hoja de Excel/Sheets que ya conozcas?</li>
+      <li>¿Hay alguien más en tu equipo además de ti que necesite acceder a las fichas? (Ej: tu abogado de confianza, una asistente)</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 4: DOCUMENTACIÓN        -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 4 — Documentación</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Gestiona el proceso de solicitar, recibir, verificar y organizar los documentos del caso. Uno de los cuellos de botella más comunes en broker hipotecario.</p>
+<div class="nota-rgpd">⚠️ Bloque sensible por RGPD — todos los documentos contienen datos personales y financieros. Ver rgpd-guardian.</div>
+
+<h3 class="director">doc-director</h3>
+<div class="agent-card">
+  <div class="agent-name">doc-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Coordina el proceso completo de documentación desde que se genera la checklist hasta que el expediente está completo. Activa a los agentes del bloque en orden, hace seguimiento del estado (pendiente/enviado/recibido/validado) y avisa a Mariano si un caso lleva más de X días bloqueado por falta de documentos.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuánto tiempo suele tardar un cliente en enviar toda la documentación? ¿Cuándo es el momento en que decides que un caso está "bloqueado" por docs?</li>
+      <li>¿Cuántos recordatorios envías normalmente antes de "rendirte" con un cliente que no manda los documentos?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">doc-checklist-generator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Genera la lista personalizada de documentos necesarios para cada caso específico. La lista varía según: tipo de solución prevista (venta vs. negociación vs. defensa legal), número de titulares, si hay proceso judicial abierto, si hay co-deudores o avalistas. No genera una lista genérica — genera la lista exacta para ese caso.</p>
+    <div class="def-label">Documentos típicos</div>
+    <p>DNI titulares, escritura de hipoteca, últimas 3 nóminas/declaración renta, extracto bancario 6 meses, nota simple del registro, carta del banco, demanda judicial si existe.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuáles son los documentos que pides SIEMPRE sin excepción, independientemente del caso?</li>
+      <li>¿Hay documentos que pides según el tipo de solución? Ej: para una venta necesitas X, para una negociación necesitas Y.</li>
+      <li>¿Has tenido casos donde el cliente no podía conseguir algún documento específico? ¿Cómo lo resolviste?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">doc-requester</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Envía al cliente la solicitud de documentos por WhatsApp y/o email, con la lista exacta y las instrucciones de cómo enviarlos (foto, PDF, enlace seguro). El mensaje está redactado en tono claro y cálido — no oficial/intimidante. Incluye las instrucciones específicas de cómo conseguir cada documento si el cliente no sabe.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo le pides ahora los documentos a un cliente? ¿Por WhatsApp, email, en persona? ¿Tienes un texto que ya uses y que funciona bien?</li>
+      <li>¿Tus clientes suelen tener dificultades para conseguir algún documento en particular? ¿Cuál?</li>
+      <li>¿Hay documentos confidenciales que prefieres recibir en persona en vez de digitalmente? (Por seguridad o confianza)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">doc-reminder</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Hace el seguimiento automático de los documentos pendientes. Si a las 48h no ha llegado el documento solicitado, envía un recordatorio suave. A las 96h, otro más directo. A los 7 días, notifica a Mariano para que llame personalmente. Registra cada recordatorio enviado.</p>
+    <div class="def-label">Tono</div>
+    <p>Primer recordatorio: amigable. Segundo: más directo pero sin presión. Tercero: alerta a Mariano.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuántos días es aceptable esperar un documento antes de que sea un problema para el caso?</li>
+      <li>¿Hay clientes que se sienten presionados con los recordatorios? ¿Prefieres un tono más paciente aunque tarde más?</li>
+      <li>¿A partir de cuántos días sin documentos consideras que un caso está en riesgo de perderse?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">doc-validator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Verifica que los documentos recibidos son correctos y completos: que el DNI no está caducado, que la nota simple del registro es reciente (máx 3 meses), que los extractos cubren el período solicitado, que las nóminas son del titular y del período correcto. Genera un informe de validación con OK / INCOMPLETO / NECESITA SUSTITUCIÓN para cada documento.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué errores de documentación son los más frecuentes que ves? (Documentos caducados, del titular equivocado, fotocopias ilegibles...)</li>
+      <li>¿Hay documentos que solo tú puedes juzgar si son válidos o si el sistema puede validarlos automáticamente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">doc-organizer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Nombra y organiza todos los documentos validados en la carpeta del caso con nomenclatura estándar: [ID-CASO]_[APELLIDO]_[TIPO-DOC]_[FECHA].pdf. Crea la estructura de carpetas en el sistema de almacenamiento. Genera un índice del expediente para que cualquier agente o persona sepa qué hay y dónde.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Dónde guardas ahora los documentos de tus casos? ¿Google Drive, tu ordenador, en papel? ¿Tiene estructura o está mezclado?</li>
+      <li>¿Tu abogado necesita acceder a los documentos directamente? ¿Cómo se los mandas ahora?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">rgpd-guardian</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Asegura que el tratamiento de datos personales cumple el RGPD en todo momento. Verifica que cada cliente ha dado consentimiento antes de guardar sus datos, que los datos se borran cuando el caso cierra (o según la política de retención), que no se envían datos personales por canales inseguros, y que existe registro de actividades de tratamiento. Genera alerta inmediata si detecta un incumplimiento.</p>
+    <div class="def-label">Contexto</div>
+    <p>Mediterránea Firmax SL opera como intermediario de crédito inmobiliario (Banco de España D219). Los datos hipotecarios son datos financieros sensibles.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes ya un aviso de privacidad y política de protección de datos en tu web? ¿Está actualizado con la normativa actual?</li>
+      <li>¿Sabes cuánto tiempo estás obligado a conservar los documentos de un caso después de cerrarlo?</li>
+      <li>¿Tienes firmado con tus clientes un consentimiento explícito para tratar sus datos? ¿O lo tienes pendiente?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 5: ANÁLISIS DEL CASO    -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 5 — Análisis del Caso</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Una vez que la documentación está completa, este bloque hace el análisis técnico profundo del caso. Es donde el sistema aplica el conocimiento de Mariano de forma sistemática.</p>
+
+<h3 class="director">analysis-director</h3>
+<div class="agent-card">
+  <div class="agent-name">analysis-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Coordina el análisis completo del caso. Activa los 7 agentes de análisis en paralelo cuando la documentación está lista. Consolida sus resultados en un informe único. Identifica si el caso necesita búsqueda legal actualizada (sentencias recientes, cambios normativos). Envía el informe consolidado a solutions-director.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuánto tiempo dedicarías tú normalmente a analizar un caso una vez que tienes toda la documentación? ¿Horas, días?</li>
+      <li>¿Hay casos en que siempre necesitas consultar con tu abogado antes de dar una opinión? ¿Cuáles?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">debt-analyzer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Calcula y desglosa la situación real de la deuda: capital pendiente, intereses devengados, intereses de demora, comisiones aplicadas por el banco, coste total real si se ejecuta la hipoteca. Compara lo que debe el cliente vs. lo que vale el inmueble (margen de maniobra). Detecta si la deuda ha crecido de forma desproporcionada.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con qué frecuencia encuentras que los intereses de demora o comisiones han inflado la deuda de forma que el banco no podría defender en juicio?</li>
+      <li>¿Hay un ratio deuda/valor de inmueble a partir del cual sabes que la negociación es imposible? ¿Cuál es esa línea para ti?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">legal-risk-assessor</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Evalúa el riesgo legal del caso: en qué fase del proceso judicial está (pre-demanda / demanda presentada / auto de admisión / señalamiento de subasta), cuánto tiempo queda antes de cada hito, qué consecuencias tiene cada fase para el cliente. Clasifica el riesgo: BAJO (tiempo para actuar), MEDIO (urgencia en semanas), ALTO (urgencia en días).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿En qué fase judicial es cuando ya no puedes hacer nada para salvar la vivienda? ¿Hay algún punto de no retorno?</li>
+      <li>¿Cuánto tiempo suele pasar en España desde que el banco presenta la demanda hasta la subasta? ¿Varía mucho según el juzgado o la zona?</li>
+      <li>¿Has tenido casos donde llegaste justo a tiempo? ¿Qué pasó exactamente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">property-valuator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Estima el valor de mercado del inmueble usando datos públicos: precio/m2 de zona según Idealista/Fotocasa, valoración catastral, tasación en escritura, comparables recientes en la zona. Calcula: valor de mercado estimado, valor de subasta estimado (70% del valor de tasación), margen entre deuda y valor.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo un cliente quiere saber cuánto vale su piso, en qué te basas tú normalmente para darte una cifra? ¿Catastro, Idealista, tu propia experiencia del mercado?</li>
+      <li>¿Tienes red de inmobiliarias de confianza que hacen valoraciones? ¿Queremos que el sistema les contacte automáticamente para obtener una valoración rápida?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">bank-behavior-analyst</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Analiza el comportamiento del banco en el caso: qué banco es, cómo actúa ese banco habitualmente en negociaciones (hay bancos que negocian más, otros que van directos a subasta), qué cartas/comunicaciones han enviado y qué significan, si el banco ha vendido la deuda a un fondo buitre. Esta información cambia completamente la estrategia.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay bancos con los que es mucho más difícil negociar? ¿Cuáles en tu experiencia son más flexibles y cuáles más agresivos?</li>
+      <li>¿Cómo cambia tu enfoque cuando la deuda la tiene un fondo buitre en vez del banco original?</li>
+      <li>¿Tienes contactos dentro de algún banco que faciliten la negociación? ¿Quieres que el sistema gestione esa comunicación o prefieres hacerlo tú directamente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">clause-detector</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Analiza la escritura de hipoteca buscando cláusulas potencialmente abusivas según jurisprudencia del Tribunal Supremo y normativa vigente: cláusula suelo, gastos de hipoteca mal imputados, IRPH, intereses de demora desproporcionados, vencimiento anticipado desproporcionado. Si detecta algo, lo marca como argumento para defensa legal o negociación.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con qué frecuencia encuentras cláusulas abusivas en las hipotecas de tus clientes? ¿Son más frecuentes en hipotecas de antes de 2010?</li>
+      <li>¿Has usado el argumento de cláusulas abusivas para negociar con algún banco? ¿Funcionó?</li>
+      <li>¿Este análisis lo haces tú o siempre lo delega en tu abogado? ¿Quieres que el sistema haga una primera detección y luego el abogado confirme?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">case-summarizer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Consolida todo el análisis (deuda, riesgo legal, valoración del inmueble, comportamiento del banco, cláusulas) en una ficha ejecutiva de 1 página legible por Mariano. Resumen estructurado: situación, urgencia, puntos fuertes del caso, puntos débiles, opciones abiertas. Diseñado para que Mariano pueda tomar decisiones en 2 minutos de lectura.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo tienes el análisis de un caso completo, qué es lo primero que buscas? ¿Qué mirar primero determina tu siguiente paso?</li>
+      <li>¿Hay información que prefieres que NO esté en el resumen para el cliente — algo que sea solo para uso interno tuyo?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">expedient-builder</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Construye el expediente completo del caso listo para ser presentado al abogado o a quien Mariano necesite. Incluye: ficha del cliente, documentación organizada, análisis completo, resumen ejecutivo y cronología del caso. En formato PDF estructurado. Es el expediente que Mariano pasa al abogado cuando necesita defensa legal.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo pasas un caso a un abogado, qué le mandas exactamente? ¿Tienes un formato que ya uses o siempre es diferente?</li>
+      <li>¿Tu abogado de confianza prefiere recibir todo en PDF, en carpeta de Drive, o en otro formato?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 6: SOLUCIONES           -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 6 — Soluciones</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Con el análisis completo, este bloque evalúa cada solución posible y redacta el informe de opciones para el cliente. Es el núcleo del valor de Centrum.</p>
+
+<h3 class="director">solutions-director</h3>
+<div class="agent-card">
+  <div class="agent-name">solutions-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Coordina la evaluación de todas las soluciones posibles para el caso. Activa los evaluadores en paralelo, recibe sus análisis, y los pasa a report-writer para construir el informe de opciones. Asegura que la recomendación final de recommendation-agent esté alineada con el perfil del cliente y los límites éticos de Centrum.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuántas soluciones distintas presentas normalmente a un cliente? ¿Le das siempre todas las opciones o filtras antes de presentarlas?</li>
+      <li>¿Alguna vez has tenido que decirle a un cliente que no hay solución? ¿Cómo lo manejas?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">solution-matcher</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Cruza el perfil completo del caso (deuda, valor inmueble, fase judicial, objetivo del cliente, situación familiar) con las 5 soluciones disponibles en Centrum. Determina cuáles son aplicables, cuáles están descartadas y por qué. Genera la lista de soluciones que pasarán a los evaluadores específicos.</p>
+    <div class="def-label">Salida</div>
+    <p>Lista de soluciones viables para este caso específico + justificación de las descartadas.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay casos en que una solución que parece imposible luego resulta viable? ¿Qué suele cambiar?</li>
+      <li>¿Cuándo recomiendas venta vs. negociación? ¿Qué variable es la más determinante para ti?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">sale-evaluator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Evalúa la viabilidad de vender el inmueble como solución. Calcula: si el precio de venta cubriría la deuda, cuánto tiempo tomaría la venta en esa zona, si el cliente tendría remanente o aún quedaría deuda, si la venta es compatible con la fase judicial actual (¿hay tiempo?), si hay cargas adicionales que compliquen la venta.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes red de compradores o inversores que pueden comprar rápido cuando hay urgencia? ¿Qué precio de descuento suelen exigir?</li>
+      <li>¿Cuándo recomiendas vender incluso si el cliente no quiere vender? ¿Cuál es el argumento que más convence al cliente?</li>
+      <li>¿Hay casos donde la venta es la única opción pero el cliente tiene alguna carga (expareja, herencia, hipoteca compartida) que la complica mucho?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">negotiation-evaluator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Evalúa la viabilidad de negociar con el banco para obtener una quita (reducción de deuda), una carencia temporal, o una reestructuración. Analiza: historial de pagos, perfil del cliente (empleado/desempleado, ingresos actuales), banco específico y su política de negociación conocida, si hay cláusulas abusivas que darían argumentos en una negociación.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuál es el mayor porcentaje de quita que has conseguido negociar con un banco? ¿En qué circunstancias fue posible?</li>
+      <li>¿Hay bancos con los que la negociación directa es imposible y siempre hay que ir por vía legal?</li>
+      <li>¿Cuánto tiempo tarda normalmente una negociación con un banco desde que la inicias hasta que hay respuesta?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">family-mortgage-evaluator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Evalúa si un familiar puede obtener una nueva hipoteca para comprar el inmueble al deudor, permitiendo que el deudor se quede viviendo en la casa (como inquilino o sin contrato). Analiza: necesidad de perfil financiero del familiar, precio de compra vs. deuda, implicaciones fiscales básicas, viabilidad bancaria del familiar.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con qué frecuencia es esta solución viable en la práctica? ¿Los familiares suelen tener perfil para conseguir hipoteca?</li>
+      <li>¿Hay conflictos familiares que conviertan esta solución en un problema a largo plazo aunque funcione en el corto? ¿Cómo lo detectas?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">legal-defense-evaluator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Evalúa si la defensa legal activa es viable y qué beneficios aportaría: presentar oposición a la ejecución, reclamar cláusulas abusivas, solicitar nulidad de actuaciones. Estima cuánto tiempo puede ganar una defensa legal, qué coste tiene, y qué probabilidad de éxito hay. Si clause-detector ha encontrado cláusulas abusivas, este evaluador las usa como argumento principal.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo recomiendas ir por vía legal defensiva en vez de buscar una salida negociada? ¿Es siempre mejor negociar?</li>
+      <li>¿Tu red de abogados trabaja a honorarios fijos, a éxito, o según el caso?</li>
+      <li>¿Has visto casos donde la defensa legal consiguió anular por completo la ejecución? ¿Qué argumento la ganó?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">time-gain-evaluator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Evalúa las estrategias para ganar tiempo cuando no hay solución inmediata disponible: incidentes procesales, solicitudes de documentación al banco, recursos administrativos, negociación dilatoria. Calcula cuánto tiempo máximo se puede ganar realísticamente y qué se puede conseguir con ese tiempo adicional.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Para qué sirve principalmente ganar tiempo — para que el cliente consiga dinero, para vender el piso, para que un familiar se organice? ¿Qué pasa habitualmente en ese tiempo ganado?</li>
+      <li>¿Cuánto tiempo realista se puede ganar en la mayoría de los casos sin que sea solo un retraso que empeora la deuda?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">report-writer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Escribe el informe de opciones para el cliente en lenguaje humano y claro — sin jerga legal ni financiera. El informe explica cada solución viable: en qué consiste, ventajas, riesgos, tiempo aproximado, qué se necesita del cliente para avanzar. El tono es el de Mariano explicándole al cliente sus opciones.</p>
+    <div class="def-label">Longitud</div>
+    <p>2-4 páginas. Nada más. El cliente necesita entender, no estudiar.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo explicas las opciones a un cliente, empiezas por la más viable, por la que él quiere oír, o por la que tú recomendarías? ¿Tienes un orden?</li>
+      <li>¿Hay palabras o términos que evitas con los clientes porque les confunden o les asustan?</li>
+      <li>¿El informe de opciones lo entregas en papel, por email, lo explicas verbalmente, o una combinación?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">recommendation-agent</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Añade la recomendación profesional de Mariano al informe de opciones. No es neutral — toma partido y dice cuál es la mejor opción en este caso específico y por qué. La recomendación está en primera persona, en el tono de Mariano. El sistema genera la recomendación basándose en los criterios de Mariano documentados — él la revisa y aprueba antes de enviar al cliente.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo haces una recomendación a un cliente, ¿la presentas como "yo haría esto" o como "la mejor opción en tu caso es"? ¿Cómo expresas tu opinión profesional?</li>
+      <li>¿Alguna vez has recomendado algo al cliente y él ha optado por otra cosa? ¿Cómo lo manejas?</li>
+      <li>¿Hay casos en que no das recomendación — simplemente presentas las opciones sin decir cuál es mejor?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">case-improver</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Busca activamente si hay algo en el análisis que no se ha explorado y que podría cambiar el resultado del caso. Hace preguntas al resto de agentes: "¿Se han revisado todas las cláusulas?", "¿Se ha buscado si hay sentencias recientes sobre este banco?", "¿Se ha verificado si hay más titulares o avalistas?". Es el agente que juega al abogado del diablo antes de cerrar el análisis.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Ha habido casos donde después de pensar que no había solución, apareció una que nadie había visto? ¿Qué fue?</li>
+      <li>¿Qué preguntas te haces a ti mismo cuando revisas un caso y no acabas de estar convencido del análisis?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 7: COMUNICACIÓN         -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 7 — Comunicación con el Cliente</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Gestiona toda la comunicación escrita con el cliente — emails, WhatsApps — en el tono de Mariano. Nada sale sin pasar por quality-checker.</p>
+
+<h3 class="director">comms-director</h3>
+<div class="agent-card">
+  <div class="agent-name">comms-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Coordina toda la comunicación saliente con clientes. Recibe las solicitudes de otros directores (ej: "envía el informe de opciones a Juan García", "solicita los documentos pendientes a María López") y activa el agente correspondiente. Mantiene el log de toda la comunicación del caso. Asegura que quality-checker y legal-language-checker validen todo antes de enviar.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuánto quieres estar en el loop de las comunicaciones automáticas? ¿Quieres aprobar cada mensaje o solo los importantes?</li>
+      <li>¿Hay mensajes que NUNCA deben salir sin tu aprobación? (Ej: el informe de opciones, la recomendación final, mensajes sobre plazos judiciales)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">email-writer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Redacta los emails al cliente en el tono de Mariano: profesional pero cercano, claro, sin tecnicismos. Cada email tiene un propósito único y acción clara. Tipos: bienvenida al caso, solicitud de documentación, presentación del informe de opciones, confirmación de acuerdos, actualizaciones del proceso. Nunca mezcla varios propósitos en un mismo email.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo escribes tú los emails a tus clientes? ¿Formales, como carta de empresa, o más directos como si les escribieras a un conocido?</li>
+      <li>¿Con qué nombre firmas tus emails: "Mariano", "Mariano García", "El equipo de Centrum", o con tu cargo?</li>
+      <li>¿Hay frases de despedida o apertura que siempre usas y que el sistema debe replicar?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">whatsapp-writer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Redacta los mensajes de WhatsApp al cliente. Tono diferente al email: más informal, más corto, más directo. Máximo 3 líneas por mensaje. Para actualizaciones rápidas, recordatorios amigables, confirmaciones de llamada, o avisos urgentes. Nunca envía documentos importantes por WhatsApp — eso va por email.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tus clientes te escriben principalmente por WhatsApp? ¿Estás cómodo usando WhatsApp para comunicaciones del negocio o prefieres separar personal/profesional?</li>
+      <li>¿Hay cosas que nunca dirías por WhatsApp pero sí por email — o viceversa?</li>
+      <li>¿A qué hora del día sueles responder mensajes de clientes? El sistema puede programar los envíos para esas horas.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">email-sender</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Envía el email redactado desde la cuenta de Gmail de Centrum (o Mediterránea Firmax SL) al cliente. Guarda copia en el expediente del caso. Registra fecha/hora de envío en el CRM. Si el email rebota o hay error, notifica a Mariano. Solo envía lo que quality-checker y legal-language-checker han aprobado.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué cuenta de email quieres usar para comunicarte con clientes de Centrum? ¿Tienes ya una cuenta @centrumdelavivienda.es o similar, o usas tu cuenta personal?</li>
+      <li>¿Quieres recibir copia de cada email que el sistema envía en tu nombre, o solo los que tú apruebas?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">whatsapp-sender</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Envía los mensajes de WhatsApp vía Twilio (número de WhatsApp Business de Centrum). Registra cada mensaje enviado en el expediente. Detecta si el cliente ha leído el mensaje y si ha respondido. Si hay respuesta del cliente, la redirige a Mariano con el contexto del caso.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes un número de WhatsApp Business para el negocio, o usas tu número personal? ¿Te gustaría tener un número separado para Centrum?</li>
+      <li>Cuando un cliente responde al WhatsApp automático, ¿quieres que la respuesta llegue a tu teléfono o a un panel que revises?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">tone-checker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Revisa que el tono de cada mensaje sea el de Mariano antes de enviarlo. Verifica: que no suene robótico, que no tenga tecnicismos innecesarios, que la calidez sea la correcta para la fase del caso (diferente si es primera comunicación vs. cliente en proceso avanzado), que no haya inconsistencias con comunicaciones anteriores del mismo caso.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay palabras o expresiones que el sistema NUNCA debe usar porque no son tuyas? (Ej: expresiones muy formales, anglicismos, palabras que te suenan frías o corporativas)</li>
+      <li>¿Cómo tratas a los clientes — de tú o de usted? ¿Siempre igual o depende del cliente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">legal-language-checker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Verifica que ningún mensaje contiene promesas legales que Centrum no pueda cumplir (ej: "garantizamos que para su desahucio"), afirmaciones que puedan constituir asesoramiento legal sin estar habilitado (eso es función del abogado), o datos incorrectos sobre plazos y procesos que podrían inducir a error al cliente. Bloquea el envío si detecta algo.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Hay frases que nunca dices a un cliente porque podrían crearte un problema legal? ¿Cuáles son las líneas rojas para ti?</li>
+      <li>¿Tienes claro qué puedes prometer tú como broker y qué solo puede prometer un abogado? ¿Nos puedes contar la diferencia?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">quality-checker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Validación final antes de cualquier envío de comunicación. Comprueba: que el destinatario es correcto, que el asunto del email es adecuado, que no hay datos de otro cliente por error (riesgo RGPD), que el mensaje está completo y no tiene frases incompletas, que los adjuntos son los correctos. Es el último filtro antes de que salga cualquier comunicación.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Has mandado alguna vez algo al cliente equivocado o con datos incorrectos? ¿Qué pasó?</li>
+      <li>¿Hay comunicaciones que quieres aprobar tú personalmente antes de que salgan, sin excepción?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 8: SEGUIMIENTO          -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 8 — Seguimiento de Casos</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Mantiene el control de todos los casos activos, detecta fechas críticas, y asegura que ningún caso quede olvidado entre una fase y otra.</p>
+
+<h3 class="director">followup-director</h3>
+<div class="agent-card">
+  <div class="agent-name">followup-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Supervisa todos los casos activos en tiempo real. Activa las alertas de milestone-detector, coordina las actualizaciones al cliente (client-updater), y gestiona los cierres de caso (case-closer) y la recogida de feedback. Genera la agenda diaria de Mariano: qué casos necesitan atención hoy y por qué.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Quieres recibir un resumen diario de tus casos activos o prefieres que solo te avisen cuando algo cambia?</li>
+      <li>¿Cuántos casos activos simultáneos puedes gestionar bien? ¿Hay un límite a partir del cual la calidad baja?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">timeline-tracker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Mantiene la línea temporal de cada caso: registra cada evento con fecha (primera llamada, recepción de docs, análisis completado, informe enviado, respuesta del banco, etc.). Calcula el tiempo en cada fase y detecta si un caso está tardando más de lo normal. Genera la cronología del caso para el expediente.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuánto tiempo debería tomar en condiciones normales cada fase? (Ej: de formulario a primera llamada, de llamada a análisis, de análisis a propuesta)</li>
+      <li>¿Qué fase es la que habitualmente más se alarga? ¿Por qué suele pasar?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">milestone-detector</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Detecta hitos críticos del caso y genera alertas proactivas con antelación suficiente: fecha de subasta (alerta 30, 15, 7, 3 días antes), plazo de respuesta del banco, vencimiento de documentos (nota simple, etc.), fechas de audiencia judicial. Prioriza alertas por urgencia y se asegura de que Mariano las vea.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con cuántos días de antelación necesitas saber de una fecha crítica para poder actuar a tiempo?</li>
+      <li>¿Hay algún hito que el sistema podría no conocer porque solo aparece en documentos físicos o comunicaciones orales que recibes tú directamente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">alert-generator</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Genera las alertas para Mariano cuando hay que actuar. Cada alerta incluye: qué pasa, cuándo, qué consecuencia tiene si no se actúa, y la acción concreta que hay que tomar. Las alertas se priorizan: CRÍTICO (hoy), URGENTE (esta semana), NORMAL (próximas 2 semanas). Se envían por WhatsApp/Telegram y quedan registradas en el panel.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Quieres recibir todas las alertas en tu móvil o prefieres un panel resumen y solo las críticas en móvil?</li>
+      <li>¿Hay alertas que deberían ir también a tu abogado directamente, no solo a ti?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">client-updater</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Envía actualizaciones periódicas al cliente sobre el estado de su caso — aunque no haya novedades. Los clientes en situación de angustia necesitan saber que su caso no está olvidado. Frecuencia por defecto: una vez por semana. Mensaje breve: qué está pasando, qué es lo próximo que ocurrirá, si necesitan hacer algo.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tus clientes te llaman mucho para preguntar cómo va su caso? ¿Con qué frecuencia te gustaría que el sistema les informara para reducir esas llamadas?</li>
+      <li>¿Qué les dices a los clientes cuando no hay novedades en su caso pero llevan 2 semanas esperando? ¿Cómo lo manejas ahora?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">case-closer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Gestiona el cierre formal del caso cuando hay un resultado definitivo (positivo o negativo): confirma con Mariano que el caso está cerrado, actualiza el estado en el CRM, archiva toda la documentación y la ficha, genera el resumen final del caso (qué ocurrió, solución aplicada, resultado), e inicia la secuencia de feedback-collector.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cuándo consideras que un caso está oficialmente cerrado? ¿Cuándo se firma, cuando el banco confirma, cuando el cliente te dice que está resuelto?</li>
+      <li>¿Hay casos que se "duermen" — no se cierran pero tampoco avanzan? ¿Cómo los gestionas tú?</li>
+      <li>¿Cuándo cierras un caso negativo (no se pudo salvar la vivienda), ¿hay algo especial que hagas con el cliente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">feedback-collector</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Al cerrar el caso, envía al cliente una encuesta corta (3-4 preguntas) para recoger su testimonio. Si el resultado fue positivo, pregunta si estaría dispuesto a dejar una reseña en Google o a recomendar Centrum. Si el resultado fue negativo, recoge su opinión del proceso para mejorar. Los testimonios positivos van al sistema de contenido para futuros anuncios (con permiso del cliente).</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Has pedido ya reseñas o referencias a clientes satisfechos? ¿Cómo lo haces ahora?</li>
+      <li>¿Estarías cómodo usando el testimonio de un cliente (anonimizado) en un vídeo de TikTok o anuncio?</li>
+      <li>¿A cuántos días del cierre del caso enviarías el mensaje de feedback? ¿Inmediatamente o dejar que pasen unos días?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- BLOQUE 9: OPERACIONES          -->
+<!-- ============================== -->
+
+<h2 class="bloque">Bloque 9 — Operaciones y Reporting</h2>
+<p style="margin-bottom:20px; color:#555; font-size:0.92em;">Visibilidad global del negocio en tiempo real. Dashboard, informes semanales, métricas de cada canal y seguimiento de facturación.</p>
+
+<h3 class="director">ops-director</h3>
+<div class="agent-card">
+  <div class="agent-name">ops-director</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Coordina el reporting del negocio. Recibe datos de todos los demás bloques y los consolida en métricas de negocio. Activa los agentes de reporting en los períodos definidos (diario, semanal, mensual). Detecta tendencias anómalas (caída de leads, colapso de un canal, casos que no avanzan) y alerta a Mariano.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Con qué frecuencia quieres ver un informe del estado del negocio? ¿Semanal es suficiente o prefieres algo diario pero más breve?</li>
+      <li>¿Hay algún número que para ti sea el indicador más importante del negocio? (Ej: número de leads esta semana, casos cerrados este mes, facturación, conversión)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">pipeline-dashboard</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Mantiene el estado en tiempo real de todos los casos activos en una vista única. Muestra: cuántos casos hay en cada fase (lead / análisis / propuesta / negociación / cierre), cuántos llevan más de X días sin avanzar, cuáles tienen fecha crítica próxima, y un indicador visual de salud de cada caso. Actualizado constantemente.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Quieres ver este panel en una pantalla del ordenador o en el móvil? ¿O un resumen enviado por WhatsApp cada mañana?</li>
+      <li>¿Qué es para ti una señal de que un caso está en mal estado? ¿Cuándo te preocupas?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">weekly-reporter</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Genera el informe semanal del negocio cada lunes (o el día que Mariano prefiera). Contenido: leads entrantes esa semana (total y por canal), leads cualificados, primeras llamadas realizadas, casos en análisis, casos cerrados positivos/negativos, tendencia vs. semana anterior. Formato: 1 página, visual, en menos de 2 minutos de lectura.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Qué día y a qué hora quieres recibir el resumen semanal?</li>
+      <li>¿Quieres que el informe incluya también lo que está pendiente de TU parte — acciones que el sistema está esperando que hagas tú?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">channel-performance</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Analiza el rendimiento de cada canal de captación: Google (impresiones, clics, coste, leads generados), Meta (alcance, clics, coste, leads) y TikTok (visualizaciones, interacciones, tráfico web generado). Compara coste por lead entre canales y detecta cuál está funcionando mejor. Propone cambios de presupuesto entre canales según resultados.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Tienes ya acceso a Google Ads y Meta Ads, o eso lo gestiona alguien por ti? ¿Necesitamos incluir un gestor externo de campañas en el sistema?</li>
+      <li>¿Cuánto estás dispuesto a pagar máximo por conseguir un lead cualificado (alguien con quien vale la pena hablar)?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">conversion-tracker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Registra y analiza la tasa de conversión en cada fase del embudo: visitas web → formulario enviado → lead cualificado → primera llamada → análisis completado → propuesta enviada → cliente activo → caso cerrado positivo. Identifica en qué fase se pierde más gente y cuánto cuesta convertir en cada paso.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>De 10 personas que te llaman, ¿cuántas se convierten en clientes que pagan? ¿Y de 10 que rellenan un formulario, cuántas te llaman?</li>
+      <li>¿Cuándo pierdes más clientes — antes de hablar con ellos, después de la primera llamada, o después de ver el informe de opciones?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">revenue-tracker</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Registra los honorarios de cada caso: cuándo se acuerda, cuándo se cobra (parcial o total), qué porcentaje es éxito vs. gestión. Calcula la facturación del mes, previsión del trimestre, y el valor promedio por caso cerrado. Alerta si hay honorarios pendientes de cobro vencidos.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Cómo cobras ahora — a éxito, tarifa fija, o combinación? ¿Es siempre igual o varía según el caso?</li>
+      <li>¿Tienes clientes que no pagan o que retrasan el pago? ¿Cómo lo gestionas actualmente?</li>
+      <li>¿Quieres que el sistema genere recordatorios automáticos para honorarios pendientes o prefieres hacerlo tú directamente?</li>
+    </ol>
+  </div>
+</div>
+
+<div class="agent-card">
+  <div class="agent-name">feedback-analyzer</div>
+  <div class="agent-def">
+    <div class="def-label">Qué hace</div>
+    <p>Analiza todos los feedbacks recibidos de clientes (encuestas de cierre, reseñas de Google, comentarios en redes) y extrae patrones: qué valoran más, qué mejoraría, si hay quejas recurrentes. Mensualmente genera un informe de "voz del cliente" que alimenta mejoras en el proceso y en el contenido de captación.</p>
+  </div>
+  <div class="preguntas">
+    <div class="preguntas-title">Preguntas para Mariano</div>
+    <ol>
+      <li>¿Has recibido feedback de clientes que te haya sorprendido — positivo o negativo? ¿Qué fue?</li>
+      <li>¿Tienes ya reseñas en Google o en alguna otra plataforma? ¿Cuántas y de qué tipo?</li>
+      <li>¿Qué crees que es lo que más valoran tus clientes de trabajar contigo? ¿Es lo mismo que lo que tú crees que es tu punto fuerte?</li>
+    </ol>
+  </div>
+</div>
+
+
+<!-- ============================== -->
+<!-- CIERRE                         -->
+<!-- ============================== -->
+
+<div style="background:#1a1a2e; color:white; border-radius:10px; padding:35px; margin-top:60px;">
+  <h2 style="color:white; font-size:1.4em; margin-bottom:15px; border-bottom:2px solid #e63946; padding-bottom:10px;">Próximos pasos</h2>
+  <p style="color:#ddd; margin-bottom:12px;">Este documento es el primer paso para que el sistema sepa exactamente cómo quieres que funcione. Una vez que hayas respondido las preguntas que consideres importantes:</p>
+  <ol style="color:#ccc; padding-left:20px; font-size:0.9em; line-height:2;">
+    <li>Lucas revisa tus respuestas y ajusta las definiciones de cada agente</li>
+    <li>Priorización conjunta: ¿qué bloque construimos primero?</li>
+    <li>Construcción por bloques, empezando por el de mayor impacto inmediato</li>
+    <li>Prueba con casos reales antes de activar en producción</li>
+  </ol>
+  <p style="color:#aaa; margin-top:15px; font-size:0.85em;">No es necesario responder a todo. Céntrate en los agentes de los bloques que más te importen ahora mismo.</p>
+</div>
+
+<div class="footer">
+  <p>Documento preparado por Lucas para Mariano — Abril 2026</p>
+  <p>Mediterránea Firmax SL | Registro Banco de España: D219 | Centrum de la Vivienda — "Salvamos Tu Vivienda"</p>
+</div>
+
+</body>
+</html>

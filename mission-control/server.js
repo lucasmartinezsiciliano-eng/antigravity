@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const app = express();
-const PORT = process.env.PORT || 3333;
+const PORT = process.env.PORT || 9999;
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -230,6 +230,141 @@ app.get('/api/crm/stats', (req, res) => {
     sinAsignar: leads.filter(l => !l.asignado_a && !['firmado','descartado'].includes(l.etapa)).length,
     sinActividad: stale.map(l => ({ id: l.id, nombre: l.nombre, dias: Math.floor((now - new Date(l.ultima_actividad)) / 86400000) }))
   });
+});
+
+// ─── CENTRUM AGENTS MONITOR ──────────────────────────────────────────────────
+const OPENCLAW_URL    = process.env.OPENCLAW_URL    || 'https://openclaw.lukimporta.es';
+const OPENCLAW_TOKEN  = process.env.OPENCLAW_TOKEN  || 'centrum2026gw';
+const PORTAINER_URL   = process.env.PORTAINER_URL   || 'https://portainer.lukimporta.es';
+const PORTAINER_USER  = process.env.PORTAINER_USER  || 'lucasmartinez';
+const PORTAINER_PASS  = process.env.PORTAINER_PASS  || '';   // set via env
+
+// In-memory activity feed (resets on server restart)
+const agentActivity = [];   // { ts, from, to, task, result, error, msg }
+const MAX_ACTIVITY  = 500;
+
+// Cached Portainer JWT (refreshed on 401)
+let portainerJwt = '';
+let portainerExpiry = 0;
+let ocContainerId = '';
+let logBuffer = [];         // raw log lines fetched from container
+let logLastTs = 0;
+
+async function getPortainerJwt() {
+  if (portainerJwt && Date.now() < portainerExpiry) return portainerJwt;
+  if (!PORTAINER_PASS) return null;
+  try {
+    const r = await fetch(`${PORTAINER_URL}/api/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: PORTAINER_USER, password: PORTAINER_PASS }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    portainerJwt = d.jwt || '';
+    portainerExpiry = Date.now() + 3 * 60 * 1000;  // 3 min
+    return portainerJwt;
+  } catch { return null; }
+}
+
+async function resolveOcContainer(jwt) {
+  if (ocContainerId) return ocContainerId;
+  try {
+    const r = await fetch(`${PORTAINER_URL}/api/endpoints/1/docker/containers/json`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r.ok) return null;
+    const containers = await r.json();
+    const oc = containers.find(c => (c.Image||'').includes('openclaw'));
+    if (oc) { ocContainerId = oc.Id; return oc.Id; }
+  } catch {}
+  return null;
+}
+
+async function fetchContainerLogs(jwt, containerId) {
+  const since = Math.floor(logLastTs / 1000) || Math.floor(Date.now()/1000) - 300;
+  try {
+    const r = await fetch(
+      `${PORTAINER_URL}/api/endpoints/1/docker/containers/${containerId}/logs?stdout=1&stderr=1&since=${since}&tail=100`,
+      { headers: { Authorization: `Bearer ${jwt}` }, signal: AbortSignal.timeout(15000) }
+    );
+    if (!r.ok) return [];
+    const buf = Buffer.from(await r.arrayBuffer());
+    // Docker multiplexed stream — strip 8-byte header per chunk
+    const lines = [];
+    let i = 0;
+    while (i + 8 <= buf.length) {
+      const size = buf.readUInt32BE(i + 4);
+      i += 8;
+      if (size > 0 && i + size <= buf.length) {
+        const chunk = buf.slice(i, i + size).toString('utf8');
+        chunk.split('\n').forEach(l => { if (l.trim()) lines.push(l.trimEnd()); });
+        i += size;
+      } else { i += size || 1; }
+    }
+    return lines;
+  } catch { return []; }
+}
+
+// Periodic log fetcher (runs in background)
+async function pollLogs() {
+  try {
+    const jwt = await getPortainerJwt();
+    if (!jwt) return;
+    const cid = await resolveOcContainer(jwt);
+    if (!cid) return;
+    const lines = await fetchContainerLogs(jwt, cid);
+    if (lines.length) {
+      logBuffer.push(...lines);
+      if (logBuffer.length > 2000) logBuffer = logBuffer.slice(-2000);
+      logLastTs = Date.now();
+    }
+  } catch {}
+}
+
+// Run every 10 seconds
+setInterval(pollLogs, 10000);
+setTimeout(pollLogs, 2000);  // first run soon after start
+
+// POST /api/agents/activity — agentes reportan aquí (webhook)
+// Body: { from, to, task, result, error, msg }
+app.post('/api/agents/activity', (req, res) => {
+  const { from, to, task, result, error, msg } = req.body || {};
+  const entry = { ts: Date.now(), from, to, task, result, error, msg };
+  agentActivity.push(entry);
+  if (agentActivity.length > MAX_ACTIVITY) agentActivity.splice(0, agentActivity.length - MAX_ACTIVITY);
+  res.json({ ok: true });
+});
+
+// GET /api/agents/activity?since=TS — feed de actividad
+app.get('/api/agents/activity', (req, res) => {
+  const since = Number(req.query.since) || 0;
+  res.json(agentActivity.filter(e => e.ts > since));
+});
+
+// GET /api/agents/logs?since=TS — últimas líneas de log del contenedor
+app.get('/api/agents/logs', async (req, res) => {
+  const since = Number(req.query.since) || 0;
+  // Return buffered lines newer than since
+  const lines = since
+    ? logBuffer.slice(-100)  // always return last 100 when polling
+    : logBuffer.slice(-200);
+  res.json({ lines, ts: Date.now(), online: logLastTs > Date.now() - 60000 });
+});
+
+// GET /api/agents/status — estado del contenedor OpenClaw
+app.get('/api/agents/status', async (req, res) => {
+  try {
+    const r = await fetch(`${OPENCLAW_URL}/health`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    const online = r.ok;
+    res.json({ online, container: ocContainerId ? ocContainerId.slice(0, 12) : null });
+  } catch {
+    res.json({ online: false, container: ocContainerId ? ocContainerId.slice(0, 12) : null });
+  }
 });
 
 // ─── START ────────────────────────────────────────────────────────────────────

@@ -172,7 +172,9 @@ def _mirror_trade_to_accounts(pnl: float, result: str):
             acc["losses"] += 1
 
         # Check prop firm rules
-        drawdown_pct = (acc["peak"] - acc["balance"]) / acc["start"] * 100
+        # Trailing DD: desde el pico histórico (Apex/Topstep usan este cálculo)
+        # FTMO usa DD relativo al balance inicial, pero usamos trailing para ser conservadores
+        drawdown_pct = (acc["peak"] - acc["balance"]) / acc["peak"] * 100 if acc["peak"] > 0 else 0
         daily_dd_pct = abs(acc["daily_pnl"]) / acc["start"] * 100 if acc["daily_pnl"] < 0 else 0
         profit_pct   = (acc["balance"] - acc["start"]) / acc["start"] * 100
 
@@ -1059,12 +1061,13 @@ def ifvg_scanner():
                 if min_disp > 0:
                     cb = sig.get("creation_bar")
                     if cb is not None:
-                        # creation_bar is index into the 50-bar slice
+                        # creation_bar = índice de c0 (3ª vela del patrón FVG) en el slice de 50
+                        # La vela de desplazamiento real es c1 (la del medio, cb-1 en el slice)
                         slice_offset = max(0, len(candles) - 50)
-                        abs_cb = slice_offset + cb
-                        if abs_cb < len(candles):
-                            cc = candles[abs_cb]
-                            body = abs(cc["close"] - cc.get("open", cc["close"]))
+                        abs_c1 = slice_offset + cb - 1   # vela del medio = desplazamiento real
+                        if 0 <= abs_c1 < len(candles):
+                            c1 = candles[abs_c1]
+                            body = abs(c1["close"] - c1.get("open", c1["close"]))
                             if body < min_disp:
                                 print(f"[SCANNER] IFVG {action} on {sym} — filtered (displacement {body:.1f}pt < {min_disp}pt)")
                                 continue
@@ -1079,7 +1082,14 @@ def ifvg_scanner():
                     print(f"[SCANNER] IFVG {action} on {sym} — filtered (max 1 trade/day reached)")
                     continue
 
-                # Gap filter descartado: señales de gaps pequeños tienen mejor WR en IFVG
+                # 15m structure confluence — verifica que el TF superior no esté en contra
+                yf_sym_15m = YF_SYMBOLS_DETECT.get(sym, sym)
+                ok_15m, reason_15m = _15m_structure(yf_sym_15m, action)
+                if not ok_15m:
+                    print(f"[SCANNER] IFVG {action} on {sym} — filtered (15m: {reason_15m})")
+                    continue
+                if reason_15m:
+                    reason = reason + f" | {reason_15m}"
 
                 payload = {
                     "action": action, "symbol": sym,
@@ -1116,9 +1126,13 @@ def morning_bias_scheduler():
         today = now.date()
         if last_triggered == today:
             continue
-        # Trigger at 8:25 ET ±1 min
-        if now.hour == 8 and 24 <= now.minute <= 26:
-            last_triggered = today
+        # Trigger entre 8:15-8:29 ET (15-min window para sobrevivir reinicios del watchdog)
+        # last_triggered == today garantiza que solo se ejecuta una vez al día
+        if now.hour == 8 and 15 <= now.minute <= 29:
+            # last_triggered se marca DENTRO del try para que un error de red
+            # permita reintentar cada 30s hasta el cierre de la ventana (8:29).
+            # Sin esto: un fallo a las 8:15 marca el día como "hecho" y el bias
+            # queda NEUTRAL sin operaciones ni aviso durante todo el día.
             try:
                 sym = "^NDX"
                 print(f"[SCHEDULER] 8:25 ET — auto-calculando bias W/D/4H...")
@@ -1127,6 +1141,7 @@ def morning_bias_scheduler():
                 BIAS_CACHE["ts"] = time.time()
                 suggested = result["suggested"]
                 conf = result["confidence"]
+                last_triggered = today   # marcar solo si analyze_bias() tuvo éxito
 
                 # Auto-apply: si confianza >= 55% aplicar el bias sugerido,
                 # si no hay claridad suficiente → NEUTRAL (no operar ese día)
@@ -1147,7 +1162,7 @@ def morning_bias_scheduler():
                         f"_No se operara hoy salvo override manual_"
                     )
             except Exception as e:
-                print(f"[SCHEDULER] Error calculando bias: {e}")
+                print(f"[SCHEDULER] Error calculando bias: {e} — reintentando en 30s")
 
 
 # ── Telegram ─────────────────────────────────────────────────────────────────
@@ -1185,18 +1200,35 @@ def _build_daily_report() -> str:
 
     bias_icon = {"BULLISH": "📈", "BEARISH": "📉", "NEUTRAL": "➡️"}.get(suggested, "—")
 
-    # Daily state
+    # Daily state — usar DAILY_STATE (memoria) pero recalcular desde closed_today si bot fue reiniciado
     daily_pnl    = DAILY_STATE.get("pnl", 0.0)
     daily_trades = DAILY_STATE.get("trades", 0)
     cb_active    = DAILY_STATE.get("circuit_breaker", False)
     scanner_sigs = DETECTOR_STATE.get("signals_today", 0)
 
-    # Closed trades today from log
-    today_str  = now_ny.strftime("%Y-%m-%d")
+    # Closed trades today — in-memory first, fallback to disk (sobrevive reinicios)
+    today_str    = now_ny.strftime("%Y-%m-%d")
     closed_today = [t for t in TRADES_LOG
                     if t.get("event") == "trade_closed"
-                    and t.get("ts", "").startswith(today_str[:7])]  # same month fallback
-    # More precise: filter by daily state date
+                    and t.get("ts", "").startswith(today_str)]
+    if not closed_today and PAPER_LOG.exists():
+        # Bot reiniciado durante el día: leer PAPER_LOG (disco) y reconstruir lista
+        try:
+            disk_recs = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+            closed_today = [
+                {"event":"trade_closed","ts":r.get("ts",""),"symbol":r.get("symbol","?"),
+                 "pnl":r.get("pnl",0),"rr_achieved":r.get("rr",0),
+                 "balance_after":r.get("balance",0),"explanation":r.get("explanation","")}
+                for r in disk_recs if r.get("date","") == today_str
+            ]
+        except Exception:
+            pass
+
+    # Si daily_pnl en memoria es 0 pero closed_today tiene trades (bot reiniciado),
+    # recalcular desde los trades del día para mantener coherencia en el reporte
+    if daily_pnl == 0.0 and closed_today:
+        daily_pnl    = round(sum(t.get("pnl", 0) for t in closed_today), 2)
+        daily_trades = len(closed_today)
 
     # Paper trading cumulative
     total_pnl = 0.0; total_t = 0; total_w = 0
@@ -1255,7 +1287,7 @@ def daily_report_scheduler():
     Envía reporte de fin de día por Telegram a las 16:15 ET (tras cierre de mercado).
     También envía alerta matutina a las 8:20 ET con el bias sugerido.
     """
-    print("[TELEGRAM] Daily report scheduler started (8:20 + 16:15 ET)")
+    print("[TELEGRAM] Daily report scheduler started (8:31 + 16:15 ET)")
     sent_morning = None
     sent_eod     = None
 
@@ -1266,9 +1298,9 @@ def daily_report_scheduler():
             continue
         today = now.date()
 
-        # 8:20 ET — alerta matutina con bias
-        if now.hour == 8 and 19 <= now.minute <= 21 and sent_morning != today:
-            sent_morning = today
+        # 8:31 ET — alerta matutina con bias (después de que morning_bias_scheduler calcule a las 8:25)
+        # sent_morning solo se marca después de envío exitoso para garantizar reintento si falla
+        if now.hour == 8 and 31 <= now.minute <= 33 and sent_morning != today:
             try:
                 bias_result = BIAS_CACHE.get("result") or {}
                 suggested   = bias_result.get("suggested", "calculando...")
@@ -1277,7 +1309,6 @@ def daily_report_scheduler():
                 news_today  = _get_today_events()
                 news_str    = "\n".join(f"  ⚠️ {e['time_et']} ET — {e['short']}" for e in news_today) \
                               if news_today else "  Sin noticias HIGH impact"
-                # Si el bias_scheduler ya lo aplicó automáticamente, reflejarlo
                 bias_applied = DAILY_BIAS.get("value", "NEUTRAL")
                 if bias_applied == suggested and conf >= 55:
                     estado = f"*APLICADO automaticamente* ✓"
@@ -1289,7 +1320,7 @@ def daily_report_scheduler():
                 msg = f"""{icon} *IFVG Bot — Buenos días {now.strftime('%d/%m')}*
 
 *Bias: {suggested}* ({conf:.0f}% conf) — {estado}
-Kill zone abre en ~10 min (8:30 ET)
+Kill zone activa (8:30-11:00 ET)
 
 *Noticias hoy:*
 {news_str}
@@ -1297,16 +1328,18 @@ Kill zone abre en ~10 min (8:30 ET)
 _Si quieres cambiar: /api/bias en el dashboard_"""
                 if send_telegram(msg):
                     print(f"[TELEGRAM] Alerta matutina enviada")
+                    sent_morning = today  # solo marcar si Telegram confirmó OK
             except Exception as e:
                 print(f"[TELEGRAM] Error alerta matutina: {e}")
 
         # 16:15 ET — reporte fin de día
+        # sent_eod solo se marca después de envío exitoso
         if now.hour == 16 and 14 <= now.minute <= 16 and sent_eod != today:
-            sent_eod = today
             try:
                 report = _build_daily_report()
                 if send_telegram(report):
                     print(f"[TELEGRAM] Reporte diario enviado")
+                    sent_eod = today  # solo marcar si Telegram confirmó OK
             except Exception as e:
                 print(f"[TELEGRAM] Error reporte EOD: {e}")
 
@@ -1404,7 +1437,7 @@ async def accounts_api():
     for acc in PROP_ACCOUNTS:
         profit     = acc["balance"] - acc["start"]
         profit_pct = profit / acc["start"] * 100
-        dd_pct     = (acc["peak"] - acc["balance"]) / acc["start"] * 100
+        dd_pct     = (acc["peak"] - acc["balance"]) / acc["peak"] * 100 if acc["peak"] > 0 else 0
         wr         = round(acc["wins"] / acc["trades"] * 100, 1) if acc["trades"] else 0
         to_target  = acc["profit_target"] - profit
         result.append({
@@ -1659,10 +1692,12 @@ async def send_report_now():
 
 @app.post("/api/reset")
 async def reset():
-    TRADES_LOG.clear(); EQUITY_CURVE.clear(); SIGNALS_QUEUE.clear(); ACTIVE_POSITION.clear()
+    TRADES_LOG.clear(); EQUITY_CURVE.clear(); SIGNALS_QUEUE.clear()
+    ACTIVE_POSITION.clear(); PAPER_POSITIONS.clear()
     ACCOUNT.update({"balance":ACCOUNT["start"],"peak":ACCOUNT["start"]})
     DAILY_BIAS["value"]="NEUTRAL"
     DETECTOR_STATE.update({"signals_today":0,"last_signal":None})
+    DAILY_STATE.update({"date":"","pnl":0.0,"trades":0,"circuit_breaker":False})
     if LOG_FILE.exists(): LOG_FILE.unlink()
     return {"status":"reset"}
 
@@ -3113,7 +3148,9 @@ def paper_review_scheduler():
     from datetime import timedelta
     start_dt  = datetime.strptime(start_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     target_dt = start_dt + timedelta(weeks=4)
-    sent      = False
+    # Si paper_review_4w.txt ya existe es que el informe se envió en una sesión anterior.
+    # Sin este check el watchdog reenvía el informe en cada reinicio post 4 semanas.
+    sent      = Path("paper_review_4w.txt").exists()
 
     print(f"[PAPER-REVIEW] Informe de 4 semanas programado para {target_dt.strftime('%Y-%m-%d')}")
 
@@ -3126,10 +3163,118 @@ def paper_review_scheduler():
             report = _build_4week_report()
             if send_telegram(report):
                 print("[PAPER-REVIEW] Informe enviado por Telegram")
-            else:
-                print("[PAPER-REVIEW] Error enviando Telegram — guardando en paper_review_4w.txt")
                 Path("paper_review_4w.txt").write_text(report, encoding="utf-8")
-            sent = True
+                sent = True  # solo marcamos enviado si Telegram confirmó OK
+            else:
+                print("[PAPER-REVIEW] Error enviando Telegram — reintentando en 1h")
+                # No marcamos sent=True → reintenta cada hora hasta que llegue
+
+
+# ── State persistence: restaurar desde disco tras reinicio ─────────────────────
+def _restore_state_from_disk():
+    """
+    Tras un reinicio (watchdog, crash, reboot), reconstruye el estado en memoria
+    leyendo PAPER_LOG (trades históricos) y PROP_ACCOUNTS_LOG (snapshots de cuentas).
+
+    Sin esto: ACCOUNT["balance"], DAILY_STATE y PROP_ACCOUNTS se resetean a cero
+    cada vez que el watchdog reinicia el bot, haciendo el paper trading inútil.
+    """
+    # ── 1. Restaurar ACCOUNT["balance"] y DAILY_STATE desde PAPER_LOG ──────────
+    if PAPER_LOG.exists():
+        try:
+            recs = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+            if recs:
+                cumulative_pnl = sum(r.get("pnl", 0) for r in recs)
+                ACCOUNT["balance"] = round(ACCOUNT["start"] + cumulative_pnl, 2)
+                # Peak: reconstruir leyendo curva de equity para obtener máximo real
+                bal = ACCOUNT["start"]
+                peak = bal
+                for r in recs:
+                    bal += r.get("pnl", 0)
+                    peak = max(peak, bal)
+                ACCOUNT["peak"] = round(peak, 2)
+
+                # DAILY_STATE para hoy
+                today = _now_ny().strftime("%Y-%m-%d")
+                today_recs = [r for r in recs if r.get("date", "") == today]
+                if today_recs:
+                    daily_pnl = round(sum(r.get("pnl", 0) for r in today_recs), 2)
+                    DAILY_STATE["date"]            = today
+                    DAILY_STATE["pnl"]             = daily_pnl
+                    DAILY_STATE["trades"]          = len(today_recs)
+                    DAILY_STATE["circuit_breaker"] = daily_pnl <= CIRCUIT_BREAKER_LIMIT
+                    if DAILY_STATE["circuit_breaker"]:
+                        print(f"[RESTORE] ⛔ Circuit breaker reactivado: PnL hoy ${daily_pnl:.0f}")
+
+                print(f"[RESTORE] Balance restaurado: ${ACCOUNT['balance']:,.0f} "
+                      f"(pico ${ACCOUNT['peak']:,.0f}, {len(recs)} trades)")
+        except Exception as e:
+            print(f"[RESTORE] Error restaurando ACCOUNT desde PAPER_LOG: {e}")
+
+    # ── 2. Restaurar PROP_ACCOUNTS reproduciendo el historial completo ──────────
+    # Reproducir todos los trades del PAPER_LOG una vez por cuenta (misma lógica que
+    # _mirror_trade_to_accounts) para obtener balance, peak, DD y estado exactos.
+    if PAPER_LOG.exists():
+        try:
+            recs = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+            if recs:
+                today = _now_ny().strftime("%Y-%m-%d")
+                for acc in PROP_ACCOUNTS:
+                    bal = acc["start"]
+                    peak = bal
+                    wins = losses = trades = 0
+                    daily_pnl = 0.0
+                    status = "EVAL"
+                    for r in recs:
+                        if status == "FAILED":
+                            break
+                        pnl = r.get("pnl", 0)
+                        res = r.get("result", "")
+                        bal   = round(bal + pnl, 2)
+                        peak  = max(peak, bal)
+                        trades += 1
+                        if res == "WIN":
+                            wins += 1
+                        else:
+                            losses += 1
+                        if r.get("date", "") == today:
+                            daily_pnl = round(daily_pnl + pnl, 2)
+                        # Reglas prop firm (mismas que _mirror_trade_to_accounts)
+                        dd = (peak - bal) / peak * 100 if peak > 0 else 0
+                        profit_pct = (bal - acc["start"]) / acc["start"] * 100
+                        if dd >= acc["max_dd_pct"]:
+                            status = "FAILED"
+                        elif profit_pct >= acc["profit_target"] / acc["start"] * 100:
+                            status = "PASSED"
+
+                    acc["balance"]    = bal
+                    acc["peak"]       = peak
+                    acc["trades"]     = trades
+                    acc["wins"]       = wins
+                    acc["losses"]     = losses
+                    acc["daily_pnl"]  = daily_pnl
+                    acc["daily_date"] = today
+                    acc["status"]     = status
+                print(f"[RESTORE] {len(PROP_ACCOUNTS)} cuentas de fondeo restauradas")
+        except Exception as e:
+            print(f"[RESTORE] Error restaurando PROP_ACCOUNTS desde PAPER_LOG: {e}")
+
+    # ── 3. Sincronizar estado FAILED desde último snapshot de PROP_ACCOUNTS_LOG ─
+    # El replay de PAPER_LOG no puede reproducir fallos por daily-DD (no hay
+    # PnL diario histórico por cuenta en PAPER_LOG).  Si el snapshot más reciente
+    # marcó una cuenta como FAILED, respetamos ese estado.
+    if PROP_ACCOUNTS_LOG.exists():
+        try:
+            snap_recs = [json.loads(l) for l in
+                         PROP_ACCOUNTS_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+            if snap_recs:
+                last_snap = {a["id"]: a for a in snap_recs[-1]["accounts"]}
+                for acc in PROP_ACCOUNTS:
+                    if acc["id"] in last_snap and last_snap[acc["id"]]["status"] == "FAILED":
+                        acc["status"] = "FAILED"
+                print(f"[RESTORE] Estado FAILED sincronizado desde último snapshot")
+        except Exception as e:
+            print(f"[RESTORE] Error leyendo PROP_ACCOUNTS_LOG para sync FAILED: {e}")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -3139,6 +3284,7 @@ if __name__=="__main__":
     print("  Dashboard: http://localhost:8000/dashboard")
     print("  Ctrl+C para parar")
     print("="*55+"\n")
+    _restore_state_from_disk()   # restaura balance, daily state y cuentas tras reinicio
     threading.Thread(target=simulated_executor,daemon=True).start()
     threading.Thread(target=paper_position_tracker,daemon=True).start()
     threading.Thread(target=ifvg_scanner,daemon=True).start()

@@ -17,8 +17,9 @@
       <span class="logo-text">ANTIGRAVITY</span>
     </div>
     <nav>
-      <a href="index.html" class="nav-item">Dashboard</a>
+      <a href="index.html"  class="nav-item">Dashboard</a>
       <a href="crm.html"   class="nav-item active">CRM Firmax</a>
+      <a href="agents.html" class="nav-item">Centrum Agentes</a>
     </nav>
     <div class="sidebar-bottom">
       <div class="worker-selector">
@@ -1761,6 +1762,19 @@ async function sendChat() {
   await api('POST', '/api/crm/chat', { autor, mensaje: texto });
   await pollChat();
 }
+
+// ─── HORIZONTAL SCROLL CON RUEDA DEL RATÓN ────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const wrapper = document.getElementById('kanban-wrapper');
+  if (!wrapper) return;
+  wrapper.addEventListener('wheel', (e) => {
+    // Si el scroll es principalmente vertical y el kanban no tiene scroll vertical, redirige a horizontal
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      wrapper.scrollLeft += e.deltaY;
+    }
+  }, { passive: false });
+});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadLeads();

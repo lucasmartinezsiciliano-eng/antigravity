@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centrum Agentes — Antigravity</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .topbar { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; flex-shrink:0; }
+    .topbar h1 { font-size:16px; font-weight:700; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+    .status-dot.offline { background:var(--red); animation:none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .status-label { font-size:12px; color:var(--text-dim); }
+
+    .content { flex:1; display:grid; grid-template-columns:1fr 340px; overflow:hidden; }
+
+    /* ── AGENT GRID ── */
+    .grid-panel { padding:20px 24px; overflow-y:auto; }
+    .grid-panel h2 { font-size:12px; font-weight:600; letter-spacing:.08em; color:var(--text-dim); text-transform:uppercase; margin-bottom:14px; }
+    .section-label { font-size:11px; color:var(--accent); font-weight:600; margin:18px 0 8px; letter-spacing:.06em; text-transform:uppercase; }
+    .agent-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; }
+    .agent-card {
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:8px; padding:12px 14px; cursor:default;
+      transition:border-color .15s, background .15s;
+      position:relative;
+    }
+    .agent-card:hover { border-color:var(--accent); background:var(--bg3); }
+    .agent-card.active { border-color:var(--green); }
+    .agent-card.busy { border-color:var(--yellow); }
+    .agent-name { font-size:12px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .agent-status { font-size:11px; color:var(--text-dim); display:flex; align-items:center; gap:5px; }
+    .agent-dot { width:6px; height:6px; border-radius:50%; background:var(--border); flex-shrink:0; }
+    .agent-card.active  .agent-dot { background:var(--green); }
+    .agent-card.busy    .agent-dot { background:var(--yellow); animation:pulse 1s infinite; }
+    .agent-card.idle    .agent-dot { background:var(--text-dim); }
+    .agent-last { font-size:10px; color:var(--text-dim); margin-top:4px; }
+
+    /* ── ACTIVITY FEED ── */
+    .feed-panel { border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+    .feed-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .feed-header h2 { font-size:12px; font-weight:600; letter-spacing:.08em; color:var(--text-dim); text-transform:uppercase; }
+    .feed-body { flex:1; overflow-y:auto; padding:12px 18px; font-size:12px; }
+    .feed-item { border-bottom:1px solid var(--border); padding:10px 0; }
+    .feed-item:last-child { border-bottom:none; }
+    .feed-time { font-size:10px; color:var(--text-dim); margin-bottom:3px; }
+    .feed-who { font-weight:600; color:var(--accent); }
+    .feed-arrow { color:var(--text-dim); margin:0 4px; }
+    .feed-target { font-weight:600; color:var(--purple); }
+    .feed-msg { color:var(--text); margin-top:3px; line-height:1.4; }
+    .feed-result { font-size:11px; color:var(--green); margin-top:3px; }
+    .feed-error  { font-size:11px; color:var(--red); margin-top:3px; }
+    .feed-empty  { color:var(--text-dim); text-align:center; padding:40px 0; }
+
+    /* ── LOG PANEL (below grid) ── */
+    .log-panel { border-top:1px solid var(--border); height:220px; display:flex; flex-direction:column; flex-shrink:0; }
+    .log-header { padding:8px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .log-header h3 { font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; }
+    .log-body { flex:1; overflow-y:auto; font-family:'JetBrains Mono','Fira Code',monospace; font-size:11px; padding:8px 24px; line-height:1.7; }
+    .log-line { color:#8b95b3; white-space:pre-wrap; word-break:break-all; }
+    .log-line.warn { color:var(--yellow); }
+    .log-line.error { color:var(--red); }
+    .log-line.agent { color:var(--green); }
+    .log-line.delegate { color:var(--purple); }
+
+    .btn-sm { background:transparent; border:1px solid var(--border); color:var(--text-dim);
+      padding:4px 10px; border-radius:5px; font-size:11px; cursor:pointer; }
+    .btn-sm:hover { border-color:var(--accent); color:var(--text); }
+    .tag { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; }
+    .tag-conv { background:#1e3a5f; color:#60a5fa; }
+    .tag-intel { background:#1e3a2f; color:#4ade80; }
+    .tag-content { background:#2d1b4e; color:#c084fc; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══ SIDEBAR ══════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">ANTIGRAVITY</span>
+    </div>
+    <nav>
+      <a href="index.html"  class="nav-item">Dashboard</a>
+      <a href="crm.html"    class="nav-item">CRM Firmax</a>
+      <a href="agents.html" class="nav-item active">Centrum Agentes</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div style="padding:16px 18px; font-size:11px; color:var(--text-dim);">
+        <div id="oc-status" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span class="status-dot offline" id="oc-dot"></span>
+          <span id="oc-label">Conectando…</span>
+        </div>
+        <div id="oc-container" style="font-size:10px;color:var(--text-dim);"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ══════════════════════════════════════════════════════════════════ -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Centrum — Panel de Agentes</h1>
+      <div style="flex:1"></div>
+      <div id="stats-bar" style="display:flex;gap:20px;font-size:12px;color:var(--text-dim);">
+        <span><b id="stat-total" style="color:var(--text)">—</b> agentes</span>
+        <span><b id="stat-active" style="color:var(--green)">—</b> activos</span>
+        <span><b id="stat-tasks" style="color:var(--purple)">—</b> tareas hoy</span>
+      </div>
+      <button class="btn-sm" onclick="refresh()">↺ Actualizar</button>
+    </div>
+
+    <div class="content">
+      <!-- Agent Grid + Logs -->
+      <div style="display:flex;flex-direction:column;overflow:hidden;">
+        <div class="grid-panel" id="grid-area">
+          <div class="section-label">CONVERSIÓN</div>
+          <div class="agent-grid" id="grid-conv"></div>
+          <div class="section-label">INTELIGENCIA</div>
+          <div class="agent-grid" id="grid-intel"></div>
+          <div class="section-label">PRODUCCIÓN CONTENIDO</div>
+          <div class="agent-grid" id="grid-content"></div>
+        </div>
+        <div class="log-panel">
+          <div class="log-header">
+            <h3>Log en vivo — OpenClaw</h3>
+            <div style="display:flex;gap:8px;">
+              <label style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">
+                <input type="checkbox" id="log-autoscroll" checked> Auto-scroll
+              </label>
+              <button class="btn-sm" onclick="clearLog()">Limpiar</button>
+            </div>
+          </div>
+          <div class="log-body" id="log-body">
+            <span class="log-line" style="color:var(--text-dim);">Esperando conexión con OpenClaw…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="feed-panel">
+        <div class="feed-header">
+          <h2>Actividad</h2>
+          <span id="feed-count" style="font-size:11px;color:var(--text-dim);">0 eventos</span>
+        </div>
+        <div class="feed-body" id="feed-body">
+          <div class="feed-empty">Sin actividad registrada.<br>Los agentes reportarán aquí cuando trabajen.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ AGENT CATALOGUE ══════════════════════════════════════════════════════════
+const AGENTS = {
+  conv: [
+    { id:'form-analyzer',       name:'Form Analyzer',       desc:'Evalúa formularios de leads' },
+    { id:'lead-scorer',         name:'Lead Scorer',         desc:'Puntúa leads 1-10' },
+    { id:'lead-classifier',     name:'Lead Classifier',     desc:'Clasifica A/B/C/D/E' },
+    { id:'lead-router',         name:'Lead Router',         desc:'Distribuye leads' },
+    { id:'lead-notifier',       name:'Lead Notifier',       desc:'Notifica al equipo' },
+    { id:'auto-responder',      name:'Auto Responder',      desc:'Responde al lead' },
+    { id:'conversion-optimizer',name:'Conversion Optimizer',desc:'Análisis semanal embudo' },
+  ],
+  intel: [
+    { id:'market-watcher',   name:'Market Watcher',   desc:'Monitoriza ejecuciones hipotecarias' },
+    { id:'law-tracker',      name:'Law Tracker',      desc:'Cambios legislativos' },
+    { id:'news-scanner',     name:'News Scanner',     desc:'Noticias del sector' },
+    { id:'competitor-spy',   name:'Competitor Spy',   desc:'Analiza vídeos competidores' },
+    { id:'avatar-researcher',name:'Avatar Researcher',desc:'Investiga qué avatar convierte' },
+    { id:'trend-exploiter',  name:'Trend Exploiter',  desc:'Detecta tendencias' },
+  ],
+  content: [
+    { id:'content-director',      name:'Content Director',      desc:'Coordina batch semanal' },
+    { id:'tiktok-scriptwriter',   name:'TikTok Scriptwriter',   desc:'Scripts TikTok' },
+    { id:'tiktok-hook-specialist',name:'Hook Specialist',       desc:'Primeros 3-5 segundos' },
+    { id:'tiktok-cta-writer',     name:'CTA Writer',            desc:'CTAs para TikTok' },
+    { id:'meta-copywriter',       name:'Meta Copywriter',       desc:'Copy anuncios Meta' },
+    { id:'meta-audience-builder', name:'Meta Audience',         desc:'Audiencias Meta' },
+    { id:'meta-headline-tester',  name:'Headline Tester',       desc:'Tests A/B titulares' },
+    { id:'google-keyword-researcher',name:'KW Researcher',      desc:'Keywords Google' },
+    { id:'google-ad-writer',      name:'Google Ad Writer',      desc:'Anuncios Google' },
+    { id:'google-negative-manager',name:'Negative Manager',     desc:'Palabras negativas' },
+    { id:'content-scheduler',     name:'Content Scheduler',     desc:'Planifica publicación' },
+    { id:'content-repurposer',    name:'Content Repurposer',    desc:'Transforma contenido' },
+    { id:'avatar-creator',        name:'Avatar Creator',        desc:'Concepto visual avatar' },
+    { id:'freepik-specialist',    name:'Freepik Specialist',    desc:'Creatividades visuales' },
+    { id:'video-editor',          name:'Video Editor',          desc:'Postproducción vídeos' },
+    { id:'ads-manager',           name:'Ads Manager',           desc:'Campañas de pago' },
+    { id:'comment-scraper',       name:'Comment Scraper',       desc:'Extrae comentarios' },
+    { id:'social-auto-responder', name:'Social Responder',      desc:'Responde comentarios' },
+  ]
+};
+
+// ══ STATE ════════════════════════════════════════════════════════════════════
+let agentState   = {};   // id → { status, lastSeen, lastTask }
+let activityFeed = [];   // [ {ts, from, to, task, result, error} ]
+let logLines     = [];
+let lastFeedTs   = 0;
+let lastLogTs    = 0;
+let ocOnline     = false;
+
+// ══ RENDER GRID ══════════════════════════════════════════════════════════════
+function renderGrid() {
+  const sections = { conv:'grid-conv', intel:'grid-intel', content:'grid-content' };
+  for (const [key, gridId] of Object.entries(sections)) {
+    const el = document.getElementById(gridId);
+    el.innerHTML = AGENTS[key].map(a => {
+      const st = agentState[a.id] || {};
+      const cls = st.status === 'busy' ? 'busy' : st.status === 'active' ? 'active' : 'idle';
+      const last = st.lastSeen ? timeAgo(st.lastSeen) : 'Sin actividad';
+      const task = st.lastTask ? `<div class="agent-last" title="${esc(st.lastTask)}">${esc(st.lastTask.slice(0,40))}${st.lastTask.length>40?'…':''}</div>` : '';
+      return `<div class="agent-card ${cls}" title="${esc(a.desc)}">
+        <div class="agent-name">${esc(a.name)}</div>
+        <div class="agent-status"><span class="agent-dot"></span>${statusLabel(st.status)}</div>
+        ${task}
+        <div class="agent-last">${last}</div>
+      </div>`;
+    }).join('');
+  }
+  // Stats
+  const all = [...AGENTS.conv, ...AGENTS.intel, ...AGENTS.content];
+  document.getElementById('stat-total').textContent = all.length;
+  const active = all.filter(a => agentState[a.id]?.status === 'busy').length;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-tasks').textContent = activityFeed.length;
+}
+
+function statusLabel(s) {
+  if (s === 'busy')   return 'Trabajando…';
+  if (s === 'active') return 'Activo';
+  return 'Inactivo';
+}
+
+// ══ RENDER FEED ═══════════════════════════════════════════════════════════════
+function renderFeed() {
+  const el = document.getElementById('feed-body');
+  if (!activityFeed.length) {
+    el.innerHTML = '<div class="feed-empty">Sin actividad registrada.<br>Los agentes reportarán aquí cuando trabajen.</div>';
+    document.getElementById('feed-count').textContent = '0 eventos';
+    return;
+  }
+  document.getElementById('feed-count').textContent = activityFeed.length + ' eventos';
+  el.innerHTML = [...activityFeed].reverse().map(e => {
+    const result = e.result ? `<div class="feed-result">✓ ${esc(e.result.slice(0,120))}</div>` : '';
+    const error  = e.error  ? `<div class="feed-error">✗ ${esc(e.error.slice(0,120))}</div>` : '';
+    const target = e.to ? `<span class="feed-arrow">→</span><span class="feed-target">${esc(e.to)}</span>` : '';
+    return `<div class="feed-item">
+      <div class="feed-time">${fmtTime(e.ts)}</div>
+      <div><span class="feed-who">${esc(e.from||'orchestrator')}</span>${target}</div>
+      <div class="feed-msg">${esc(e.task||e.msg||'')}</div>
+      ${result}${error}
+    </div>`;
+  }).join('');
+}
+
+// ══ RENDER LOG ════════════════════════════════════════════════════════════════
+function appendLog(lines) {
+  const el = document.getElementById('log-body');
+  if (!lines.length) return;
+  logLines.push(...lines);
+  if (logLines.length > 500) logLines = logLines.slice(-500);
+  el.innerHTML = logLines.map(l => {
+    const cls = l.includes('error')||l.includes('Error') ? 'error'
+              : l.includes('warn')||l.includes('Warn')   ? 'warn'
+              : l.includes('[agent]')||l.includes('agent-to-agent') ? 'delegate'
+              : l.includes('[telegram]')||l.includes('[gateway]')   ? 'agent'
+              : '';
+    return `<span class="log-line ${cls}">${esc(l)}</span>`;
+  }).join('\n');
+  if (document.getElementById('log-autoscroll').checked) {
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
+function clearLog() { logLines=[]; document.getElementById('log-body').innerHTML=''; }
+
+// ══ API CALLS ════════════════════════════════════════════════════════════════
+async function fetchActivity() {
+  try {
+    const r = await fetch(`/api/agents/activity?since=${lastFeedTs}`);
+    if (!r.ok) return;
+    const items = await r.json();
+    if (items.length) {
+      activityFeed.push(...items);
+      if (activityFeed.length > 200) activityFeed = activityFeed.slice(-200);
+      lastFeedTs = Math.max(...items.map(i => i.ts));
+      // Update agent state from activity
+      for (const item of items) {
+        if (item.from) agentState[item.from] = { ...agentState[item.from], status:'active', lastSeen:item.ts, lastTask:item.task||item.msg };
+        if (item.to)   agentState[item.to]   = { ...agentState[item.to],   status: item.result||item.error ? 'active' : 'busy', lastSeen:item.ts, lastTask:item.task||item.msg };
+      }
+      renderFeed();
+      renderGrid();
+    }
+  } catch {}
+}
+
+async function fetchLogs() {
+  try {
+    const r = await fetch(`/api/agents/logs?since=${lastLogTs}`);
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data.lines && data.lines.length) {
+      appendLog(data.lines);
+      lastLogTs = data.ts || Date.now();
+    }
+    // Check gateway status
+    const wasOnline = ocOnline;
+    ocOnline = data.online !== false;
+    if (ocOnline !== wasOnline) updateStatus();
+  } catch {}
+}
+
+async function fetchStatus() {
+  try {
+    const r = await fetch('/api/agents/status');
+    if (!r.ok) { setOffline(); return; }
+    const d = await r.json();
+    ocOnline = d.online;
+    document.getElementById('oc-container').textContent = d.container ? `ID: ${d.container}` : '';
+    updateStatus();
+  } catch { setOffline(); }
+}
+
+function updateStatus() {
+  const dot   = document.getElementById('oc-dot');
+  const label = document.getElementById('oc-label');
+  dot.className   = 'status-dot' + (ocOnline ? '' : ' offline');
+  label.textContent = ocOnline ? 'OpenClaw activo' : 'OpenClaw offline';
+}
+function setOffline() { ocOnline=false; updateStatus(); }
+
+async function refresh() {
+  await fetchStatus();
+  await fetchActivity();
+  await fetchLogs();
+}
+
+// ══ POLLING ═══════════════════════════════════════════════════════════════════
+refresh();
+setInterval(fetchActivity, 4000);
+setInterval(fetchLogs,    6000);
+setInterval(fetchStatus, 30000);
+
+// ══ UTILS ════════════════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60) return 'hace '+s+'s';
+  if (s < 3600) return 'hace '+Math.floor(s/60)+'m';
+  if (s < 86400) return 'hace '+Math.floor(s/3600)+'h';
+  return 'hace '+Math.floor(s/86400)+'d';
+}
+function fmtTime(ts) {
+  return new Date(ts).toLocaleString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'2-digit'});
+}
+</script>
+</body>
+</html>

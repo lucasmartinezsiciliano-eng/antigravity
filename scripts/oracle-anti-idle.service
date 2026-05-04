@@ -1,0 +1,8 @@
+[Unit]
+Description=Oracle Anti-Idle Keep-Alive
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/oracle-anti-idle.sh
+User=root
