@@ -17,61 +17,45 @@ function showToast(msg, type = 'success') {
 }
 
 // ============================================
-// SCORING A/B/C/D (replicado del WF3)
+// SCORING 3-BLOQUES (Endeudamiento 40% · Estabilidad 30% · Ahorros 30%)
 // ============================================
 function calcularScore(data) {
-  // ── KNOCKOUT — ASNEF/RAI ──────────────────────────────────────────────────
-  if (data.impagos === 'si') return { score: 0, clasificacion: 'D' };
+  // ── B1: Endeudamiento / DTI (0-100) ──────────────────────────────────────
+  const precioMid = { 'menos-150': 100000, '150-250': 200000, '250-300': 275000, '300-500': 400000, '500-750': 625000, 'mas-750': 900000 };
+  const ahorrosPct = { 'mas-30': 0.33, '20-30': 0.25, '10-20': 0.15, 'menos-10': 0.08 };
+  const cuotasMap  = { 'cero': 0, 'menos-200': 100, '200-500': 350, 'mas-500': 600 };
+  const ingresosMid = { 'menos-1500': 1200, '1500-2500': 2000, '2500-3500': 3000, '3500-5000': 4250, 'mas-5000': 6000 };
 
-  let score = 0;
+  const precio   = precioMid[data.precio_vivienda] || 200000;
+  const pctAho   = ahorrosPct[data.ahorros_pct] || 0.15;
+  const prestamo = precio * (1 - pctAho);
+  const cuotaHipo = prestamo * 0.0042; // ~30yr 3.8%
+  const otrasCuotas = cuotasMap[data.otras_cuotas] || 0;
+  const ingresos = ingresosMid[data.ingresos] || 2000;
+  const dti = (cuotaHipo + otrasCuotas) / ingresos;
+
+  let b1 = dti < 0.28 ? 100 : dti < 0.33 ? 80 : dti < 0.38 ? 58 : dti < 0.43 ? 32 : 10;
+  if (data.cotitular === 'si') b1 = Math.min(100, b1 + 12);
+
+  // ── B2: Estabilidad laboral (0-100) ──────────────────────────────────────
   const tc = data.tipo_contrato || '';
+  const estabilidadBase = { 'funcionario': 100, 'indefinido': 85, 'interino': 70, 'fijo_discontinuo': 65, 'autonomo_2plus': 60, 'temporal': 45, 'autonomo_nuevo': 25 };
+  let b2 = estabilidadBase[tc] || 50;
+  if (data.cambio_empleo === 'si') b2 = Math.max(0, b2 - 20);
 
-  // ── BLOQUE A — Tipo de contrato (15 pts) ──────────────────────────────────
-  if (tc === 'indefinido' || tc === 'funcionario')                              score += 15;
-  else if (['fijo_discontinuo','interino','autonomo_2plus','temporal'].includes(tc)) score += 8;
-  else if (tc === 'autonomo_nuevo')                                              score += 5;
+  // ── B3: Ahorros / Patrimonio (0-100) ─────────────────────────────────────
+  const ahorroPtsMap = { 'mas-30': 100, '20-30': 75, '10-20': 45, 'menos-10': 15 };
+  let b3 = ahorroPtsMap[data.ahorros_pct] || 45;
+  if (data.tiene_patrimonio === 'si') b3 = Math.min(100, b3 + 10);
 
-  // ── BLOQUE A — Antigüedad implícita según tipo (15 pts) ───────────────────
-  if (['indefinido','funcionario','interino'].includes(tc))                      score += 15;
-  else if (['fijo_discontinuo','autonomo_2plus','temporal'].includes(tc))        score += 10;
-  // autonomo_nuevo → 0
+  // ── Knockout ──────────────────────────────────────────────────────────────
+  if (data.impagos === 'si') return { b1: 0, b2: 0, b3: 0, score: 0, clasificacion: 'D' };
 
-  // ── BLOQUE A — Ingresos netos del hogar (15 pts) ──────────────────────────
-  const ingresosMap = { 'menos-1500': 0, '1500-2500': 5, '2500-3500': 10, '3500-5000': 15, 'mas-5000': 15 };
-  score += ingresosMap[data.ingresos] || 0;
+  // ── Global (ponderado) ────────────────────────────────────────────────────
+  const global = Math.round(b1 * 0.40 + b2 * 0.30 + b3 * 0.30);
+  const clasificacion = global >= 75 ? 'A' : global >= 55 ? 'B' : global >= 35 ? 'C' : 'D';
 
-  // ── BLOQUE A — LTV solicitado (10 pts) ────────────────────────────────────
-  const ltvMap = { 'menos-70': 10, '70-80': 8, '80-85': 5, '85-90': 2, 'mas-90': 0 };
-  score += ltvMap[data.ltv] || 0;
-
-  // ── BLOQUE B — Premium ────────────────────────────────────────────────────
-  if (tc === 'funcionario')                    score += 10; // estabilidad máxima
-  if (data.cirbe_limpio === 'si')              score += 8;  // historial limpio
-  if (data.ltv === 'menos-70')                 score += 7;  // ahorros sólidos >30%
-  if (data.cotitular === 'si')                 score += 5;  // doble ingreso
-  if (data.sector_estrategico === 'si')        score += 5;  // empleo estratégico
-
-  // ── BLOQUE C — Intención real ─────────────────────────────────────────────
-  if (data.estado === 'reserva')               score += 30;
-  else if (data.estado === 'identificada')     score += 5;
-  else if (data.estado === 'mirando')          score -= 10;
-
-  if (data.urgencia === 'menos-1')             score += 15;
-  else if (data.urgencia === 'mas-3')          score -= 5;
-
-  // ── BLOQUE D — Valor de vida ──────────────────────────────────────────────
-  if (data.primera_vivienda === 'si')          score += 5;
-  if (['300-500','500-750','mas-750'].includes(data.precio_vivienda)) score += 5;
-  if (data.tiene_patrimonio === 'si')          score += 5;
-
-  // ── Penalizaciones (no knockout) ─────────────────────────────────────────
-  if (data.cambio_empleo === 'si')             score -= 15;
-  if (data.ingresos_variables === 'si')        score -= 10;
-
-  const s = Math.max(0, Math.min(150, score));
-  const clasificacion = s >= 80 ? 'A' : s >= 60 ? 'B' : s >= 40 ? 'C' : 'D';
-
-  return { score: s, clasificacion };
+  return { b1: Math.round(b1), b2: Math.round(b2), b3: Math.round(b3), score: global, clasificacion };
 }
 
 // ============================================
@@ -120,19 +104,19 @@ function initSimpleForms() {
 // QUIZ WIZARD
 // ============================================
 const STEP_NAMES = [
-  'situacion_laboral', 'ingresos', 'precio_vivienda', 'ltv',
-  'estado_busqueda', 'urgencia', 'senales_positivas', 'obstaculos', 'contacto',
+  'situacion_laboral', 'ingresos', 'otras_cuotas', 'precio_vivienda',
+  'ahorros_pct', 'estado_vivienda', 'cotitular', 'senales_adicionales', 'contacto',
 ];
 
 const STEP_TEXTS = [
   '⏱ 2 minutos y lo tienes',
-  '🔥 Ya llevas 1 — casi en la mitad',
-  '💰 Tercera pregunta, vas muy bien',
-  '🏦 Cuarta pregunta — ya casi',
-  '🔍 La mitad del análisis lista',
-  '📅 Dos preguntas más, casi estás',
-  '✨ Última ronda antes del contacto',
-  '🎯 Solo un paso más',
+  '🔥 Paso 2 — ingresos del hogar',
+  '💰 Paso 3 — carga financiera actual',
+  '🏦 Paso 4 — precio de la vivienda',
+  '🏦 Paso 5 — ahorros disponibles',
+  '🔍 Paso 6 — situación de búsqueda',
+  '👫 Paso 7 — titulares de la hipoteca',
+  '✨ Paso 8 — detalles finales',
   '📬 Solo necesitamos saber a quién enviárselo',
 ];
 
@@ -214,7 +198,7 @@ function initQuiz() {
     btn.textContent = 'Analizando...';
     btn.disabled = true;
 
-    const { score, clasificacion } = calcularScore(answers);
+    const { b1, b2, b3, score, clasificacion } = calcularScore(answers);
 
     const ok = await submitLead({
       nombre, telefono, email,
@@ -236,6 +220,22 @@ function initQuiz() {
     resultStep.querySelectorAll('.result-msg').forEach(el => el.style.display = 'none');
     const msgEl = resultStep.querySelector(`[data-result="${clasificacion}"]`);
     if (msgEl) msgEl.style.display = 'block';
+
+    // Rellenar bloques de scoring
+    function tagLabel(val) {
+      if (val >= 75) return 'Excelente';
+      if (val >= 55) return 'Bueno';
+      if (val >= 35) return 'Mejorable';
+      return 'Crítico';
+    }
+    [['b1', b1], ['b2', b2], ['b3', b3]].forEach(([key, val]) => {
+      const scoreEl = quiz.querySelector(`#r-${key}-score`);
+      const fillEl  = quiz.querySelector(`#r-${key}-fill`);
+      const tagEl   = quiz.querySelector(`#r-${key}-tag`);
+      if (scoreEl) scoreEl.textContent = val + '/100';
+      if (fillEl)  fillEl.style.width  = val + '%';
+      if (tagEl)   tagEl.textContent   = tagLabel(val);
+    });
 
     window.brokerAnalytics?.sendEvent('quiz_complete', { clasificacion, score });
     if (!ok) showToast('Error al enviar. Te llamaremos igualmente.', 'error');
