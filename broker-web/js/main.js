@@ -294,6 +294,23 @@ function initQuiz() {
     }
   }
 
+  function buildAlerts(px, s, sc) {
+    const a = [];
+    if (sc.t1) a.push('T1 temporal: ingresos no computables.');
+    if (sc.t2) a.push('T2 temporal: 0 pts laboral.');
+    if (sc.ingresosTotalesComp === 0) a.push('Sin ingresos computables: operación no viable.');
+    if (s.dti >= 45 && sc.ingresosTotalesComp > 0) a.push('DTI muy alto (' + s.dti.toFixed(1) + '%). Riesgo denegación.');
+    else if (s.dti >= 35 && sc.ingresosTotalesComp > 0) a.push('DTI ajustado (' + s.dti.toFixed(1) + '%). Estudiar cargas.');
+    if (px === 'B') a.push('LTV 90%: solo entidades específicas (jóvenes, aval ICO).');
+    if (!s.suficiente) a.push('Ahorros insuficientes para cubrir entrada + gastos.');
+    if (s.plazo < 30) a.push('Plazo reducido a ' + s.plazo + ' años (límite 80 años).');
+    if (s.scoreLaboral < 50) a.push('Perfil laboral débil. Pedir IRPF y vida laboral.');
+    if (s.global >= 75) a.push('Perfil sólido. Viable mayoría entidades.');
+    else if (s.global >= 50) a.push('Viable con matices. Trabajar puntos débiles.');
+    else a.push('Perfil de riesgo. Conviene mejorar antes de solicitar.');
+    return a;
+  }
+
   async function submitQuiz() {
     const nombre   = qval('q_nombre').trim();
     const telefono = qval('q_telefono').trim();
@@ -351,11 +368,25 @@ function initQuiz() {
     const ok = await submitLead({
       nombre, telefono, email, _hp: hp, source: 'quiz',
       urgencia, clasificacion,
-      score_80: sA.global, score_90: sB.global,
       n_titulares: nSol,
       contrato1, ingresos1: ingresos1Raw, cuotas1,
       contrato2: nSol === 2 ? contrato2 : null, ingresos2: ingresos2Raw, cuotas2,
       precio, ahorros, provincia, tipo_compra: tipo,
+      itp_pct: itpEf.itp, itp_ccaa: itpEf.ccaa,
+      sc_a: {
+        score: sA.global, endeu: sA.scoreEndeu, laboral: sA.scoreLaboral, ahorro_pts: sA.scoreAhorros,
+        hipoteca: Math.round(sA.hipoteca), cuota: Math.round(sA.cuotaHip),
+        dti: +sA.dti.toFixed(1), dti_label: sA.dtiResult.label,
+        total_nec: Math.round(sA.totalNecesario), itp_est: Math.round(sA.gastosITP),
+        plazo: sA.plazo, suficiente: sA.suficiente, alertas: buildAlerts('A', sA, sc),
+      },
+      sc_b: {
+        score: sB.global, endeu: sB.scoreEndeu, laboral: sB.scoreLaboral, ahorro_pts: sB.scoreAhorros,
+        hipoteca: Math.round(sB.hipoteca), cuota: Math.round(sB.cuotaHip),
+        dti: +sB.dti.toFixed(1), dti_label: sB.dtiResult.label,
+        total_nec: Math.round(sB.totalNecesario), itp_est: Math.round(sB.gastosITP),
+        plazo: sB.plazo, suficiente: sB.suficiente, alertas: buildAlerts('B', sB, sc),
+      },
     });
 
     // Mostrar resultado
@@ -379,11 +410,6 @@ function initQuiz() {
     if (iconEl) iconEl.textContent = msg.icon;
     if (titEl)  titEl.textContent  = msg.titulo;
     if (descEl) descEl.textContent = msg.desc;
-
-    setTimeout(() => {
-      renderScenario('A', sA, sc, itpEf);
-      renderScenario('B', sB, sc, itpEf);
-    }, 100);
 
     window.brokerAnalytics?.sendEvent('quiz_complete', { clasificacion, score_80: sA.global, score_90: sB.global });
     if (!ok) showToast('Error al enviar. Te llamaremos igualmente.', 'error');
