@@ -2,7 +2,8 @@
    BROKER HIPOTECARIO — Main JS v2
    ============================================= */
 
-const N8N_WEBHOOK_URL = 'https://n8n.lukimporta.es/webhook/broker-lead';
+const N8N_WEBHOOK_URL       = 'https://n8n.lukimporta.es/webhook/broker-lead';
+const N8N_WEBHOOK_PADRE_URL = 'https://n8n.lukimporta.es/webhook/broker-lead-padre';
 
 // ============================================
 // TOAST
@@ -120,13 +121,14 @@ function calcScenario(precio, ahorros, ltv, itpEf, cuotasTotales, ingresosTotale
 // ENVÍO A N8N
 // ============================================
 async function submitLead(payload) {
+  const body = JSON.stringify({ ...payload, timestamp: new Date().toISOString(), page: window.location.pathname });
+  const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
   try {
-    const res = await fetch(N8N_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, timestamp: new Date().toISOString(), page: window.location.pathname }),
-    });
-    return res.ok;
+    const [res] = await Promise.allSettled([
+      fetch(N8N_WEBHOOK_URL, opts),
+      fetch(N8N_WEBHOOK_PADRE_URL, opts),
+    ]);
+    return res.status === 'fulfilled' && res.value.ok;
   } catch {
     return false;
   }

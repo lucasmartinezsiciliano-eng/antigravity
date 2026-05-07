@@ -1,0 +1,56 @@
+{
+  "name": "Broker - Notificacion Lead Padre",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "broker-lead-padre",
+        "responseMode": "immediately",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "8720170007",
+        "text": "={{ \n'🏠 NUEVO LEAD — BrokerHipotecario.es\\n\\n' +\n'👤 ' + $json.body.nombre + '\\n' +\n'📞 ' + $json.body.telefono + '\\n' +\n($json.body.email ? '📧 ' + $json.body.email + '\\n' : '') +\n'\\n' +\n'🏷 Clasificacion: ' + $json.body.clasificacion + '\\n' +\n'📊 Score 80%: ' + $json.body.score_80 + '/100  |  Score 90%: ' + $json.body.score_90 + '/100\\n' +\n'\\n' +\n'🏡 VIVIENDA\\n' +\n'Precio: ' + Number($json.body.precio).toLocaleString('es-ES') + 'EUR\\n' +\n'Ahorros: ' + Number($json.body.ahorros).toLocaleString('es-ES') + 'EUR\\n' +\n'Provincia: ' + $json.body.provincia + '  |  ' + $json.body.tipo_compra + '\\n' +\n'\\n' +\n'💼 TITULAR PRINCIPAL\\n' +\n'Contrato: ' + $json.body.contrato1 + '\\n' +\n'Ingresos netos: ' + $json.body.ingresos1 + 'EUR/mes\\n' +\n'Cuotas activas: ' + ($json.body.cuotas1 || 0) + 'EUR/mes\\n' +\n($json.body.n_titulares === 2 ? '\\n👫 SEGUNDO TITULAR\\nContrato: ' + $json.body.contrato2 + '\\nIngresos netos: ' + $json.body.ingresos2 + 'EUR/mes\\nCuotas activas: ' + ($json.body.cuotas2 || 0) + 'EUR/mes\\n' : '') +\n'\\n' +\n'⏰ Urgencia: ' + $json.body.urgencia\n}}",
+        "additionalFields": {}
+      },
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "Telegram Padre",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [500, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "FIRMAX_WEB_BOT",
+          "name": "Firmax Web Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Lead": {
+      "main": [
+        [
+          {
+            "node": "Telegram Padre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
