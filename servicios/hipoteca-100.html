@@ -102,41 +102,29 @@
         <!-- Progreso -->
         <div class="quiz-progress">
           <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:0%"></div></div>
-          <span class="quiz-progress-text">Paso 1 de 9</span>
+          <span class="quiz-progress-text">⏱ 2 minutos y tenemos tu análisis</span>
         </div>
 
-        <!-- PASO 1: Situación laboral -->
+        <!-- PASO 1: Urgencia -->
         <div class="quiz-step active">
-          <h3>¿Cuál es tu situación laboral?</h3>
-          <p>Es el primer dato que miran los bancos al analizar una hipoteca.</p>
+          <h3>¿Cuándo tienes previsto comprar?</h3>
+          <p>Nos ayuda a priorizar tu expediente correctamente.</p>
           <div class="quiz-options">
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="indefinido">
-              <span class="quiz-opt-icon">💼</span>
-              <div class="quiz-opt-text">Contrato fijo indefinido<small>Empleado por cuenta ajena, sin fecha de fin</small></div>
+            <div class="quiz-opt" data-key="urgencia" data-value="reservada">
+              <span class="quiz-opt-icon">✅</span>
+              <div class="quiz-opt-text">Ya la tengo reservada<small>Necesito la hipoteca sí o sí</small></div>
             </div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="fijo_discontinuo">
-              <span class="quiz-opt-icon">🔄</span>
-              <div class="quiz-opt-text">Contrato fijo discontinuo<small>Temporadas o actividad estacional</small></div>
+            <div class="quiz-opt" data-key="urgencia" data-value="identificada">
+              <span class="quiz-opt-icon">🔍</span>
+              <div class="quiz-opt-text">Tengo la vivienda identificada<small>Estoy a punto de decidirme</small></div>
             </div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="funcionario">
-              <span class="quiz-opt-icon">🏛️</span>
-              <div class="quiz-opt-text">Funcionario<small>Plaza en propiedad en el sector público</small></div>
+            <div class="quiz-opt" data-key="urgencia" data-value="3meses">
+              <span class="quiz-opt-icon">📅</span>
+              <div class="quiz-opt-text">La compraré en menos de 3 meses<small>Quiero tener todo listo ya</small></div>
             </div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="interino">
-              <span class="quiz-opt-icon">🏢</span>
-              <div class="quiz-opt-text">Funcionario interino<small>Sector público sin plaza en propiedad</small></div>
-            </div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo_2plus">
-              <span class="quiz-opt-icon">🧾</span>
-              <div class="quiz-opt-text">Autónomo consolidado<small>Más de 2 años de actividad</small></div>
-            </div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="autonomo_nuevo">
-              <span class="quiz-opt-icon">🌱</span>
-              <div class="quiz-opt-text">Autónomo reciente<small>Menos de 2 años de actividad</small></div>
-            </div>
-            <div class="quiz-opt" data-key="tipo_contrato" data-value="temporal">
-              <span class="quiz-opt-icon">📋</span>
-              <div class="quiz-opt-text">Contrato temporal<small>Obra y servicio u otros contratos temporales</small></div>
+            <div class="quiz-opt" data-key="urgencia" data-value="mirando">
+              <span class="quiz-opt-icon">👀</span>
+              <div class="quiz-opt-text">Estoy mirando opciones<small>Quiero conocer mis posibilidades</small></div>
             </div>
           </div>
           <div class="quiz-nav">
@@ -145,170 +133,18 @@
           </div>
         </div>
 
-        <!-- PASO 2: Ingresos -->
+        <!-- PASO 2: Número de solicitantes -->
         <div class="quiz-step">
-          <h3>¿Cuáles son los ingresos netos del hogar?</h3>
-          <p>Suma todos los ingresos netos mensuales: nóminas, actividad, rentas.</p>
+          <h3>¿Cuántos titulares irán en la hipoteca?</h3>
+          <p>Dos ingresos mejoran significativamente el perfil ante los bancos.</p>
           <div class="quiz-options">
-            <div class="quiz-opt" data-key="ingresos" data-value="menos-1500">
-              <span class="quiz-opt-icon">📉</span>
-              <div class="quiz-opt-text">Menos de 1.500 €/mes<small>Ingresos bajos para una hipoteca estándar</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ingresos" data-value="1500-2500">
-              <span class="quiz-opt-icon">💶</span>
-              <div class="quiz-opt-text">1.500 – 2.500 €/mes<small>Rango habitual en hipotecas de entrada</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ingresos" data-value="2500-3500">
-              <span class="quiz-opt-icon">💰</span>
-              <div class="quiz-opt-text">2.500 – 3.500 €/mes<small>Perfil cómodo para la mayoría de bancos</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ingresos" data-value="3500-5000">
-              <span class="quiz-opt-icon">💵</span>
-              <div class="quiz-opt-text">3.500 – 5.000 €/mes<small>Perfil sólido, acceso a condiciones premium</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ingresos" data-value="mas-5000">
-              <span class="quiz-opt-icon">🏦</span>
-              <div class="quiz-opt-text">Más de 5.000 €/mes<small>Perfil muy atractivo para cualquier banco</small></div>
-            </div>
-          </div>
-          <div class="quiz-nav">
-            <button class="quiz-back">← Atrás</button>
-            <button class="btn btn-primary quiz-next">Siguiente →</button>
-          </div>
-        </div>
-
-        <!-- PASO 3: Otras cuotas activas -->
-        <div class="quiz-step">
-          <h3>¿Tienes otras cuotas o préstamos activos?</h3>
-          <p>Coche, créditos, tarjetas aplazadas... Todo lo que pagas mensualmente en deudas.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="otras_cuotas" data-value="cero">
-              <span class="quiz-opt-icon">✅</span>
-              <div class="quiz-opt-text">Sin cuotas activas<small>No tengo deudas ni pagos mensuales</small></div>
-            </div>
-            <div class="quiz-opt" data-key="otras_cuotas" data-value="menos-200">
-              <span class="quiz-opt-icon">📄</span>
-              <div class="quiz-opt-text">Menos de 200 €/mes<small>Cuota pequeña, coche u otro préstamo menor</small></div>
-            </div>
-            <div class="quiz-opt" data-key="otras_cuotas" data-value="200-500">
-              <span class="quiz-opt-icon">📊</span>
-              <div class="quiz-opt-text">200 – 500 €/mes<small>Uno o varios compromisos financieros</small></div>
-            </div>
-            <div class="quiz-opt" data-key="otras_cuotas" data-value="mas-500">
-              <span class="quiz-opt-icon">⚠️</span>
-              <div class="quiz-opt-text">Más de 500 €/mes<small>Carga financiera importante</small></div>
-            </div>
-          </div>
-          <div class="quiz-nav">
-            <button class="quiz-back">← Atrás</button>
-            <button class="btn btn-primary quiz-next">Siguiente →</button>
-          </div>
-        </div>
-
-        <!-- PASO 4: Precio vivienda -->
-        <div class="quiz-step">
-          <h3>¿Cuál es el precio de la vivienda que buscas?</h3>
-          <p>Una estimación es suficiente si aún no tienes una vivienda concreta.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="precio_vivienda" data-value="menos-150">
-              <span class="quiz-opt-icon">🏠</span>
-              <div class="quiz-opt-text">Menos de 150.000 €<small>Vivienda asequible</small></div>
-            </div>
-            <div class="quiz-opt" data-key="precio_vivienda" data-value="150-250">
-              <span class="quiz-opt-icon">🏡</span>
-              <div class="quiz-opt-text">150.000 – 250.000 €<small>Rango habitual en la zona</small></div>
-            </div>
-            <div class="quiz-opt" data-key="precio_vivienda" data-value="250-300">
-              <span class="quiz-opt-icon">🏘️</span>
-              <div class="quiz-opt-text">250.000 – 300.000 €<small>Vivienda de nivel medio-alto</small></div>
-            </div>
-            <div class="quiz-opt" data-key="precio_vivienda" data-value="300-500">
-              <span class="quiz-opt-icon">🏢</span>
-              <div class="quiz-opt-text">300.000 – 500.000 €<small>Operación importante</small></div>
-            </div>
-            <div class="quiz-opt" data-key="precio_vivienda" data-value="500-750">
-              <span class="quiz-opt-icon">🏰</span>
-              <div class="quiz-opt-text">500.000 – 750.000 €<small>Perfil alto</small></div>
-            </div>
-            <div class="quiz-opt" data-key="precio_vivienda" data-value="mas-750">
-              <span class="quiz-opt-icon">🌟</span>
-              <div class="quiz-opt-text">Más de 750.000 €<small>Segmento premium</small></div>
-            </div>
-          </div>
-          <div class="quiz-nav">
-            <button class="quiz-back">← Atrás</button>
-            <button class="btn btn-primary quiz-next">Siguiente →</button>
-          </div>
-        </div>
-
-        <!-- PASO 5: Ahorros disponibles -->
-        <div class="quiz-step">
-          <h3>¿Cuánto tienes ahorrado respecto al precio?</h3>
-          <p>Los bancos piden mínimo un 20% del precio más gastos. Esto define tu posición de partida.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="ahorros_pct" data-value="mas-30">
-              <span class="quiz-opt-icon">🟢</span>
-              <div class="quiz-opt-text">Más del 30% del precio<small>Ahorros sólidos — posición excelente</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ahorros_pct" data-value="20-30">
-              <span class="quiz-opt-icon">🔵</span>
-              <div class="quiz-opt-text">Entre 20% y 30%<small>Cubro entrada y gastos — perfil estándar</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ahorros_pct" data-value="10-20">
-              <span class="quiz-opt-icon">🟡</span>
-              <div class="quiz-opt-text">Entre 10% y 20%<small>Ahorros justos — posible con buen perfil</small></div>
-            </div>
-            <div class="quiz-opt" data-key="ahorros_pct" data-value="menos-10">
-              <span class="quiz-opt-icon">🟠</span>
-              <div class="quiz-opt-text">Menos del 10%<small>Ahorros escasos — necesita análisis</small></div>
-            </div>
-          </div>
-          <div class="quiz-nav">
-            <button class="quiz-back">← Atrás</button>
-            <button class="btn btn-primary quiz-next">Siguiente →</button>
-          </div>
-        </div>
-
-        <!-- PASO 6: Estado vivienda -->
-        <div class="quiz-step">
-          <h3>¿En qué punto estás con la vivienda?</h3>
-          <p>Nos ayuda a priorizar tu caso correctamente.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="estado" data-value="reserva">
-              <span class="quiz-opt-icon">✅</span>
-              <div class="quiz-opt-text">Ya tengo reserva firmada<small>Necesito la hipoteca sí o sí</small></div>
-            </div>
-            <div class="quiz-opt" data-key="estado" data-value="identificada">
-              <span class="quiz-opt-icon">🔍</span>
-              <div class="quiz-opt-text">Tengo la vivienda identificada<small>Estoy a punto de decidirme</small></div>
-            </div>
-            <div class="quiz-opt" data-key="estado" data-value="3meses">
-              <span class="quiz-opt-icon">📅</span>
-              <div class="quiz-opt-text">La compraré en los próximos 3 meses<small>Quiero tener todo listo ya</small></div>
-            </div>
-            <div class="quiz-opt" data-key="estado" data-value="mirando">
-              <span class="quiz-opt-icon">👀</span>
-              <div class="quiz-opt-text">Estoy mirando opciones<small>Quiero conocer mis posibilidades</small></div>
-            </div>
-          </div>
-          <div class="quiz-nav">
-            <button class="quiz-back">← Atrás</button>
-            <button class="btn btn-primary quiz-next">Siguiente →</button>
-          </div>
-        </div>
-
-        <!-- PASO 7: Cotitular -->
-        <div class="quiz-step">
-          <h3>¿Solicitarás la hipoteca en solitario o con alguien más?</h3>
-          <p>Un cotitular suma ingresos y mejora la capacidad de endeudamiento.</p>
-          <div class="quiz-options">
-            <div class="quiz-opt" data-key="cotitular" data-value="no">
+            <div class="quiz-opt" data-key="n_sol" data-value="1">
               <span class="quiz-opt-icon">👤</span>
               <div class="quiz-opt-text">Solo yo<small>Solicitud individual</small></div>
             </div>
-            <div class="quiz-opt" data-key="cotitular" data-value="si">
+            <div class="quiz-opt" data-key="n_sol" data-value="2">
               <span class="quiz-opt-icon">👫</span>
-              <div class="quiz-opt-text">Con pareja o cotitular<small>Dos titulares en la hipoteca</small></div>
+              <div class="quiz-opt-text">Dos titulares<small>Pareja o cotitular</small></div>
             </div>
           </div>
           <div class="quiz-nav">
@@ -317,39 +153,154 @@
           </div>
         </div>
 
-        <!-- PASO 8: Señales adicionales (multi-select) -->
+        <!-- PASO 3: Datos Solicitante 1 -->
         <div class="quiz-step">
-          <h3>¿Alguna de estas situaciones te describe?</h3>
-          <p>Selecciona todo lo que aplique. Estos datos completan tu análisis.</p>
-          <div class="quiz-options quiz-multiselect">
-            <div class="quiz-opt" data-key="primera_vivienda" data-value="si" data-multiselect="true">
-              <span class="quiz-opt-icon">🗝️</span>
-              <div class="quiz-opt-text">Es mi primera vivienda<small>Accedo a condiciones y bonificaciones especiales</small></div>
+          <h3>Datos del titular principal</h3>
+          <p>La situación laboral e ingresos son los factores más importantes para los bancos.</p>
+          <div class="quiz-form-grid">
+            <div class="form-group">
+              <label>Situación laboral</label>
+              <select name="q_contrato1">
+                <option value="funcionario">Funcionario/a</option>
+                <option value="indefinido" selected>Contrato indefinido</option>
+                <option value="fijo_disc">Fijo discontinuo</option>
+                <option value="func_interino">Funcionario/a interino/a</option>
+                <option value="autonomo_cons">Autónomo/a consolidado/a (+2 años)</option>
+                <option value="temporal">Contrato temporal</option>
+                <option value="autonomo_rec">Autónomo/a reciente (-2 años)</option>
+                <option value="otro">Otro</option>
+              </select>
             </div>
-            <div class="quiz-opt" data-key="tiene_patrimonio" data-value="si" data-multiselect="true">
-              <span class="quiz-opt-icon">🏛️</span>
-              <div class="quiz-opt-text">Tengo otros bienes o patrimonio<small>Propiedades, inversiones, etc.</small></div>
+            <div class="form-group">
+              <label>Ingresos netos al mes (€)</label>
+              <input type="number" name="q_ingresos1" placeholder="ej. 2500" min="0" />
             </div>
-            <div class="quiz-opt" data-key="impagos" data-value="si" data-multiselect="true">
-              <span class="quiz-opt-icon">⚠️</span>
-              <div class="quiz-opt-text">Tengo o he tenido impagos<small>ASNEF, RAI u otros registros</small></div>
+            <div class="form-group">
+              <label>Cuotas de préstamos activos al mes (€)</label>
+              <input type="number" name="q_cuotas1" placeholder="ej. 0" min="0" value="0" />
             </div>
-            <div class="quiz-opt" data-key="cambio_empleo" data-value="si" data-multiselect="true">
-              <span class="quiz-opt-icon">🔀</span>
-              <div class="quiz-opt-text">Cambié de trabajo en los últimos 6 meses<small>Puede afectar a la estabilidad que exige el banco</small></div>
+            <div class="form-group">
+              <label>Mes y año de nacimiento</label>
+              <input type="month" name="q_nacimiento1" />
+            </div>
+            <div class="form-group">
+              <label>¿Tiene bienes o patrimonio adicional?</label>
+              <select name="q_patrimonio1">
+                <option value="no">No</option>
+                <option value="si">Sí — propiedades, inversiones, etc.</option>
+              </select>
             </div>
           </div>
-          <p class="quiz-hint">Si no te aplica ninguna, avanza directamente.</p>
           <div class="quiz-nav">
             <button class="quiz-back">← Atrás</button>
             <button class="btn btn-primary quiz-next">Siguiente →</button>
           </div>
         </div>
 
-        <!-- PASO 9: Contacto -->
+        <!-- PASO 4: Datos Solicitante 2 (condicional) -->
+        <div class="quiz-step">
+          <h3>Datos del segundo titular</h3>
+          <p>Los datos del cotitular se suman al análisis y mejoran la operación.</p>
+          <div class="quiz-form-grid">
+            <div class="form-group">
+              <label>Situación laboral</label>
+              <select name="q_contrato2">
+                <option value="funcionario">Funcionario/a</option>
+                <option value="indefinido" selected>Contrato indefinido</option>
+                <option value="fijo_disc">Fijo discontinuo</option>
+                <option value="func_interino">Funcionario/a interino/a</option>
+                <option value="autonomo_cons">Autónomo/a consolidado/a (+2 años)</option>
+                <option value="temporal">Contrato temporal</option>
+                <option value="autonomo_rec">Autónomo/a reciente (-2 años)</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ingresos netos al mes (€)</label>
+              <input type="number" name="q_ingresos2" placeholder="ej. 2000" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Cuotas de préstamos activos al mes (€)</label>
+              <input type="number" name="q_cuotas2" placeholder="ej. 0" min="0" value="0" />
+            </div>
+            <div class="form-group">
+              <label>Mes y año de nacimiento</label>
+              <input type="month" name="q_nacimiento2" />
+            </div>
+            <div class="form-group">
+              <label>¿Tiene bienes o patrimonio adicional?</label>
+              <select name="q_patrimonio2">
+                <option value="no">No</option>
+                <option value="si">Sí — propiedades, inversiones, etc.</option>
+              </select>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 5: Datos de la operación -->
+        <div class="quiz-step">
+          <h3>Datos de la vivienda</h3>
+          <p>Con estos datos calculamos cuota real, ITP y el esfuerzo financiero total.</p>
+          <div class="quiz-form-grid">
+            <div class="form-group">
+              <label>Precio de la vivienda (€)</label>
+              <input type="number" name="q_precio" placeholder="ej. 250000" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Ahorros disponibles (€)</label>
+              <input type="number" name="q_ahorros" placeholder="ej. 75000" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Provincia</label>
+              <select name="q_provincia">
+                <optgroup label="Cataluña">
+                  <option value="tarragona" selected>Tarragona</option>
+                  <option value="barcelona">Barcelona</option>
+                  <option value="girona">Girona</option>
+                  <option value="lleida">Lleida</option>
+                </optgroup>
+                <optgroup label="Andalucía"><option value="almeria">Almería</option><option value="cadiz">Cádiz</option><option value="cordoba">Córdoba</option><option value="granada">Granada</option><option value="huelva">Huelva</option><option value="jaen">Jaén</option><option value="malaga">Málaga</option><option value="sevilla">Sevilla</option></optgroup>
+                <optgroup label="Aragón"><option value="huesca">Huesca</option><option value="teruel">Teruel</option><option value="zaragoza">Zaragoza</option></optgroup>
+                <optgroup label="Asturias"><option value="asturias">Asturias</option></optgroup>
+                <optgroup label="Baleares"><option value="baleares">Illes Balears</option></optgroup>
+                <optgroup label="Canarias"><option value="laspalmas">Las Palmas</option><option value="tenerife">Tenerife</option></optgroup>
+                <optgroup label="Cantabria"><option value="cantabria">Cantabria</option></optgroup>
+                <optgroup label="Castilla-La Mancha"><option value="albacete">Albacete</option><option value="ciudadreal">Ciudad Real</option><option value="cuenca">Cuenca</option><option value="guadalajara">Guadalajara</option><option value="toledo">Toledo</option></optgroup>
+                <optgroup label="Castilla y León"><option value="avila">Ávila</option><option value="burgos">Burgos</option><option value="leon">León</option><option value="palencia">Palencia</option><option value="salamanca">Salamanca</option><option value="segovia">Segovia</option><option value="soria">Soria</option><option value="valladolid">Valladolid</option><option value="zamora">Zamora</option></optgroup>
+                <optgroup label="C. Valenciana"><option value="alicante">Alicante</option><option value="castellon">Castellón</option><option value="valencia">Valencia</option></optgroup>
+                <optgroup label="Extremadura"><option value="badajoz">Badajoz</option><option value="caceres">Cáceres</option></optgroup>
+                <optgroup label="Galicia"><option value="acoruña">A Coruña</option><option value="lugo">Lugo</option><option value="ourense">Ourense</option><option value="pontevedra">Pontevedra</option></optgroup>
+                <optgroup label="La Rioja"><option value="larioja">La Rioja</option></optgroup>
+                <optgroup label="Madrid"><option value="madrid">Madrid</option></optgroup>
+                <optgroup label="Murcia"><option value="murcia">Murcia</option></optgroup>
+                <optgroup label="Navarra"><option value="navarra">Navarra</option></optgroup>
+                <optgroup label="País Vasco"><option value="alava">Álava</option><option value="gipuzkoa">Gipuzkoa</option><option value="bizkaia">Bizkaia</option></optgroup>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tipo de compra</label>
+              <select name="q_tipo_compra">
+                <option value="habitual">Vivienda habitual</option>
+                <option value="segunda">Segunda residencia</option>
+                <option value="cambio">Cambio de propiedad</option>
+                <option value="inversion">Inversión</option>
+              </select>
+            </div>
+          </div>
+          <div class="quiz-nav">
+            <button class="quiz-back">← Atrás</button>
+            <button class="btn btn-primary quiz-next">Siguiente →</button>
+          </div>
+        </div>
+
+        <!-- PASO 6: Contacto -->
         <div class="quiz-step">
           <h3>¿A quién le enviamos el análisis?</h3>
-          <p>Te contactamos personalmente en menos de 24h.</p>
+          <p>Te contactamos personalmente en menos de 24h con el resultado completo.</p>
           <div class="quiz-contact-grid">
             <div class="form-group">
               <label>Nombre</label>
@@ -376,57 +327,75 @@
         <div class="quiz-step quiz-result-step">
           <div class="quiz-result">
 
-            <!-- Resultado A -->
-            <div class="result-msg" data-result="A" style="display:none;">
-              <div class="quiz-result-icon">🚀</div>
-              <h3>Tu perfil es excelente</h3>
-              <p>Tienes todo lo que los bancos quieren ver. Es muy probable que consigamos condiciones muy por encima de la media para ti.</p>
+            <!-- Lead message -->
+            <div id="r-lead-msg">
+              <div class="quiz-result-icon" id="r-icon">—</div>
+              <h3 id="r-titulo">—</h3>
+              <p id="r-desc">—</p>
             </div>
 
-            <!-- Resultado B -->
-            <div class="result-msg" data-result="B" style="display:none;">
-              <div class="quiz-result-icon">💪</div>
-              <h3>Buen perfil, buenas opciones</h3>
-              <p>Tu situación es sólida. Hay varias entidades que estarían encantadas de trabajar contigo — y nosotros sabemos cuáles ofrecen las mejores condiciones.</p>
-            </div>
+            <!-- Dos escenarios -->
+            <div class="result-scenarios-grid">
 
-            <!-- Resultado C -->
-            <div class="result-msg" data-result="C" style="display:none;">
-              <div class="quiz-result-icon">💡</div>
-              <h3>Hay margen para mejorar</h3>
-              <p>Tu perfil tiene potencial, pero hay puntos que conviene analizar antes de llamar a los bancos. Con la estrategia correcta, las cosas mejoran rápido.</p>
-            </div>
-
-            <!-- Resultado D -->
-            <div class="result-msg" data-result="D" style="display:none;">
-              <div class="quiz-result-icon">🤝</div>
-              <h3>Tu caso necesita estrategia</h3>
-              <p>Hay cosas que trabajar, pero eso no significa que no haya opciones. Muchos clientes llegaron en tu misma situación y hoy tienen su hipoteca firmada.</p>
-            </div>
-
-            <!-- Bloques de scoring -->
-            <div class="result-blocks">
-              <div class="result-block">
-                <div class="result-block-label">Endeudamiento</div>
-                <div class="result-block-score" id="r-b1-score">–</div>
-                <div class="result-block-bar"><div class="result-block-fill" id="r-b1-fill" style="width:0%"></div></div>
-                <div class="result-block-tag" id="r-b1-tag">–</div>
+              <!-- Opción A: 80% -->
+              <div class="result-scenario-card result-scenario-a">
+                <div class="result-scenario-header">
+                  <div class="result-scenario-lbl">Hipoteca al 80%</div>
+                  <div class="result-scenario-score" id="rA-global">—</div>
+                  <div class="result-scenario-tag" id="rA-tag">—</div>
+                </div>
+                <div class="result-blocks">
+                  <div class="result-block">
+                    <div class="result-block-label">Endeud.</div>
+                    <div class="result-block-score" id="rA-b1-score">–</div>
+                    <div class="result-block-bar"><div class="result-block-fill" id="rA-b1-fill" style="width:0%"></div></div>
+                  </div>
+                  <div class="result-block">
+                    <div class="result-block-label">Laboral</div>
+                    <div class="result-block-score" id="rA-b2-score">–</div>
+                    <div class="result-block-bar"><div class="result-block-fill" id="rA-b2-fill" style="width:0%"></div></div>
+                  </div>
+                  <div class="result-block">
+                    <div class="result-block-label">Ahorros</div>
+                    <div class="result-block-score" id="rA-b3-score">–</div>
+                    <div class="result-block-bar"><div class="result-block-fill" id="rA-b3-fill" style="width:0%"></div></div>
+                  </div>
+                </div>
+                <div class="result-kvs" id="rA-kvs"></div>
+                <div class="result-alerts" id="rA-alerts"></div>
               </div>
-              <div class="result-block">
-                <div class="result-block-label">Estabilidad</div>
-                <div class="result-block-score" id="r-b2-score">–</div>
-                <div class="result-block-bar"><div class="result-block-fill" id="r-b2-fill" style="width:0%"></div></div>
-                <div class="result-block-tag" id="r-b2-tag">–</div>
-              </div>
-              <div class="result-block">
-                <div class="result-block-label">Ahorros</div>
-                <div class="result-block-score" id="r-b3-score">–</div>
-                <div class="result-block-bar"><div class="result-block-fill" id="r-b3-fill" style="width:0%"></div></div>
-                <div class="result-block-tag" id="r-b3-tag">–</div>
-              </div>
-            </div>
 
-            <!-- Común a todos -->
+              <!-- Opción B: 90% -->
+              <div class="result-scenario-card result-scenario-b">
+                <div class="result-scenario-header">
+                  <div class="result-scenario-lbl">Hipoteca al 90%</div>
+                  <div class="result-scenario-score" id="rB-global">—</div>
+                  <div class="result-scenario-tag" id="rB-tag">—</div>
+                </div>
+                <div class="result-blocks">
+                  <div class="result-block">
+                    <div class="result-block-label">Endeud.</div>
+                    <div class="result-block-score" id="rB-b1-score">–</div>
+                    <div class="result-block-bar"><div class="result-block-fill" id="rB-b1-fill" style="width:0%"></div></div>
+                  </div>
+                  <div class="result-block">
+                    <div class="result-block-label">Laboral</div>
+                    <div class="result-block-score" id="rB-b2-score">–</div>
+                    <div class="result-block-bar"><div class="result-block-fill" id="rB-b2-fill" style="width:0%"></div></div>
+                  </div>
+                  <div class="result-block">
+                    <div class="result-block-label">Ahorros</div>
+                    <div class="result-block-score" id="rB-b3-score">–</div>
+                    <div class="result-block-bar"><div class="result-block-fill" id="rB-b3-fill" style="width:0%"></div></div>
+                  </div>
+                </div>
+                <div class="result-kvs" id="rB-kvs"></div>
+                <div class="result-alerts" id="rB-alerts"></div>
+              </div>
+
+            </div><!-- /result-scenarios-grid -->
+
+            <!-- Común -->
             <div class="result-common">
               <div class="result-highlight result-highlight--green">
                 <p>✅ Un asesor te contactará en menos de 48h con las opciones concretas para tu perfil.</p>
@@ -441,9 +410,7 @@
           </div>
         </div>
 
-      
-
-    </div>
+        </div>
   </div>
 </section>
 
