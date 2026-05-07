@@ -2,7 +2,7 @@
    BROKER HIPOTECARIO — Design System v3
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
   --teal:        #8DC63F;
@@ -22,8 +22,8 @@
   --gray-800:    #161E18;
   --black:       #0F1410;
 
-  --font:         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-heading: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --font:         'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --radius:      12px;
   --radius-sm:   7px;
   --radius-lg:   20px;
@@ -43,18 +43,18 @@ a { text-decoration: none; color: inherit; }
 h1 {
   font-family: var(--font-heading);
   font-size: clamp(2.4rem, 5.5vw, 3.8rem);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
 }
 h2 {
   font-family: var(--font-heading);
   font-size: clamp(1.9rem, 3.5vw, 2.8rem);
-  font-weight: 400;
-  line-height: 1.12;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
 }
-h3 { font-size: 1.05rem; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; font-weight: 600; line-height: 1.35; letter-spacing: 0em; }
 p  { color: var(--gray-500); font-size: 1rem; line-height: 1.72; }
 
 /* ---- Layout ---- */
@@ -97,14 +97,25 @@ header {
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
 .logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon { height: 46px; width: auto; display: block; border-radius: 7px; }
+.logo-text-wrapper { display: flex; flex-direction: column; gap: 1px; }
+.logo-main {
+  font-family: var(--font); font-size: 1rem; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--white); line-height: 1.1;
+}
+.logo-main .logo-green { color: var(--teal); }
+.logo-sub {
+  font-family: var(--font); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal);
+}
+/* legacy - kept for any remaining references */
+.logo-brand { height: 48px; width: auto; display: block; }
 .logo-img { height: 52px; width: auto; display: block; border-radius: 8px; }
 .logo-group { display: flex; flex-direction: column; gap: 2px; }
-.logo-text { font-size: 1.05rem; font-weight: 700; color: var(--white); letter-spacing: -0.01em; line-height: 1.1; }
+.logo-text { font-size: 1.05rem; font-weight: 700; color: var(--white); letter-spacing: 0em; line-height: 1.1; }
 .logo-text span { color: #8DC63F; }
-.logo-byline {
-  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
-  color: #8DC63F; text-transform: uppercase;
-}
+.logo-byline { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; color: #8DC63F; text-transform: uppercase; }
 
 nav { display: flex; align-items: center; gap: 4px; }
 nav a {

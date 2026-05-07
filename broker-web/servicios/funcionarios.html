@@ -45,7 +45,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="landing.css" />
   <style>
@@ -155,8 +155,7 @@
   <header>
     <div class="container header-inner">
       <a href="../index.html" class="logo">
-        <img src="../img/firmax-icon.png" alt="Firmax" class="logo-img" />
-        <div class="logo-group"><span class="logo-text">Broker<span>Hipotecario</span></span><span class="logo-byline">by Firmax</span></div>
+        <img src="../img/firmax-icon.png" alt="Firmax" class="logo-icon" /><div class="logo-text-wrapper"><span class="logo-main">BROKER <span class="logo-green">HIPOTECARIO.es</span></span><span class="logo-sub">By FIRMAX</span></div>
       </a>
       <nav>
         <a href="../index.html#servicios">Servicios</a>
@@ -173,7 +172,44 @@
   </header>
 
   <!-- HERO LANDING -->
-<section id="form" class="quiz-section">
+<section class="landing-hero">
+    <div class="container landing-hero-inner">
+      <div>
+        <div class="breadcrumb">
+          <a href="../index.html">Inicio</a>
+          <span>›</span>
+          <a href="../index.html#servicios">Servicios</a>
+          <span>›</span>
+          <span>Funcionarios</span>
+        </div>
+        <span class="badge" style="margin-bottom:20px;display:inline-block;">Hipoteca Funcionarios</span>
+        <h1>Tu empleo estable<br>merece la<br><span style="color:var(--teal)">hipoteca que te corresponde</span></h1>
+        <p style="font-size:1.1rem;margin:20px 0 32px;max-width:440px;">
+          Como funcionario o empleado público tienes un perfil que los bancos adoran. Aprovechémoslo para negociar condiciones muy por encima de lo que el banco te ofrecería directamente.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="#ventajas" class="btn btn-primary">Quiero mi estudio gratuito →</a>
+          <a href="#proceso" class="btn btn-ghost">Cómo funciona</a>
+        </div>
+      </div>
+
+      <!-- Persona card -->
+      <div class="persona-card">
+        <div class="persona-img"><img src="../img/persona-funcionarios.png" alt="Laura, maestra funcionaria con hipoteca en Tarragona — Firmax Broker" style="object-position: center top;" /><span class="persona-badge-img">✅ Hipoteca firmada</span>
+        </div>
+        <div class="persona-info">
+          <div class="persona-name">Laura, 34 años</div>
+          <div class="persona-role">Maestra de primaria · Tarragona</div>
+          <p class="persona-quote">
+            "Llevaba dos años pensando que no podría comprar porque no llegaba al 20% de entrada. Con su ayuda firmé en 3 meses."
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HERO LANDING -->
+  <section id="form" class="quiz-section">
   <div class="container">
     <div class="quiz-inner">
       <span class="badge badge-dark quiz-badge">Calculadora hipotecaria</span>
@@ -521,43 +557,6 @@
   </div>
 </section>
 
-  <!-- HERO LANDING -->
-  <section class="landing-hero">
-    <div class="container landing-hero-inner">
-      <div>
-        <div class="breadcrumb">
-          <a href="../index.html">Inicio</a>
-          <span>›</span>
-          <a href="../index.html#servicios">Servicios</a>
-          <span>›</span>
-          <span>Funcionarios</span>
-        </div>
-        <span class="badge" style="margin-bottom:20px;display:inline-block;">Hipoteca Funcionarios</span>
-        <h1>Tu empleo estable<br>merece la<br><span style="color:var(--teal)">hipoteca que te corresponde</span></h1>
-        <p style="font-size:1.1rem;margin:20px 0 32px;max-width:440px;">
-          Como funcionario o empleado público tienes un perfil que los bancos adoran. Aprovechémoslo para negociar condiciones muy por encima de lo que el banco te ofrecería directamente.
-        </p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <a href="#ventajas" class="btn btn-primary">Quiero mi estudio gratuito →</a>
-          <a href="#proceso" class="btn btn-ghost">Cómo funciona</a>
-        </div>
-      </div>
-
-      <!-- Persona card -->
-      <div class="persona-card">
-        <div class="persona-img"><img src="../img/persona-funcionarios.png" alt="Laura, maestra funcionaria con hipoteca en Tarragona — Firmax Broker" style="object-position: center top;" /><span class="persona-badge-img">✅ Hipoteca firmada</span>
-        </div>
-        <div class="persona-info">
-          <div class="persona-name">Laura, 34 años</div>
-          <div class="persona-role">Maestra de primaria · Tarragona</div>
-          <p class="persona-quote">
-            "Llevaba dos años pensando que no podría comprar porque no llegaba al 20% de entrada. Con su ayuda firmé en 3 meses."
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- VENTAJAS -->
   <section class="ventajas" id="ventajas">
     <div class="container">
@@ -678,8 +677,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <div class="logo">
-            <img src="../img/firmax-icon.png" alt="Firmax" class="logo-img" />
-            <div class="logo-group"><span class="logo-text">Broker<span>Hipotecario</span></span><span class="logo-byline">by Firmax</span></div>
+            <img src="../img/firmax-icon.png" alt="Firmax" class="logo-icon" /><div class="logo-text-wrapper"><span class="logo-main">BROKER <span class="logo-green">HIPOTECARIO.es</span></span><span class="logo-sub">By FIRMAX</span></div>
           </div>
           <p>Tu asesor hipotecario independiente en Tarragona.</p>
         </div>
