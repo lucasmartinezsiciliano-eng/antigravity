@@ -206,22 +206,47 @@
             </div>
             <div class="form-group">
               <label>Ingresos netos al mes (€)</label>
-              <input type="number" name="q_ingresos1" placeholder="ej. 2500" min="0" />
+              <div class="drag-wheel" data-step="100" data-min="0" data-max="10000">
+                <span class="dw-arrow">&#8249;</span>
+                <div class="dw-body">
+                  <span class="dw-val">1.500</span>
+                  <span class="dw-unit">€/mes</span>
+                </div>
+                <span class="dw-arrow">&#8250;</span>
+                <input type="hidden" name="q_ingresos1" value="1500">
+              </div>
             </div>
             <div class="form-group">
-              <label>Cuotas de préstamos activos al mes (€)</label>
-              <input type="number" name="q_cuotas1" placeholder="ej. 0" min="0" value="0" />
+              <label>Cuotas activas al mes (€)</label>
+              <div class="drag-wheel" data-step="50" data-min="0" data-max="5000">
+                <span class="dw-arrow">&#8249;</span>
+                <div class="dw-body">
+                  <span class="dw-val">0</span>
+                  <span class="dw-unit">€/mes</span>
+                </div>
+                <span class="dw-arrow">&#8250;</span>
+                <input type="hidden" name="q_cuotas1" value="0">
+              </div>
             </div>
             <div class="form-group">
-              <label>Mes y año de nacimiento</label>
-              <input type="month" name="q_nacimiento1" />
+              <label>Edad del titular</label>
+              <div class="stepper" data-step="1" data-min="18" data-max="75">
+                <button type="button" class="stepper-btn stepper-dec">&#8722;</button>
+                <div class="stepper-display">
+                  <span class="stepper-val">35</span>
+                  <span class="stepper-unit">años</span>
+                </div>
+                <button type="button" class="stepper-btn stepper-inc">+</button>
+                <input type="hidden" name="q_nacimiento1" value="35">
+              </div>
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label>¿Tiene bienes o patrimonio adicional?</label>
-              <select name="q_patrimonio1">
-                <option value="no">No</option>
-                <option value="si">Sí — propiedades, inversiones, etc.</option>
-              </select>
+              <div class="toggle-btns">
+                <button type="button" class="toggle-btn active" data-val="no">No</button>
+                <button type="button" class="toggle-btn" data-val="si">Sí, tengo</button>
+                <input type="hidden" name="q_patrimonio1" value="no">
+              </div>
             </div>
           </div>
           <div class="quiz-nav">
@@ -250,22 +275,47 @@
             </div>
             <div class="form-group">
               <label>Ingresos netos al mes (€)</label>
-              <input type="number" name="q_ingresos2" placeholder="ej. 2000" min="0" />
+              <div class="drag-wheel" data-step="100" data-min="0" data-max="10000">
+                <span class="dw-arrow">&#8249;</span>
+                <div class="dw-body">
+                  <span class="dw-val">1.500</span>
+                  <span class="dw-unit">€/mes</span>
+                </div>
+                <span class="dw-arrow">&#8250;</span>
+                <input type="hidden" name="q_ingresos2" value="1500">
+              </div>
             </div>
             <div class="form-group">
-              <label>Cuotas de préstamos activos al mes (€)</label>
-              <input type="number" name="q_cuotas2" placeholder="ej. 0" min="0" value="0" />
+              <label>Cuotas activas al mes (€)</label>
+              <div class="drag-wheel" data-step="50" data-min="0" data-max="5000">
+                <span class="dw-arrow">&#8249;</span>
+                <div class="dw-body">
+                  <span class="dw-val">0</span>
+                  <span class="dw-unit">€/mes</span>
+                </div>
+                <span class="dw-arrow">&#8250;</span>
+                <input type="hidden" name="q_cuotas2" value="0">
+              </div>
             </div>
             <div class="form-group">
-              <label>Mes y año de nacimiento</label>
-              <input type="month" name="q_nacimiento2" />
+              <label>Edad del titular</label>
+              <div class="stepper" data-step="1" data-min="18" data-max="75">
+                <button type="button" class="stepper-btn stepper-dec">&#8722;</button>
+                <div class="stepper-display">
+                  <span class="stepper-val">35</span>
+                  <span class="stepper-unit">años</span>
+                </div>
+                <button type="button" class="stepper-btn stepper-inc">+</button>
+                <input type="hidden" name="q_nacimiento2" value="35">
+              </div>
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label>¿Tiene bienes o patrimonio adicional?</label>
-              <select name="q_patrimonio2">
-                <option value="no">No</option>
-                <option value="si">Sí — propiedades, inversiones, etc.</option>
-              </select>
+              <div class="toggle-btns">
+                <button type="button" class="toggle-btn active" data-val="no">No</button>
+                <button type="button" class="toggle-btn" data-val="si">Sí, tengo</button>
+                <input type="hidden" name="q_patrimonio2" value="no">
+              </div>
             </div>
           </div>
           <div class="quiz-nav">
@@ -281,11 +331,27 @@
           <div class="quiz-form-grid">
             <div class="form-group">
               <label>Precio de la vivienda (€)</label>
-              <input type="number" name="q_precio" placeholder="ej. 250000" min="0" />
+              <div class="drag-wheel" data-step="5000" data-min="0" data-max="1500000">
+                <span class="dw-arrow">&#8249;</span>
+                <div class="dw-body">
+                  <span class="dw-val">200.000</span>
+                  <span class="dw-unit">€</span>
+                </div>
+                <span class="dw-arrow">&#8250;</span>
+                <input type="hidden" name="q_precio" value="200000">
+              </div>
             </div>
             <div class="form-group">
               <label>Ahorros disponibles (€)</label>
-              <input type="number" name="q_ahorros" placeholder="ej. 75000" min="0" />
+              <div class="drag-wheel" data-step="2500" data-min="0" data-max="500000">
+                <span class="dw-arrow">&#8249;</span>
+                <div class="dw-body">
+                  <span class="dw-val">50.000</span>
+                  <span class="dw-unit">€</span>
+                </div>
+                <span class="dw-arrow">&#8250;</span>
+                <input type="hidden" name="q_ahorros" value="50000">
+              </div>
             </div>
             <div class="form-group">
               <label>Provincia</label>

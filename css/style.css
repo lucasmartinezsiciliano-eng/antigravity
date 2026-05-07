@@ -350,6 +350,33 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 .quiz-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
 @media (max-width: 560px) { .quiz-form-grid { grid-template-columns: 1fr; } }
 .quiz-form-grid .form-group { margin-bottom: 0; }
+.form-group--full { grid-column: 1 / -1; }
+
+/* Stepper — +/- para edad */
+.stepper { display: flex; align-items: center; border: 1.5px solid var(--gray-100); border-radius: 10px; overflow: hidden; height: 54px; background: var(--off-white); transition: border-color 0.2s; }
+.stepper:focus-within { border-color: var(--teal); background: var(--white); box-shadow: 0 0 0 3px rgba(141,198,63,0.12); }
+.stepper-btn { width: 48px; height: 54px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--teal-dark); flex-shrink: 0; transition: background 0.15s; display: flex; align-items: center; justify-content: center; }
+.stepper-btn:hover { background: var(--teal-bg); }
+.stepper-btn:active { background: #d4efaa; }
+.stepper-display { flex: 1; text-align: center; pointer-events: none; }
+.stepper-val { font-size: 1.2rem; font-weight: 700; color: var(--gray-800); }
+.stepper-unit { font-size: 0.75rem; color: var(--gray-400); margin-left: 3px; }
+
+/* Drag wheel — arrastrar izq/der para cantidades */
+.drag-wheel { display: flex; align-items: center; height: 64px; border: 1.5px solid var(--gray-100); border-radius: 10px; background-color: var(--off-white); background-image: repeating-linear-gradient(90deg, transparent, transparent 18px, var(--gray-100) 18px, var(--gray-100) 19px); cursor: ew-resize; -webkit-user-select: none; user-select: none; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; touch-action: none; }
+.drag-wheel:hover, .drag-wheel.dragging { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(141,198,63,0.12); }
+.drag-wheel.dragging { background-color: var(--white); }
+.dw-arrow { width: 28px; font-size: 19px; color: var(--gray-300); text-align: center; flex-shrink: 0; transition: color 0.15s; z-index: 1; font-style: normal; }
+.drag-wheel:hover .dw-arrow, .drag-wheel.dragging .dw-arrow { color: var(--teal-dark); }
+.dw-body { flex: 1; text-align: center; z-index: 1; }
+.dw-val { display: block; font-size: 1.35rem; font-weight: 800; color: var(--gray-800); line-height: 1; }
+.dw-unit { font-size: 0.72rem; color: var(--gray-400); margin-top: 3px; display: block; }
+
+/* Toggle buttons — sí/no patrimonio */
+.toggle-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.toggle-btn { padding: 12px; border: 1.5px solid var(--gray-100); border-radius: 8px; background: var(--off-white); font-size: 0.95rem; font-weight: 600; color: var(--gray-600); cursor: pointer; transition: all 0.15s; }
+.toggle-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+.toggle-btn.active { border-color: var(--teal); background: var(--teal-bg); color: var(--teal-darker); }
 
 /* Bloques de scoring (resultado) */
 .result-blocks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }

@@ -40,6 +40,8 @@ const CS_LABORAL = { funcionario:100, indefinido:90, fijo_disc:70, func_interino
 
 function calcEdad(v) {
   if (!v || !v.trim()) return null;
+  const n = parseFloat(v);
+  if (!isNaN(n) && n >= 0 && n <= 120) return n;
   const p = v.split('-'); if (p.length < 2) return null;
   const y = parseInt(p[0], 10), m = parseInt(p[1], 10);
   if (isNaN(y) || isNaN(m)) return null;
@@ -386,6 +388,89 @@ function initQuiz() {
     window.brokerAnalytics?.sendEvent('quiz_complete', { clasificacion, score_80: sA.global, score_90: sB.global });
     if (!ok) showToast('Error al enviar. Te llamaremos igualmente.', 'error');
   }
+
+  // Steppers — +/- para edad
+  function initSteppers() {
+    quiz.querySelectorAll('.stepper').forEach(el => {
+      const step  = +el.dataset.step || 1;
+      const min   = +el.dataset.min  || 0;
+      const max   = +el.dataset.max  || 999;
+      const inp   = el.querySelector('input[type="hidden"]');
+      const valEl = el.querySelector('.stepper-val');
+      function update(v) {
+        v = Math.max(min, Math.min(max, Math.round(v / step) * step));
+        inp.value = v;
+        valEl.textContent = v.toLocaleString('es-ES');
+      }
+      el.querySelector('.stepper-dec').addEventListener('click', () => update(+inp.value - step));
+      el.querySelector('.stepper-inc').addEventListener('click', () => update(+inp.value + step));
+      update(+inp.value || min);
+    });
+  }
+
+  // Drag wheels — arrastrar izq/der para valores monetarios
+  function initDragWheels() {
+    quiz.querySelectorAll('.drag-wheel').forEach(el => {
+      const step = +el.dataset.step || 100;
+      const min  = +el.dataset.min  || 0;
+      const max  = +el.dataset.max  || 999999;
+      const inp  = el.querySelector('input[type="hidden"]');
+      const valEl = el.querySelector('.dw-val');
+      const PX_PER_STEP = 28;
+      let startX   = null;
+      let startVal = 0;
+
+      function clamp(v) { return Math.max(min, Math.min(max, Math.round(v / step) * step)); }
+
+      function render(v, dx) {
+        inp.value = v;
+        valEl.textContent = v.toLocaleString('es-ES');
+        el.style.backgroundPositionX = (((dx || 0) % 20) + 20) % 20 + 'px';
+      }
+
+      function onStart(x) {
+        startX = x; startVal = +inp.value;
+        el.classList.add('dragging');
+      }
+      function onMove(x) {
+        if (startX === null) return;
+        const dx = x - startX;
+        render(clamp(startVal + Math.trunc(dx / PX_PER_STEP) * step), dx);
+      }
+      function onEnd() {
+        startX = null;
+        el.classList.remove('dragging');
+        el.style.backgroundPositionX = '0px';
+      }
+
+      el.addEventListener('mousedown',  e => { onStart(e.clientX); e.preventDefault(); });
+      document.addEventListener('mousemove', e => { if (startX !== null) onMove(e.clientX); });
+      document.addEventListener('mouseup',   onEnd);
+      el.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
+      el.addEventListener('touchmove',  e => { onMove(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
+      el.addEventListener('touchend',   onEnd);
+
+      render(clamp(+inp.value), 0);
+    });
+  }
+
+  // Toggle buttons — sí/no → hidden input
+  function initToggleBtns() {
+    quiz.querySelectorAll('.toggle-btns').forEach(el => {
+      const inp = el.querySelector('input[type="hidden"]');
+      el.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          el.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          inp.value = btn.dataset.val;
+        });
+      });
+    });
+  }
+
+  initSteppers();
+  initDragWheels();
+  initToggleBtns();
 
   window.addEventListener('beforeunload', () => {
     if (current > 0 && current < 5) {
