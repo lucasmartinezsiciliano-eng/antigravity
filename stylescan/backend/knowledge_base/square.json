@@ -1,0 +1,56 @@
+{
+  "face_shape": "square",
+  "description": "Frente, pómulos y mandíbula con anchuras similares, ángulos marcados y mandíbula horizontal prominente. Objetivo: suavizar ángulos manteniendo la fortaleza.",
+  "cuts": [
+    {
+      "id": "square-001",
+      "nombre_es": "Taper Clásico con Textura Desordenada",
+      "nombre_en": "Classic Taper with Textured Mess",
+      "tags": ["taper", "textured", "effortless", "modern"],
+      "technique": "taper bajo número 2 en laterales, tope 6-7cm textura libre con cera mate, sin estructura rígida",
+      "why_works_short": "El taper mantiene algo de masa lateral que suaviza los ángulos agudos de la mandíbula. La textura quita rigidez sin eliminar la fortaleza.",
+      "trend_score": 0.93,
+      "search_query": "taper textured mess top men square face"
+    },
+    {
+      "id": "square-002",
+      "nombre_es": "Low Fade con Flequillo Caído",
+      "nombre_en": "Low Fade with Side Swept Fringe",
+      "tags": ["fade", "low", "fringe", "modern", "soft"],
+      "technique": "low fade número 1, tope 7-8cm flequillo hacia el lado con ligera curva, soplete y cera ligera",
+      "why_works_short": "El flequillo lateral crea una diagonal que rompe la horizontalidad de la mandíbula cuadrada. El low fade no expone demasiado la anchura lateral.",
+      "trend_score": 0.87,
+      "search_query": "low fade side swept fringe men square jaw"
+    },
+    {
+      "id": "square-003",
+      "nombre_es": "Crop Texturizado con Taper",
+      "nombre_en": "Textured Crop with Taper",
+      "tags": ["crop", "taper", "textured", "minimal"],
+      "technique": "taper suave número 2-3, crop tope 3-4cm desmechado, flequillo con movimiento hacia frente",
+      "why_works_short": "La textura desmechada del crop crea movimiento que suaviza la percepción de la mandíbula cuadrada. Efecto casual intencional.",
+      "trend_score": 0.85,
+      "search_query": "textured crop taper square face men"
+    },
+    {
+      "id": "square-004",
+      "nombre_es": "Peinado Lateral con Taper Bajo",
+      "nombre_en": "Side Part Low Taper",
+      "tags": ["side part", "taper", "classic", "professional"],
+      "technique": "taper muy bajo número 2-3, tope 7cm raya al lado clara, peinado lateral con cera media",
+      "why_works_short": "La raya lateral crea asimetría que suaviza la simetría rígida de la cara cuadrada. Look clásico que refuerza la mandíbula sin exagerarla.",
+      "trend_score": 0.80,
+      "search_query": "side part low taper men professional square"
+    },
+    {
+      "id": "square-005",
+      "nombre_es": "Curl o Rizo Natural con Taper",
+      "nombre_en": "Natural Curl with Low Taper",
+      "tags": ["curly", "natural", "taper", "effortless"],
+      "technique": "taper bajo conservando anchura lateral, rizo natural sin aplastar, máximo 2cm de desmechado",
+      "why_works_short": "Los rizos naturales suavizan la dureza de la mandíbula cuadrada de forma orgánica. El taper define sin perder el volumen suavizador.",
+      "trend_score": 0.88,
+      "search_query": "natural curly taper men square face 2025"
+    }
+  ]
+}

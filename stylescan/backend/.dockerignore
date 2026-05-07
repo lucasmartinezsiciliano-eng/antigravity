@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.pyo
+.env
+*.db
+*.db-journal
+stylescan.db
+uvicorn.log
+.git
+.gitignore
+knowledge_base/trending/*.json
+models/

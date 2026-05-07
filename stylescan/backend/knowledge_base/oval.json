@@ -1,0 +1,56 @@
+{
+  "face_shape": "oval",
+  "description": "Forma más versátil. Longitud ~1.5x anchura, frente ligeramente más ancha que mentón. El reto es destacar en vez de ser genérico.",
+  "cuts": [
+    {
+      "id": "oval-001",
+      "nombre_es": "Degradado Medio Texturizado",
+      "nombre_en": "Mid Fade with Textured Top",
+      "tags": ["fade", "mid", "textured", "modern", "versatile"],
+      "technique": "mid fade número 1 abajo subiendo a 3, tope 5-6cm tijera texturizada, patillas limpias navaja",
+      "why_works_short": "Crea balance perfecto sin alterar las proporciones ya óptimas. El tope texturizado añade movimiento sin perder limpieza.",
+      "trend_score": 0.95,
+      "search_query": "mid fade textured top men haircut 2025"
+    },
+    {
+      "id": "oval-002",
+      "nombre_es": "Crop Francés con Taper",
+      "nombre_en": "French Crop with Low Taper",
+      "tags": ["crop", "taper", "fringe", "modern", "european"],
+      "technique": "taper bajo número 2, flequillo recto a 2-3cm sobre frente, clipper over comb en tope, nuca cuadrada",
+      "why_works_short": "El crop francés rompe la simetría óptima del óvalo de forma estética. El flequillo enmarca frente sin ocultarla.",
+      "trend_score": 0.92,
+      "search_query": "french crop low taper men 2025 trending"
+    },
+    {
+      "id": "oval-003",
+      "nombre_es": "Skin Fade con Volumen Natural",
+      "nombre_en": "Skin Fade with Natural Volume Top",
+      "tags": ["fade", "skin", "volume", "modern", "bold"],
+      "technique": "skin fade (cero en base), sube 3 números a mitad, tope 6-8cm sin estructura libre",
+      "why_works_short": "El contraste máximo del skin fade en cara óvalo crea look de alto impacto sin distorsionar proporciones.",
+      "trend_score": 0.88,
+      "search_query": "skin fade natural volume top men 2025"
+    },
+    {
+      "id": "oval-004",
+      "nombre_es": "Peinado Hacia Atrás Clásico",
+      "nombre_en": "Classic Slick Back with Taper",
+      "tags": ["slick back", "taper", "classic", "professional"],
+      "technique": "taper bajo número 2, tope 7-9cm peinado hacia atrás con cera media, patillas definidas",
+      "why_works_short": "El óvalo permite el slick back sin añadir altura que desequilibre. Look profesional de máximo impacto.",
+      "trend_score": 0.82,
+      "search_query": "slick back taper men professional haircut"
+    },
+    {
+      "id": "oval-005",
+      "nombre_es": "Buzz Cut Desestructurado",
+      "nombre_en": "Textured Buzz Cut",
+      "tags": ["buzz", "short", "minimal", "effortless"],
+      "technique": "número 3 uniforme, fade muy suave en patillas y nuca número 1, sin estructura",
+      "why_works_short": "La cara óvalo es la única que permite buzz cut sin comprometer proporciones. Muestra la estructura facial directamente.",
+      "trend_score": 0.78,
+      "search_query": "textured buzz cut men oval face"
+    }
+  ]
+}

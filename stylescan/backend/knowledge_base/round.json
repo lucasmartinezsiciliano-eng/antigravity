@@ -1,0 +1,56 @@
+{
+  "face_shape": "round",
+  "description": "Longitud ≈ anchura, rasgos suaves sin ángulos marcados. Objetivo: crear ilusión de verticalidad y definir mandíbula visualmente.",
+  "cuts": [
+    {
+      "id": "round-001",
+      "nombre_es": "High Fade con Quiff Alto",
+      "nombre_en": "High Fade with Tall Quiff",
+      "tags": ["fade", "high", "quiff", "volume-top", "modern"],
+      "technique": "high fade piel o cero en base, sube 2-3 a mitad, tope 7-8cm quiff hacia arriba con soplete, fijador fuerte",
+      "why_works_short": "El high fade elimina el peso lateral que engrosa la cara. El quiff alto añade verticalidad que alarga el rostro visualmente.",
+      "trend_score": 0.94,
+      "search_query": "high fade quiff round face men 2025"
+    },
+    {
+      "id": "round-002",
+      "nombre_es": "Mid Fade con Crop Corto",
+      "nombre_en": "Mid Fade with Short Crop",
+      "tags": ["fade", "mid", "crop", "minimal", "effortless"],
+      "technique": "mid fade número 0.5 abajo, sube a 2 en la mitad, crop 3-4cm tope, flequillo mínimo hacia adelante",
+      "why_works_short": "El flequillo recto corta la verticalidad del rostro de forma que el tope parece menos redondo. Clásico anti-cara-redonda.",
+      "trend_score": 0.89,
+      "search_query": "mid fade crop round face slim men"
+    },
+    {
+      "id": "round-003",
+      "nombre_es": "Skin Fade con Tope Anguloso",
+      "nombre_en": "Skin Fade with Angular Top",
+      "tags": ["fade", "skin", "angular", "structured", "bold"],
+      "technique": "skin fade completo, tope 5-6cm peinado lateralmente con forma angular, raya definida al lado",
+      "why_works_short": "Los ángulos del tope peinado contrastan con la redondez natural, creando la percepción de más filo y definición facial.",
+      "trend_score": 0.86,
+      "search_query": "skin fade angular top side part men"
+    },
+    {
+      "id": "round-004",
+      "nombre_es": "Fade con Pompadour",
+      "nombre_en": "Fade with Pompadour",
+      "tags": ["fade", "pompadour", "volume", "retro", "modern"],
+      "technique": "low-to-mid fade, tope 8-9cm peinado hacia atrás y arriba con soplete desde base",
+      "why_works_short": "El pompadour eleva el punto focal de la cara hacia arriba y atrás, alargando visualmente la proporción del rostro.",
+      "trend_score": 0.83,
+      "search_query": "pompadour fade men round face 2025"
+    },
+    {
+      "id": "round-005",
+      "nombre_es": "Zero Fade con Barba Cuadrada",
+      "nombre_en": "Zero Fade with Square Beard",
+      "tags": ["fade", "zero", "beard", "define-jaw", "combo"],
+      "technique": "zero fade, tope 4-5cm, barba cuadrada bordes rectos definidos con navaja, sin barba en mejillas",
+      "why_works_short": "La barba cuadrada añade el ángulo mandibular que la cara redonda no tiene de forma natural. El fade mantiene limpieza.",
+      "trend_score": 0.91,
+      "search_query": "zero fade square beard round face men"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "face_shape": "diamond",
+  "description": "Pómulos prominentes con frente y mentón más estrechos. Objetivo: añadir anchura en línea de frente y suavizar la proyección de pómulos.",
+  "cuts": [
+    {
+      "id": "diamond-001",
+      "nombre_es": "Taper con Textura en Frente",
+      "nombre_en": "Taper with Frontal Texture",
+      "tags": ["taper", "textured-front", "volume-top", "modern"],
+      "technique": "taper bajo número 2-3, tope 6-7cm textura hacia frente con volumen en línea de cabello",
+      "why_works_short": "El volumen frontal añade anchura en la línea de cabello, compensando la frente estrecha. El taper no reduce los lados que ya son estrechos.",
+      "trend_score": 0.87,
+      "search_query": "taper frontal texture volume diamond face men"
+    },
+    {
+      "id": "diamond-002",
+      "nombre_es": "Quiff con Taper Bajo",
+      "nombre_en": "Low Taper Quiff",
+      "tags": ["quiff", "taper", "volume-frente", "modern"],
+      "technique": "taper muy bajo número 2, quiff 7-8cm hacia arriba-adelante, levanta la línea de la frente",
+      "why_works_short": "El quiff añade anchura visual a la frente estrecha. El taper bajo conserva la anchura lateral existente.",
+      "trend_score": 0.84,
+      "search_query": "low taper quiff diamond face men narrow forehead"
+    },
+    {
+      "id": "diamond-003",
+      "nombre_es": "Crop con Lados Moderados",
+      "nombre_en": "Crop with Moderate Sides",
+      "tags": ["crop", "moderate", "balanced"],
+      "technique": "taper suave, crop 4-5cm sin reducir demasiado los lados (mantener algo de masa lateral)",
+      "why_works_short": "Los lados moderados equilibran la proyección de pómulos sin estrecharlos más. El crop frontal añade anchura arriba.",
+      "trend_score": 0.80,
+      "search_query": "crop moderate sides diamond face men balanced"
+    },
+    {
+      "id": "diamond-004",
+      "nombre_es": "Flequillo con Low Fade",
+      "nombre_en": "Fringe with Low Fade",
+      "tags": ["fringe", "fade", "low", "modern", "cover-forehead"],
+      "technique": "low fade número 1, flequillo 5-6cm hacia frente ligeramente hacia el lado, sin llegar a cortar frente completa",
+      "why_works_short": "El flequillo lateral añade masa visual sobre la frente estrecha, el rasgo más diferenciador de la cara diamante.",
+      "trend_score": 0.88,
+      "search_query": "fringe low fade diamond narrow forehead men"
+    }
+  ]
+}

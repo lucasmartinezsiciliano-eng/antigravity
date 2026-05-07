@@ -1,0 +1,46 @@
+{
+  "face_shape": "triangle",
+  "description": "Mandíbula más ancha que frente. Objetivo: añadir volumen en la zona superior y reducir peso visual en la mandíbula.",
+  "cuts": [
+    {
+      "id": "triangle-001",
+      "nombre_es": "Quiff Alto con Low Fade",
+      "nombre_en": "Tall Quiff with Low Fade",
+      "tags": ["quiff", "volume-top", "low-fade", "bold"],
+      "technique": "low fade número 1-2, quiff 8-9cm con soplete, máximo volumen en tope y frente",
+      "why_works_short": "El quiff desplaza el punto focal hacia la parte superior, contrabalanceando la base ancha de la mandíbula.",
+      "trend_score": 0.89,
+      "search_query": "tall quiff low fade men triangle wide jaw"
+    },
+    {
+      "id": "triangle-002",
+      "nombre_es": "Pompadour con Taper",
+      "nombre_en": "Pompadour with Low Taper",
+      "tags": ["pompadour", "taper", "volume", "classic"],
+      "technique": "taper bajo conservando lados, pompadour 7-8cm hacia atrás y arriba, fijador firme",
+      "why_works_short": "El pompadour añade masa en la zona superior-trasera contrarrestando la mandíbula prominente de la base.",
+      "trend_score": 0.83,
+      "search_query": "pompadour low taper men wide jaw triangle"
+    },
+    {
+      "id": "triangle-003",
+      "nombre_es": "Crop con Flequillo Completo",
+      "nombre_en": "Full Fringe Crop",
+      "tags": ["crop", "full-fringe", "modern", "volume-top"],
+      "technique": "taper bajo-medio, crop 4-5cm con flequillo completo horizontal, añade masa visual en frente",
+      "why_works_short": "El flequillo completo crea anchura visual en la frente que equilibra la base de la mandíbula ancha.",
+      "trend_score": 0.86,
+      "search_query": "full fringe crop men wide jaw triangle face"
+    },
+    {
+      "id": "triangle-004",
+      "nombre_es": "Textura Caótica con Barba Corta",
+      "nombre_en": "Messy Texture with Short Beard",
+      "tags": ["messy", "textured", "beard-short", "effortless"],
+      "technique": "taper muy bajo, tope 5-7cm caótico libre, barba muy corta o solo contorno, sin definir la mandíbula",
+      "why_works_short": "La textura caótica desvía la atención del ancho mandibular. La barba muy corta no añade anchura a la base.",
+      "trend_score": 0.84,
+      "search_query": "messy textured short beard men triangle jaw"
+    }
+  ]
+}

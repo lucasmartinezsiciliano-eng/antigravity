@@ -1,0 +1,15 @@
+{
+  "last_updated": null,
+  "month": null,
+  "note": "Populated automatically by trend_worker.py — run weekly",
+  "global_trends": [],
+  "by_face_shape": {
+    "oval": [],
+    "round": [],
+    "square": [],
+    "oblong": [],
+    "heart": [],
+    "diamond": [],
+    "triangle": []
+  }
+}

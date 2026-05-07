@@ -1,0 +1,169 @@
+{
+  "_doc": "Sistema de prompts para generación de imágenes de referencia de cortes masculinos. Diseñado para fal.ai FLUX Kontext Pro (edición de foto real) y para FLUX text-to-image (referencia genérica). Estética: Instagram barbería premium española.",
+  "version": "1.0",
+  "engine": "fal-ai/flux-pro/kontext",
+
+  "system_design": {
+    "_titulo": "Arquitectura del Sistema de Prompts",
+    "modos": {
+      "modo_kontext": "FLUX Kontext: recibe la foto del cliente + instrucción. Transforma el pelo del cliente real. Usar para el virtual try-on personalizado.",
+      "modo_text_to_image": "FLUX text-to-image: genera una imagen de referencia de un hombre con la forma facial del cliente. Usar como 'foto de inspiración' cuando no hay foto real."
+    },
+    "angulos": {
+      "frontal": "Vista de frente. Muestra el tope, el flequillo, las proporciones. Iluminación de estudio, fondo neutro.",
+      "tres_cuartos_izquierda": "Perfil 45° desde la izquierda. El ángulo más favorecedor. Muestra el fade lateral izquierdo y el tope simultáneamente.",
+      "tres_cuartos_derecha": "Perfil 45° desde la derecha. Muestra el fade lateral derecho, la nuca, la transición."
+    }
+  },
+
+  "kontext_instructions": {
+    "_doc": "Instrucciones para FLUX Kontext (edición de foto real). La foto del cliente es el input. El texto describe qué cambiar.",
+
+    "template_base": {
+      "estructura": "Keep the person's face, skin tone, eyes, and facial structure exactly identical. Change ONLY the hairstyle to: {cut_name}. Barbershop technique: {technique}. Result must look like a professional barbershop portfolio photo. Do not change clothing, facial hair, or background. {angle_suffix}",
+      "campos": {
+        "cut_name": "Nombre técnico en inglés del corte (nombre_en del catálogo)",
+        "technique": "Descripción técnica concisa (máx 250 chars) del catálogo spain_trends",
+        "angle_suffix": "Instrucción de ángulo de cámara (ver abajo)"
+      }
+    },
+
+    "angle_suffixes": {
+      "frontal": "Camera angle: straight-on frontal view, subject looking directly at camera. Passport-style portrait lighting. Clean neutral background.",
+      "three_quarter_left": "Camera angle: 3/4 profile from the subject's left side, approximately 45 degrees. Left side of face and temple fade clearly visible. Professional barbershop editorial angle. Natural side lighting.",
+      "three_quarter_right": "Camera angle: 3/4 profile from the subject's right side, approximately 45 degrees. Right side fade/taper clearly visible. Shows back hairline and neckline transition. Warm barbershop lighting."
+    },
+
+    "guidance": {
+      "guidance_scale": 3.5,
+      "num_inference_steps": 28,
+      "nota": "Para mayor fidelidad al corte: subir guidance_scale a 4.0-4.5. Para mayor fidelidad a la cara: bajar a 3.0. El balance actual (3.5) es el óptimo."
+    }
+  },
+
+  "text_to_image_prompts": {
+    "_doc": "Prompts para generar imágenes de referencia sin foto del cliente. El sujeto es genérico pero con la forma facial indicada.",
+
+    "template_base": {
+      "estructura": "{view_prefix}, {subject_description}, {haircut_description}, {photo_style}, --no {negatives}",
+      "campos": {
+        "view_prefix": "Descripción del ángulo de cámara",
+        "subject_description": "Descripción del hombre con forma facial específica",
+        "haircut_description": "Descripción exacta del corte con terminología técnica",
+        "photo_style": "Estilo fotográfico de referencia",
+        "negatives": "Elementos a excluir del resultado"
+      }
+    },
+
+    "view_prefixes": {
+      "frontal": "Front-facing portrait",
+      "three_quarter_left": "Three-quarter left profile portrait, 45-degree angle",
+      "three_quarter_right": "Three-quarter right profile portrait, 45-degree angle, showing neckline"
+    },
+
+    "subject_descriptions_by_face_shape": {
+      "oval": "young to mid-age man with oval face shape, balanced proportions, well-defined cheekbones, slightly wider forehead than jawline",
+      "round": "young man with round face shape, soft features, full cheeks, similar face width and length, minimal jaw definition",
+      "square": "man with square face shape, strong angular jawline, prominent square chin, similar forehead and jaw widths, masculine features",
+      "oblong": "man with oblong face shape, noticeably longer than wide, narrow cheeks, elongated features, prominent vertical proportions",
+      "heart": "man with heart-shaped face, wide forehead, prominent cheekbones narrowing sharply to a pointed chin, V-shaped jaw",
+      "diamond": "man with diamond-shaped face, prominent wide cheekbones, narrow forehead and narrow pointed chin, angular midface",
+      "triangle": "man with triangular face shape, wide strong jawline and chin, narrower forehead, bottom-heavy facial proportions"
+    },
+
+    "haircut_descriptions": {
+      "_doc": "Plantillas de descripción técnica para los 15 cortes del catálogo Spain. Usar en el campo haircut_description del prompt.",
+
+      "skin_fade_textured": "freshly cut skin fade haircut fading from skin-close at temples to a mid-length textured messy top approximately 5-6cm long, natural chaotic texture with matte finish, defined neckline",
+      "french_crop_low_fade": "freshly cut French crop haircut with low taper fade, short horizontal fringe approximately 3cm sitting just above eyebrows, clean squared neckline, close-cropped sides with minimal fade",
+      "modern_mullet": "modern mullet haircut with mid fade on sides, medium top approximately 4-5cm, longer nape section approximately 6-7cm, smooth fade transition from sides to nape, contemporary interpretation",
+      "wolf_cut": "men's wolf cut hairstyle, long layered shaggy hair approximately 10-12cm, heavy layers throughout, curtain-like texture, voluminous crown, no hard fade, soft natural flow",
+      "quiff_mid_fade": "quiff hairstyle with mid fade, sides faded from skin at base blending to longer top, front hair approximately 7-8cm swept up and slightly forward with volume, clean temple line",
+      "buzz_cut_taper": "buzz cut with soft taper fade, uniform number 3 clipper all over top approximately 9mm, soft blend at temples and neckline, minimal fade, very clean and precise",
+      "high_fade_hard_part": "high fade with hard part, temples shaved close to skin, defined razor-cut parting line on left or right side, top hair approximately 7cm combed to one side with pomade, sharp neckline",
+      "curtain_bangs": "men's curtain bangs haircut, middle parting, hair approximately 10-12cm flowing naturally to both sides like curtains, soft layers, textured ends, no fade, natural relaxed style",
+      "zero_fade_beard": "zero fade haircut with connected medium beard approximately 15-20 days growth, closely faded temples blending into beard, squared beard contour with defined edges, top approximately 5cm",
+      "classic_taper_natural": "classic taper haircut, natural hair flow, gradual blend from shorter sides to longer top approximately 6-7cm, no hard fade, natural texture, minimal product",
+      "slick_back_low_fade": "slick back hairstyle with low fade, hair approximately 9-10cm slicked completely back with shine pomade, low fade at temples, sharp sideburns, professional clean look",
+      "natural_curls_taper": "natural curly hair men's haircut with low taper, tight curls approximately 6-8cm on top, defined curl pattern, soft fade at sides not reaching skin, curl cream definition",
+      "pompadour_mid_fade": "modern pompadour haircut with mid fade, hair swept up and back from forehead creating a high wave shape approximately 8-9cm, sides faded, structured pomade finish, classic yet modern",
+      "textured_fringe_taper": "textured fringe haircut with low taper, approximately 5-6cm top with textured fringe falling naturally forward, soft movement, matte finish, low taper blend at sides",
+      "number2_full_beard": "number 2 clipper all over top approximately 6mm, connected full beard 3-4 weeks growth well-groomed, clean beard contour line, masculine professional look"
+    },
+
+    "photo_styles": {
+      "barbershop_editorial": "professional barbershop editorial photography, warm golden-hour barbershop lighting, soft bokeh background of a premium Spanish barbershop, shallow depth of field, 50mm portrait lens",
+      "studio_clean": "clean studio portrait photography, soft box lighting, neutral light grey background, high detail sharp focus on hair texture, professional beauty lighting setup",
+      "instagram_barbershop": "Instagram barbershop style photography, natural window light from the side, exposed brick or dark wood background, warm tones, authentic barbershop feel, sharp detail on the fade",
+      "magazine_style": "high-end men's grooming magazine style photography, dramatic side lighting, dark moody background, editorial fashion feel, razor-sharp detail on the haircut"
+    },
+
+    "negatives": {
+      "standard": "blurry, distorted face, extra fingers, bad anatomy, deformed, ugly, amateur photo, low quality, watermark, text overlay, cartoon, drawing, illustration, 3d render, painting",
+      "hair_specific": "wig, hat, messy untrimmed haircut, unfinished fade, bad blending, visible clipper lines, bald patches, wrong hair color unless specified",
+      "combined": "blurry, distorted face, bad anatomy, deformed, ugly, amateur photo, low quality, watermark, wig, hat, bad fade blending, visible clipper lines, cartoon, illustration"
+    },
+
+    "ejemplos_completos": {
+      "_doc": "Ejemplos completos de prompts listos para usar, para cada ángulo. Sujeto: hombre de cara redonda con skin fade + textura.",
+
+      "ejemplo_skin_fade_round_frontal": {
+        "prompt": "Front-facing portrait, young man with round face shape, soft features, full cheeks, similar face width and length, freshly cut high fade haircut fading from skin-close at temples to a tall textured quiff approximately 7-8cm on top, defined neckline, professional barbershop editorial photography, warm golden-hour barbershop lighting, soft bokeh background of a premium Spanish barbershop, shallow depth of field --no blurry, distorted face, bad anatomy, wig, bad fade blending, cartoon, illustration",
+        "nota": "Para cara redonda se usa quiff (no skin fade texturado) — aplicando las reglas de visagismo"
+      },
+
+      "ejemplo_french_crop_oblong_frontal": {
+        "prompt": "Front-facing portrait, man with oblong face shape, noticeably longer than wide, narrow cheeks, freshly cut French crop haircut with low taper fade, short horizontal fringe approximately 3cm sitting just above eyebrows, clean squared neckline, close-cropped sides with minimal fade, professional barbershop editorial photography, warm barbershop lighting, shallow depth of field --no blurry, bad anatomy, bad fade, wig, cartoon",
+        "nota": "Para cara oblong el flequillo horizontal acorta la percepción — correcto"
+      },
+
+      "ejemplo_wolf_cut_square_3q": {
+        "prompt": "Three-quarter left profile portrait, 45-degree angle, man with square face shape, strong angular jawline, prominent square chin, men's wolf cut hairstyle, long layered shaggy hair approximately 10-12cm, heavy layers throughout, curtain-like texture, voluminous crown, no hard fade, soft natural flow, Instagram barbershop style photography, natural window light from the side, warm tones, authentic barbershop feel --no blurry, bad anatomy, wig, bad blending, cartoon",
+        "nota": "Wolf cut en cara cuadrada suaviza los ángulos con el volumen y las capas"
+      }
+    }
+  },
+
+  "reference_search_templates": {
+    "_doc": "Templates de búsqueda de imágenes de referencia para las apps de barbería (Pinterest, Google Images). Complementan las imágenes generadas con fotos reales.",
+
+    "templates": {
+      "pinterest": "{cut_name_en} men haircut {year} site:pinterest.com",
+      "instagram_barbershop": "{cut_name_en} barbershop men {face_shape} face",
+      "tutorial": "{cut_name_en} men haircut tutorial barbershop",
+      "trending": "{cut_name_en} men trending {year} tiktok"
+    },
+
+    "por_corte": {
+      "skin_fade_textured": "skin fade textured top men 2025",
+      "french_crop": "french crop low fade men 2025",
+      "modern_mullet": "modern mullet fade men trending 2025",
+      "wolf_cut": "wolf cut men 2025 shaggy",
+      "quiff": "quiff mid fade men 2025",
+      "buzz_cut": "buzz cut taper men 2025 clean",
+      "high_fade_hard_part": "high fade hard part side part men 2025",
+      "curtain_bangs": "curtain bangs men middle part 2025",
+      "zero_fade_beard": "zero fade beard combo men 2025",
+      "classic_taper": "classic taper natural men 2025",
+      "slick_back": "slick back low fade men professional 2025",
+      "natural_curls": "natural curly taper men 2025",
+      "pompadour": "pompadour mid fade men modern 2025",
+      "textured_fringe": "textured fringe taper men 2025",
+      "number2_beard": "number 2 full beard men combo 2025"
+    }
+  },
+
+  "quality_guidelines": {
+    "_titulo": "Criterios de Calidad para Imágenes de Barbería Premium",
+    "referencia_instagram": "Las mejores barberías de Instagram en España (TheCut BCN, Gentlemen's Club Madrid, Barber Shop Málaga) usan iluminación natural lateral o luz de ventana con fondo de madera oscura o ladrillo. El foco está siempre en la textura del corte.",
+
+    "criterios": {
+      "iluminacion": "Luz natural de ventana o luz suave de caja. Evitar flash directo. La textura del pelo debe verse con detalle.",
+      "angulo": "El 3/4 izquierdo es el ángulo más usado en Instagram de barberías — muestra el fade Y el tope simultáneamente.",
+      "fondo": "Madera oscura, ladrillo expuesto, o fondo neutro gris/blanco. Nada que distraiga del corte.",
+      "expresion": "Cara seria o expresión neutral. No sonrisa. La foto es del corte, no del personaje.",
+      "ropa": "Camiseta blanca o capa de barbería negra — no distraen del corte.",
+      "detalle": "La textura, el fade, la transición de la nuca deben verse con nitidez absoluta."
+    }
+  }
+}

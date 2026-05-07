@@ -1,0 +1,670 @@
+{
+  "_doc": "Catálogo de cortes de pelo masculinos más populares en España 2024-2025. Fuente: tendencias de barberías premium, TikTok barbershop ES, Instagram peluqueros españoles, búsquedas Google Trends España. Para uso en VISAI StyleScan.",
+  "last_updated": "2025-05",
+  "market": "Spain",
+  "total_cuts": 15,
+
+  "cuts": [
+
+    {
+      "id": "es-001",
+      "nombre_es": "Degradado Skin con Textura Caótica",
+      "nombre_en": "Skin Fade with Textured Mess",
+      "popularidad_spain": "muy_alta",
+      "trend_score": 0.97,
+      "tendencia_2024_2025": "El corte dominante en barberías españolas desde 2023. TikTok lo lleva a barberías de barrio. Muy pedido por hombres de 16-35 años.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Skin fade (a piel, número 0 en la base)",
+        "fade_start": "Comienza a 2-3 cm sobre la oreja, sube gradualmente",
+        "tope_largo": "5-7 cm en el centro, algo menos en los laterales del tope",
+        "tecnica_tope": "Tijera sobre peine con puntas entintadas, acabado desestruct con cera mate",
+        "patillas": "Línea limpia con navaja, terminación en punto o cuadrada",
+        "nuca": "Skin fade limpia en U o cuadrada según morfología",
+        "herramientas": "Máquina zero-gap, tijera entintada, navaja para patillas y nuca"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "square", "oblong"],
+        "funciona_bien": "oval, oblong (siempre que se controle la altura del tope), square (suaviza ángulos con la textura)",
+        "no_recomendado": ["round", "triangle"],
+        "por_que_no_round": "El skin fade elimina toda la masa lateral, haciendo la cara redonda parecer aún más esférica",
+        "por_que_no_triangle": "Expone la mandíbula ancha sin compensación en el tope — se necesita MUCHO volumen arriba para que funcione"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 2-3 semanas (el skin fade pierde definición rápido)",
+        "cuidado_en_casa": "Cera mate o pomada ligera. Sin fijadores fuertes que aplanen.",
+        "tiempo_en_barberia": "35-45 min",
+        "coste_medio_spain": "15-25€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado_suave"],
+        "funciona": ["fino", "grueso"],
+        "dificil": ["muy_rizado"],
+        "nota_rizado": "En pelo rizado puede hacer el tope demasiado voluminoso — hay que desrizar o controlar con crema"
+      },
+
+      "instrucciones_barbero": "Quiero un skin fade. Que empiece a piel en la base y suba gradualmente hasta un número 2 o 3 en la línea de peso. El tope lo quiero texturizado, desordenado, sin estructura. No me hagas raya. La patilla en punta limpia con navaja.",
+      "palabras_clave_tiktok": ["skin fade textured", "degradado skin", "barbería española", "faded textured top"]
+    },
+
+    {
+      "id": "es-002",
+      "nombre_es": "Crop Francés con Degradado Bajo",
+      "nombre_en": "French Crop with Low Fade",
+      "popularidad_spain": "muy_alta",
+      "trend_score": 0.95,
+      "tendencia_2024_2025": "El crop clásico relanzado por barberías europeas y TikTok barbershop francés e italiano. Muy popular en España desde 2023, especialmente en ciudades grandes.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Low fade o taper bajo (número 2 en la base)",
+        "fade_start": "Muy bajo, empieza 1-2 cm sobre la oreja",
+        "tope_largo": "3-5 cm en el centro, flequillo frontal a 1-2 cm sobre las cejas",
+        "tecnica_tope": "Clipper over comb en lados, tijera recta en el flequillo, nuca cuadrada o redondeada",
+        "patillas": "Definidas, cortas, cuadradas",
+        "nuca": "Cuadrada y limpia",
+        "herramientas": "Clipper con guardas, tijera recta para flequillo, navaja para contorno"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "oblong", "square"],
+        "funciona_bien": "oval (versatilidad total), oblong (el flequillo horizontal acorta la cara larga), square (la textura suaviza la mandíbula)",
+        "no_recomendado": ["round", "heart"],
+        "por_que_no_round": "El flequillo horizontal añade anchura visual a nivel de frente, ampliando la percepción de cara redonda",
+        "por_que_no_heart": "El flequillo horizontal sobre una frente ya ancha la hace parecer aún más ancha"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 3-4 semanas",
+        "cuidado_en_casa": "Mínimo — cera ligera o sin producto. El crop mantiene su forma",
+        "tiempo_en_barberia": "25-35 min",
+        "coste_medio_spain": "12-20€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "fino"],
+        "funciona": ["ondulado_suave", "grueso"],
+        "dificil": ["muy_rizado"],
+        "nota_rizado": "En rizado el flequillo no cae recto — requiere alisado o el look cambia completamente"
+      },
+
+      "instrucciones_barbero": "Quiero un crop francés. Los lados con taper bajo, número 2 abajo. El tope cortito, unos 3-4 cm, con flequillo recto hacia adelante que quede justo encima de las cejas. La nuca cuadrada y limpia.",
+      "palabras_clave_tiktok": ["french crop", "crop cut men", "crop haircut", "degradado bajo crop"]
+    },
+
+    {
+      "id": "es-003",
+      "nombre_es": "Mullet Moderno con Degradado",
+      "nombre_en": "Modern Mullet with Fade",
+      "popularidad_spain": "alta",
+      "trend_score": 0.93,
+      "tendencia_2024_2025": "El regreso del mullet fue viral en TikTok 2023-2024. En España se adoptó con versión más refinada — lados con fade, nuca con longitud pero controlada. Muy pedido por 18-28 años.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Mid fade o low fade en los lados",
+        "fade_start": "Lateral: mid fade número 1-2; nuca: transición suave conservando longitud",
+        "tope_largo": "Tope: 4-6 cm. Nuca: 5-8 cm (la parte característica del mullet)",
+        "tecnica_tope": "Tope texturizado o corto, transición gradual a nuca más larga, sin escalón abrupto",
+        "patillas": "Cortas definidas, integradas en el fade",
+        "nuca": "Larga, 5-8 cm, puede ser recta o en V",
+        "herramientas": "Clipper, tijera para nuca larga, peine de corte para transición"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oblong", "oval", "square"],
+        "funciona_bien": "oblong (la nuca larga desplaza el peso hacia atrás acortando la percepción frontal), oval (todas las variantes funcionan), square (la nuca suaviza la dureza mandibular)",
+        "no_recomendado": ["triangle", "round"],
+        "por_que_no_triangle": "La nuca larga añade masa en la base que ya es ancha en la cara triangular",
+        "por_que_no_round": "Los lados cortos + nuca larga no crean el efecto alargador necesario para cara redonda"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 3-4 semanas para el fade; nuca crece bastante rápido",
+        "cuidado_en_casa": "Sal marina o texturizador para la nuca. Seco al aire o ligero soplete",
+        "tiempo_en_barberia": "40-50 min",
+        "coste_medio_spain": "18-28€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado"],
+        "funciona": ["grueso"],
+        "dificil": ["muy_fino", "muy_rizado"],
+        "nota_rizado": "En rizado puede quedar 'afro mullet' — puede ser intencional o no, depende del cliente"
+      },
+
+      "instrucciones_barbero": "Quiero un mullet moderno. Los lados con mid fade, cortos. El tope unos 4-5 cm. Y la nuca quiero que tenga longitud, unos 6-7 cm, pero con la transición suave del fade, no un escalón. Algo moderno, no el mullet de los 80.",
+      "palabras_clave_tiktok": ["modern mullet", "mullet fade", "mullet moderno", "tiktok mullet 2025"]
+    },
+
+    {
+      "id": "es-004",
+      "nombre_es": "Wolf Cut Masculino",
+      "nombre_en": "Men's Wolf Cut",
+      "popularidad_spain": "alta",
+      "trend_score": 0.91,
+      "tendencia_2024_2025": "Importado del K-pop y adoptado masivamente en TikTok. En España ganó popularidad entre 2023-2025 especialmente en pelo largo-medio. Fusión entre shag y mullet moderno.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Sin fade o taper muy suave (cut más orgánico que técnico)",
+        "fade_start": "Taper mínimo o ninguno — el corte es en capas, no en fade",
+        "tope_largo": "Pelo largo en el tope: 8-15 cm. Voluminoso y con capas",
+        "tecnica_tope": "Capas largas, mucho desmechado, textura de punta a punta. Técnica 'razor cut' o tijera cóncava",
+        "patillas": "Largas integradas en las capas — no definidas con navaja",
+        "nuca": "Media: 4-7 cm con degradado suave o en capas",
+        "herramientas": "Navaja (razor cut), tijera cóncava para textura, difusor si hay ondas"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "square", "oblong"],
+        "funciona_bien": "oval (cualquier variante), square (el volumen suaviza la mandíbula cuadrada), oblong (hay que controlar el volumen para no alargar más)",
+        "no_recomendado": ["round"],
+        "por_que_no_round": "El volumen amplio en los lados y la falta de fade empeora significativamente la cara redonda"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 6-8 semanas (el pelo largo tolera más tiempo)",
+        "cuidado_en_casa": "Sal marina, difusor para ondas naturales, crema texturizadora. Bastante cuidado en casa",
+        "tiempo_en_barberia": "45-60 min",
+        "coste_medio_spain": "20-35€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["ondulado", "rizado_suave"],
+        "funciona": ["grueso_liso"],
+        "dificil": ["muy_fino", "totalmente_liso"],
+        "nota_fino": "En pelo muy fino el wolf cut pierde el volumen característico — se aplana"
+      },
+
+      "instrucciones_barbero": "Quiero un wolf cut. Pelo largo con muchas capas, bastante textura y desmechado por todas partes. Que tenga volumen arriba. Sin fade duro, solo un taper muy suave o nada. Que quede rollo grunge, desestructurado.",
+      "palabras_clave_tiktok": ["wolf cut men", "wolf cut masculino", "men wolf cut", "shag haircut men"]
+    },
+
+    {
+      "id": "es-005",
+      "nombre_es": "Quiff con Mid Fade",
+      "nombre_en": "Quiff with Mid Fade",
+      "popularidad_spain": "alta",
+      "trend_score": 0.89,
+      "tendencia_2024_2025": "Clásico renovado que no pierde popularidad. En España es el corte del hombre de 25-40 años que quiere look cuidado sin ser demasiado trendy. Muy pedido en el entorno profesional.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Mid fade (número 1 abajo, sube a 3 en la zona media)",
+        "fade_start": "A nivel de la mitad del lateral, transición media",
+        "tope_largo": "6-8 cm, suficiente para crear volumen hacia arriba y adelante",
+        "tecnica_tope": "Soplete y peine redondo para crear volumen. Cera media o pomada brillante para fijar. Pelo hacia arriba y ligeramente hacia adelante",
+        "patillas": "Definidas con navaja, cuadradas o en punta",
+        "nuca": "Degradada, limpia en U o cuadrada",
+        "herramientas": "Clipper para fade, tijera para el tope, soplete y cepillo redondo"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["round", "oval", "triangle"],
+        "funciona_bien": "round (el volumen alto alarga la cara), oval (look clásico sin restricciones), triangle (el quiff compensa la base ancha con volumen arriba)",
+        "no_recomendado": ["oblong", "diamond"],
+        "por_que_no_oblong": "El volumen hacia arriba alarga aún más la cara ya larga",
+        "por_que_no_diamond": "El quiff puede ampliar los pómulos ya prominentes si no se controla bien"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 3 semanas",
+        "cuidado_en_casa": "Soplete + peine redondo + pomada media. 5-8 min de styling diario",
+        "tiempo_en_barberia": "30-40 min",
+        "coste_medio_spain": "15-22€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado_suave"],
+        "funciona": ["grueso"],
+        "dificil": ["muy_fino", "muy_rizado"],
+        "nota_fino": "En pelo muy fino el quiff cae — usar voluminizador en spray antes del soplete"
+      },
+
+      "instrucciones_barbero": "Quiero un quiff con mid fade. El fade que empiece a la mitad de los laterales, número 1 abajo subiéndose. El tope unos 7-8 cm, que lo pueda peinar hacia arriba con soplete. Que tenga volumen, que se vea trabajado.",
+      "palabras_clave_tiktok": ["quiff fade", "men quiff 2025", "quiff haircut", "peinado hacia arriba hombre"]
+    },
+
+    {
+      "id": "es-006",
+      "nombre_es": "Buzz Cut con Taper Suave",
+      "nombre_en": "Buzz Cut with Soft Taper",
+      "popularidad_spain": "alta",
+      "trend_score": 0.88,
+      "tendencia_2024_2025": "El buzz cut experimentó revival masivo con la estética 'clean aesthetic' de TikTok 2024. En España lo llevan mucho hombres que empiezan a perder pelo y quieren control. Versión con taper más sofisticada que el clásico.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Taper suave (no fade duro), número 2-3 en los lados",
+        "fade_start": "Transición muy suave por todo el lateral",
+        "tope_largo": "Uniforme: número 3-4 (6-9mm) en todo el tope",
+        "tecnica_tope": "Clipper con guarda uniforme. Línea de peso suave sin romper la silueta. Patillas en punta o cuadradas",
+        "patillas": "Cortas, integradas en el taper, punto o cuadradas",
+        "nuca": "Taper suave en U, muy limpia",
+        "herramientas": "Solo clipper con distintas guardas. Trabajo rápido."
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "oblong"],
+        "funciona_bien": "oval (muestra la estructura facial directamente), oblong (el número 3 uniforme no añade altura innecesaria)",
+        "no_recomendado": ["round", "heart", "diamond"],
+        "por_que_no_round": "El buzz sin volumen elimina la posibilidad de corregir la redondez — expone directamente la forma",
+        "por_que_no_heart": "La frente ancha queda completamente expuesta",
+        "por_que_no_diamond": "Los pómulos prominentes quedan sin marco que los equilibre"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 2-3 semanas para mantener longitud",
+        "cuidado_en_casa": "Mínimo — sin producto necesario. Opcional: ligera cera mate para textura",
+        "tiempo_en_barberia": "15-20 min",
+        "coste_medio_spain": "10-15€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["cualquier_textura"],
+        "funciona": ["fino", "grueso", "rizado", "liso"],
+        "dificil": [],
+        "nota_general": "El buzz funciona con cualquier textura — es universal"
+      },
+
+      "instrucciones_barbero": "Quiero un buzz cut con taper suave. Número 3 en el tope, los lados un poco más cortos con una transición suave. Sin fade duro. La nuca limpia en U.",
+      "palabras_clave_tiktok": ["buzz cut men", "buzz cut taper", "clean aesthetic men", "pelo corto hombre"]
+    },
+
+    {
+      "id": "es-007",
+      "nombre_es": "Degradado Alto con Skin Fade y Raya Definida",
+      "nombre_en": "High Fade with Hard Part",
+      "popularidad_spain": "media_alta",
+      "trend_score": 0.87,
+      "tendencia_2024_2025": "Corte de alta precisión muy asociado a las barberías de autor españolas. La raya definida con navaja (hard part) es la firma estética. Popular en hombres que van a la barbería regularmente.",
+
+      "descripcion_tecnica": {
+        "fade_type": "High fade (skin o número 0 en la base, empieza alto cerca de la línea de cabello)",
+        "fade_start": "A 1-2 cm de la línea de cabello, transición muy rápida",
+        "tope_largo": "6-8 cm, peinado con raya clara al lado derecho o izquierdo",
+        "tecnica_tope": "Tope peinado al lado con pomada brillante o media. Raya 'hard part' trazada con navaja o máquina sin guarda",
+        "patillas": "Muy cortas o rasuradas, integradas en el fade",
+        "nuca": "Skin fade, muy limpia",
+        "herramientas": "Zero-gap clipper, navaja para la raya (hard part), peine y pomada"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "square"],
+        "funciona_bien": "oval (la asimetría de la raya añade carácter), square (la raya lateral rompe la simetría cuadrada)",
+        "no_recomendado": ["round", "oblong", "triangle"],
+        "por_que_no_round": "El high fade + volumen lateral del tope amplía la percepción horizontal",
+        "por_que_no_oblong": "El high fade elimina la masa lateral necesaria en cara alargada",
+        "por_que_no_triangle": "El corte expone los lados (mandíbula ancha) sin compensación en el tope"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 2-3 semanas (el high fade pierde forma muy rápido)",
+        "cuidado_en_casa": "Pomada o cera a diario para mantener la raya. 3-5 min de peinado",
+        "tiempo_en_barberia": "35-45 min (requiere precisión para el hard part)",
+        "coste_medio_spain": "18-28€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ligeramente_ondulado"],
+        "funciona": ["fino", "grueso"],
+        "dificil": ["rizado", "muy_ondulado"],
+        "nota_rizado": "La raya definida no funciona con pelo rizado — el pelo vuelve a su forma y pierde la línea"
+      },
+
+      "instrucciones_barbero": "Quiero un high fade con raya. El fade bien alto y apurado, piel en la base. El tope unos 7 cm, peinado al lado con raya marcada con la navaja — que se vea bien definida. Pomada para que se quede fija.",
+      "palabras_clave_tiktok": ["high fade hard part", "skin fade side part", "fade raya hombre", "hard part haircut"]
+    },
+
+    {
+      "id": "es-008",
+      "nombre_es": "Flequillo de Cortina con Raya al Centro",
+      "nombre_en": "Curtain Bangs (Middle Part)",
+      "popularidad_spain": "alta",
+      "trend_score": 0.90,
+      "tendencia_2024_2025": "El flequillo de cortina explotó en TikTok 2023 desde el K-pop. En España es el corte más pedido por hombres de 16-25 años. Raya al centro con flequillo que cae hacia los lados.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Taper muy bajo o sin fade (el look es más orgánico)",
+        "fade_start": "Taper mínimo si lo hay, los lados con longitud suficiente (5-8 cm)",
+        "tope_largo": "8-12 cm en el tope para que el flequillo tenga caída. Lados: 5-8 cm",
+        "tecnica_tope": "Raya al centro. Flequillo cae naturalmente a los lados en diagonal. Tijera en seco para textura. Mínimo producto",
+        "patillas": "Integradas en el corte, no definidas — quedan largas y parte del estilo",
+        "nuca": "Taper suave o recortada limpia",
+        "herramientas": "Tijera en seco, texturizadora opcional, navaja para suavizar puntas"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "square", "oblong"],
+        "funciona_bien": "oval (total libertad), square (el flequillo suaviza la dureza cuadrada), oblong (el flequillo horizontal acorta la cara larga)",
+        "no_recomendado": ["round", "triangle"],
+        "por_que_no_round": "La raya al centro sin volumen deja la cara redonda sin corrección",
+        "por_que_no_triangle": "Los lados con longitud amplían la zona de la mandíbula — al contrario de lo que necesita el triángulo"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 5-6 semanas",
+        "cuidado_en_casa": "Sal marina para textura natural. Secado al aire. Muy bajo mantenimiento — es parte del look",
+        "tiempo_en_barberia": "20-30 min",
+        "coste_medio_spain": "12-18€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["ondulado", "liso_fino"],
+        "funciona": ["grueso_manejable"],
+        "dificil": ["muy_rizado"],
+        "nota_rizado": "En rizado el flequillo no cae hacia los lados — hay que usar alisado o el corte se transforma en algo diferente"
+      },
+
+      "instrucciones_barbero": "Quiero curtain bangs — flequillo de cortina con raya al centro. El pelo largo, unos 10 cm en el tope para que tenga caída. Los lados también con longitud para que las 'cortinas' caigan bien. Sin fade. Solo textura y que quede natural.",
+      "palabras_clave_tiktok": ["curtain bangs men", "flequillo cortina hombre", "middle part men", "kpop haircut men"]
+    },
+
+    {
+      "id": "es-009",
+      "nombre_es": "Zero Fade con Barba Media",
+      "nombre_en": "Zero Fade with Medium Beard",
+      "popularidad_spain": "muy_alta",
+      "trend_score": 0.94,
+      "tendencia_2024_2025": "La combinación zero fade + barba es el estilo más clásico de la barbería española moderna. No es una tendencia pasajera — es el standard permanente de la barbería premium española.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Zero fade (número 0 en la base, sin llegar a piel pero muy apurado)",
+        "fade_start": "Desde la base, transición gradual",
+        "tope_largo": "4-6 cm, puede ser texturizado o crop corto",
+        "tecnica_tope": "Clipper over comb, tijera texturizada, o crop simple. Barba: 10-20 días de crecimiento arreglada con máquina contorneadora",
+        "patillas": "La barba integra las patillas — contorneado limpio",
+        "nuca": "Zero o skin fade, cuadrada o en V",
+        "herramientas": "Clipper zero, máquina de barba, navaja para contorno"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["round", "oval", "heart"],
+        "funciona_bien": "round (la barba cuadrada define la mandíbula que falta), oval (la combinación perfecta de todo), heart (la barba amplía el mentón estrecho)",
+        "no_recomendado": ["triangle"],
+        "por_que_no_triangle": "La barba media amplía aún más la mandíbula que ya es ancha en el triángulo",
+        "nota": "La forma de la barba importa tanto como el corte en sí"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 2-3 semanas para el fade. La barba se arregla en casa semanalmente",
+        "cuidado_en_casa": "Aceite de barba a diario. Recorte semanal con máquina. Peinado del tope con cera",
+        "tiempo_en_barberia": "40-50 min (corte + arreglo de barba)",
+        "coste_medio_spain": "18-30€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado"],
+        "funciona": ["grueso", "fino"],
+        "dificil": ["muy_rizado"],
+        "nota_rizado": "En rizado funciona bien si el tope es crop corto — evitar topes largos que expandan el volumen"
+      },
+
+      "instrucciones_barbero": "Quiero zero fade, bien apurado en la base. El tope cortito, unos 5 cm. Y me arreglas la barba — que quede cuadrada, con el contorno limpio. Sin afeitarla entera, solo darle forma.",
+      "palabras_clave_tiktok": ["zero fade beard", "fade barba", "barbería española", "zero fade hombre"]
+    },
+
+    {
+      "id": "es-010",
+      "nombre_es": "Taper Clásico con Peinado Natural",
+      "nombre_en": "Classic Taper with Natural Flow",
+      "popularidad_spain": "alta",
+      "trend_score": 0.85,
+      "tendencia_2024_2025": "El taper clásico está en revival por la reacción al over-faded look. Muchos hombres de 30-45 años en España prefieren el taper por su naturalidad y adaptabilidad a entornos profesionales.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Taper (no fade — la transición es gradual sin degradar a piel o número 0)",
+        "fade_start": "Transición empieza en la mitad-baja del lateral, sube progresivamente",
+        "tope_largo": "6-8 cm, peinado naturalmente con el flujo del pelo",
+        "tecnica_tope": "Tijera limpia, puntas texturizadas o no. El pelo sigue su dirección natural. Peine y soplete suave opcional",
+        "patillas": "Integradas, cortas pero no rasuradas, naturales",
+        "nuca": "Taper en U, limpia sin ser muy apurada",
+        "herramientas": "Clipper con guardas, tijera, peine. Menos herramientas que el fade"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["square", "oblong", "diamond"],
+        "funciona_bien": "square (el taper suaviza los ángulos mejor que el fade), oblong (mantiene la masa lateral necesaria), diamond (conserva anchura lateral en las sienes)",
+        "no_recomendado": ["round"],
+        "por_que_no_round": "El taper mantiene la masa lateral que amplía la cara redonda — esta forma necesita fade obligatoriamente"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 4-5 semanas",
+        "cuidado_en_casa": "Muy bajo — cera ligera o nada. El pelo natural se gestiona solo",
+        "tiempo_en_barberia": "25-30 min",
+        "coste_medio_spain": "12-18€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["ondulado", "grueso"],
+        "funciona": ["liso", "fino", "rizado_medio"],
+        "dificil": [],
+        "nota_general": "El taper funciona bien con cualquier textura"
+      },
+
+      "instrucciones_barbero": "Quiero un taper clásico, nada de fade a piel. Solo que vayan bajando los números gradualmente — que los lados queden limpios pero naturales. El tope sin mucha estructura, que fluya natural.",
+      "palabras_clave_tiktok": ["taper haircut", "taper clásico hombre", "natural haircut men", "men professional haircut"]
+    },
+
+    {
+      "id": "es-011",
+      "nombre_es": "Slick Back con Low Fade",
+      "nombre_en": "Slick Back with Low Fade",
+      "popularidad_spain": "media_alta",
+      "trend_score": 0.84,
+      "tendencia_2024_2025": "El slick back volvió con fuerza en estética mafia/vintage que promovió Peaky Blinders y similares. En España lo llevan mucho hombres de negocios y en entornos formales.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Low fade (número 1-2 en la base, transición baja)",
+        "fade_start": "Muy bajo, casi solo en la nuca y base de los laterales",
+        "tope_largo": "8-10 cm en el tope para poder peinar hacia atrás",
+        "tecnica_tope": "Pelo peinado hacia atrás completamente. Pomada brillante o media. Soplete y peine fino para alisar hacia atrás",
+        "patillas": "Cortas, definidas con navaja, cuadradas",
+        "nuca": "Low fade, cuadrada y limpia",
+        "herramientas": "Clipper para el fade, soplete y peine fino para el tope, pomada de fijación media-alta"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "square"],
+        "funciona_bien": "oval (el slick back en cara óvalo es el combo perfecto — proporciones ya correctas), square (expone la mandíbula de forma poderosa)",
+        "no_recomendado": ["oblong", "heart", "round"],
+        "por_que_no_oblong": "El slick back deja la frente completamente expuesta, alargando aún más la cara",
+        "por_que_no_round": "Sin volumen ni estructura, no hay corrección posible para la cara redonda"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 3-4 semanas",
+        "cuidado_en_casa": "Pomada a diario obligatoria. 5 min de peinado. Exige consistencia",
+        "tiempo_en_barberia": "30-40 min",
+        "coste_medio_spain": "15-22€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado_suave"],
+        "funciona": ["grueso"],
+        "dificil": ["muy_rizado", "muy_fino"],
+        "nota_rizado": "En rizado no se puede hacer slick back real sin alisado fuerte"
+      },
+
+      "instrucciones_barbero": "Quiero un slick back. Los lados con low fade, que empiece muy abajo. El tope lo quiero largo para poderlo peinar hacia atrás completamente. Con pomada brillante que lo fije bien. Patilla definida con navaja.",
+      "palabras_clave_tiktok": ["slick back fade", "slick back men", "peinado hacia atras hombre", "peaky blinders haircut"]
+    },
+
+    {
+      "id": "es-012",
+      "nombre_es": "Rizado Natural con Taper",
+      "nombre_en": "Natural Curls with Low Taper",
+      "popularidad_spain": "alta",
+      "trend_score": 0.88,
+      "tendencia_2024_2025": "El movimiento 'pelo natural' ganó mucha fuerza en España. Hombres con rizado que durante años se alisaban o iban rapados ahora abrazan su textura. Muy común en hombres de ascendencia mediterránea, latinoamericana o africana.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Taper bajo o mid fade suave",
+        "fade_start": "Bajo, sin llegar a skin — mantiene la masa que los rizos necesitan",
+        "tope_largo": "5-10 cm dependiendo del tipo de rizo (2A-4C). Los rizos 'crecen hacia arriba'",
+        "tecnica_tope": "Tijera en seco (dry cut) sobre rizos naturales. Difusor para activar. Crema de rizos para definir. NO usar clipper en el tope",
+        "patillas": "Taper suave, los rizos integran las patillas naturalmente",
+        "nuca": "Taper bajo, cuadrada o en U limpia",
+        "herramientas": "Tijera en seco, clipper para taper, difusor, crema rizos"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["square", "oval", "oblong"],
+        "funciona_bien": "square (los rizos suavizan la dureza mandibular naturalmente), oval (total libertad), oblong (el volumen lateral de los rizos añade anchura visual)",
+        "no_recomendado": ["triangle"],
+        "por_que_no_triangle": "El volumen lateral de los rizos en la zona baja amplía la mandíbula ya ancha del triángulo",
+        "nota": "En cara redonda: usar taper y mantener rizos altos — nunca rizos con volumen lateral"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 4-6 semanas",
+        "cuidado_en_casa": "Rutina CG (Curly Girl adaptada): lavado con champú sin sulfatos, crema rizos, difusor. Bastante cuidado en casa",
+        "tiempo_en_barberia": "40-50 min",
+        "coste_medio_spain": "18-28€ (barberías especializadas en rizado)"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["rizado_tipo_2B_a_4A"],
+        "funciona": ["ondulado_pronunciado"],
+        "dificil": ["liso"],
+        "nota": "Este corte es específico para pelo con textura natural"
+      },
+
+      "instrucciones_barbero": "Tengo el pelo rizado y quiero potenciarlo, no aplastarlo. Quiero taper bajo en los lados, que no llegue a skin. El tope cortado en seco con tijera respetando la forma del rizo. Que me defina bien los rizos con crema al final.",
+      "palabras_clave_tiktok": ["curly hair men taper", "pelo rizado hombre natural", "curly taper", "rizos naturales hombre"]
+    },
+
+    {
+      "id": "es-013",
+      "nombre_es": "Pompadour Moderno con Mid Fade",
+      "nombre_en": "Modern Pompadour with Mid Fade",
+      "popularidad_spain": "media",
+      "trend_score": 0.82,
+      "tendencia_2024_2025": "El pompadour clásico actualizado con fade moderno. Muy popular en la comunidad latina de España (especialmente Madrid, Barcelona, Valencia) y en el entorno de las barberías premium.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Mid fade (número 1 abajo, sube a 2-3 en la mitad)",
+        "fade_start": "A mitad del lateral, transición media",
+        "tope_largo": "8-10 cm en el frente para construir el pompadour",
+        "tecnica_tope": "Soplete y peine redondo: peinado hacia arriba-atrás desde la raíz. Pomada de fijación alta para mantener el volumen. Forma de 'cresta' redondeada",
+        "patillas": "Muy cortas integradas en el fade, definidas",
+        "nuca": "Mid fade, cuadrada y limpia",
+        "herramientas": "Soplete y peine redondo, clipper para el fade, pomada firme"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["round", "oval", "triangle"],
+        "funciona_bien": "round (el pompadour alto alarga la cara), oval (clásico sin restricciones), triangle (contrapesa la base ancha con masa arriba)",
+        "no_recomendado": ["oblong", "heart"],
+        "por_que_no_oblong": "El volumen alto alarga aún más la cara oblong",
+        "por_que_no_heart": "El volumen sobre la frente ancha amplía el tercio superior que ya es problemático"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 3 semanas",
+        "cuidado_en_casa": "Soplete + peine a diario + pomada firme. 8-10 min de styling. Es un corte comprometido",
+        "tiempo_en_barberia": "35-45 min",
+        "coste_medio_spain": "18-28€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado_suave"],
+        "funciona": ["grueso"],
+        "dificil": ["muy_fino", "rizado"],
+        "nota_fino": "En pelo fino el pompadour colapsa — usar spray voluminizador + spray fijador antes del soplete"
+      },
+
+      "instrucciones_barbero": "Quiero un pompadour moderno. Mid fade en los lados, apurado. El tope largo para poder levantar el pompadour. Que me lo hagas con el soplete y me pongas pomada fuerte para que aguante volumen. Que se vea levantado y con cuerpo.",
+      "palabras_clave_tiktok": ["pompadour fade", "pompadour men modern", "pompadour 2025", "volumen peinado hombre"]
+    },
+
+    {
+      "id": "es-014",
+      "nombre_es": "Taper con Flequillo Texturizado",
+      "nombre_en": "Taper with Textured Fringe",
+      "popularidad_spain": "alta",
+      "trend_score": 0.86,
+      "tendencia_2024_2025": "Variante europea muy popular en barberías españolas. El flequillo texturizado cae hacia adelante de forma natural pero controlada. A medio camino entre el crop francés y el curtain bangs.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Taper bajo o low fade (número 2 en base)",
+        "fade_start": "Muy bajo, solo en la base",
+        "tope_largo": "5-7 cm en el tope, 4-5 cm en el flequillo",
+        "tecnica_tope": "Flequillo cae hacia adelante con textura. Tijera en seco para texturizar. No es recto (como el crop) sino con movimiento natural. Cera mate ligera",
+        "patillas": "Integradas en el taper, cortas y naturales",
+        "nuca": "Taper limpio en U",
+        "herramientas": "Tijera, clipper para taper, navaja para texturizar opcional"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "square", "oblong"],
+        "funciona_bien": "oval (flexible, queda muy bien), square (el flequillo suaviza la rigidez cuadrada), oblong (el flequillo acorta visualmente el tercio superior)",
+        "no_recomendado": ["round", "heart"],
+        "por_que_no_round": "El flequillo agrava la percepción de cara ancha en caras redondas",
+        "por_que_no_heart": "El flequillo sobre frente ancha amplía el problema"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 4 semanas",
+        "cuidado_en_casa": "Cera mate o sal marina. 3-5 min — el flequillo cae solo con poco producto",
+        "tiempo_en_barberia": "25-35 min",
+        "coste_medio_spain": "14-20€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["liso", "ondulado_suave", "fino"],
+        "funciona": ["grueso_manejable"],
+        "dificil": ["muy_rizado"],
+        "nota_fino": "Funciona especialmente bien en pelo fino — el flequillo cae naturalmente y se ve abundante"
+      },
+
+      "instrucciones_barbero": "Quiero taper bajo en los lados, número 2 abajo. El tope unos 6 cm y el flequillo que caiga hacia adelante texturizado, con movimiento. Que no sea el crop recto, más natural. Con cera mate ligera.",
+      "palabras_clave_tiktok": ["textured fringe men", "flequillo texturizado hombre", "taper fringe", "men fringe 2025"]
+    },
+
+    {
+      "id": "es-015",
+      "nombre_es": "Dos Ceros con Barba Larga",
+      "nombre_en": "Number 2 All Over with Full Beard",
+      "popularidad_spain": "muy_alta",
+      "trend_score": 0.86,
+      "tendencia_2024_2025": "El look más 'de hombre' en España. Simple, funcional, envejecido bien. Muy popular en hombres de 35-55 años, especialmente con algo de canas. El contraste pelo muy corto + barba larga es el classic español.",
+
+      "descripcion_tecnica": {
+        "fade_type": "Uniforme: número 2 en todo, o con taper muy suave",
+        "fade_start": "Taper mínimo solo en la nuca si lo hay",
+        "tope_largo": "6-9mm (número 2 o 3 uniforme)",
+        "tecnica_tope": "Clipper con guarda uniforme. La técnica está 100% en la barba",
+        "patillas": "La barba conecta directamente con el pelo cortado, con la línea bien definida",
+        "nuca": "Cuadrada y limpia, el pelo corto integra bien",
+        "herramientas": "Clipper para el pelo. Todo el trabajo técnico en la barba: perfilado, contorno, arreglado de nuca de barba"
+      },
+
+      "visagismo": {
+        "formas_ideales": ["oval", "oblong", "square"],
+        "funciona_bien": "oval (la barba larga potencia el contorno facial), oblong (la barba lateral añade anchura visual en el tercio inferior), square (la barba suaviza los ángulos agudos)",
+        "no_recomendado": ["round"],
+        "por_que_no_round": "La barba llena sin fade para el pelo amplía la cara redonda — aunque una barba cuadrada bien perfilada puede compensar parcialmente",
+        "nota_barba": "La forma de la barba (cuadrada vs redondeada vs triangular) es tan importante como el corte"
+      },
+
+      "mantenimiento": {
+        "frecuencia_barberia": "Cada 3-4 semanas para pelo. La barba requiere arreglo en casa 1-2 veces por semana",
+        "cuidado_en_casa": "Aceite de barba diario. Peine de barba. Recorte con máquina semanal. Bajo mantenimiento en el pelo",
+        "tiempo_en_barberia": "30-45 min (la mayoría del tiempo es barba)",
+        "coste_medio_spain": "15-25€"
+      },
+
+      "tipos_pelo": {
+        "mejor": ["cualquier_textura"],
+        "funciona": ["todos"],
+        "dificil": [],
+        "nota": "Al ser tan corto, la textura no importa — funciona universal"
+      },
+
+      "instrucciones_barbero": "El pelo bien cortito, número 2 en todo. Sin fade duro. Y la barba que me la arregles bien: que quede limpia con contorno definido, cuadrada, y me la iguales. Aceite al final.",
+      "palabras_clave_tiktok": ["number 2 beard combo", "pelo corto barba larga hombre", "short hair long beard", "hombre clásico barba"]
+    }
+
+  ]
+}

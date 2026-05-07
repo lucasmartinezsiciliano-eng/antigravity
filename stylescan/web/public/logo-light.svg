@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="240" height="64" role="img" aria-label="VISAI">
+  <title>VISAI</title>
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Syne:wght@800&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="300" height="80" fill="#FFFFFF"/>
+  <text
+    x="150"
+    y="62"
+    text-anchor="middle"
+    font-family="'Syne', sans-serif"
+    font-weight="800"
+    font-size="58"
+    letter-spacing="6"
+    fill="#080808"
+  >VISAI</text>
+  <line x1="4" y1="33" x2="296" y2="33" stroke="#080808" stroke-width="0.7" opacity="0.3"/>
+  <circle cx="4" cy="33" r="1.5" fill="#080808" opacity="0.45"/>
+  <circle cx="296" cy="33" r="1.5" fill="#080808" opacity="0.45"/>
+</svg>

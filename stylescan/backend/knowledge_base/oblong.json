@@ -1,0 +1,56 @@
+{
+  "face_shape": "oblong",
+  "description": "Ratio >1.78, claramente más larga que ancha. Objetivo: añadir anchura lateral, NUNCA volumen vertical en el tope.",
+  "cuts": [
+    {
+      "id": "oblong-001",
+      "nombre_es": "Taper Bajo con Anchura Lateral",
+      "nombre_en": "Low Taper with Wide Side Volume",
+      "tags": ["taper", "low", "wide", "lateral-volume"],
+      "technique": "taper muy bajo número 3-4, conserva máxima anchura lateral, tope máximo 4cm sin añadir altura",
+      "why_works_short": "El taper conserva la anchura lateral que la cara alargada necesita. Sin volumen vertical que estire más.",
+      "trend_score": 0.91,
+      "search_query": "low taper wide sides men oblong face"
+    },
+    {
+      "id": "oblong-002",
+      "nombre_es": "Crop con Flequillo Horizontal",
+      "nombre_en": "Horizontal Fringe Crop",
+      "tags": ["crop", "fringe", "horizontal", "modern"],
+      "technique": "taper bajo, crop 3-4cm con flequillo recto horizontal completo, no levantado",
+      "why_works_short": "El flequillo horizontal crea una línea visual que acorta el rostro. Es el recurso más efectivo para cara alargada.",
+      "trend_score": 0.94,
+      "search_query": "horizontal fringe crop men long face 2025"
+    },
+    {
+      "id": "oblong-003",
+      "nombre_es": "Ondas Naturales con Taper",
+      "nombre_en": "Natural Waves with Taper",
+      "tags": ["wavy", "natural", "taper", "effortless", "volume-sides"],
+      "technique": "taper suave, ondas naturales con anchura lateral potenciada, sal marina para textura y expansión lateral",
+      "why_works_short": "Las ondas expanden hacia los lados añadiendo fWHR visual. Son el único tipo de volumen beneficioso en cara alargada.",
+      "trend_score": 0.86,
+      "search_query": "wavy natural sides men oblong narrow face"
+    },
+    {
+      "id": "oblong-004",
+      "nombre_es": "Side Part Clásico con Lados Llenos",
+      "nombre_en": "Classic Side Part with Full Sides",
+      "tags": ["side part", "full sides", "classic", "professional"],
+      "technique": "sin fade, taper mínimo número 3, lados llenos conservados, tope 6-7cm raya lateral",
+      "why_works_short": "Los lados llenos añaden anchura que la cara alargada necesita. La raya lateral rompe la verticalidad excesiva.",
+      "trend_score": 0.79,
+      "search_query": "full sides side part men narrow oblong face"
+    },
+    {
+      "id": "oblong-005",
+      "nombre_es": "Mullet Moderno",
+      "nombre_en": "Modern Mullet",
+      "tags": ["mullet", "modern", "trending", "bold", "sides-wide"],
+      "technique": "low fade o taper, lados cortos, nuca larga 4-6cm, tope medio 4-5cm, transición suave",
+      "why_works_short": "El mullet añade masa visual en la zona posterior acortando la percepción de longitud frontal. Trending 2025.",
+      "trend_score": 0.96,
+      "search_query": "modern mullet men trending 2025 tiktok"
+    }
+  ]
+}

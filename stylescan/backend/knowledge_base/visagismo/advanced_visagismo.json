@@ -1,0 +1,330 @@
+{
+  "_doc": "Conocimiento avanzado de visagismo masculino. Proporciones áureas, interacción barba-corte, errores comunes, método Fernand Aubry + visagismo moderno. Para uso en prompts de LLM y lógica de recomendación VISAI.",
+  "version": "1.0",
+
+  "proporcion_aurea": {
+    "_titulo": "Proporción Áurea Aplicada al Corte Masculino",
+    "_principio": "El visagismo clásico (Fernand Aubry, École Internationale de Coiffure, París) establece que el corte ideal aproxima el rostro al óvalo canónico mediante la aplicación de la proporción áurea (φ = 1.618).",
+
+    "ratios_clave": {
+      "face_length_to_width": {
+        "ideal": 1.618,
+        "descripcion": "Longitud total del rostro (línea de cabello a mentón) dividida entre el punto más ancho (zigomático). El corte manipula este ratio añadiendo o quitando altura/anchura percibida.",
+        "correcciones": {
+          "ratio_bajo_redondo": "Añadir altura con volumen vertical (quiff, pompadour). Eliminar peso lateral con fade.",
+          "ratio_alto_oblong": "Eliminar altura suprimiendo volumen vertical. Añadir anchura con taper + volumen lateral.",
+          "ratio_optimo_oval": "Solo potenciar — ninguna corrección estructural necesaria."
+        }
+      },
+      "tercios_verticales": {
+        "descripcion": "El rostro se divide en 3 tercios iguales: frente (línea cabello-cejas), nariz (cejas-base nariz), mentón (base nariz-mentón). El corte ideal mantiene estos tercios en equilibrio φ.",
+        "correcciones": {
+          "tercio_superior_largo": "Flequillo para reducir visualmente la frente. Baja la línea de cabello perceptualmente.",
+          "tercio_superior_corto": "Peinado hacia atrás o arriba. El slick back es la solución más efectiva.",
+          "tercio_inferior_corto": "Barba media para alargar el mentón. La barba en punta crea profundidad.",
+          "tercio_inferior_largo": "Barba mínima o sin barba. El contorno apurado acorta el mentón largo."
+        }
+      },
+      "fwhr": {
+        "descripcion": "Facial Width-to-Height Ratio: anchura bicigomática dividida entre distancia cejas-labio. Ratio biométrico de atractivo masculino.",
+        "valores": {
+          "dominante_high": "> 2.0 — percepción de dominancia y liderazgo (Brad Pitt: ~1.97)",
+          "neutro": "1.7 - 2.0 — zona óptima para atractivo equilibrado",
+          "bajo": "< 1.5 — percepción de menor presencia, cara estrecha"
+        },
+        "correcciones_capilares": {
+          "aumentar_fwhr": "Taper bajo conservando masa lateral. Fade suave solo. Sin volumen vertical.",
+          "reducir_fwhr": "Skin fade para eliminar masa lateral. Volumen vertical (quiff) para aumentar altura relativa.",
+          "notas": "El fWHR es un factor secundario en el análisis — la forma facial prima siempre."
+        }
+      },
+      "proporcion_nariz_frente": {
+        "descripcion": "La nariz ideal mide 1/3 de la longitud total del tercio medio. Si la nariz supera esta proporción perceptualmente, los recursos capilares redirigen la atención.",
+        "correccion_nariz_prominente": "Volumen en el tope desplaza el foco hacia arriba. Barba equilibra el tercio inferior. El marco capilar más amplio hace la nariz parecer más proporcionada por contraste."
+      }
+    },
+
+    "linea_de_peso": {
+      "descripcion": "La línea de peso (weight line) es la zona de máximo volumen en el corte. Su posición relativa determina el punto focal visual del peinado y altera la percepción de las proporciones faciales.",
+      "posiciones": {
+        "alta": "Por encima de los pómulos → alarga visualmente el rostro. Indicado para: redondo, corazón.",
+        "media": "A la altura de los pómulos → equilibrado, neutro. Indicado para: oval, cuadrado.",
+        "baja": "Por debajo de los pómulos → acorta el rostro. Indicado para: oblong, alargado."
+      },
+      "errores_comunes": [
+        "Línea de peso alta en cara oblong — alarga más",
+        "Línea de peso baja en cara redonda — acorta en lugar de alargar",
+        "Línea de peso inconsistente entre lados en cara asimétrica — amplifica la asimetría"
+      ]
+    }
+  },
+
+  "barba_y_corte": {
+    "_titulo": "Interacción Barba-Corte en Visagismo Masculino",
+    "_principio": "La barba no es un añadido estético independiente — es parte integral del diseño del corte. El visagismo correcto trata el corte y la barba como un sistema unificado.",
+
+    "formas_faciales": {
+      "oval": {
+        "barba_ideal": "Cualquier longitud. La cara óvalo tolera todo.",
+        "barba_potenciadora": "Barba corta (10-15 días) bien perfilada — define los ángulos mandibulares ya presentes",
+        "barba_a_evitar": "Ninguna evitar específicamente",
+        "nota": "Si hay mandíbula fuerte: barba mínima para exponerla. Si el mentón es muy redondo: barba en punto para alargar."
+      },
+      "round": {
+        "barba_ideal": "Barba cuadrada con bordes rectos y definidos. Mantenida corta (10-20 días) pero con forma angular.",
+        "efecto_corrector": "La barba cuadrada CREA la mandíbula que la cara redonda no tiene. Es el recurso más efectivo para esta forma.",
+        "tecnica": "Navaja en la línea de la mandíbula trazando un borde recto. Mejillas limpias o muy cortas. Solo barba en mentón y ángulos mandibulares.",
+        "barba_a_evitar": "Barba redonda o redondeada — amplia la percepción de redondez. Barba en perilla central — estrecha la base.",
+        "prioridad": "Alta — la barba cuadrada es más importante que el corte para esta forma"
+      },
+      "square": {
+        "barba_ideal": "Barba corta-media (5-15 días) sin bordes muy definidos. Textura suave.",
+        "efecto_corrector": "Suaviza los ángulos agudos de la mandíbula cuadrada. La barba texturizada actúa como 'cushion' visual.",
+        "tecnica": "Evitar bordes muy rectos y angulosos que enfaticen la cuadratura. Dejar los bordes ligeramente difusos o redondeados.",
+        "barba_a_evitar": "Barba cuadrada muy definida con ángulos marcados — duplica la cuadratura de la mandíbula",
+        "nota": "Si el usuario QUIERE potenciar la mandíbula cuadrada (como rasgo de fuerza): barba corta bien definida y skin fade. Es una elección estética válida."
+      },
+      "oblong": {
+        "barba_ideal": "Barba larga en los laterales, corta en el centro. Añade anchura visual en el tercio inferior.",
+        "efecto_corrector": "La barba lateral amplía la percepción de anchura mandibular, compensando la elongación de la cara oblong.",
+        "tecnica": "Dejar crecer los pelos laterales de la barba, recortar la zona central del mentón más corta. Efecto 'ancho'.",
+        "barba_a_evitar": "Barba en punta o triangular — alarga el mentón y empeora la elongación",
+        "nota": "La barba es obligatoria como herramienta en cara oblong si el usuario la tiene"
+      },
+      "heart": {
+        "barba_ideal": "Barba media en la zona del mentón y mandíbula, ligeramente más amplia en los laterales. Añade anchura en el mentón estrecho.",
+        "efecto_corrector": "Amplía la base visual del tercio inferior, compensando la frente ancha.",
+        "tecnica": "Dejar crecer la barba hacia los lados para ampliar la mandíbula. Contorno definido pero con volumen lateral.",
+        "barba_a_evitar": "Barba muy centrada solo en el mentón — estrecha más la base"
+      },
+      "diamond": {
+        "barba_ideal": "Barba corta en el mentón. Puede ser barba en punta suave para alargar el mentón estrecho.",
+        "efecto_corrector": "El mentón estrecho del diamante se beneficia de una pequeña cantidad de barba que añade proyección.",
+        "tecnica": "Mantener la barba concentrada en el mentón. No ampliar hacia los pómulos que ya son la zona más ancha.",
+        "barba_a_evitar": "Barba llena que amplíe los pómulos que ya son el punto más proyectado"
+      },
+      "triangle": {
+        "barba_ideal": "Sin barba o barba muy corta (2-3 días máximo). Solo contorno limpio.",
+        "razon": "La barba añadiría anchura a una mandíbula que ya es la más ancha del rostro. El objetivo del triángulo es reducir visualmente la base, no ampliarla.",
+        "barba_a_evitar": "Barba llena — empeoraría significativamente el desequilibrio"
+      }
+    },
+
+    "longitudes_barba": {
+      "stubble_5_dias": {
+        "efecto_visual": "Define el contorno facial sin añadir masa significativa. Excelente para cara redonda (define sin engordar) y oval.",
+        "limitaciones": "No añade volumen real — si se necesita compensar un mentón estrecho, no es suficiente"
+      },
+      "barba_corta_10_20_dias": {
+        "efecto_visual": "La zona óptima para la mayoría de formas. Define perfectamente, añade algo de masa. El 'sweet spot' del visagismo de barba.",
+        "indicado_para": "Casi todas las formas faciales. La forma de perfilado es lo que cambia, no la longitud."
+      },
+      "barba_media_3_6_semanas": {
+        "efecto_visual": "Alarga el mentón visualmente. Añade masa y anchura significativa. Útil para caras oblongas y corazón.",
+        "cuidado": "En caras redondas: solo si la barba es cuadrada. La barba redondeada de esta longitud amplía la redondez."
+      },
+      "barba_larga": {
+        "efecto_visual": "Alarga el tercio inferior significativamente. Requiere perfilado técnico para que no amplifique los defectos.",
+        "indicado_para": "Oval y oblong. En otras formas requiere perfilado especializado."
+      }
+    }
+  },
+
+  "errores_comunes": {
+    "_titulo": "Los 12 Errores de Corte Más Comunes y Cómo Evitarlos",
+
+    "errores": [
+      {
+        "id": "error-001",
+        "nombre": "Fade demasiado alto en cara redonda",
+        "descripcion": "El cliente pide 'lo que está de moda' sin considerar su forma facial. El barbero aplica skin fade alto que elimina toda la masa lateral, haciendo la cara parecer perfectamente esférica.",
+        "frecuencia": "muy_comun",
+        "consecuencia": "La cara redonda pierde cualquier estructura angular, el fWHR percibido aumenta, la cara parece más ancha.",
+        "solucion": "En cara redonda: mid fade como máximo. El fade elimina el peso lateral SOLO hasta donde es beneficioso. Si el cliente insiste en skin fade, compensar obligatoriamente con volumen muy alto en el tope.",
+        "como_prevenirlo": "Antes de hacer el fade, considerar siempre la forma facial. La cara redonda necesita alto contraste arriba-abajo, no un fade que elimine todo el contexto lateral."
+      },
+      {
+        "id": "error-002",
+        "nombre": "Taper en cara redonda",
+        "descripcion": "El barbero aplica taper en lugar de fade en una cara redonda, manteniendo la masa lateral que la hace parecer más ancha.",
+        "frecuencia": "comun",
+        "consecuencia": "La anchura lateral refuerza la redondez en lugar de eliminarla.",
+        "solucion": "Cara redonda = FADE obligatorio (mid o high). El taper está contraindicado.",
+        "regla_absoluta": "Cara redonda → fade. Nunca taper."
+      },
+      {
+        "id": "error-003",
+        "nombre": "Volumen en el tope en cara oblong",
+        "descripcion": "Se aplica quiff, pompadour o cualquier volumen vertical en una cara ya de por sí larga.",
+        "frecuencia": "comun",
+        "consecuencia": "La cara oblong parece aún más larga. El ratio sube de 1.8 a parecer 2.0+.",
+        "solucion": "En cara oblong: NUNCA volumen vertical. Solo flequillo horizontal o lateral para acortar la percepción.",
+        "regla_absoluta": "Cara oblong → cero volumen en el tope. El tope siempre plano o con flequillo."
+      },
+      {
+        "id": "error-004",
+        "nombre": "Flequillo horizontal en cara redonda",
+        "descripcion": "El barbero aplica crop con flequillo recto horizontal en una cara redonda.",
+        "frecuencia": "muy_comun",
+        "consecuencia": "El flequillo horizontal añade una línea visual que amplía la percepción horizontal del tercio superior.",
+        "solucion": "En cara redonda: si hay flequillo, que sea diagonal o hacia el lado. Nunca horizontal recto.",
+        "alternativa": "Si el cliente quiere crop: usar un crop con flequillo diagonal. La diagonal acorta la frente sin añadir anchura horizontal."
+      },
+      {
+        "id": "error-005",
+        "nombre": "Skin fade en cara cuadrada",
+        "descripcion": "El barbero aplica skin fade extremo en una mandíbula muy cuadrada, exponiendo completamente los ángulos.",
+        "frecuencia": "comun",
+        "consecuencia": "Los ángulos de la mandíbula cuadrada quedan completamente expuestos y sin suavización. El cliente puede parecer excesivamente 'duro'.",
+        "solucion": "En cara cuadrada: taper o low fade. Si el cliente quiere skin fade específicamente, compensar con textura caótica en el tope que rompa la rigidez.",
+        "nota": "Si el cliente QUIERE el look de mandíbula fuerte (estética powerlifting, etc.), el skin fade con cara cuadrada puede ser intencional."
+      },
+      {
+        "id": "error-006",
+        "nombre": "Raya al centro en cara asimétrica",
+        "descripcion": "El barbero peina con raya al centro cuando hay asimetría facial notable.",
+        "frecuencia": "comun",
+        "consecuencia": "La raya central divide el rostro perfectamente en dos mitades, haciendo la asimetría completamente obvia.",
+        "solucion": "Con asimetría: siempre raya lateral al lado del hemisferio más lleno/proyectado. La textura asimétrica convierte la diferencia en 'diseño'.",
+        "tecnica_especifica": "Identificar el lado más proyectado. Hacer la raya hacia ese lado. El volumen fluye hacia el lado más plano para compensar."
+      },
+      {
+        "id": "error-007",
+        "nombre": "Barba en perilla en cara redonda",
+        "descripcion": "Solo se deja crecer la barba en el punto central del mentón (perilla tradicional).",
+        "frecuencia": "comun",
+        "consecuencia": "La perilla estrecha visualmente la base del mentón, haciendo la cara redonda parecer aún más esférica arriba y puntiaguda abajo. El peor resultado posible.",
+        "solucion": "En cara redonda: barba cuadrada en toda la mandíbula, o sin barba. La perilla jamás en cara redonda.",
+        "regla_absoluta": "Cara redonda → barba cuadrada o sin barba. Nunca perilla."
+      },
+      {
+        "id": "error-008",
+        "nombre": "Ignorar las entradas al hacer un corte de volumen",
+        "descripcion": "Se intenta hacer un quiff o pompadour en alguien con entradas avanzadas, peinando el cabello existente hacia adelante.",
+        "frecuencia": "muy_comun",
+        "consecuencia": "El quiff expone perfectamente las entradas. El resultado es el contrario al deseado — hace las entradas más prominentes.",
+        "solucion": "Con entradas visibles: buzz cut o crop corto texturizado. Nunca peinados que expongan la línea de cabello.",
+        "alternativa": "El buzz cut de número 3-4 es el mejor corte para entradas — cuando todo es igual de corto, las entradas dejan de ser el punto focal."
+      },
+      {
+        "id": "error-009",
+        "nombre": "Nuca cuadrada en cara redonda con papada",
+        "descripcion": "Nuca horizontal y cuadrada en alguien con cara redonda y cuello corto o papada.",
+        "frecuencia": "comun",
+        "consecuencia": "La nuca horizontal crea una 'plataforma' visual que enfatiza el cuello corto y la papada.",
+        "solucion": "Con papada: nuca en V que alarga visualmente la nuca. El vértice de la V desplaza el foco hacia abajo y crea sensación de cuello más largo."
+      },
+      {
+        "id": "error-010",
+        "nombre": "Fade alto con orejas prominentes",
+        "descripcion": "Skin fade o high fade en alguien con orejas que se proyectan significativamente.",
+        "frecuencia": "comun",
+        "consecuencia": "Las orejas quedan completamente expuestas sin ningún marco de cabello que las integre. Se convierten en el punto focal inmediato.",
+        "solucion": "Con orejas prominentes: taper o mid fade (nunca skin en la zona de las orejas). Conservar suficiente longitud lateral para que las orejas queden integradas.",
+        "tecnica": "El cabello lateral no tiene que cubrir la oreja, solo 'integrarla' en la silueta. Con 1-2 cm de cabello sobre y alrededor de la oreja el efecto es suficiente."
+      },
+      {
+        "id": "error-011",
+        "nombre": "Mismo corte para pelo fino que para pelo grueso",
+        "descripcion": "El barbero aplica la misma técnica (especialmente textura desmechada) independientemente de la densidad del cabello.",
+        "frecuencia": "muy_comun",
+        "consecuencia": "En pelo fino: la textura desmechada revela el cuero cabelludo. En pelo grueso: sin desmechado, el corte pesa demasiado.",
+        "solucion": "Pelo fino: evitar mucha texturización y desmechado. Usar técnicas de peso (chunky cut) que añadan densidad visual. Pelo grueso: texturizar obligatoriamente para quitar peso.",
+        "tecnicas_adaptadas": {
+          "pelo_fino": "Cortes blunt (sin texturizar las puntas), líneas más pesadas, flequillo con corte recto que parezca más lleno.",
+          "pelo_grueso": "Texturización agresiva, punto cruz, desmechado para quitar volumen excesivo."
+        }
+      },
+      {
+        "id": "error-012",
+        "nombre": "Barba llena en cara triangular",
+        "descripcion": "Se deja crecer o se recomienda barba llena en alguien con mandíbula más ancha que la frente.",
+        "frecuencia": "comun",
+        "consecuencia": "La barba amplía aún más la parte más ancha del rostro, exagerando el desequilibrio triangular.",
+        "solucion": "Cara triangular: sin barba o stubble de máximo 3-5 días. Solo contorno muy limpio y apurado.",
+        "nota": "Si el cliente no quiere afeitarse: barba muy corta (número 1 de máquina) perfectamente igualada. Nunca dejarla crecer."
+      }
+    ]
+  },
+
+  "metodo_fernand_aubry": {
+    "_titulo": "Método Fernand Aubry Aplicado al Corte Masculino Moderno",
+    "_fuente": "Fernand Aubry, fundador de la escuela de visagismo francesa. Método adopatado y modernizado para barberías.",
+
+    "principios_fundamentales": [
+      "El corte debe aproximar el rostro al óvalo ideal (1.5x más largo que ancho)",
+      "La corrección visual se logra mediante contraste, no mediante formas idénticas",
+      "La línea de peso dirige el ojo hacia donde el barbero quiere que vaya la atención",
+      "Los defectos se neutralizan redirigiendo el foco visual, no ocultándolos",
+      "El cabello y la barba son un sistema unificado — deben diseñarse juntos"
+    ],
+
+    "metodo_de_analisis": {
+      "paso_1": "Medir o estimar los tres tercios verticales (frente, nariz, mentón). ¿Están equilibrados?",
+      "paso_2": "Determinar el ratio longitud/anchura. ¿Está cerca del 1.5 o se desvía?",
+      "paso_3": "Identificar la forma facial primaria (oval/redonda/cuadrada/oblong/corazón/diamante/triángulo)",
+      "paso_4": "Identificar defectos secundarios (entradas, orejas, mandíbula, nariz, asimetría)",
+      "paso_5": "Determinar qué correcciones compiten (si las hay) y priorizar según matriz de conflictos",
+      "paso_6": "Seleccionar la técnica principal (fade vs taper, línea de peso alta/media/baja, volumen arriba/lateral/no)",
+      "paso_7": "Integrar la barba en el diseño si el cliente la lleva"
+    },
+
+    "triangulo_corrector": {
+      "descripcion": "Aubry definió el 'triángulo corrector' como el principio de que para cada defecto existe un punto focal alternativo hacia donde dirigir la atención.",
+      "aplicaciones": {
+        "nariz_prominente": "Foco → tope y frente (volumen arriba desplaza la mirada)",
+        "cara_redonda": "Foco → tope alto (el volumen vertical lleva la mirada hacia arriba, no hacia los lados)",
+        "frente_alta": "Foco → flequillo como punto de interrupción visual",
+        "mandibula_debil": "Foco → barba cuadrada (crea el ángulo donde no existe)",
+        "asimetria": "Foco → raya y volumen intencional en el lado correcto"
+      }
+    },
+
+    "visagismo_moderno_diferencias": {
+      "aubry_clasico": "Diseñado para peluquerías tradicionales con técnicas de tijera. Muy formal y estructurado.",
+      "visagismo_moderno": [
+        "Integra el fade (técnica de barbería masculina moderna, post-2000)",
+        "Considera la barba como herramienta de visagismo tanto como el corte",
+        "Incorpora métricas biométricas (fWHR, jaw_ratio) que Aubry no podía medir",
+        "Adapta los principios a tendencias visuales (TikTok, Instagram) manteniendo los fundamentos de geometría",
+        "Reconoce que ciertos 'defectos' (mandíbula fuerte, fWHR alto) son rasgos positivos de atractivo masculino — el visagismo moderno no los 'corrige' sino que los potencia"
+      ]
+    }
+  },
+
+  "guia_rapida_por_objetivo": {
+    "_titulo": "Guía Rápida: Cliente con Objetivo Específico",
+    "objetivos": [
+      {
+        "objetivo": "Parecer más delgado / que la cara se vea más estrecha",
+        "tecnicas": ["Fade (mid o high)", "Volumen en el tope", "Línea de peso alta", "Barba cuadrada si hay cara redonda"],
+        "evitar": ["Taper", "Volumen lateral", "Flequillo horizontal"]
+      },
+      {
+        "objetivo": "Parecer más joven",
+        "tecnicas": ["Textura caótica o desordenada", "Flequillo o crop", "Cortes trending (mullet moderno, wolf cut)", "Color en puntas si el cliente lo acepta"],
+        "evitar": ["Slick back muy formal", "Cortes muy estructurados y rígidos", "Rasurado total sin barba"]
+      },
+      {
+        "objetivo": "Look profesional / formal",
+        "tecnicas": ["Side part (raya lateral)", "Taper clásico", "Slick back", "Tope controlado sin textura caótica"],
+        "evitar": ["Mullet", "Wolf cut", "Textura muy desordenada"]
+      },
+      {
+        "objetivo": "Potenciar la mandíbula",
+        "tecnicas": ["Skin fade o high fade", "Barba mínima o sin barba (expone la mandíbula)", "Nuca cuadrada definida"],
+        "evitar": ["Lados largos que tapen la mandíbula", "Barba llena que cubra la línea mandibular"]
+      },
+      {
+        "objetivo": "Gestionar la calvicie / entradas",
+        "tecnicas": ["Buzz cut uniforme (el más efectivo)", "Crop corto texturizado", "Cabello dirigido hacia adelante"],
+        "evitar": ["Quiff con entradas", "Raya al centro que expone las entradas", "Cabello largo en tope con lados cortos"]
+      },
+      {
+        "objetivo": "Pelo natural / sin mucho mantenimiento",
+        "tecnicas": ["Buzz cut", "Crop simple", "Taper con textura natural", "Rizos naturales con taper"],
+        "evitar": ["Pompadour", "Slick back", "Cualquier corte que requiera soplete a diario"]
+      }
+    ]
+  }
+}

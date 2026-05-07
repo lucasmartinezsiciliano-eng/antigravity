@@ -1,0 +1,349 @@
+@import "tailwindcss";
+
+/* ── Palette D: monochrome — hierarchy through contrast, weight, spacing only ── */
+:root {
+  --font-logo:      'Syne', sans-serif;
+
+  --bg:             #080808;
+  --surface:        #101010;
+  --surface2:       #181818;
+  --border:         #1E1E1E;
+  --border-subtle:  #141414;
+
+  /* No hue accent — off-white IS the brand */
+  --accent:         #E8E8E8;
+  --accent-dim:     #888888;
+  --accent-subtle:  rgba(232, 232, 232, 0.05);
+  --accent-glow:    rgba(232, 232, 232, 0.03);
+
+  --text:           #E8E8E8;
+  --text-muted:     #555555;
+  --text-dim:       #2E2E2E;
+
+  /* Functional — kept minimal */
+  --success: #3DB882;
+  --danger:  #D94F4F;
+
+  --r-sm:   10px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-full: 9999px;
+  --screen-pad: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* When cookie banner is open, push screen content above it */
+body.cookie-open .screen {
+  padding-bottom: 180px !important;
+}
+
+button, a {
+  touch-action: manipulation; /* removes 300ms tap delay + prevents double-tap zoom */
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+button:active:not(:disabled) {
+  opacity: 0.8;
+  transform: scale(0.97);
+}
+
+input, textarea, select { font: inherit; color: inherit; }
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* ── Buttons ── */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 18px 24px;
+  background: var(--accent);   /* off-white */
+  color: #080808;              /* near-black — high contrast on white */
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: var(--r-full);
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.btn-primary:disabled {
+  opacity: 0.2;
+  transform: none !important;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 24px;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border);
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 20px;
+}
+
+.card-accent {
+  background: var(--accent-glow);
+  border: 1px solid rgba(232, 232, 232, 0.08);
+  border-radius: var(--r-md);
+  padding: 20px;
+}
+
+/* ── Typography utilities ── */
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.label-accent {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.caption {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Screen ── */
+.screen {
+  flex: 1;           /* fills remaining body height after BarberTicker + footer */
+  display: flex;
+  flex-direction: column;
+  padding: 24px var(--screen-pad);
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* ── Loading dots ── */
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.15; transform: scale(0.75); }
+  50%       { opacity: 1;    transform: scale(1); }
+}
+
+.dot-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
+/* ── Back button icon ── */
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Payment method badges ── */
+.pay-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pay-badge--visa {
+  background: #1A1F71;
+  color: #fff;
+  font-style: italic;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+}
+
+.pay-badge--mc {
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  padding: 0 8px;
+}
+
+.pay-badge--apple {
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 500;
+  border: 1px solid #2A2A2A;
+}
+
+.pay-badge--google {
+  background: #fff;
+  color: #3c4043;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.g-blue   { color: #4285F4; }
+.g-red    { color: #EA4335; }
+.g-yellow { color: #FBBC05; }
+.g-green  { color: #34A853; }
+
+/* ── Barber partner ticker ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee-root {
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--screen-pad));
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+}
+
+.marquee-track {
+  display: flex;
+  align-items: center;
+  padding: 9px 0;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 26s) linear infinite;
+}
+
+.marquee-root:hover .marquee-track,
+.marquee-root:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-handle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding: 0 14px;
+  letter-spacing: 0.01em;
+}
+
+.marquee-sep {
+  color: rgba(232, 232, 232, 0.15);
+  font-size: 7px;
+  flex-shrink: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Variant: marquee clipped inside a card — no bleed, no fade */
+.marquee-root--card {
+  margin: 0;
+  border: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* ── Legal footer ── */
+.legal-footer {
+  text-align: center;
+  padding: 28px var(--screen-pad) calc(28px + env(safe-area-inset-bottom));
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 2;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 12px;
+}
+.legal-footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.legal-footer a:hover { color: var(--text-muted); }

@@ -1,0 +1,170 @@
+{
+  "_doc": "Reglas de visagismo por forma facial. Para cada forma: objetivo corrector principal, técnicas obligatorias, técnicas contraindicadas, y cómo interactúa con los defectos del catálogo. El objetivo siempre es aproximar la silueta al ÓVALO IDEAL (canon del visagismo clásico de Fernand Aubry).",
+
+  "ideal_reference": {
+    "shape": "oval",
+    "description": "Referencia universal del visagismo. Longitud 1.5x anchura. Frente ligeramente más ancha que mandíbula. Tres tercios iguales. Todos los demás cortes buscan aproximarse a este patrón.",
+    "haircut_principle": "No necesita corrección de forma — solo potenciar rasgos positivos y seguir tendencias"
+  },
+
+  "shapes": {
+    "oval": {
+      "goal": "Versatilidad total — el reto es destacar en vez de ser genérico. Sin restricciones de forma.",
+      "primary_corrections": [],
+      "mandatory_techniques": [],
+      "flexible": true,
+      "weight_line": "Media — la más versátil y favorecedora por defecto",
+      "fade_vs_taper": "Ambos funcionan. Fade medio maximiza fWHR percibido. Taper si se prefiere look clásico.",
+      "volume": "Puede añadirse donde lo pida el estilo",
+      "forbidden_techniques": [],
+      "visagismo_priority": "Rasgos positivos y tendencias. No hay forma que corregir.",
+      "barber_baseline": "Sin restricciones de forma. Guiarse 100% por textura, densidad, estilo de vida y preferencias."
+    },
+
+    "round": {
+      "goal": "Crear ilusión de verticalidad y definir la mandíbula visualmente. Aproximar el óvalo alargando la percepción.",
+      "primary_corrections": [
+        "Eliminar peso visual lateral",
+        "Añadir altura en el tope",
+        "Definir mandíbula (con barba si ratio < 0.88)",
+        "Estrechar la percepción general del rostro"
+      ],
+      "mandatory_techniques": [
+        "FADE (mid o high) — obligatorio para eliminar peso lateral",
+        "Volumen en el tope — para añadir verticalidad",
+        "Línea de peso alta — por encima de los pómulos",
+        "Nuca cuadrada o definida — añade ángulo en la base"
+      ],
+      "fade_vs_taper": "SIEMPRE fade. El taper está contraindicado porque mantiene la anchura lateral que sobra.",
+      "volume": "Solo en el tope, nunca en los lados",
+      "forbidden_techniques": [
+        "Taper — mantiene anchura lateral que amplía visualmente la cara",
+        "Volumen en los lados — amplía horizontalmente",
+        "Lados largos — añaden anchura visual",
+        "Línea de peso baja — acorta en lugar de alargar",
+        "Bowl cut / flequillo horizontal — añade anchura a nivel de pómulos"
+      ],
+      "visagismo_priority": "La forma facial es el factor limitante principal. Prioridad: FADE + VOLUMEN ARRIBA.",
+      "barber_baseline": "Pedir explícitamente mid o high fade. Si la densidad del cabello es fina, ajustar el volumen del tope."
+    },
+
+    "square": {
+      "goal": "Suavizar los ángulos agudos de la mandíbula sin eliminar la fortaleza que aportan. Añadir movimiento y curvatura.",
+      "primary_corrections": [
+        "Suavizar ángulos de la mandíbula",
+        "Añadir movimiento y textura (vs rigidez)",
+        "No eliminar la fortaleza mandibular — solo suavizarla"
+      ],
+      "mandatory_techniques": [
+        "Taper o low fade — mantiene algo de masa lateral que suaviza los ángulos",
+        "Textura y movimiento en el tope — contrasta con la rigidez mandibular",
+        "Línea de peso media — equilibrada",
+        "Flequillo lateral o textura libre — rompe la simetría cuadrada"
+      ],
+      "fade_vs_taper": "Taper preferido. Low fade aceptable. Skin fade solo si la mandíbula es muy angular y el usuario busca look extremo.",
+      "volume": "Moderado. Ni demasiado plano (enfatiza ángulos) ni demasiado voluminoso (añade dureza)",
+      "forbidden_techniques": [
+        "Skin fade — puede hacer la mandíbula cuadrada parecer excesivamente dura",
+        "Línea de peso muy alta — aumenta la verticalidad exagerando la forma",
+        "Cortes muy estructurados y angulosos — refuerzan la cuadratura natural"
+      ],
+      "visagismo_priority": "Textura y movimiento son clave. El barbero debe evitar cortes con líneas demasiado rectas.",
+      "barber_baseline": "Taper bajo o mid fade suave. Tope con textura y movimiento, no geométrico."
+    },
+
+    "oblong": {
+      "goal": "Añadir anchura visual y NUNCA altura. Acortar la percepción de la longitud facial.",
+      "primary_corrections": [
+        "Añadir anchura lateral",
+        "Acortar percepción vertical",
+        "Evitar todo lo que alargue más"
+      ],
+      "mandatory_techniques": [
+        "TAPER — obligatorio para conservar anchura lateral",
+        "Línea de peso baja — por debajo de los pómulos, acorta visualmente",
+        "Flequillo horizontal — interrumpe la verticalidad",
+        "Volumen lateral — expande fWHR visual"
+      ],
+      "fade_vs_taper": "SIEMPRE taper. El fade es contraindicado porque elimina la anchura lateral que se necesita.",
+      "volume": "Solo en los lados, NUNCA en el tope",
+      "forbidden_techniques": [
+        "Fade (especialmente high o skin) — elimina la anchura lateral que se necesita",
+        "Quiff o pompadour — añade altura que alarga más",
+        "Volumen en el tope — aumenta la verticalidad percibida",
+        "Tope muy largo — añade altura"
+      ],
+      "visagismo_priority": "La forma facial es el factor limitante principal. Prioridad: TAPER + ANCHURA LATERAL.",
+      "barber_baseline": "Especificar explícitamente 'conservar masa en los lados'. Línea de peso baja. Sin volumen arriba."
+    },
+
+    "heart": {
+      "goal": "Equilibrar la base (añadir anchura bajo los pómulos hacia el mentón) y reducir el impacto visual de la frente ancha.",
+      "primary_corrections": [
+        "Reducir anchura visual de la frente",
+        "Añadir volumen en zona mandibular-mentón",
+        "Equilibrar los tercios verticales"
+      ],
+      "mandatory_techniques": [
+        "Flequillo diagonal — estrecha visualmente la frente sin bloquear el tercio superior",
+        "Volumen lateral medio — añade masa a nivel de pómulos",
+        "Low fade — conserva masa en la zona baja",
+        "Barba lateral que amplíe el mentón — esencial si el mentón es muy estrecho"
+      ],
+      "fade_vs_taper": "Low fade o taper. Nunca high fade — eliminaría la masa baja que se necesita.",
+      "volume": "Medio-bajo. Evitar volumen en la frente (ya de por sí ancha)",
+      "forbidden_techniques": [
+        "High o mid-high fade — elimina masa en la zona que necesita amplitud",
+        "Flequillo horizontal completo sobre frente — amplía más la frente",
+        "Volumen en el tope — aumenta la anchura percibida del tercio superior"
+      ],
+      "visagismo_priority": "El flequillo diagonal y la barba lateral son las herramientas más efectivas.",
+      "barber_baseline": "Conservar algo de longitud en lados. Flequillo con diagonal, no recto."
+    },
+
+    "diamond": {
+      "goal": "Añadir anchura en la línea de la frente y reducir el impacto de los pómulos prominentes.",
+      "primary_corrections": [
+        "Añadir volumen en la frente (estrecha)",
+        "Moderar el impacto visual de los pómulos (prominentes)",
+        "Compensar mentón estrecho si existe"
+      ],
+      "mandatory_techniques": [
+        "Volumen frontal — fringe, textura hacia adelante, o quiff hacia la frente",
+        "Taper bajo — conserva algo de masa lateral (las sienes ya son estrechas)",
+        "Barba corta si el mentón es estrecho — amplía la base"
+      ],
+      "fade_vs_taper": "Taper. El fade alto estrecharía más las sienes ya de por sí estrechas.",
+      "volume": "En el tope/frente. Moderado en lados.",
+      "forbidden_techniques": [
+        "Fade alto — estrecha las sienes que ya son el punto más estrecho",
+        "Sin flequillo con lados muy cortos — enfatiza la proyección de los pómulos"
+      ],
+      "visagismo_priority": "El volumen frontal es el recurso principal.",
+      "barber_baseline": "Taper suave. Textura o fringe hacia la frente."
+    },
+
+    "triangle": {
+      "goal": "Equilibrar la base ancha (mandíbula) con más volumen en la parte superior.",
+      "primary_corrections": [
+        "Añadir volumen en el tope y la frente",
+        "Reducir peso visual en la zona mandibular",
+        "Reequilibrar los tercios —el superior debe ser el más ancho visualmente"
+      ],
+      "mandatory_techniques": [
+        "Volumen en el tope — quiff, pompadour, fringe completo",
+        "Low fade — no eliminar toda la masa lateral pero reducir el peso en la mandíbula",
+        "Línea de peso alta",
+        "Barba muy corta o sin barba — la barba ampliaría la mandíbula ya ancha"
+      ],
+      "fade_vs_taper": "Low fade. El taper mantiene demasiada masa en la zona mandibular.",
+      "volume": "Máximo en el tope. Mínimo en los lados bajos.",
+      "forbidden_techniques": [
+        "Sin volumen en el tope — deja la cara con forma de triángulo sin compensación",
+        "Barba llena — añade anchura en la base ya ancha",
+        "Lados muy largos — amplían la mandíbula"
+      ],
+      "visagismo_priority": "El volumen en el tope es obligatorio.",
+      "barber_baseline": "Pedir explícitamente volumen en el tope. Fade suave en lados."
+    }
+  }
+}

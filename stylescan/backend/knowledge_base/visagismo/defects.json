@@ -1,0 +1,300 @@
+{
+  "_doc": "Catálogo profesional de defectos/características faciales y sus correcciones capilares. Base del visagismo clínico. Cada defecto tiene: señal biométrica que lo detecta, técnica correctiva, técnica a evitar, y nota sobre interacciones con otros defectos.",
+
+  "defects": [
+
+    {
+      "id": "forehead_high",
+      "label": "Frente alta (tercio superior largo)",
+      "detection": "forehead_height_ratio > 0.38 OR visual_thirds[0] > visual_thirds[1]",
+      "biometric_hint": "length_width_ratio alto + forehead_to_face_ratio > 1.1",
+      "severity": "correctable",
+      "correction": {
+        "principle": "El flequillo es la herramienta principal. Reducir el espacio visible de la frente.",
+        "techniques": [
+          "Flequillo horizontal completo a 1-2cm por encima de las cejas",
+          "Flequillo diagonal (para no perder anchura)",
+          "Fringe texturizado — cae naturalmente sobre la frente",
+          "Crop cut con flequillo frontal"
+        ],
+        "weight_line": "Baja — nunca levantada sobre los pómulos",
+        "volume": "Evitar volumen en la parte superior del cráneo",
+        "what_works": "El flequillo recorta visualmente el tercio superior equilibrando las proporciones"
+      },
+      "avoid": [
+        "Topes peinados hacia atrás — exponen la frente entera",
+        "Pompadour — añade altura sobre la frente",
+        "Quiff levantado — aumenta la percepción de la frente",
+        "Sin flequillo con raya al centro — divide frente en dos mitades enfatizándola"
+      ],
+      "interactions": {
+        "round": "En cara redonda, el flequillo horizontal puede acortar demasiado — usar diagonal",
+        "oblong": "Frente alta + cara alargada = prioridad máxima flequillo. El caso más favorable para flequillo completo"
+      }
+    },
+
+    {
+      "id": "forehead_low",
+      "label": "Frente baja o estrecha (tercio superior corto)",
+      "detection": "forehead_to_face_ratio < 0.90",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Despejar la frente, añadir altura en la parte superior del peinado.",
+        "techniques": [
+          "Tope peinado hacia atrás o hacia arriba",
+          "Quiff suave — levanta la línea visual",
+          "Slick back — descubre la frente maximizando el espacio visible",
+          "Degradado alto — elimina masa lateral dirigiendo atención arriba"
+        ],
+        "weight_line": "Alta — por encima de los pómulos",
+        "volume": "Volumen concentrado en el tope/frente"
+      },
+      "avoid": [
+        "Flequillo horizontal — cubre la poca frente disponible y aplana el tercio superior",
+        "Crop con flequillo — hace la frente desaparecer visualmente"
+      ],
+      "interactions": {
+        "heart": "Frente baja + cara corazón = rare combination — la frente estrecha mejora el corazón, no corregir agresivamente"
+      }
+    },
+
+    {
+      "id": "forehead_wide",
+      "label": "Frente ancha en relación a pómulos",
+      "detection": "forehead_to_face_ratio > 1.05",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Reducir anchura visual de la frente con volumen lateral en pómulos o flequillo diagonal.",
+        "techniques": [
+          "Flequillo diagonal — estrecha visualmente la frente",
+          "Textura lateral media — añade masa a nivel de pómulos",
+          "Fade muy bajo — conserva masa lateral",
+          "Raya lateral definida — rompe la superficie horizontal de la frente"
+        ],
+        "weight_line": "Media-baja"
+      },
+      "avoid": [
+        "Flequillo horizontal recto — amplía la frente visualmente",
+        "Fade alto — elimina masa lateral que equilibra la frente"
+      ],
+      "interactions": {
+        "heart": "Es la definición de cara corazón — aplicar todas las correcciones corazón"
+      }
+    },
+
+    {
+      "id": "jaw_weak",
+      "label": "Mandíbula débil o estrecha (mentón retrocedido o base estrecha)",
+      "detection": "jaw_to_face_ratio < 0.88",
+      "severity": "high_priority",
+      "correction": {
+        "principle": "La barba es el recurso nº1, más importante que el corte. El corte solo puede ayudar marginalmente.",
+        "techniques": [
+          "Barba en mentón y mandíbula (heavy stubble ~10 días o barba corta) — define y proyecta la mandíbula",
+          "Barba cuadrada con bordes rectos — añade ángulo donde no existe",
+          "Sin barba en mejillas — solo en mandíbula y mentón para máximo efecto de definición",
+          "Nuca cuadrada (no redondeada) — añade ángulo en la base",
+          "Degradado bajo con lados moderados — mantiene anchura sin comprometer la mandíbula"
+        ],
+        "barber_instructions": "Barba: tratar la línea de la mandíbula con navaja dejando borde recto. Solo en zona de mentón y ángulo mandibular. Mejillas limpias.",
+        "what_works": "La barba cuadrada puede 'crear' visualmente una mandíbula que no existe. Es el equivalente capilar de hacer ejercicio para el trapezoide en el cuello."
+      },
+      "avoid": [
+        "Fade muy alto — expone el cuello y la base débil",
+        "Cara afeitada sin barba — expone la mandíbula débil directamente",
+        "Barba en perilla (solo el mentón central) — estrecha más la base"
+      ],
+      "interactions": {
+        "round": "Mandíbula débil + cara redonda = máxima prioridad barba cuadrada",
+        "heart": "Mandíbula débil + cara corazón = normal (mentón estrecho es parte del patrón)",
+        "square": "Mandíbula débil + cara cuadrada = inusual, verificar métricas"
+      }
+    },
+
+    {
+      "id": "jaw_strong",
+      "label": "Mandíbula fuerte y prominente",
+      "detection": "jaw_to_face_ratio > 0.96",
+      "severity": "positive_feature",
+      "correction": {
+        "principle": "Es un rasgo positivo de atractivo masculino. El objetivo es potenciarlo, no suavizarlo.",
+        "techniques": [
+          "Lados muy cortos (fade alto o skin fade) — expone la mandíbula como elemento principal",
+          "Sin barba o barba muy mínima — la barba ocultaría el rasgo más valioso",
+          "Nuca cuadrada definida — prolonga el ángulo de la mandíbula hacia atrás"
+        ],
+        "what_works": "Una mandíbula fuerte con sienes limpias = el marco facial más clásico y dominante del atractivo masculino"
+      },
+      "avoid": [
+        "Barba llena gruesa — tapa el mejor rasgo",
+        "Lados largos con taper bajo — difumina el contorno mandibular"
+      ],
+      "interactions": {
+        "square": "Mandíbula fuerte + cara cuadrada = máximo impacto con skin fade, cuidar no añadir dureza excesiva",
+        "oval": "Mandíbula fuerte + cara oval = el mejor escenario posible"
+      }
+    },
+
+    {
+      "id": "prominent_ears",
+      "label": "Orejas prominentes o separadas",
+      "detection": "No detectable directo por MediaPipe — inferir de ear_protrusion si disponible, o nota de usuario",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Cubrir o redirigir la atención visual de las orejas con longitud lateral y textura.",
+        "techniques": [
+          "Taper o fade muy bajo — conserva longitud en la zona de las orejas",
+          "Cabello lateralmente cubriendo la oreja — la más efectiva",
+          "Longitud sobre la oreja en lugar de por encima",
+          "Textura lateral — añade masa que visualmente 'centra' las orejas"
+        ],
+        "what_works": "La longitud lateral correcta hace que las orejas queden integradas en la silueta en lugar de proyectarse fuera"
+      },
+      "avoid": [
+        "Skin fade alto — expone las orejas completamente",
+        "Lados rapados (buzzcut con transición) — el máximo contraste expone las orejas",
+        "Corte muy corto en los laterales — deja las orejas sin 'marco'"
+      ],
+      "interactions": {
+        "round": "Orejas prominentes + cara redonda = dilema — el fade que ayuda a la cara redonda perjudica las orejas. Preferir mid fade no llegando a skin",
+        "square": "Orejas prominentes + cara cuadrada = taper bajo, el único caso donde el taper es obligatorio"
+      }
+    },
+
+    {
+      "id": "receding_hairline",
+      "label": "Entradas o línea de cabello retrocedida",
+      "detection": "Detectable parcialmente por MediaPipe si hay zona calva en región frontal",
+      "severity": "high_priority",
+      "correction": {
+        "principle": "Nunca exponer las entradas como 'problema'. Integrar y gestionar la silueta.",
+        "techniques": [
+          "Buzz cut general (uniformiza la silueta, las entradas se integran)",
+          "Textura en el tope con cabello dirigido hacia adelante — crea ilusión de línea más completa",
+          "Crop corto con textura — las entradas quedan integradas en la textura global",
+          "Taper bajo con tope largo si la densidad lo permite — la longitud compensa las entradas"
+        ],
+        "what_works": "El buzz cut es paradójicamente el mejor corte para entradas severas — cuando todo es igual de corto, las entradas dejan de ser el punto focal"
+      },
+      "avoid": [
+        "Cabello largo en tope con lados cortos — maximiza el contraste con las entradas",
+        "Flequillo intentando cubrir — queda artificial y llama más la atención",
+        "Raya al centro con cabello largo — expone perfectamente la forma de las entradas"
+      ],
+      "interactions": {
+        "oblong": "Entradas + cara alargada = buzz cut elimina el problema y la cara alargada lo tolera bien",
+        "oval": "Entradas + cara oval = buzz cut funciona perfectamente"
+      }
+    },
+
+    {
+      "id": "double_chin",
+      "label": "Papada o cuello corto/gordo",
+      "detection": "Inferir de face_length_ratio bajo + jaw metrics",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Crear ilusión de cuello más largo y definido. Elongar visualmente el tercio inferior.",
+        "techniques": [
+          "Fade alto o mid fade — la transición alta elonga el cuello visualmente",
+          "Nuca en V o abierta (no cuadrada) — la forma en V alarga la nuca",
+          "Sin barba en la papada — la barba abultada agrava",
+          "Contorno de barba muy apurado si hay barba — solo borde definido"
+        ],
+        "what_works": "El fade alto desplaza el punto de atención hacia arriba. La nuca en V elimina la horizontalidad que acorta el cuello."
+      },
+      "avoid": [
+        "Nuca cuadrada y horizontal — crea una 'plataforma' que enfatiza el cuello corto",
+        "Barba llena en toda la zona mandibular — añade masa donde hay papada",
+        "Taper bajo con lados llenos — amplía la zona del cuello"
+      ],
+      "interactions": {
+        "round": "Papada + cara redonda = prioridad máxima fade alto + nuca en V"
+      }
+    },
+
+    {
+      "id": "prominent_nose",
+      "label": "Nariz prominente o larga",
+      "detection": "No directo — parte del análisis de proporciones faciales globales",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Redirigir la atención con volumen en el tope y masa lateral. La nariz se percibe menos prominente cuando otros elementos compiten visualmente.",
+        "techniques": [
+          "Volumen en el tope — desplaza el foco hacia arriba",
+          "Textura lateral media — añade masa en las proporciones laterales",
+          "Barba moderada — equilibra el tercio inferior y reduce el peso visual de la nariz",
+          "Fringe o flequillo ligero — crea un nuevo punto focal arriba"
+        ],
+        "what_works": "La nariz parece más proporcional cuando el marco del pelo crea una silueta más amplia en la parte superior"
+      },
+      "avoid": [
+        "Pelo muy plano y pegado — hace que la nariz sea el único elemento que 'sobresale'",
+        "Sin barba y cara muy limpia — concentra la atención en el tercio central"
+      ],
+      "interactions": {}
+    },
+
+    {
+      "id": "asymmetry_notable",
+      "label": "Asimetría facial notable",
+      "detection": "asymmetry_score >= 0.15",
+      "severity": "correctable",
+      "correction": {
+        "principle": "La raya siempre al lado del hemisferio más lleno. El volumen se dirige hacia el lado más plano para compensar.",
+        "techniques": [
+          "Raya al lado del hemisferio más proyectado/lleno — visual más equilibrado",
+          "Volumen dirigido hacia el lado más plano/pequeño",
+          "Textura asimétrica intencional — hace que la asimetría parezca diseño, no defecto",
+          "Flequillo lateral hacia el lado más lleno"
+        ],
+        "what_works": "El corte puede crear simetría visual donde la anatomía no la tiene"
+      },
+      "avoid": [
+        "Raya al centro con cara asimétrica — divide la cara resaltando la diferencia de los dos lados",
+        "Peinado hacia atrás perfectamente simétrico — expone la asimetría completamente"
+      ],
+      "interactions": {}
+    },
+
+    {
+      "id": "high_fwhr",
+      "label": "fWHR alto (cara muy ancha en relación a su altura) — percepción de dureza",
+      "detection": "fwhr > 2.0 (anchura bigzygomatica / distancia cejas-labio)",
+      "severity": "positive_feature_with_nuance",
+      "correction": {
+        "principle": "fWHR alto = percepción de dominancia y liderazgo. Puede suavizarse si el usuario lo desea, pero es un rasgo de atractivo masculino.",
+        "techniques_if_soften": [
+          "Textura suave en el tope",
+          "Fade medio en lugar de skin fade — mantiene algo de masa lateral que 'dilata' el fWHR percibido"
+        ],
+        "techniques_if_maximize": [
+          "Skin fade con lados muy cortos — maximiza el fWHR percibido",
+          "Quiff o tope levantado — añade altura relativa"
+        ]
+      },
+      "interactions": {}
+    },
+
+    {
+      "id": "low_fwhr",
+      "label": "fWHR bajo (cara estrecha) — percepción de menor dominancia",
+      "detection": "fwhr < 1.5",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Aumentar la anchura visual de la cara con técnicas que expanden los laterales.",
+        "techniques": [
+          "Taper bajo con masa lateral conservada",
+          "Volumen lateral medio — amplía el fWHR percibido",
+          "Raya lateral con volumen hacia el lado más ancho"
+        ]
+      },
+      "avoid": [
+        "Fade alto que elimina toda la masa lateral",
+        "Cortes que añaden altura sin anchura"
+      ],
+      "interactions": {
+        "oblong": "Low fWHR + cara alargada = el caso más extremo. Taper + anchura lateral son absolutamente prioritarios"
+      }
+    }
+  ]
+}

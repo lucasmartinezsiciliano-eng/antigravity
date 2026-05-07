@@ -1,0 +1,46 @@
+{
+  "face_shape": "heart",
+  "description": "Frente ancha que se estrecha hacia el mentón. Objetivo: equilibrar la base (añadir anchura bajo pómulos) y reducir visualmente anchura de la frente.",
+  "cuts": [
+    {
+      "id": "heart-001",
+      "nombre_es": "Low Fade con Tope Lateral",
+      "nombre_en": "Low Fade with Side-Swept Volume",
+      "tags": ["fade", "low", "side-swept", "balanced"],
+      "technique": "low fade número 1-2, tope 6-7cm peinado lateralmente hacia abajo, sin altura",
+      "why_works_short": "El tope lateral bajo añade masa visual en la zona media-baja del rostro, compensando la frente ancha.",
+      "trend_score": 0.88,
+      "search_query": "low fade side swept men heart face balance"
+    },
+    {
+      "id": "heart-002",
+      "nombre_es": "Crop con Flequillo Lateral",
+      "nombre_en": "Crop with Diagonal Fringe",
+      "tags": ["crop", "diagonal-fringe", "modern", "balanced"],
+      "technique": "taper bajo, crop 4cm flequillo en diagonal (de lado), no recto horizontal",
+      "why_works_short": "El flequillo diagonal reduce visualmente la anchura frontal moviéndola hacia el lateral. Efecto balanceador clave.",
+      "trend_score": 0.85,
+      "search_query": "diagonal fringe crop men heart face"
+    },
+    {
+      "id": "heart-003",
+      "nombre_es": "Textura Libre con Barba Larga",
+      "nombre_en": "Free Texture with Extended Beard",
+      "tags": ["textured", "beard", "balance-jaw", "effortless"],
+      "technique": "taper bajo libre, tope 5-6cm textura casual, barba corta-media que amplíe el mentón hacia los lados",
+      "why_works_short": "La barba lateral amplía el mentón visualmente compensando la frente ancha. El tope libre quita el foco de la zona frontal.",
+      "trend_score": 0.90,
+      "search_query": "textured top beard wider jaw heart face men"
+    },
+    {
+      "id": "heart-004",
+      "nombre_es": "Mid Fade con Volumen Medio",
+      "nombre_en": "Mid Fade with Medium Volume",
+      "tags": ["fade", "mid", "medium-volume", "modern"],
+      "technique": "mid fade, tope 5-6cm ligero volumen lateral en la zona media, evitar volumen en frente",
+      "why_works_short": "El volumen medio no altera la parte superior (frente) pero añade masa visual en la zona de pómulos donde se necesita.",
+      "trend_score": 0.82,
+      "search_query": "mid fade medium volume men heart narrow chin"
+    }
+  ]
+}

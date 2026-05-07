@@ -1,0 +1,102 @@
+{
+  "_doc": "Matriz de combinaciones forma facial + defecto secundario → recomendación específica. Cuando hay combinaciones de factores, esta matriz da la instrucción de priorización para Claude. Sin esta matriz, los defectos se tratarían de forma aislada, lo que puede generar conflictos técnicos.",
+
+  "matrix": [
+
+    {
+      "shape": "round",
+      "defect": "prominent_ears",
+      "conflict": "El fade que alarga la cara redonda (high fade) expondría las orejas prominentes",
+      "resolution": "Priorizar: mid fade (no skin) que alarga sin exponer orejas. Cabello lateralmente cubriendo oreja. La cara redonda prima sobre las orejas.",
+      "final_instruction": "Mid fade llegando a número 1 pero sin llegar a piel. Conservar algo de longitud sobre la oreja."
+    },
+
+    {
+      "shape": "round",
+      "defect": "jaw_weak",
+      "conflict": "La cara redonda ya tiene poca definición mandibular. La mandíbula débil la agrava.",
+      "resolution": "Prioridad máxima barba cuadrada. El fade también ayuda. Es el caso más urgente de barba.",
+      "final_instruction": "Fade medio-alto + barba cuadrada con bordes definidos. Sin barba en mejillas, solo en mandíbula. La barba es más importante que el corte aquí."
+    },
+
+    {
+      "shape": "oblong",
+      "defect": "forehead_high",
+      "conflict": "La cara alargada necesita flequillo (que también corrige la frente alta). Las técnicas se alinean.",
+      "resolution": "Sin conflicto — ambas correcciones requieren flequillo. Caso donde el defecto y la forma facial piden lo mismo.",
+      "final_instruction": "Flequillo horizontal completo es la solución perfecta. Doble efecto corrector."
+    },
+
+    {
+      "shape": "oblong",
+      "defect": "jaw_weak",
+      "conflict": "La cara alargada ya necesita anchura. La mandíbula débil añade un problema en el tercio inferior.",
+      "resolution": "Barba en mandíbula + taper bajo conservando anchura. La barba cuadrada ADD anchura mandibular que compensa ambos problemas.",
+      "final_instruction": "Taper con lados llenos + barba cuadrada con línea horizontal en mandíbula. Barba lateral que amplíe la base."
+    },
+
+    {
+      "shape": "square",
+      "defect": "prominent_ears",
+      "conflict": "La cara cuadrada tolera taper (no skin fade), que también conserva más longitud lateral para cubrir orejas. Sin conflicto mayor.",
+      "resolution": "Taper bajo + cabello cubriendo la oreja. La textura libre ayuda a integrar las orejas en la silueta.",
+      "final_instruction": "Taper bajo, conservar longitud suficiente para que la oreja quede integrada. Textura libre en el tope."
+    },
+
+    {
+      "shape": "square",
+      "defect": "receding_hairline",
+      "conflict": "La cara cuadrada podría tolerar un buzz cut (que resuelve las entradas) pero los ángulos sin pelo pueden quedar demasiado duros.",
+      "resolution": "Buzz cut con textura suave o crop muy corto. Suavizar con barba ligera en mandíbula para compensar la dureza.",
+      "final_instruction": "Buzz cut número 3-4 con fade suave. Barba de varios días para suavizar la cara sin la textura del pelo."
+    },
+
+    {
+      "shape": "heart",
+      "defect": "jaw_weak",
+      "conflict": "La cara corazón ya tiene el mentón estrecho. La mandíbula débil confirma el problema en la base.",
+      "resolution": "Este es el caso clásico donde la barba lateral (en la zona mandibular) es la intervención estética más importante de todo el análisis.",
+      "final_instruction": "Barba cuadrada lateral que amplíe el mentón y la mandíbula. Es la corrección más importante en este perfil."
+    },
+
+    {
+      "shape": "heart",
+      "defect": "forehead_wide",
+      "conflict": "La cara corazón YA tiene frente ancha. El defecto y la forma se solapan — máxima prioridad en corrección de frente.",
+      "resolution": "Todas las técnicas de reducción de frente. Flequillo diagonal + fade muy bajo conservando masa baja.",
+      "final_instruction": "Flequillo diagonal obligatorio. Fade muy bajo. Máxima masa en los lados bajos."
+    },
+
+    {
+      "shape": "oval",
+      "defect": "jaw_strong",
+      "conflict": "Sin conflicto — la cara oval con mandíbula fuerte es la combinación de máximo atractivo.",
+      "resolution": "Potenciar el rasgo. Skin fade o high fade que expone la mandíbula como elemento principal.",
+      "final_instruction": "Fade alto o skin fade. Sin barba o barba mínima. Sienes y cuello limpios."
+    },
+
+    {
+      "shape": "oval",
+      "defect": "asymmetry_notable",
+      "conflict": "La cara oval tolera bien la asimetría pero hay que compensarla.",
+      "resolution": "Raya al lado del hemisferio más lleno. Volumen hacia el lado más plano. El óvalo tiene margen para manejar esto sin comprometer el resultado.",
+      "final_instruction": "Raya al lado más proyectado. Textura asimétrica intencional. Sin raya al centro."
+    },
+
+    {
+      "shape": "diamond",
+      "defect": "prominent_ears",
+      "conflict": "El taper que ayuda al diamante también conserva longitud lateral que puede cubrir las orejas. Sin conflicto mayor.",
+      "resolution": "Taper bajo + cabello sobre la oreja. El diamante tolera bien esta combinación.",
+      "final_instruction": "Taper muy bajo. Cabello lateral suficiente para integrar la oreja. Fringe frontal para compensar la frente estrecha."
+    },
+
+    {
+      "shape": "triangle",
+      "defect": "jaw_strong",
+      "conflict": "La cara triangular ya tiene mandíbula prominente. Si también es fuerte, el efecto es máximo — la base domina completamente.",
+      "resolution": "Prioridad: volumen en el tope para compensar. La mandíbula fuerte aquí es un factor que hay que compensar con más volumen arriba, no potenciar.",
+      "final_instruction": "Quiff o pompadour de máximo volumen. Low fade. Sin barba o mínima. El objetivo es reequilibrar hacia arriba."
+    }
+  ]
+}
