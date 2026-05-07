@@ -408,28 +408,31 @@ function initQuiz() {
     });
   }
 
-  // Drag wheels — arrastrar izq/der para valores monetarios
+  // Drag wheels — ruedita horizontal
   function initDragWheels() {
     quiz.querySelectorAll('.drag-wheel').forEach(el => {
-      const step = +el.dataset.step || 100;
-      const min  = +el.dataset.min  || 0;
-      const max  = +el.dataset.max  || 999999;
-      const inp  = el.querySelector('input[type="hidden"]');
-      const valEl = el.querySelector('.dw-val');
-      const PX_PER_STEP = 28;
-      let startX   = null;
-      let startVal = 0;
+      const step   = +el.dataset.step || 100;
+      const min    = +el.dataset.min  || 0;
+      const max    = +el.dataset.max  || 999999;
+      const inp    = el.querySelector('input[type="hidden"]');
+      const valEl  = el.querySelector('.dw-val');
+      const tickEl = el.querySelector('.dw-ticks');
+      const TICK   = 11;   // px entre ticks (debe coincidir con el repeating-gradient)
+      const PX_PER_STEP = 22;
+      let startX = null, startVal = 0, offsetPx = 0;
 
       function clamp(v) { return Math.max(min, Math.min(max, Math.round(v / step) * step)); }
 
       function render(v, dx) {
         inp.value = v;
         valEl.textContent = v.toLocaleString('es-ES');
-        el.style.backgroundPositionX = (((dx || 0) % 20) + 20) % 20 + 'px';
+        // desplaza los ticks suavemente
+        const shift = (((dx % TICK) + TICK) % TICK);
+        if (tickEl) tickEl.style.backgroundPositionX = shift + 'px';
       }
 
       function onStart(x) {
-        startX = x; startVal = +inp.value;
+        startX = x; startVal = +inp.value; offsetPx = 0;
         el.classList.add('dragging');
       }
       function onMove(x) {
@@ -438,9 +441,9 @@ function initQuiz() {
         render(clamp(startVal + Math.trunc(dx / PX_PER_STEP) * step), dx);
       }
       function onEnd() {
+        if (tickEl) tickEl.style.backgroundPositionX = '0px';
         startX = null;
         el.classList.remove('dragging');
-        el.style.backgroundPositionX = '0px';
       }
 
       el.addEventListener('mousedown',  e => { onStart(e.clientX); e.preventDefault(); });
