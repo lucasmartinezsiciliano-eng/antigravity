@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 200">
+  <!-- Left house/building shape with inner cutout -->
+  <path fill="#2AB5CF" fill-rule="evenodd" d="M 12 188 L 12 12 L 112 12 L 146 46 L 146 188 Z M 40 40 L 113 40 L 113 160 L 40 160 Z"/>
+  <!-- Right H: left bar -->
+  <rect fill="#2AB5CF" x="164" y="12" width="27" height="176"/>
+  <!-- Right H: right bar -->
+  <rect fill="#2AB5CF" x="229" y="12" width="27" height="176"/>
+  <!-- Right H: crossbar -->
+  <rect fill="#2AB5CF" x="164" y="84" width="92" height="26"/>
+</svg>
