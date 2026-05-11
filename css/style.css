@@ -107,7 +107,7 @@ header {
 .logo-main .logo-green { color: var(--teal); }
 .logo-sub {
   font-family: var(--font); font-size: 0.62rem; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal);
+  letter-spacing: 0.14em; text-transform: uppercase; color: #8DC63F;
 }
 /* legacy - kept for any remaining references */
 .logo-brand { height: 48px; width: auto; display: block; }
