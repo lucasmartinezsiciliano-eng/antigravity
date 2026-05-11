@@ -36,5 +36,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
-# Start server — shell form so $PORT is expanded at runtime
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2
+# Python reads PORT from env — avoids shell $PORT expansion issues in Railway
+CMD ["python", "-c", "import os,uvicorn; uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.environ.get('PORT',8000)), workers=2)"]
