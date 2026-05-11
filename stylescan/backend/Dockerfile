@@ -11,10 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libgl1-mesa-glx \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# setuptools needed for packages that still use setup.py (instagrapi, etc.)
+RUN pip install --no-cache-dir setuptools wheel
 
 # Install Python dependencies first (layer caching)
 COPY requirements.txt .
@@ -33,5 +36,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
-# Start server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+# Start server — shell form so $PORT is expanded at runtime
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2
