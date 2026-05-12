@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
 
@@ -11,7 +11,7 @@ const SHOTS = [
   { label: "Perfil derecho",   hint: "Gira la cabeza hacia tu derecha" },
 ];
 
-type Stage = "camera" | "uploading" | "processing" | "error";
+type Stage = "camera" | "preview" | "uploading" | "processing" | "error";
 
 export default function CapturePage() {
   const params  = useParams();
@@ -22,14 +22,16 @@ export default function CapturePage() {
   const streamRef    = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  /* refs so callbacks never have stale values */
   const shotIdxRef   = useRef(0);
   const photosRef    = useRef<File[]>([]);
 
-  const [stage,       setStage]       = useState<Stage>("camera");
-  const [cameraReady, setCameraReady] = useState(false);
-  const [shotIndex,   setShotIndex]   = useState(0);   // drives re-render
-  const [error,       setError]       = useState("");
+  const [stage,        setStage]        = useState<Stage>("camera");
+  const [cameraReady,  setCameraReady]  = useState(false);
+  const [shotIndex,    setShotIndex]    = useState(0);
+  const [previewUrl,   setPreviewUrl]   = useState<string>("");
+  const [previewBlob,  setPreviewBlob]  = useState<Blob | null>(null);
+  const [flashActive,  setFlashActive]  = useState(false);
+  const [error,        setError]        = useState("");
 
   /* ── camera helpers ── */
   const stopStream = useCallback(() => {
@@ -41,10 +43,10 @@ export default function CapturePage() {
   useEffect(() => () => {
     stopStream();
     if (pollRef.current) clearInterval(pollRef.current);
-  }, [stopStream]);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [stopStream]);  // eslint-disable-line
 
-  /* start camera on mount */
-  useEffect(() => { startCamera(); }, []);           // eslint-disable-line
+  useEffect(() => { startCamera(); }, []);  // eslint-disable-line
 
   async function startCamera() {
     try {
@@ -91,12 +93,17 @@ export default function CapturePage() {
     img.src = url;
   }
 
-  /* ── capture ── */
+  /* ── capture: show flash + preview ── */
   function captureFrame() {
     const video  = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
     if (video.readyState < 2) return;
+
+    // Flash effect
+    setFlashActive(true);
+    setTimeout(() => setFlashActive(false), 250);
+
     canvas.width  = video.videoWidth  || 1280;
     canvas.height = video.videoHeight || 960;
     const ctx = canvas.getContext("2d");
@@ -104,43 +111,56 @@ export default function CapturePage() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
       if (!blob) return;
-      const idx  = shotIdxRef.current;
-      if (idx === 0) savePhotoToSession(blob, `visai_frontal_${id}`);
-      if (idx === 1) savePhotoToSession(blob, `visai_profile_${id}`);
-      const file = new File([blob], `photo_${idx + 1}.jpg`, { type: "image/jpeg" });
-      photosRef.current = [...photosRef.current, file];
-      const next = idx + 1;
-      shotIdxRef.current = next;
-      setShotIndex(next);
-      if (next >= SHOTS.length) {
-        stopStream();
-        handleUpload(photosRef.current);
-      }
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewBlob(blob);
+      setPreviewUrl(URL.createObjectURL(blob));
+      setStage("preview");
     }, "image/jpeg", 0.92);
   }
 
-  /* fallback: file chosen from picker */
-  function onFileInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
+  /* ── confirm preview → accept photo ── */
+  function confirmPhoto() {
+    if (!previewBlob) return;
     const idx = shotIdxRef.current;
-    if (idx === 0 || idx === 1) {
-      const key = idx === 0 ? `visai_frontal_${id}` : `visai_profile_${id}`;
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        try { sessionStorage.setItem(key, reader.result as string); } catch {}
-      };
-      reader.readAsDataURL(file);
-    }
+    if (idx === 0) savePhotoToSession(previewBlob, `visai_frontal_${id}`);
+    if (idx === 1) savePhotoToSession(previewBlob, `visai_profile_${id}`);
+    const file = new File([previewBlob], `photo_${idx + 1}.jpg`, { type: "image/jpeg" });
     photosRef.current = [...photosRef.current, file];
     const next = idx + 1;
     shotIdxRef.current = next;
     setShotIndex(next);
-    if (next >= SHOTS.length) handleUpload(photosRef.current);
+    setPreviewBlob(null);
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(""); }
+    if (next >= SHOTS.length) {
+      stopStream();
+      setStage("uploading");
+      handleUpload(photosRef.current);
+    } else {
+      setStage("camera");
+    }
   }
 
-  /* ── repetir ── */
+  /* ── retake: go back to camera ── */
+  function retakePhoto() {
+    setPreviewBlob(null);
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(""); }
+    setStage("camera");
+  }
+
+  /* ── fallback: file chosen from picker ── */
+  function onFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    // Show preview for file input too
+    const blob = file.slice(0, file.size, file.type);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewBlob(blob);
+    setPreviewUrl(URL.createObjectURL(blob));
+    setStage("preview");
+  }
+
+  /* ── repetir (undo last accepted photo) ── */
   function handleRepeat() {
     const idx     = shotIdxRef.current;
     const prevIdx = Math.max(0, idx - 1);
@@ -151,9 +171,8 @@ export default function CapturePage() {
 
   /* ── upload ── */
   async function handleUpload(files: File[]) {
-    setStage("uploading");
-    setError("");
     storage.saveAnalysisId(id);
+    setError("");
     try {
       await api.uploadPhotos(id, files);
       setStage("processing");
@@ -165,7 +184,6 @@ export default function CapturePage() {
             pollRef.current = null;
             window.location.href = `/result/${id}`;
           }
-          // code 202 = still processing → keep polling
         } catch (e: any) {
           clearInterval(pollRef.current!);
           pollRef.current = null;
@@ -230,6 +248,96 @@ export default function CapturePage() {
     );
   }
 
+  /* ── preview screen ── */
+  if (stage === "preview") {
+    const idx = shotIdxRef.current;
+    const shot = SHOTS[Math.min(idx, SHOTS.length - 1)];
+    return (
+      <div style={{ position: "fixed", inset: 0, background: "#000", display: "flex", flexDirection: "column" }}>
+        {/* Preview image — mirrored like viewfinder */}
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="preview"
+            style={{
+              position: "absolute", inset: 0,
+              width: "100%", height: "100%",
+              objectFit: "cover",
+              transform: "scaleX(-1)",
+            }}
+          />
+        )}
+
+        {/* Dark top overlay */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0,
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)",
+          padding: "calc(env(safe-area-inset-top) + 16px) 24px 40px",
+          textAlign: "center",
+        }}>
+          <p style={{ color: "rgba(201,168,76,0.9)", fontSize: 13, fontWeight: 700, letterSpacing: 1.5, margin: 0 }}>
+            ¿ESTÁ BIEN?
+          </p>
+          <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "6px 0 0", letterSpacing: -0.3 }}>
+            {shot.label}
+          </h2>
+        </div>
+
+        {/* Dark bottom overlay with buttons */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
+          padding: "40px 40px calc(env(safe-area-inset-bottom) + 32px)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          {/* Retake */}
+          <button
+            type="button"
+            onClick={retakePhoto}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+              color: "white",
+            }}
+          >
+            <div style={{
+              width: 60, height: 60, borderRadius: "50%",
+              background: "rgba(255,255,255,0.15)",
+              border: "2px solid rgba(255,255,255,0.4)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <ChevronLeft size={28} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Repetir</span>
+          </button>
+
+          {/* OK */}
+          <button
+            type="button"
+            onClick={confirmPhoto}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+              color: "white",
+            }}
+          >
+            <div style={{
+              width: 80, height: 80, borderRadius: "50%",
+              background: "rgba(201,168,76,0.9)",
+              border: "4px solid rgba(201,168,76,1)",
+              boxShadow: "0 0 0 4px rgba(201,168,76,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Check size={36} strokeWidth={3} color="#080808" />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Usar foto</span>
+          </button>
+
+          {/* Spacer */}
+          <div style={{ width: 60 }} />
+        </div>
+      </div>
+    );
+  }
+
   /* ── camera stage ── */
   const currentShot = SHOTS[Math.min(shotIndex, SHOTS.length - 1)];
   const isLastShot  = shotIndex === SHOTS.length - 1;
@@ -238,7 +346,18 @@ export default function CapturePage() {
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000", display: "flex", flexDirection: "column" }}>
 
-      {/* Live video — always rendered so ref attaches */}
+      {/* Flash overlay */}
+      {flashActive && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 99,
+          background: "white",
+          opacity: 0.85,
+          pointerEvents: "none",
+          animation: "none",
+        }} />
+      )}
+
+      {/* Live video */}
       <video
         ref={videoRef}
         autoPlay
@@ -304,7 +423,6 @@ export default function CapturePage() {
         padding: "calc(env(safe-area-inset-top) + 16px) 24px 0",
         textAlign: "center",
       }}>
-        {/* Progress dots */}
         <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
           {SHOTS.map((_, i) => (
             <div key={i} style={{
@@ -321,17 +439,14 @@ export default function CapturePage() {
           ))}
         </div>
 
-        {/* Shot number */}
         <div style={{ color: "rgba(201,168,76,0.9)", fontSize: 17, fontWeight: 700, marginBottom: 6 }}>
           {Math.min(shotIndex + 1, SHOTS.length)} / {SHOTS.length}
         </div>
 
-        {/* Shot label */}
         <h2 style={{ color: "#ffffff", fontSize: 28, fontWeight: 800, margin: "0 0 6px", letterSpacing: -0.3 }}>
           {currentShot.label}
         </h2>
 
-        {/* Hint */}
         <p style={{ color: "rgba(201,168,76,0.85)", fontSize: 15, margin: 0, fontWeight: 500 }}>
           {currentShot.hint}
         </p>
@@ -380,7 +495,7 @@ export default function CapturePage() {
           }} />
         </button>
 
-        {/* Shot counter */}
+        {/* Counter */}
         <div style={{ textAlign: "center", minWidth: 60 }}>
           {!isDone && (
             <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
