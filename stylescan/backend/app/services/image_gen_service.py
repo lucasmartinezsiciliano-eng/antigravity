@@ -256,6 +256,48 @@ def _build_prompt(
     return prompt
 
 
+async def _generate_one_angle_openai(
+    client_data_uri: str,
+    prompt: str,
+    angle: dict,
+) -> AngleImage:
+    """
+    Generate one angle via OpenAI gpt-image-1 (images.edit).
+    Cost: ~$0.042/image. KB reference is NOT passed here — only the text prompt
+    (which already contains the haircut description) is used. Single-image edit.
+    """
+    try:
+        from openai import OpenAI
+        from app.core.config import settings
+        import io
+
+        # Decode the data URI back into raw bytes for OpenAI's multipart upload
+        b64_str = client_data_uri.split(",", 1)[1]
+        photo_bytes = base64.b64decode(b64_str)
+
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+        def _call():
+            return client.images.edit(
+                model="gpt-image-1",
+                image=("photo.jpg", io.BytesIO(photo_bytes), "image/jpeg"),
+                prompt=prompt,
+                n=1,
+                size="1024x1024",
+            )
+
+        response = await asyncio.to_thread(_call)
+
+        b64_out = response.data[0].b64_json
+        url = f"data:image/png;base64,{b64_out}"
+        logger.info("  → angle %s: OK [openai gpt-image-1]", angle["id"])
+        return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+
+    except Exception as e:
+        logger.error("  → angle %s FAILED [openai]: %s", angle["id"], e)
+        return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e))
+
+
 async def _generate_one_angle(
     photo_b64: str,
     nombre_en: str,
@@ -264,13 +306,21 @@ async def _generate_one_angle(
     fal_key: str,
     reference_url: Optional[str] = None,
 ) -> AngleImage:
-    import fal_client  # type: ignore
-
-    os.environ["FAL_KEY"] = fal_key
+    from app.core.config import settings
 
     client_data_uri = f"data:image/jpeg;base64,{photo_b64}"
     angle_suffix = angle["instruction_suffix"]
     has_ref = reference_url is not None
+
+    # OpenAI path — no reference image in v1, text-only prompt
+    if settings.IMAGE_GEN_PROVIDER == "openai":
+        prompt = _build_prompt(nombre_en, technique, angle_suffix, has_reference=False)
+        return await _generate_one_angle_openai(client_data_uri, prompt, angle)
+
+    # fal.ai path (default legacy behaviour)
+    import fal_client  # type: ignore
+
+    os.environ["FAL_KEY"] = fal_key
 
     # Build image_urls list: client always first, reference second if available
     image_urls = [client_data_uri]
