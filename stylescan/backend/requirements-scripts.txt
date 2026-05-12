@@ -1,0 +1,5 @@
+# Dependencies for barber_instagram_agent.py (NOT installed in production)
+# Run locally: pip install -r requirements-scripts.txt
+instaloader==4.13.1
+instagrapi==1.5.9
+requests==2.25.1

@@ -43,7 +43,5 @@ duckduckgo-search==6.2.13
 fal-client==0.5.6
 apscheduler==3.10.4
 
-# Barber Instagram Agent
-instaloader==4.13.1
-requests==2.32.3
-instagrapi==1.5.9
+# HTTP (unpinned — let pip resolve compatible version with all deps)
+requests
