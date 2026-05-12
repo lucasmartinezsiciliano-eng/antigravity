@@ -8,6 +8,7 @@ POST /analysis/{id}/consent  — Record RGPD consent (required before photo uplo
 DELETE /analysis/{id}        — Right to erasure (Art. 17 RGPD)
 """
 
+import asyncio
 import hashlib
 import logging
 import uuid

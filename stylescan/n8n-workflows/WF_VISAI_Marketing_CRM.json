@@ -1,0 +1,563 @@
+{
+  "name": "VISAI — Marketing & CRM",
+  "nodes": [
+    {
+      "id": "sticky-setup",
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80],
+      "parameters": {
+        "content": "## VISAI — Marketing & CRM\n\n**Antes de activar este workflow:**\n\n1. **RESEND_API_KEY** — Reemplaza `{{RESEND_API_KEY}}` en todos los nodos de email con tu clave de Resend (https://resend.com)\n2. **TWENTY_API_KEY** — Reemplaza `{{TWENTY_API_KEY}}` en los nodos de Twenty CRM con tu API key de Twenty\n3. **Dominio emisor** — El `from` usa `noreply@visaiapp.com`. Verifica el dominio en Resend primero.\n4. **Webhook URL** — Tras activar, la URL del webhook será:\n   `https://[tu-n8n]/webhook/visai-marketing`\n   Configúrala en el backend VISAI como destino del POST tras cada análisis completado.\n\n**Flujo general:**\n- POST llega con `{ email, analysis_id, created_at, result_url, capture_url, unsubscribe_url, marketing_consent }`\n- Se crea persona + nota en Twenty CRM siempre\n- Si `marketing_consent === true` → secuencia 4 emails (día 0, 2, 7, 30)\n- Si `marketing_consent === false` → solo CRM, sin emails\n\n**Secuencia de emails:**\n- Día 0 — Bienvenida (inmediato)\n- Día 2 (+48h) — Consejo barbero\n- Día 7 (+5 días) — Upsell colorimetría (solo si no compró upsells)\n- Día 30 (+23 días) — Re-engagement\n\n**Stack:** Twenty CRM · Resend · VISAI API",
+        "height": 580,
+        "width": 500,
+        "color": 7
+      }
+    },
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook — VISAI Backend",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 380],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "visai-marketing",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "visai-marketing-webhook"
+    },
+    {
+      "id": "parse-data",
+      "name": "Parse Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 380],
+      "parameters": {
+        "jsCode": "// Normalize and validate incoming payload from VISAI backend\nconst body = $input.first().json.body || $input.first().json;\n\nconst email = (body.email || '').trim().toLowerCase();\nconst analysisId = body.analysis_id || body.analysisId || '';\nconst createdAt = body.created_at || body.createdAt || new Date().toISOString();\nconst resultUrl = body.result_url || body.resultUrl || `https://visaiapp.com/result/${analysisId}`;\nconst captureUrl = body.capture_url || body.captureUrl || '';\nconst unsubscribeUrl = body.unsubscribe_url || body.unsubscribeUrl || `https://visaiapp.com/unsubscribe?email=${encodeURIComponent(email)}`;\nconst marketingConsent = body.marketing_consent === true || body.marketing_consent === 'true' || body.marketingConsent === true;\n\nif (!email) throw new Error('Missing required field: email');\nif (!analysisId) throw new Error('Missing required field: analysis_id');\n\nreturn [{\n  json: {\n    email,\n    analysis_id: analysisId,\n    created_at: createdAt,\n    result_url: resultUrl,\n    capture_url: captureUrl,\n    unsubscribe_url: unsubscribeUrl,\n    marketing_consent: marketingConsent\n  }\n}];"
+      }
+    },
+    {
+      "id": "twenty-create-person",
+      "name": "Twenty CRM — Create Person",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "https://twenty-production-8066.up.railway.app/api/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{TWENTY_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": {\n    \"firstName\": \"{{ $('Parse Data').item.json.email.split('@')[0] }}\",\n    \"lastName\": \"\"\n  },\n  \"emails\": {\n    \"primaryEmail\": \"{{ $('Parse Data').item.json.email }}\"\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "twenty-create-note",
+      "name": "Twenty CRM — Create Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "https://twenty-production-8066.up.railway.app/api/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{TWENTY_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"Análisis VISAI — {{ $('Parse Data').item.json.analysis_id }}\",\n  \"body\": \"**Email:** {{ $('Parse Data').item.json.email }}\\n\\n**Analysis ID:** {{ $('Parse Data').item.json.analysis_id }}\\n\\n**Fecha:** {{ $('Parse Data').item.json.created_at }}\\n\\n**URL Resultado:** {{ $('Parse Data').item.json.result_url }}\\n\\n**Consentimiento marketing:** {{ $('Parse Data').item.json.marketing_consent }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "if-marketing-consent",
+      "name": "IF — Marketing Consent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 380],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-marketing-consent",
+              "leftValue": "={{ $('Parse Data').item.json.marketing_consent }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "no-consent-end",
+      "name": "No Consent — End",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1120, 600],
+      "parameters": {}
+    },
+    {
+      "id": "email-welcome",
+      "name": "Email — Welcome (Day 0)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{RESEND_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"VISAI <noreply@visaiapp.com>\",\n  \"to\": [\"{{ $('Parse Data').item.json.email }}\"],\n  \"subject\": \"Bienvenido a VISAI 💈 — Tu barbero te espera\",\n  \"html\": \"<!DOCTYPE html><html lang=\\\"es\\\"><head><meta charset=\\\"utf-8\\\"><meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\"></head><body style=\\\"margin:0;padding:0;background:#0a0a0a;\\\"><table width=\\\"100%\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"background:#0a0a0a;\\\"><tr><td align=\\\"center\\\" style=\\\"padding:40px 20px;\\\"><table width=\\\"520\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"max-width:520px;width:100%;\\\"><tr><td style=\\\"padding-bottom:32px;\\\"><span style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:18px;font-weight:800;letter-spacing:7px;color:#f0f0f0;text-transform:uppercase;\\\">VISAI</span></td></tr><tr><td style=\\\"background:#111111;border:1px solid #1e1e1e;border-radius:12px;padding:32px;\\\"><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"margin-bottom:20px;\\\"><tr><td style=\\\"background:#1a1600;border:1px solid rgba(201,168,76,0.25);border-radius:99px;padding:4px 12px;\\\"><span style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#c9a84c;text-transform:uppercase;\\\">RESULTADO LISTO</span></td></tr></table><h2 style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:700;color:#f0f0f0;margin:0 0 12px;line-height:1.25;\\\">Ya tienes tu look ideal documentado</h2><p style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#888;line-height:1.65;margin:0 0 24px;\\\">Tu resultado tiene instrucciones exactas para pedirle a tu barbero: número de máquina, tipo de degradado, técnica y largo. La próxima vez que vayas, solo muéstraselo.</p><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\"><tr><td><a href=\\\"{{ $('Parse Data').item.json.result_url }}\\\" style=\\\"display:block;background:#c9a84c;color:#080808;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-family:-apple-system,Arial,sans-serif;font-weight:700;font-size:15px;\\\">Ver mi resultado →</a></td></tr></table></td></tr><tr><td style=\\\"padding-top:24px;text-align:center;\\\"><p style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:11px;color:#3a3a3a;line-height:1.8;margin:0;\\\">VISAI &nbsp;·&nbsp; <a href=\\\"https://visaiapp.com/privacidad\\\" style=\\\"color:#444;text-decoration:none;\\\">Privacidad</a> &nbsp;·&nbsp; <a href=\\\"{{ $('Parse Data').item.json.unsubscribe_url }}\\\" style=\\\"color:#444;text-decoration:none;\\\">Darse de baja</a></p></td></tr></table></td></tr></table></body></html>\"\n}"
+      }
+    },
+    {
+      "id": "wait-48h",
+      "name": "Wait — 48h",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1560, 380],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 48,
+        "unit": "hours"
+      },
+      "webhookId": "wait-48h-visai"
+    },
+    {
+      "id": "email-barbero-tip",
+      "name": "Email — Barbero Tip (Day 2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{RESEND_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"VISAI <noreply@visaiapp.com>\",\n  \"to\": [\"{{ $('Parse Data').item.json.email }}\"],\n  \"subject\": \"¿Ya fuiste a la barbería? 💈\",\n  \"html\": \"<!DOCTYPE html><html lang=\\\"es\\\"><head><meta charset=\\\"utf-8\\\"><meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\"></head><body style=\\\"margin:0;padding:0;background:#0a0a0a;\\\"><table width=\\\"100%\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"background:#0a0a0a;\\\"><tr><td align=\\\"center\\\" style=\\\"padding:40px 20px;\\\"><table width=\\\"520\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"max-width:520px;width:100%;\\\"><tr><td style=\\\"padding-bottom:32px;\\\"><span style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:18px;font-weight:800;letter-spacing:7px;color:#f0f0f0;text-transform:uppercase;\\\">VISAI</span></td></tr><tr><td style=\\\"background:#111111;border:1px solid #1e1e1e;border-radius:12px;padding:32px;\\\"><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"margin-bottom:20px;\\\"><tr><td style=\\\"background:#1a1600;border:1px solid rgba(201,168,76,0.25);border-radius:99px;padding:4px 12px;\\\"><span style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#c9a84c;text-transform:uppercase;\\\">CONSEJO</span></td></tr></table><h2 style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:700;color:#f0f0f0;margin:0 0 12px;line-height:1.25;\\\">Muéstrale el resultado a tu barbero</h2><p style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#888;line-height:1.65;margin:0 0 24px;\\\">Tu análisis tiene las instrucciones técnicas exactas: número de máquina, degradado, técnica y longitud. Muchos barberos aprecian tener esta información — les facilita el trabajo y garantiza el corte perfecto.</p><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\"><tr><td><a href=\\\"{{ $('Parse Data').item.json.result_url }}\\\" style=\\\"display:block;background:#c9a84c;color:#080808;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-family:-apple-system,Arial,sans-serif;font-weight:700;font-size:15px;\\\">Abrir mi resultado →</a></td></tr></table></td></tr><tr><td style=\\\"padding-top:24px;text-align:center;\\\"><p style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:11px;color:#3a3a3a;line-height:1.8;margin:0;\\\">VISAI &nbsp;·&nbsp; <a href=\\\"https://visaiapp.com/privacidad\\\" style=\\\"color:#444;text-decoration:none;\\\">Privacidad</a> &nbsp;·&nbsp; <a href=\\\"{{ $('Parse Data').item.json.unsubscribe_url }}\\\" style=\\\"color:#444;text-decoration:none;\\\">Darse de baja</a></p></td></tr></table></td></tr></table></body></html>\"\n}"
+      }
+    },
+    {
+      "id": "wait-5d",
+      "name": "Wait — 5 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2000, 380],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 5,
+        "unit": "days"
+      },
+      "webhookId": "wait-5d-visai"
+    },
+    {
+      "id": "get-analysis-status",
+      "name": "Get Analysis Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 380],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://harmonious-gratitude-production-2c0d.up.railway.app/api/v1/analysis/{{ $('Parse Data').item.json.analysis_id }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "if-no-upsells",
+      "name": "IF — No Upsells Purchased",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2440, 380],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-no-colorimetry",
+              "leftValue": "={{ $json.includes_colorimetry }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
+            },
+            {
+              "id": "cond-no-products",
+              "leftValue": "={{ $json.includes_products_guide }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "email-upsell",
+      "name": "Email — Upsell Colorimetría (Day 7)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2660, 260],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{RESEND_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"VISAI <noreply@visaiapp.com>\",\n  \"to\": [\"{{ $('Parse Data').item.json.email }}\"],\n  \"subject\": \"Descubre qué ropa te sienta mejor — solo €2,49 💎\",\n  \"html\": \"<!DOCTYPE html><html lang=\\\"es\\\"><head><meta charset=\\\"utf-8\\\"><meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\"></head><body style=\\\"margin:0;padding:0;background:#0a0a0a;\\\"><table width=\\\"100%\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"background:#0a0a0a;\\\"><tr><td align=\\\"center\\\" style=\\\"padding:40px 20px;\\\"><table width=\\\"520\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"max-width:520px;width:100%;\\\"><tr><td style=\\\"padding-bottom:32px;\\\"><span style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:18px;font-weight:800;letter-spacing:7px;color:#f0f0f0;text-transform:uppercase;\\\">VISAI</span></td></tr><tr><td style=\\\"background:#111111;border:1px solid #1e1e1e;border-radius:12px;padding:32px;\\\"><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"margin-bottom:20px;\\\"><tr><td style=\\\"background:#1a1600;border:1px solid rgba(201,168,76,0.25);border-radius:99px;padding:4px 12px;\\\"><span style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#c9a84c;text-transform:uppercase;\\\">MEJORA TU IMAGEN</span></td></tr></table><h2 style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:700;color:#f0f0f0;margin:0 0 12px;line-height:1.25;\\\">Tu paleta de colores personal</h2><p style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#888;line-height:1.65;margin:0 0 24px;\\\">Basándonos en tu análisis facial, podemos calcular tu colorimetría: qué tonos de ropa, piel y gafas potencian tu imagen. Una inversión de €2,49 que marca la diferencia.</p><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\"><tr><td><a href=\\\"https://visaiapp.com/result/{{ $('Parse Data').item.json.analysis_id }}\\\" style=\\\"display:block;background:#c9a84c;color:#080808;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-family:-apple-system,Arial,sans-serif;font-weight:700;font-size:15px;\\\">Añadir colorimetría →</a></td></tr></table></td></tr><tr><td style=\\\"padding-top:24px;text-align:center;\\\"><p style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:11px;color:#3a3a3a;line-height:1.8;margin:0;\\\">VISAI &nbsp;·&nbsp; <a href=\\\"https://visaiapp.com/privacidad\\\" style=\\\"color:#444;text-decoration:none;\\\">Privacidad</a> &nbsp;·&nbsp; <a href=\\\"{{ $('Parse Data').item.json.unsubscribe_url }}\\\" style=\\\"color:#444;text-decoration:none;\\\">Darse de baja</a></p></td></tr></table></td></tr></table></body></html>\"\n}"
+      }
+    },
+    {
+      "id": "merge-after-upsell",
+      "name": "Merge — Continue to Day 30",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2880, 380],
+      "parameters": {
+        "mode": "passThrough",
+        "output": "input1"
+      }
+    },
+    {
+      "id": "wait-23d",
+      "name": "Wait — 23 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [3100, 380],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 23,
+        "unit": "days"
+      },
+      "webhookId": "wait-23d-visai"
+    },
+    {
+      "id": "email-reengagement",
+      "name": "Email — Re-engagement (Day 30)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3320, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{RESEND_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"VISAI <noreply@visaiapp.com>\",\n  \"to\": [\"{{ $('Parse Data').item.json.email }}\"],\n  \"subject\": \"¿Cuándo fue tu último corte? ✂️\",\n  \"html\": \"<!DOCTYPE html><html lang=\\\"es\\\"><head><meta charset=\\\"utf-8\\\"><meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\"></head><body style=\\\"margin:0;padding:0;background:#0a0a0a;\\\"><table width=\\\"100%\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"background:#0a0a0a;\\\"><tr><td align=\\\"center\\\" style=\\\"padding:40px 20px;\\\"><table width=\\\"520\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"max-width:520px;width:100%;\\\"><tr><td style=\\\"padding-bottom:32px;\\\"><span style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:18px;font-weight:800;letter-spacing:7px;color:#f0f0f0;text-transform:uppercase;\\\">VISAI</span></td></tr><tr><td style=\\\"background:#111111;border:1px solid #1e1e1e;border-radius:12px;padding:32px;\\\"><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" style=\\\"margin-bottom:20px;\\\"><tr><td style=\\\"background:#1a1600;border:1px solid rgba(201,168,76,0.25);border-radius:99px;padding:4px 12px;\\\"><span style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#c9a84c;text-transform:uppercase;\\\">RENOVAR LOOK</span></td></tr></table><h2 style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:700;color:#f0f0f0;margin:0 0 12px;line-height:1.25;\\\">Meses después, el look importa más</h2><p style=\\\"font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#888;line-height:1.65;margin:0 0 24px;\\\">Han pasado 30 días desde tu análisis VISAI. Si el pelo ha crecido y quieres actualizar tu look, el resultado sigue activo — muéstraselo de nuevo a tu barbero o empieza un nuevo análisis.</p><table cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" border=\\\"0\\\" width=\\\"100%\\\"><tr><td><a href=\\\"{{ $('Parse Data').item.json.result_url }}\\\" style=\\\"display:block;background:#c9a84c;color:#080808;text-decoration:none;text-align:center;padding:16px 24px;border-radius:8px;font-family:-apple-system,Arial,sans-serif;font-weight:700;font-size:15px;\\\">Ver mi resultado →</a></td></tr></table></td></tr><tr><td style=\\\"padding-top:24px;text-align:center;\\\"><p style=\\\"font-family:-apple-system,Arial,sans-serif;font-size:11px;color:#3a3a3a;line-height:1.8;margin:0;\\\">VISAI &nbsp;·&nbsp; <a href=\\\"https://visaiapp.com/privacidad\\\" style=\\\"color:#444;text-decoration:none;\\\">Privacidad</a> &nbsp;·&nbsp; <a href=\\\"{{ $('Parse Data').item.json.unsubscribe_url }}\\\" style=\\\"color:#444;text-decoration:none;\\\">Darse de baja</a></p></td></tr></table></td></tr></table></body></html>\"\n}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — VISAI Backend": {
+      "main": [
+        [
+          {
+            "node": "Parse Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Data": {
+      "main": [
+        [
+          {
+            "node": "Twenty CRM — Create Person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twenty CRM — Create Person": {
+      "main": [
+        [
+          {
+            "node": "Twenty CRM — Create Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twenty CRM — Create Note": {
+      "main": [
+        [
+          {
+            "node": "IF — Marketing Consent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Marketing Consent": {
+      "main": [
+        [
+          {
+            "node": "Email — Welcome (Day 0)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Consent — End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email — Welcome (Day 0)": {
+      "main": [
+        [
+          {
+            "node": "Wait — 48h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — 48h": {
+      "main": [
+        [
+          {
+            "node": "Email — Barbero Tip (Day 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email — Barbero Tip (Day 2)": {
+      "main": [
+        [
+          {
+            "node": "Wait — 5 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — 5 Days": {
+      "main": [
+        [
+          {
+            "node": "Get Analysis Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Analysis Status": {
+      "main": [
+        [
+          {
+            "node": "IF — No Upsells Purchased",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — No Upsells Purchased": {
+      "main": [
+        [
+          {
+            "node": "Email — Upsell Colorimetría (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge — Continue to Day 30",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Email — Upsell Colorimetría (Day 7)": {
+      "main": [
+        [
+          {
+            "node": "Merge — Continue to Day 30",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Continue to Day 30": {
+      "main": [
+        [
+          {
+            "node": "Wait — 23 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — 23 Days": {
+      "main": [
+        [
+          {
+            "node": "Email — Re-engagement (Day 30)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "VISAI",
+      "createdAt": "2026-05-12T00:00:00.000Z",
+      "updatedAt": "2026-05-12T00:00:00.000Z"
+    },
+    {
+      "name": "Marketing",
+      "createdAt": "2026-05-12T00:00:00.000Z",
+      "updatedAt": "2026-05-12T00:00:00.000Z"
+    },
+    {
+      "name": "CRM",
+      "createdAt": "2026-05-12T00:00:00.000Z",
+      "updatedAt": "2026-05-12T00:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "visai-marketing-crm-v1"
+  }
+}
