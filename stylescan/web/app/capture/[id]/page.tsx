@@ -8,8 +8,6 @@ const SHOTS = [
   { label: "Frontal",          hint: "Mira directamente a la cámara" },
   { label: "Perfil izquierdo", hint: "Gira la cabeza hacia tu izquierda" },
   { label: "Perfil derecho",   hint: "Gira la cabeza hacia tu derecha" },
-  { label: "Mentón arriba",    hint: "Levanta el mentón ligeramente" },
-  { label: "Mentón abajo",     hint: "Baja el mentón ligeramente hacia el pecho" },
 ];
 
 type Stage = "camera" | "uploading" | "processing" | "error";
@@ -23,7 +21,6 @@ export default function CapturePage() {
   const streamRef    = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tickRef      = useRef<ReturnType<typeof setInterval> | null>(null);
   /* refs so callbacks never have stale values */
   const shotIdxRef   = useRef(0);
   const photosRef    = useRef<File[]>([]);
@@ -31,7 +28,6 @@ export default function CapturePage() {
   const [stage,       setStage]       = useState<Stage>("camera");
   const [cameraReady, setCameraReady] = useState(false);
   const [shotIndex,   setShotIndex]   = useState(0);   // drives re-render
-  const [countdown,   setCountdown]   = useState(3);
   const [error,       setError]       = useState("");
 
   /* ── camera helpers ── */
@@ -41,13 +37,8 @@ export default function CapturePage() {
     setCameraReady(false);
   }, []);
 
-  function clearTick() {
-    if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
-  }
-
   useEffect(() => () => {
     stopStream();
-    clearTick();
     if (pollRef.current) clearInterval(pollRef.current);
   }, [stopStream]);
 
@@ -63,29 +54,17 @@ export default function CapturePage() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        await new Promise<void>((res) => { videoRef.current!.onloadedmetadata = () => res(); });
         await videoRef.current.play();
       }
       setCameraReady(true);
-      startCountdown();
     } catch {
       setCameraReady(false);
     }
   }
 
-  /* ── countdown ── */
-  function startCountdown() {
-    clearTick();
-    setCountdown(3);
-    let c = 3;
-    tickRef.current = setInterval(() => {
-      c--;
-      setCountdown(c);
-      if (c <= 0) { clearTick(); captureFrame(); }
-    }, 1000);
-  }
-
-  /* ── save frontal for auto-visuals ── */
-  function saveFrontalToSession(blob: Blob) {
+  /* ── save photo to sessionStorage for auto-visuals ── */
+  function savePhotoToSession(blob: Blob, key: string) {
     const small = document.createElement("canvas");
     const src   = document.createElement("canvas");
     const img   = document.createElement("img");
@@ -102,7 +81,7 @@ export default function CapturePage() {
         if (!b) return;
         const reader = new FileReader();
         reader.onloadend = () => {
-          try { sessionStorage.setItem(`visai_frontal_${id}`, reader.result as string); } catch {}
+          try { sessionStorage.setItem(key, reader.result as string); } catch {}
         };
         reader.readAsDataURL(b);
       }, "image/jpeg", 0.65);
@@ -113,10 +92,10 @@ export default function CapturePage() {
 
   /* ── capture ── */
   function captureFrame() {
-    clearTick();
     const video  = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
+    if (video.readyState < 2) return;
     canvas.width  = video.videoWidth  || 1280;
     canvas.height = video.videoHeight || 960;
     const ctx = canvas.getContext("2d");
@@ -125,17 +104,16 @@ export default function CapturePage() {
     canvas.toBlob((blob) => {
       if (!blob) return;
       const idx  = shotIdxRef.current;
-      if (idx === 0) saveFrontalToSession(blob);
+      if (idx === 0) savePhotoToSession(blob, `visai_frontal_${id}`);
+      if (idx === 1) savePhotoToSession(blob, `visai_profile_${id}`);
       const file = new File([blob], `photo_${idx + 1}.jpg`, { type: "image/jpeg" });
       photosRef.current = [...photosRef.current, file];
       const next = idx + 1;
       shotIdxRef.current = next;
       setShotIndex(next);
       if (next >= SHOTS.length) {
-        stopStream(); clearTick();
+        stopStream();
         handleUpload(photosRef.current);
-      } else {
-        startCountdown();
       }
     }, "image/jpeg", 0.92);
   }
@@ -146,10 +124,11 @@ export default function CapturePage() {
     if (!file) return;
     e.target.value = "";
     const idx = shotIdxRef.current;
-    if (idx === 0) {
+    if (idx === 0 || idx === 1) {
+      const key = idx === 0 ? `visai_frontal_${id}` : `visai_profile_${id}`;
       const reader = new FileReader();
       reader.onloadend = () => {
-        try { sessionStorage.setItem(`visai_frontal_${id}`, reader.result as string); } catch {}
+        try { sessionStorage.setItem(key, reader.result as string); } catch {}
       };
       reader.readAsDataURL(file);
     }
@@ -162,13 +141,11 @@ export default function CapturePage() {
 
   /* ── repetir ── */
   function handleRepeat() {
-    clearTick();
     const idx     = shotIdxRef.current;
     const prevIdx = Math.max(0, idx - 1);
     photosRef.current   = photosRef.current.slice(0, prevIdx);
     shotIdxRef.current  = prevIdx;
     setShotIndex(prevIdx);
-    if (cameraReady) startCountdown();
   }
 
   /* ── upload ── */
@@ -180,20 +157,20 @@ export default function CapturePage() {
       setStage("processing");
       pollRef.current = setInterval(async () => {
         try {
-          const result = await api.getResult(id);
-          if (result.face_shape) {
+          const status = await api.getAnalysisStatus(id);
+          if (status.code === 200 && status.result?.face_shape) {
             clearInterval(pollRef.current!);
+            pollRef.current = null;
             window.location.href = `/result/${id}`;
           }
+          // code 202 = still processing → keep polling
         } catch (e: any) {
-          const msg = e.message ?? "";
-          if (!msg.includes("202") && !msg.includes("progreso") && !msg.includes("procesando")) {
-            clearInterval(pollRef.current!);
-            setError(msg || "Error al obtener el resultado.");
-            setStage("error");
-          }
+          clearInterval(pollRef.current!);
+          pollRef.current = null;
+          setError(e.message || "Error al obtener el resultado.");
+          setStage("error");
         }
-      }, 2500);
+      }, 3000);
     } catch (e: any) {
       setError(e.message || "Error al subir las fotos. Inténtalo de nuevo.");
       setStage("error");
@@ -201,6 +178,7 @@ export default function CapturePage() {
   }
 
   function handleRetry() {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     photosRef.current  = [];
     shotIdxRef.current = 0;
     setShotIndex(0);
@@ -231,7 +209,7 @@ export default function CapturePage() {
             <div style={{ display: "flex", gap: 6 }}>
               {[0, 1, 2].map((i) => <div key={i} className="dot-pulse" style={{ animationDelay: `${i * 0.4}s` }} />)}
             </div>
-            <p className="caption">Suele tardar 15–30 segundos</p>
+            <p className="caption">Suele tardar 40–60 segundos</p>
           </>
         )}
       </div>
@@ -400,21 +378,11 @@ export default function CapturePage() {
           }} />
         </button>
 
-        {/* Countdown + count */}
+        {/* Shot counter */}
         <div style={{ textAlign: "center", minWidth: 60 }}>
-          {cameraReady && !isDone && (
-            <>
-              <div style={{ color: "rgba(201,168,76,0.95)", fontSize: 32, fontWeight: 800, lineHeight: 1 }}>
-                {countdown}s
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>
-                {Math.min(shotIndex + 1, SHOTS.length)}/{SHOTS.length}
-              </div>
-            </>
-          )}
-          {!cameraReady && !isDone && (
+          {!isDone && (
             <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
-              {shotIndex + 1}/{SHOTS.length}
+              {Math.min(shotIndex + 1, SHOTS.length)}/{SHOTS.length}
             </div>
           )}
         </div>
