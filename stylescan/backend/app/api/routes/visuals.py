@@ -12,7 +12,6 @@ GET  /analysis/{id}/visuals
 """
 
 import logging
-import asyncio
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 async def _run_generation(
     analysis_id: str,
-    photo_bytes: bytes,
+    photos_bytes: list[bytes],
     cuts: list[dict],
     face_shape: str,
 ):
@@ -38,7 +37,7 @@ async def _run_generation(
     async with AsyncSessionLocal() as db:
         try:
             visuals = await image_gen_service.generate_visuals(
-                photo_bytes=photo_bytes,
+                photos_bytes=photos_bytes,
                 cuts=cuts,
                 face_shape=face_shape,
                 fal_key=settings.FAL_KEY,
@@ -61,20 +60,23 @@ async def _run_generation(
                 analysis.visuals_status = "failed"
                 await db.commit()
         finally:
-            # GDPR: photo_bytes only lived in this task
-            del photo_bytes
+            del photos_bytes
 
 
 @router.post("/{analysis_id}/generate-visuals", status_code=202)
 async def generate_visuals(
     analysis_id: str,
     background_tasks: BackgroundTasks,
-    photo: UploadFile = File(..., description="Foto frontal del usuario para prueba virtual"),
+    photo: UploadFile = File(..., description="Foto frontal del usuario"),
+    profile_photo: UploadFile = File(None, description="Foto de perfil izquierdo (opcional — mejora el ángulo lateral)"),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Trigger virtual try-on generation. The photo is used ONLY for image gen
-    and is never stored to disk or database. Returns immediately — poll /visuals.
+    Trigger virtual try-on generation.
+    - photo: frontal (required) → used for the frontal angle image
+    - profile_photo: left profile from capture (optional) → used for the lateral angle image
+      If absent, FLUX generates the lateral from the frontal with a text instruction.
+    Photos are never stored. Returns immediately — poll /visuals.
     """
     if not settings.FAL_KEY:
         raise HTTPException(503, "Servicio de visualización no configurado.")
@@ -90,15 +92,28 @@ async def generate_visuals(
     if analysis.visuals_status == "processing":
         raise HTTPException(409, "Generación ya en progreso. Espera o consulta /visuals.")
 
-    # Validate + prepare photo
+    # Validate + prepare frontal
     raw = await photo.read()
-    val_result, prepared = photo_service.validate_and_prepare_photo(
+    val_result, prepared_frontal = photo_service.validate_and_prepare_photo(
         raw, photo.filename or "photo.jpg"
     )
-    del raw  # GDPR
+    del raw
+    if not val_result.valid or not prepared_frontal:
+        raise HTTPException(422, f"Foto frontal no válida: {val_result.error}")
 
-    if not val_result.valid or not prepared:
-        raise HTTPException(422, f"Foto no válida: {val_result.error}")
+    # Validate + prepare profile (optional)
+    photos_bytes = [prepared_frontal]
+    if profile_photo:
+        raw_p = await profile_photo.read()
+        val_p, prepared_profile = photo_service.validate_and_prepare_photo(
+            raw_p, profile_photo.filename or "profile.jpg"
+        )
+        del raw_p
+        if val_p.valid and prepared_profile:
+            photos_bytes.append(prepared_profile)
+            logger.info("Profile photo accepted — lateral angle will use real profile shot")
+        else:
+            logger.info("Profile photo invalid (%s) — lateral will use text-only", val_p.error)
 
     # Extract cuts from the stored report
     report = analysis.report or {}
@@ -112,19 +127,13 @@ async def generate_visuals(
     analysis.visuals_status = "processing"
     await db.commit()
 
-    # Fire background task (prepared bytes passed explicitly)
-    background_tasks.add_task(
-        _run_generation,
-        analysis_id,
-        prepared,
-        cuts,
-        face_shape,
-    )
+    background_tasks.add_task(_run_generation, analysis_id, photos_bytes, cuts, face_shape)
 
     return {
         "message": "Generación iniciada. Consulta GET /analysis/{id}/visuals en ~30 segundos.",
         "analysis_id": analysis_id,
         "visuals_status": "processing",
+        "has_profile_photo": len(photos_bytes) == 2,
     }
 
 

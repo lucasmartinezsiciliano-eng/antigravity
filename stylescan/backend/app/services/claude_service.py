@@ -1,25 +1,21 @@
 """
-StyleScan — Claude Report Generation Service
+StyleScan — LLM Report Generation Service
 
-Converts raw FaceMetrics + quiz answers into a professional, personalized
-hair analysis report in Spanish. Output is structured JSON consumed by the app.
+Converts raw FaceMetrics + visagismo analysis + quiz answers into a professional,
+personalized hair analysis report in Spanish. Output is structured JSON.
 
-Prompt strategy:
-- System prompt: persona + science framework + format constraints (CACHED)
-- User prompt: metrics + quiz (factual, dense, specific)
-- Model: claude-haiku-4-5-20251001 (cost-efficient for structured output)
-- Caching: System prompt cached (saves ~70% of prompt tokens on repeats)
-- Fallback: If JSON parse fails, retry with explicit correction prompt
+Provider is controlled by LLM_PROVIDER in .env (anthropic | deepseek | gemini).
+All providers receive the same system prompt and schema — quality is equivalent.
 
 Science basis:
-- Rule of thirds (not golden ratio) for facial balance assessment
-- fWHR (facial Width-to-Height Ratio) — dominance signal, not classical beauty
+- Rule of thirds for facial balance assessment
+- fWHR (facial Width-to-Height Ratio) — dominance signal
 - Jawline prominence = primary masculine attractiveness marker
-- Fade vs taper: fade elongates/slims; taper adds width — opposite effects
+- Fade vs taper: fade elongates/slims; taper adds width
 - Weight line = visual mass band created by the length transition zone
 - Heavy stubble (10-day) = peak attractiveness in controlled studies
 - Asymmetry compensation via parting strategy
-- Age-appropriate texture and length guidance
+- Visagismo professional method (Fernand Aubry) for defect correction
 """
 
 import json
@@ -27,14 +23,17 @@ import logging
 import re
 from typing import Any
 
-import anthropic
-
 from app.core.config import settings
+from app.services import llm_service
 from app.services.face_analysis import FaceMetrics
+from app.services.kb_service import (
+    get_advanced_visagismo_context,
+    get_kb_context,
+    get_spain_trends_context,
+)
+from app.services.visagismo_service import analyze as visagismo_analyze
 
 logger = logging.getLogger(__name__)
-
-_client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 # ---------------------------------------------------------------------------
 # Static descriptors (used in prompt construction)
@@ -154,45 +153,102 @@ REGLAS DE FORMATO (ABSOLUTAS)
 # ---------------------------------------------------------------------------
 # Main generation function
 # ---------------------------------------------------------------------------
-def generate_report(metrics: FaceMetrics, quiz: dict[str, Any]) -> dict:
+def generate_colorimetry_report(metrics: FaceMetrics, quiz: dict[str, Any]) -> dict:
+    """Generate colorimetry analysis based on face shape + quiz answers."""
+    face_desc = FACE_SHAPE_ES.get(metrics.face_shape, metrics.face_shape)
+    quiz_lines = _format_quiz(quiz)
+
+    prompt = f"""════ DATOS FACIALES ════
+Forma facial: {metrics.face_shape.upper()} — {face_desc}
+Ratio longitud/anchura: {metrics.length_width_ratio:.3f}
+Mandíbula/pómulos: {metrics.jaw_to_face_ratio:.3f}
+Asimetría: {metrics.asymmetry_score:.3f}
+
+════ PREFERENCIAS ════
+{quiz_lines}
+
+════ INSTRUCCIÓN ════
+Eres experto en colorimetría masculina y análisis de imagen personal.
+Genera un análisis de colorimetría adaptado a esta forma facial.
+Devuelve SOLO JSON, sin texto fuera:
+
+{{
+  "paleta_colores_ropa": ["color1", "color2", "color3", "color4", "color5"],
+  "tonos_a_evitar": ["color1", "color2", "color3"],
+  "razon_paleta": "string — 2-3 frases. Por qué estos colores favorecen a esta forma facial y proporciones específicas.",
+  "tonos_cabello": "string — recomendaciones de tono de cabello (si aplica) según la forma facial. 2 frases.",
+  "tipo_montura_gafas": "string — qué forma de montura equilibra mejor esta cara y por qué. 2 frases.",
+  "colores_formales": "string — paleta para entorno profesional/formal. 2 frases.",
+  "colores_casual": "string — paleta para entorno casual. 2 frases.",
+  "consejo_imagen_personal": "string — 2-3 consejos concretos de imagen personal para este perfil facial específico."
+}}"""
+
+    return _call_llm(prompt)
+
+
+def generate_products_guide(metrics: FaceMetrics, quiz: dict[str, Any], cuts: list[dict]) -> dict:
+    """Generate personalized hair products guide based on quiz + recommended cuts."""
+    hair_texture = quiz.get("hair_texture", "straight")
+    hair_density = quiz.get("hair_density", "medium")
+    maintenance = quiz.get("maintenance_willingness", "medium")
+    cut_names = [c.get("nombre_tecnico") or c.get("nombre", "") for c in cuts[:3]]
+
+    prompt = f"""════ DATOS DEL CABELLO ════
+Textura: {hair_texture} | Densidad: {hair_density}
+Tiempo disponible mañana: {maintenance}
+Cortes recomendados: {', '.join(cut_names)}
+Forma facial: {metrics.face_shape}
+
+════ INSTRUCCIÓN ════
+Eres experto en tricología y productos capilares masculinos.
+Genera una guía de productos personalizada para este perfil.
+Devuelve SOLO JSON, sin texto fuera:
+
+{{
+  "tipo_cabello_descripcion": "string — describe el tipo de cabello del usuario y sus necesidades principales. 2 frases.",
+  "productos_recomendados": [
+    {{
+      "tipo": "string — tipo de producto (ej: 'Cera mate', 'Aceite de argán', 'Espuma de volumen')",
+      "para_que": "string — función específica para este tipo de cabello. 1 frase.",
+      "como_aplicar": "string — técnica de aplicación y cantidad. 1-2 frases.",
+      "cuando": "string — cuándo usarlo en la rutina. 1 frase."
+    }}
+  ],
+  "rutina_diaria": "string — paso a paso de la rutina de 3-5 pasos adaptada al tiempo disponible. Lista numerada.",
+  "tecnica_lavado": "string — frecuencia de lavado y técnica correcta para este tipo de cabello. 2 frases.",
+  "productos_a_evitar": ["producto1", "producto2", "producto3"],
+  "razon_evitar": "string — por qué evitar esos tipos de producto para este cabello. 1-2 frases.",
+  "mantenimiento_entre_barberia": "string — cómo mantener el corte en casa entre visitas. 2-3 frases."
+}}"""
+
+    return _call_llm(prompt)
+
+
+def generate_report(metrics: FaceMetrics, quiz: dict[str, Any], include_seasonal: bool = False) -> dict:
     """
-    Generate full analysis report via Claude.
+    Generate full analysis report via the configured LLM provider.
     Returns structured dict with all report sections.
-    Raises ValueError if Claude returns unparseable output after retries.
+    Raises ValueError if the LLM returns unparseable output after retries.
     """
-    user_prompt = _build_user_prompt(metrics, quiz)
+    user_prompt = _build_user_prompt(metrics, quiz, include_seasonal=include_seasonal)
     try:
-        return _call_claude(user_prompt)
+        return _call_llm(user_prompt)
     except Exception as e:
-        logger.error("Claude report generation failed: %s", e)
+        logger.error("LLM report generation failed: %s", e)
         raise
 
 
-def _call_claude(user_prompt: str, retry: bool = True) -> dict:
-    response = _client.messages.create(
-        model=settings.CLAUDE_MODEL,
-        max_tokens=settings.CLAUDE_MAX_TOKENS,
-        system=[
-            {
-                "type": "text",
-                "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": user_prompt}],
-    )
+def _call_llm(user_prompt: str, retry: bool = True) -> dict:
+    raw = llm_service.call(SYSTEM_PROMPT, user_prompt)
+    logger.debug("LLM raw output length: %d chars (provider=%s)", len(raw), settings.LLM_PROVIDER)
 
-    raw = response.content[0].text.strip()
-    logger.debug("Claude raw output length: %d chars", len(raw))
-
-    # Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+    # Strip markdown code fences if present
     cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip())
     cleaned = re.sub(r"\s*```$", "", cleaned.strip())
 
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
-        # Try to extract the outermost JSON object
         match = re.search(r"\{[\s\S]*\}", cleaned)
         if match:
             try:
@@ -201,21 +257,21 @@ def _call_claude(user_prompt: str, retry: bool = True) -> dict:
                 pass
 
         if retry:
-            logger.warning("Claude JSON parse failed, retrying with strict correction prompt")
+            logger.warning("LLM JSON parse failed, retrying with correction prompt")
             correction = (
-                "Tu respuesta anterior contenía texto fuera del JSON (como bloques ```json```). "
+                "Tu respuesta anterior contenía texto fuera del JSON. "
                 "Devuelve ÚNICAMENTE el objeto JSON, sin ningún texto, sin markdown, sin ```.\n\n"
                 f"Corrige y devuelve solo el JSON:\n\n{raw[:800]}"
             )
-            return _call_claude(correction, retry=False)
+            return _call_llm(correction, retry=False)
 
-        raise ValueError(f"Claude returned non-JSON output: {raw[:200]}")
+        raise ValueError(f"LLM returned non-JSON output: {raw[:200]}")
 
 
 # ---------------------------------------------------------------------------
 # Prompt construction
 # ---------------------------------------------------------------------------
-def _build_user_prompt(metrics: FaceMetrics, quiz: dict) -> str:
+def _build_user_prompt(metrics: FaceMetrics, quiz: dict, include_seasonal: bool = False) -> str:
     face_desc = FACE_SHAPE_ES.get(metrics.face_shape, metrics.face_shape)
     cranial_desc = CRANIAL_ES.get(metrics.cranial_proportion, metrics.cranial_proportion)
 
@@ -248,18 +304,45 @@ def _build_user_prompt(metrics: FaceMetrics, quiz: dict) -> str:
     if metrics.analysis_notes:
         notes_text = "\n\nNOTAS DEL ANÁLISIS:\n" + "\n".join(f"  - {n}" for n in metrics.analysis_notes)
 
+    vis = visagismo_analyze(metrics)
+    kb_context = (
+        vis.formatted_block
+        + get_kb_context(metrics.face_shape)
+        + get_spain_trends_context(metrics.face_shape)
+        + get_advanced_visagismo_context(metrics.face_shape)
+    )
+
     quiz_lines = _format_quiz(quiz)
+
+    seasonal_field = ""
+    if include_seasonal:
+        from datetime import date
+        month = date.today().month
+        upcoming = "verano" if 3 <= month <= 5 else "otoño" if 6 <= month <= 8 else "invierno" if 9 <= month <= 11 else "primavera"
+        seasonal_field = f""",
+
+  "analisis_temporal": {{
+    "temporada": "{upcoming}",
+    "longitud_recomendada": "string — corto/medio/largo con justificación para {upcoming} y para esta forma facial",
+    "adaptacion_corte": "string — cómo adaptar el corte principal para {upcoming}: temperatura, \
+humedad, actividad. 2-3 frases concretas.",
+    "productos_temporada": "string — productos específicos para {upcoming} (fijador anti-humedad en verano, \
+aceite nutritivo en invierno, etc.)",
+    "timing_barberia": "string — cuándo ir a la barbería para llegar perfecto al inicio de {upcoming}"
+  }}"""
 
     # Beard context from quiz
     beard_from_quiz = quiz.get("beard", "none")
     beard_context = {
-        "none":    "actualmente sin barba",
-        "stubble": "barba de pocos días (óptimo según estudios de percepción)",
-        "short":   "barba corta (<2 cm)",
-        "full":    "barba completa",
+        "none":     "actualmente sin barba",
+        "stubble":  "barba de pocos días (óptimo según estudios de percepción)",
+        "goatee":   "perilla (solo en mentón, sin barba en mejillas ni bigote completo)",
+        "mustache": "solo bigote (sin barba en mejillas ni mentón)",
+        "short":    "barba corta (<2 cm)",
+        "full":     "barba completa",
     }.get(beard_from_quiz, beard_from_quiz)
 
-    return f"""════ MÉTRICAS FACIALES (MediaPipe 468 puntos) ════
+    return f"""{kb_context}════ MÉTRICAS FACIALES (MediaPipe 468 puntos) ════
 
 Forma facial: {metrics.face_shape.upper()}
 Descripción: {face_desc}
@@ -275,7 +358,7 @@ Ratios biométricos:
     ({metrics.asymmetry_description}){asym_flag}
 
 Proporciones craneales: {cranial_desc}
-Fotos procesadas: {metrics.photos_used}/5 | Confianza: {metrics.confidence:.0%}
+Fotos procesadas: {metrics.photos_used}/5 (frontal + perfil 90° izquierdo + perfil 90° derecho + vista superior + mentón abajo) | Confianza: {metrics.confidence:.0%}
 
 Recomendación técnica de base:
   {fade_guidance}{notes_text}
@@ -340,7 +423,7 @@ de tus pómulos (ratio {metrics.forehead_to_face_ratio:.2f}), acentuando lo que 
 (3) cómo trabajar el volumen según sus proporciones craneales; \
 (4) si hay textura o rizos, cómo aprovecharlos; \
 (5) cualquier observación específica derivada de las notas del análisis. \
-Cada consejo en una frase accionable. Sin repetir lo dicho en las secciones anteriores."
+Cada consejo en una frase accionable. Sin repetir lo dicho en las secciones anteriores."{seasonal_field}
 }}"""
 
 
@@ -398,16 +481,28 @@ def _format_quiz(quiz: dict) -> str:
             "medium": "Normal",
             "thick":  "Grueso / abundante",
         }),
+        "lifestyle": ("Entorno habitual", {
+            "professional": "Oficina / profesional (reuniones, clientes, formal)",
+            "creative":     "Sector creativo (agencia, arte, casual)",
+            "active":       "Físico / deportivo (obra, deporte, aire libre)",
+            "mixed":        "Mixto / desde casa (variado, sin código fijo)",
+        }),
+        "style_goal": ("Objetivo con el corte", {
+            "professional_look": "Verse más profesional (cuidado, serio, imagen sólida)",
+            "trendy_look":       "Seguir tendencias (actual, llamativo, con personalidad)",
+            "effortless_look":   "Bien sin esfuerzo (natural, sin complicaciones)",
+            "confidence_boost":  "Ganar confianza (un cambio real, reinventarse)",
+        }),
         "preferred_length": ("Longitud preferida", {
             "very_short": "Muy corto (<1 cm)",
             "short":      "Corto (1-3 cm)",
             "medium":     "Medio (3-6 cm)",
             "long":       "Largo (>6 cm)",
         }),
-        "maintenance_willingness": ("Disposición al mantenimiento", {
-            "low":    "Mínimo — quiero olvidarme del pelo",
-            "medium": "Moderado — algo de rutina está bien",
-            "high":   "Alto — me gusta cuidar mi imagen",
+        "maintenance_willingness": ("Tiempo de arreglo matutino", {
+            "low":    "Menos de 2 min (ducha y listo, sin producto)",
+            "medium": "Unos 5 min (un poco de producto, nada más)",
+            "high":   "10 min o más (secador, producto, lo que toque)",
         }),
         "style_preference": ("Estilo preferido", {
             "classic": "Clásico / conservador",
@@ -415,12 +510,15 @@ def _format_quiz(quiz: dict) -> str:
             "trendy":  "A la moda / atrevido",
         }),
         "beard": ("Barba", {
-            "none":    "Sin barba",
-            "stubble": "Barba de pocos días",
-            "short":   "Barba corta (<2 cm)",
-            "full":    "Barba completa",
+            "none":     "Sin barba",
+            "stubble":  "Barba de pocos días",
+            "goatee":   "Perilla (solo en mentón, sin mejillas)",
+            "mustache": "Solo bigote (sobre el labio, sin barba)",
+            "short":    "Barba corta (<2 cm)",
+            "full":     "Barba completa",
         }),
         "problematic_areas": ("Zonas problemáticas", None),
+        "reference_style":   ("Estilos de referencia (cortes pasados que gustaron)", None),
         "additional_notes":  ("Observaciones adicionales", None),
     }
 

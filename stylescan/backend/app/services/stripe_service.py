@@ -88,11 +88,12 @@ def create_checkout_session(
         })
 
     session_params: dict = {
-        "payment_method_types": ["card"],
         "line_items": line_items,
         "mode": "payment",
-        "success_url": f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
+        # success_url already contains ?id=... so we append session_id with & not ?
+        "success_url": f"{success_url}&session_id={{CHECKOUT_SESSION_ID}}",
         "cancel_url": cancel_url,
+        "locale": "es",
         "metadata": {
             "analysis_id": analysis_id,
             "include_colorimetry": str(include_colorimetry),
@@ -117,6 +118,46 @@ def create_checkout_session(
     return stripe.checkout.Session.create(**session_params)
 
 
+def create_upsell_checkout_session(
+    analysis_id: str,
+    upsell_type: str,
+    success_url: str,
+    cancel_url: str,
+) -> stripe.checkout.Session:
+    """
+    Create a Stripe Checkout Session for post-analysis upsell purchase.
+    upsell_type: "colorimetry" | "products" | "pack"
+    """
+    price_map = {
+        "colorimetry": (settings.PRICE_COLORIMETRY, "Colorimetría personalizada"),
+        "products":    (settings.PRICE_PRODUCTS_GUIDE, "Guía de productos personalizada"),
+        "pack":        (settings.PRICE_PACK_COMPLETE, "Pack Completo — Colorimetría + Guía de productos"),
+    }
+    amount, name = price_map.get(upsell_type, (settings.PRICE_COLORIMETRY, "Upsell"))
+
+    return stripe.checkout.Session.create(
+        line_items=[{
+            "price_data": {
+                "currency": "eur",
+                "product_data": {"name": f"StyleScan — {name}"},
+                "unit_amount": amount,
+            },
+            "quantity": 1,
+        }],
+        mode="payment",
+        success_url=f"{success_url}?upsell=ok&session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=cancel_url,
+        locale="es",
+        allow_promotion_codes=True,
+        metadata={
+            "analysis_id": analysis_id,
+            "upsell_type": upsell_type,
+            "include_colorimetry": str(upsell_type in ("colorimetry", "pack")),
+            "include_products_guide": str(upsell_type in ("products", "pack")),
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # Barber promotion code management
 # ---------------------------------------------------------------------------
@@ -129,10 +170,10 @@ def get_or_create_base_coupon() -> str:
         return settings.STRIPE_BASE_COUPON_ID
 
     coupon = stripe.Coupon.create(
-        amount_off=100,
+        amount_off=settings.BARBER_COMMISSION_CENTS,
         currency="eur",
         duration="once",
-        name="Descuento colaborador barbería StyleScan (-€1)",
+        name="Descuento colaborador barbería VISAI (-€3)",
         metadata={"program": "barbershop_affiliate"},
     )
     logger.info("Created base coupon: %s", coupon.id)
@@ -149,15 +190,15 @@ def create_barber_promo_code(
     Create a unique Stripe PromotionCode for a barber partner.
     Returns (promotion_code_string, stripe_promo_code_id).
 
-    Code format: STYLESCAN-{NAME}-{ID_SHORT}
-    Example: STYLESCAN-CARLOS-A1B2
+    Code format: VISAI-{NAME}-{ID_SHORT}
+    Example: VISAI-CARLOS-A1B2
     """
     coupon_id = get_or_create_base_coupon()
 
     # Code must be uppercase alphanumeric + hyphens
     clean_name = "".join(c for c in barber_name.upper() if c.isalnum())[:12]
     id_suffix = barber_id[-4:].upper()
-    code = f"STYLESCAN-{clean_name}-{id_suffix}"
+    code = f"VISAI-{clean_name}-{id_suffix}"
 
     expires_at = int((datetime.now(timezone.utc) + timedelta(days=365)).timestamp())
 

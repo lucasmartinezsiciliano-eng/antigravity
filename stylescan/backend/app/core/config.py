@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
 
     # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./stylescan.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./knowledge_base/stylescan.db"
 
     # LLM Provider — switch without touching code
     # Values: anthropic | deepseek | gemini
@@ -34,11 +34,12 @@ class Settings(BaseSettings):
     STRIPE_BASE_COUPON_ID: str = ""  # Created once, all barber codes reference it
 
     # Pricing (in cents)
-    PRICE_BASE_ANALYSIS: int = 799       # €7.99
+    PRICE_BASE_ANALYSIS: int = 1499      # €14.99
     PRICE_COLORIMETRY: int = 249         # €2.49
     PRICE_PRODUCTS_GUIDE: int = 199      # €1.99
-    PRICE_PACK_COMPLETE: int = 349       # €3.49
-    BARBER_COMMISSION_CENTS: int = 100   # €1.00
+    PRICE_PACK_COMPLETE: int = 2499      # €24.99 (completo: todo incluido)
+    PRICE_SEASONAL: int = 499            # €4.99
+    BARBER_COMMISSION_CENTS: int = 300   # €3.00
 
     # Photo processing
     MAX_PHOTO_SIZE_MB: int = 10
@@ -54,9 +55,8 @@ class Settings(BaseSettings):
     MAX_ANALYSES_PER_PHONE_30D: int = 3
     MAX_BARBER_CODE_USES_PER_PHONE: int = 1
 
-    # Trend research
+    # Image generation — Nano Banana Pro via fal.ai
     FAL_KEY: str = ""          # fal.ai API key — required for virtual try-on
-    PEXELS_API_KEY: str = ""      # Pexels API key — for haircut reference images (free: 200 req/h)
     INSTAGRAM_USERNAME: str = ""  # Instagram account for barber reference scraping
     INSTAGRAM_PASSWORD: str = ""  # Instagram password
     # IMAGE_GEN_ENABLED auto-derives from FAL_KEY presence

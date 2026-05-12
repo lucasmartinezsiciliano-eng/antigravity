@@ -1,24 +1,28 @@
 """
 StyleScan — Virtual Try-On Image Generation
 
-For each of the 3 recommended cuts, generates 3 images of the client
-from different angles using fal.ai FLUX Kontext:
+For each of the 3 recommended cuts, generates 2 images using
+fal-ai/nano-banana-pro/edit (Google Nano Banana Pro via fal.ai):
 
-  Angle 0 — Frontal (vista de frente)
-  Angle 1 — 3/4 izquierda (45°, el ángulo más favorecedor)
-  Angle 2 — 3/4 derecha (45° al otro lado, muestra el fade lateral)
+  Angle 0 — Frontal: client's face with new hairstyle (face LOCKED)
+  Angle 1 — Lateral: left-profile view showing fade/taper graduation
 
-= 9 images total (3 cuts × 3 angles), all generated in parallel.
+= 6 images total (3 cuts × 2 angles), all generated in parallel.
 
-When PEXELS_API_KEY is configured:
-  Uses fal-ai/flux-pro/kontext/multi — user photo + reference haircut photo.
-  The visual reference dramatically improves output quality vs text-only.
+Reference strategy (improvement #1 — multi-angle KB):
+  Each angle requests a KB reference whose photo_angle matches:
+    frontal  → prefers photo_angle="front"
+    lateral  → prefers photo_angle="side_left"
+  When both client photo + reference are available, the model receives
+  [client_photo, reference_photo] via image_urls — no competing face
+  as reference because we filter for shots without visible face (is_nuca_shot)
+  or use side/front shots from the curated index.
 
-When PEXELS_API_KEY is absent:
-  Falls back to fal-ai/flux-pro/kontext (single image + text description).
+Cost: ~$0.039–$0.15 per edit at 1K resolution via fal.ai.
+  At 6 images/analysis × $0.039 = ~$0.23 variable cost per user.
 
 GDPR: uploaded photo is never stored. fal.ai processes in-memory.
-Generated image URLs are CDN links valid ~24h.
+Generated image URLs are CDN links valid ~24 h.
 """
 
 import asyncio
@@ -35,32 +39,36 @@ logger = logging.getLogger(__name__)
 
 _IMAGE_PROMPTS_PATH = Path(__file__).parent.parent.parent / "knowledge_base" / "image_prompts.json"
 
-# Angle descriptors for FLUX Kontext (calibrated for barbershop editorial quality)
+# Model — Nano Banana Pro Edit on fal.ai
+# Accepts image_urls (list): first = client identity anchor, second (optional) = style reference
+_MODEL = "fal-ai/nano-banana-pro/edit"
+
+# 2 angles per cut.
+# photo_index: which client capture photo to use as identity anchor
+# prefer_angle: KB lookup preference — find references shot from this angle
 _ANGLES = [
     {
         "id": "frontal",
         "label": "Frontal",
+        "photo_index": 0,
+        "prefer_angle": "front",
         "instruction_suffix": (
-            "Camera angle: straight-on frontal view, subject looking directly at camera. "
-            "Passport-style portrait lighting. Clean neutral background."
+            "Keep the EXACT same frontal camera angle. Subject looks directly at the camera. "
+            "Show the full top of the head: length on top, parting, and fringe/quiff/pompadour if present. "
+            "Professional barbershop portrait, clean neutral dark background."
         ),
     },
     {
-        "id": "three_quarter_left",
-        "label": "3/4 izquierda",
+        "id": "lateral",
+        "label": "Lateral",
+        "photo_index": 1,
+        "prefer_angle": "side_left",
         "instruction_suffix": (
-            "Camera angle: 3/4 profile from the subject's left side, approximately 45 degrees. "
-            "Left side of face and temple fade clearly visible. "
-            "Professional barbershop editorial angle. Natural side lighting."
-        ),
-    },
-    {
-        "id": "three_quarter_right",
-        "label": "3/4 derecha",
-        "instruction_suffix": (
-            "Camera angle: 3/4 profile from the subject's right side, approximately 45 degrees. "
-            "Right side fade/taper clearly visible. Shows back hairline and neckline transition. "
-            "Warm barbershop lighting."
+            "This is the left profile / side view of the same person. "
+            "Show the left side of the head clearly: left temple, ear, and the fade or taper on the side. "
+            "The hair length on top, the fade transition, and the sideburn line must all be clearly visible. "
+            "Keep all facial features consistent with the input photo. "
+            "Professional barbershop portfolio lighting, clean neutral background."
         ),
     },
 ]
@@ -88,7 +96,7 @@ def _normalize(text: str) -> str:
 def _lookup_image_desc(nombre_en: str) -> str:
     """
     Try to find a matching haircut description from image_prompts.json.
-    Compares normalized key tokens against the cut name. Returns empty string if no match.
+    Compares normalized key tokens against the cut name. Returns "" if no match.
     """
     name_norm = _normalize(nombre_en)
     best_key, best_score = "", 0
@@ -125,50 +133,132 @@ class HaircutVisual:
         return any(a.url for a in self.angles)
 
 
-def _load_barber_reference_context(nombre_en: str, face_shape: str) -> str:
-    """Pull real barbershop technique insights from the barber Instagram index."""
+def _resolve_kb_reference(
+    nombre_en: str,
+    face_shape: str,
+    age_group: Optional[str],
+    prefer_angle: Optional[str],
+    skin_tone: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Look up a reference image from the barber Instagram KB (SQLite).
+    Returns a file:// URL (curated local image) or an Instagram CDN URL,
+    or None if nothing useful is found.
+
+    Prefers references whose photo_angle matches prefer_angle and skin_tone matches
+    the client's detected skin tone (critical for Nano Banana Pro blending quality).
+    """
     try:
-        from scripts.barber_instagram_agent import build_reference_context
-        return build_reference_context(face_shape, nombre_en)
+        from scripts.barber_instagram_agent import find_references, CURATED_DIR
     except Exception:
-        return ""
+        return None
+
+    refs = find_references(
+        face_shape=face_shape,
+        cut_name=nombre_en,
+        limit=5,
+        require_image=False,  # also consider CDN-only refs
+        age_group=age_group,
+        trending_only=False,
+        prefer_angle=prefer_angle,
+        skin_tone=skin_tone,
+    )
+
+    if not refs:
+        return None
+
+    # Prefer refs with a local curated file (better quality, always available)
+    for ref in refs:
+        curated = ref.get("curated_file")
+        if curated:
+            curated_path = CURATED_DIR / curated
+            if curated_path.exists():
+                return curated_path.as_uri()  # file:// URI
+
+    # Fall back to image_file in images/
+    for ref in refs:
+        img_file = ref.get("image_file")
+        if img_file:
+            from scripts.barber_instagram_agent import IMG_DIR
+            img_path = IMG_DIR / img_file
+            if img_path.exists():
+                return img_path.as_uri()
+
+    # Fall back to Instagram CDN URL (may expire in ~24 h but usable now)
+    for ref in refs:
+        cdn = ref.get("instagram_cdn_url")
+        if cdn and cdn.startswith(("http://", "https://")):
+            return cdn
+
+    return None
 
 
-def _build_instruction_text_only(nombre_en: str, technique: str, angle_suffix: str, face_shape: str = "") -> str:
-    """Text-only instruction for fal-ai/flux-pro/kontext (single image)."""
+def _ref_url_to_fal_input(reference_url: str) -> str:
+    """
+    Normalize a reference URL into something fal.ai can consume.
+    - http(s):// → pass through.
+    - file://    → read and inline as data URI (base64).
+    """
+    if reference_url.startswith(("http://", "https://", "data:")):
+        return reference_url
+    if reference_url.startswith("file://"):
+        from urllib.parse import urlparse, unquote
+        parsed = urlparse(reference_url)
+        local_path = unquote(parsed.path)
+        if os.name == "nt" and local_path.startswith("/"):
+            local_path = local_path[1:]
+        with open(local_path, "rb") as f:
+            payload = f.read()
+        ext = Path(local_path).suffix.lower().lstrip(".") or "jpeg"
+        if ext == "jpg":
+            ext = "jpeg"
+        return f"data:image/{ext};base64,{base64.b64encode(payload).decode()}"
+    return reference_url
+
+
+def _build_prompt(
+    nombre_en: str,
+    technique: str,
+    angle_suffix: str,
+    has_reference: bool,
+) -> str:
+    """
+    Build the edit prompt for Nano Banana Pro.
+    When has_reference=True, the model receives [client_photo, reference_photo]
+    so we direct it to take hair style from image 2 only.
+    When has_reference=False, single photo mode with explicit text description.
+    """
     image_desc = _lookup_image_desc(nombre_en)
-    haircut_desc = image_desc if image_desc else technique[:250]
-    barber_ctx = _load_barber_reference_context(nombre_en, face_shape) if face_shape else ""
+    haircut_detail = image_desc if image_desc else technique[:300]
 
-    parts = [
-        "Keep the person's face, skin tone, eyes, and facial structure exactly identical.",
-        f"Change ONLY the hairstyle to: {nombre_en}.",
-        f"Barbershop technique: {haircut_desc}.",
-    ]
-    if barber_ctx:
-        parts.append(barber_ctx)
-    parts += [
-        "Result must look like a professional barbershop portfolio photo.",
-        "Do not change clothing, facial hair, or background.",
-        angle_suffix,
-    ]
-    return " ".join(parts)
-
-
-def _build_instruction_with_reference(nombre_en: str, angle_suffix: str) -> str:
-    """
-    Instruction for fal-ai/flux-pro/kontext/multi (user photo + reference photo).
-    Shorter: the visual reference replaces the need for verbose text description.
-    """
-    parts = [
-        "Image 1 is the person. Image 2 is a reference haircut photo.",
-        f"Apply the {nombre_en} hairstyle shown in image 2 to the person in image 1.",
-        "Keep the person's face, skin tone, eyes, facial structure, clothing, and background exactly identical.",
-        "Match the hair length, texture, fade level, and styling shown in image 2 precisely.",
-        "Result must look like a professional barbershop portfolio photo.",
-        angle_suffix,
-    ]
-    return " ".join(parts)
+    if has_reference:
+        prompt = (
+            f"HAIR-ONLY EDIT using two reference images. "
+            f"Image 1 is the CLIENT — their face, skin tone, eyes, nose, mouth, jaw, beard, "
+            f"and all facial features are the IDENTITY ANCHOR and must NOT change at all. "
+            f"Image 2 is the HAIRCUT REFERENCE — use ONLY the hair style, length, texture, and fade "
+            f"shown in image 2. Do NOT copy any facial features from image 2. "
+            f"Apply the {nombre_en} hairstyle from image 2 to the person from image 1, "
+            f"keeping the client's face PIXEL-IDENTICAL to image 1. "
+            f"Clothing and background must also remain as in image 1. "
+            f"Result must look like a professional barbershop portfolio photo. "
+            f"{angle_suffix}"
+        )
+    else:
+        prompt = (
+            f"HAIR-ONLY EDIT. "
+            f"IDENTITY LOCK — do NOT modify under any circumstances: "
+            f"the person's face (every feature, wrinkle, pore, shadow), eye shape and color, "
+            f"eyebrow shape, nose shape, mouth and lips, chin, jaw line, skin tone, "
+            f"facial hair or beard stubble, ears, neck, clothing, and background. "
+            f"These elements must remain PIXEL-IDENTICAL to the input image. "
+            f"ONLY CHANGE: the hair on top of the head, on the sides, and on the back of the head. "
+            f"New hairstyle: {nombre_en}. "
+            f"Haircut detail: {haircut_detail}. "
+            f"The result must look like a photo taken in a professional barbershop for their portfolio. "
+            f"{angle_suffix}"
+        )
+    return prompt
 
 
 async def _generate_one_angle(
@@ -177,76 +267,103 @@ async def _generate_one_angle(
     technique: str,
     angle: dict,
     fal_key: str,
-    face_shape: str = "",
     reference_url: Optional[str] = None,
 ) -> AngleImage:
     import fal_client  # type: ignore
 
-    os.environ["FAL_KEY"] = fal_key  # fal_client reads from env only
+    os.environ["FAL_KEY"] = fal_key
 
-    data_uri = f"data:image/jpeg;base64,{photo_b64}"
+    client_data_uri = f"data:image/jpeg;base64,{photo_b64}"
     angle_suffix = angle["instruction_suffix"]
+    has_ref = reference_url is not None
+
+    # Build image_urls list: client always first, reference second if available
+    image_urls = [client_data_uri]
+    if has_ref:
+        try:
+            ref_input = _ref_url_to_fal_input(reference_url)
+            image_urls.append(ref_input)
+        except Exception as e:
+            logger.warning("  → angle %s: reference load failed (%s), using text-only", angle["id"], e)
+            has_ref = False
+            image_urls = [client_data_uri]
+
+    prompt = _build_prompt(nombre_en, technique, angle_suffix, has_ref)
 
     try:
-        loop = asyncio.get_event_loop()
-
-        if reference_url:
-            # FLUX Kontext Multi: user photo + reference haircut image
-            instruction = _build_instruction_with_reference(nombre_en, angle_suffix)
-            result = await loop.run_in_executor(
-                None,
-                lambda: fal_client.run(
-                    "fal-ai/flux-pro/kontext/multi",
-                    arguments={
-                        "prompt": instruction,
-                        "image_urls": [data_uri, reference_url],
-                        "num_images": 1,
-                        "guidance_scale": 3.5,
-                        "num_inference_steps": 28,
-                    },
-                ),
-            )
-        else:
-            # Fallback: single image + detailed text description
-            instruction = _build_instruction_text_only(nombre_en, technique, angle_suffix, face_shape)
-            result = await loop.run_in_executor(
-                None,
-                lambda: fal_client.run(
-                    "fal-ai/flux-pro/kontext",
-                    arguments={
-                        "prompt": instruction,
-                        "image_url": data_uri,
-                        "num_images": 1,
-                        "guidance_scale": 3.5,
-                        "num_inference_steps": 28,
-                    },
-                ),
-            )
+        result = await asyncio.to_thread(
+            fal_client.run,
+            _MODEL,
+            arguments={
+                "prompt": prompt,
+                "image_urls": image_urls,
+                "num_images": 1,
+                "output_format": "jpeg",
+                "resolution": "1K",      # cheapest tier — sufficient for mobile display
+                "safety_tolerance": "4",
+            },
+        )
 
         url = result["images"][0]["url"]
-        logger.info("  → angle %s: OK (ref=%s)", angle["id"], "visual" if reference_url else "text")
+        ref_mode = "ref+text" if has_ref else "text-only"
+        logger.info("  → angle %s: OK [%s]", angle["id"], ref_mode)
         return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+
     except Exception as e:
         logger.error("  → angle %s FAILED: %s", angle["id"], e)
         return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e))
 
 
 async def _generate_cut(
-    photo_b64: str,
+    photos_b64: list[str],
     cut_index: int,
     nombre_en: str,
     technique: str,
     fal_key: str,
-    face_shape: str = "",
-    reference_url: Optional[str] = None,
+    face_shape: str = "oval",
+    age_group: Optional[str] = None,
+    skin_tone: Optional[str] = None,
 ) -> HaircutVisual:
-    """Generate all 3 angle images for one cut, in parallel."""
-    mode = "multi+visual" if reference_url else "single+text"
-    logger.info("Generating cut %d: %s (3 angles, mode=%s)", cut_index, nombre_en, mode)
-    angle_tasks = [
-        _generate_one_angle(photo_b64, nombre_en, technique, angle, fal_key, face_shape, reference_url)
-        for angle in _ANGLES
-    ]
+    """
+    Generate 2 angle images for one cut (frontal + lateral).
+
+    Improvement #1 (multi-angle KB):
+    Each angle independently resolves its own reference from the KB,
+    preferring a photo shot from the matching angle:
+      frontal  → prefer_angle="front"
+      lateral  → prefer_angle="side_left"
+
+    This means FLUX (now Nano Banana Pro) receives angle-appropriate references
+    instead of a generic one — maximizing style consistency across both angles.
+    """
+    logger.info("Generating cut %d: %s", cut_index, nombre_en)
+
+    angle_tasks = []
+    for angle in _ANGLES:
+        # Resolve reference for THIS angle's preferred viewpoint
+        ref_url = _resolve_kb_reference(
+            nombre_en=nombre_en,
+            face_shape=face_shape,
+            age_group=age_group,
+            prefer_angle=angle["prefer_angle"],
+            skin_tone=skin_tone,
+        )
+        if ref_url:
+            logger.info(
+                "  cut %d angle '%s' — KB reference found (angle_pref=%s)",
+                cut_index, angle["id"], angle["prefer_angle"],
+            )
+        else:
+            logger.info(
+                "  cut %d angle '%s' — no KB reference, text-only mode",
+                cut_index, angle["id"],
+            )
+
+        photo_b64 = photos_b64[min(angle["photo_index"], len(photos_b64) - 1)]
+        angle_tasks.append(
+            _generate_one_angle(photo_b64, nombre_en, technique, angle, fal_key, ref_url)
+        )
+
     angle_images = await asyncio.gather(*angle_tasks, return_exceptions=False)
     return HaircutVisual(
         cut_index=cut_index,
@@ -256,60 +373,46 @@ async def _generate_cut(
 
 
 async def generate_visuals(
-    photo_bytes: bytes,
+    photos_bytes: list[bytes],
     cuts: list[dict],
     face_shape: str,
     fal_key: str,
+    age_group: Optional[str] = None,
+    skin_tone: Optional[str] = None,
 ) -> list[HaircutVisual]:
     """
-    Generate 3 angle images for each of the 3 recommended cuts.
-    All 9 images generated in parallel via asyncio.gather.
+    Generate 2 angle images (frontal + lateral) for each of the 3 recommended cuts.
+    All 6 images generated in parallel via asyncio.gather.
 
-    When PEXELS_API_KEY is set, fetches a reference image per cut and uses
-    fal-ai/flux-pro/kontext/multi for dramatically better results.
+    skin_tone (e.g. "medio", "claro") filters KB references to match the client's
+    detected skin tone — critical for Nano Banana Pro blending quality.
 
     Returns list of HaircutVisual sorted by cut_index.
     """
     from app.services.trend_service import get_reference_images_for_cut
-    from app.services.reference_image_service import get_reference_image_url
-    from app.core.config import settings
 
-    photo_b64 = base64.b64encode(photo_bytes).decode()
-
-    # Fetch reference images per cut (up to 3, in parallel)
-    ref_tasks = []
-    cut_names = []
-    for i, cut in enumerate(cuts[:3]):
-        nombre_en = cut.get("nombre_tecnico") or cut.get("nombre_en", f"Cut {i+1}")
-        cut_names.append(nombre_en)
-        ref_tasks.append(
-            asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda n=nombre_en: get_reference_image_url(n, settings.PEXELS_API_KEY),
-            )
-        )
-
-    reference_urls: list[Optional[str]] = await asyncio.gather(*ref_tasks, return_exceptions=False)
-    for i, ref_url in enumerate(reference_urls):
-        if ref_url:
-            logger.info("Cut %d '%s' — visual reference found", i, cut_names[i])
-        else:
-            logger.info("Cut %d '%s' — no reference, using text-only", i, cut_names[i])
+    photos_b64 = [base64.b64encode(b).decode() for b in photos_bytes]
 
     cut_tasks = []
     for i, cut in enumerate(cuts[:3]):
-        nombre_en = cut_names[i]
+        nombre_en = cut.get("nombre_tecnico") or cut.get("nombre_en", f"Cut {i+1}")
         technique = cut.get("como_pedirlo_al_barbero", "")
         cut_tasks.append(
             _generate_cut(
-                photo_b64, i, nombre_en, technique, fal_key, face_shape,
-                reference_url=reference_urls[i],
+                photos_b64=photos_b64,
+                cut_index=i,
+                nombre_en=nombre_en,
+                technique=technique,
+                fal_key=fal_key,
+                face_shape=face_shape,
+                age_group=age_group,
+                skin_tone=skin_tone,
             )
         )
 
     visuals = await asyncio.gather(*cut_tasks, return_exceptions=False)
 
-    # Attach reference search queries for the frontend
+    # Attach reference search queries for the frontend display
     for visual in visuals:
         if isinstance(visual, HaircutVisual):
             visual.references = get_reference_images_for_cut(

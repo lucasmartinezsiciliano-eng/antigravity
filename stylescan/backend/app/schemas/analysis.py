@@ -9,6 +9,7 @@ class AnalysisInitiateRequest(BaseModel):
     quiz_answers: dict[str, Any] | None = Field(None, description="Respuestas del quiz previo")
     include_colorimetry: bool = False
     include_products_guide: bool = False
+    marketing_consent: bool = Field(False, description="RGPD: consentimiento explícito para comunicaciones comerciales por email")
 
 
 class AnalysisInitiateResponse(BaseModel):
@@ -28,6 +29,17 @@ class ConsentRequest(BaseModel):
     device_fingerprint_hash: str | None = None
 
 
+class UpsellRequest(BaseModel):
+    upsell_type: str = Field(..., description="'colorimetry' | 'products' | 'pack'")
+
+
+class UpsellResponse(BaseModel):
+    checkout_url: str
+    analysis_id: str
+    upsell_type: str
+    amount_euros: float
+
+
 class AnalysisResult(BaseModel):
     analysis_id: str
     face_shape: str
@@ -40,5 +52,7 @@ class AnalysisResult(BaseModel):
     colorimetry_report: dict | None
     includes_products_guide: bool
     products_guide: dict | None
+    includes_seasonal: bool = False
+    seasonal_report: dict | None = None
     created_at: datetime
     expires_at: datetime
