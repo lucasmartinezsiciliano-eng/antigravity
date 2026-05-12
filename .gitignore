@@ -16,6 +16,17 @@ ai-perfume-influencer/node_modules/
 .DS_Store
 Thumbs.db
 
+# SQLite databases (user data — never commit)
+*.db
+*.db-shm
+*.db-wal
+
+# Barber reference images (binary, regenerable via scraper)
+stylescan/backend/knowledge_base/barber_references/images/
+# But DO track the index and accounts JSON (metadata, small)
+!stylescan/backend/knowledge_base/barber_references/index.json
+!stylescan/backend/knowledge_base/barber_accounts.json
+
 # Archivos con credenciales (NUNCA commitear)
 ai-perfume-influencer/.env
 Firmax/twilio_recovery_code.txt
@@ -27,3 +38,5 @@ cloudflare-worker/.wrangler/
 # Claude Code settings — puede contener tokens de MCP servers
 .claude/settings.json
 .claude/settings.local.json
+
+.vercel

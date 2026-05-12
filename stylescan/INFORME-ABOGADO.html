@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISAI — Informe para asesor jurídico</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C;
+    --dark: #0A0A0A;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --border: #ddd;
+    --bg-light: #fafafa;
+    --bg-section: #f4f4f2;
+  }
+  body {
+    font-family: 'Georgia', serif;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: white;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 60px;
+  }
+
+  /* HEADER */
+  .header {
+    border-bottom: 3px solid var(--dark);
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .brand { font-size: 28px; font-weight: bold; letter-spacing: -1px; font-family: 'Helvetica Neue', sans-serif; }
+  .brand span { color: var(--gold); }
+  .meta { text-align: right; color: var(--muted); font-size: 12px; line-height: 1.6; font-family: 'Helvetica Neue', sans-serif; }
+
+  /* SECTION TITLES */
+  h1 {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+    margin-top: 44px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-family: 'Georgia', serif;
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--dark);
+    margin: 22px 0 10px;
+  }
+  h3 {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 18px 0 8px;
+  }
+  p { margin-bottom: 10px; }
+
+  /* TABLES */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 13px;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  th {
+    background: var(--dark);
+    color: white;
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  th:first-child { border-radius: 0; }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: var(--bg-light); }
+  tr:last-child td { border-bottom: 2px solid var(--dark); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .total td { font-weight: 700; background: var(--bg-section) !important; }
+  .highlight td { background: #fffbee !important; border-left: 3px solid var(--gold); }
+
+  /* QUESTION BLOCKS */
+  .question-block {
+    margin: 14px 0;
+    padding: 14px 16px 14px 20px;
+    border-left: 3px solid var(--gold);
+    background: var(--bg-light);
+  }
+  .q-label {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 5px;
+  }
+  .q-text { font-size: 14px; color: var(--dark); line-height: 1.6; }
+
+  /* ALERT BOXES */
+  .alert {
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 2px;
+    font-size: 13px;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .alert-red { background: #fff0f0; border-left: 4px solid #c0392b; color: #7b241c; }
+  .alert-yellow { background: #fffbee; border-left: 4px solid var(--gold); color: #7a5c00; }
+  .alert-green { background: #f0fff4; border-left: 4px solid #27ae60; color: #1a5c33; }
+
+  /* FLOW */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 12px;
+    align-items: center;
+  }
+  .flow-step {
+    background: var(--dark);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .flow-arrow { color: var(--muted); font-size: 16px; }
+
+  /* TECH STACK */
+  .stack-row {
+    display: flex;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .stack-label { width: 180px; color: var(--muted); flex-shrink: 0; }
+  .stack-value { color: var(--dark); font-weight: 600; }
+  .stack-note { color: var(--muted); margin-left: 8px; font-weight: 400; }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Helvetica Neue', sans-serif;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* CONFIDENTIAL BANNER */
+  .confidential {
+    text-align: center;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+
+  @media print {
+    body { padding: 30px 40px; font-size: 13px; }
+    h1 { page-break-after: avoid; }
+    h2, h3 { page-break-after: avoid; }
+    .question-block { page-break-inside: avoid; }
+    table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="confidential">Confidencial — Documento preparado para reunión con asesor jurídico</div>
+
+<div class="header">
+  <div>
+    <div class="brand">VIS<span>AI</span></div>
+    <div style="font-family:'Helvetica Neue',sans-serif; font-size:13px; color:var(--muted); margin-top:4px;">
+      Análisis facial con inteligencia artificial para hombres
+    </div>
+  </div>
+  <div class="meta">
+    Reunión con abogado<br>
+    Mayo 2026<br>
+    Lucas Martínez Siciliano<br>
+    lucas.martinez.siciliano@gmail.com
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     1. QUÉ ES VISAI
+═══════════════════════════════════════════ -->
+<h1>01 — Descripción del negocio</h1>
+
+<p>
+  <strong>VISAI</strong> es una aplicación web que analiza el rostro de un hombre mediante inteligencia artificial
+  y entrega un informe personalizado con los 3 cortes de pelo que mejor le quedan, instrucciones técnicas
+  para pedírselo al peluquero, y un <em>virtual try-on</em> —imágenes generadas por IA mostrando al propio
+  usuario con cada corte.
+</p>
+
+<h3>Flujo de uso</h3>
+<div class="flow">
+  <span class="flow-step">1 · Código peluquero</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">2 · Quiz 5 min</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">3 · Pago €14,99</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">4 · 3 fotos móvil</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">5 · Análisis IA</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">6 · Informe + imágenes</span>
+</div>
+
+<p>
+  El sistema analiza <strong>468 puntos faciales</strong> para calcular forma de rostro, proporciones y asimetría.
+  El informe lo redacta un modelo de lenguaje grande (Kimi K2 de Moonshot AI). Las imágenes del virtual try-on
+  las genera OpenAI (GPT Image 1). Las fotos del usuario <strong>se eliminan tras el procesamiento</strong> y
+  nunca se almacenan en disco ni base de datos.
+</p>
+
+<h3>Modelo B2B2C — Red de peluqueros</h3>
+<p>
+  Los peluqueros reciben un <strong>código personalizado</strong>. Cuando un cliente lo usa al comprar,
+  el peluquero recibe <strong>€3,00 de comisión</strong> por cada análisis vendido. El cliente puede recibir
+  un descuento. El peluquero no gestiona pagos ni tiene relación contractual con el cliente final.
+</p>
+
+<h3>Upsells opcionales</h3>
+<table>
+  <tr><th>Producto</th><th class="num">Precio (IVA incl.)</th></tr>
+  <tr><td>Análisis base</td><td class="num">€14,99</td></tr>
+  <tr><td>Análisis de temporada</td><td class="num">+€4,99</td></tr>
+  <tr><td>Colorimetría</td><td class="num">+€2,49</td></tr>
+  <tr><td>Guía de productos de styling</td><td class="num">+€1,99</td></tr>
+  <tr class="highlight"><td><strong>Pack completo (todo incluido)</strong></td><td class="num"><strong>€24,99</strong></td></tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════
+     2. ECONOMÍA POR CLIENTE
+═══════════════════════════════════════════ -->
+<h1>02 — Economía por cliente · Con SL activa</h1>
+
+<div class="alert alert-yellow">
+  <strong>Nota fiscal:</strong> Todos los precios al cliente incluyen IVA (21%). VISAI recauda el IVA y lo liquida
+  trimestralmente a Hacienda (modelo 303). La <em>base imponible</em> real es €12,39 por análisis base.
+</div>
+
+<h3>Costes variables por análisis vendido con código de peluquero</h3>
+<table>
+  <tr>
+    <th>Concepto</th>
+    <th>Detalle</th>
+    <th class="num">Coste</th>
+  </tr>
+  <tr>
+    <td>Comisión Stripe</td>
+    <td>1,4% × €14,99 + €0,25 fijo (tarjeta europea)</td>
+    <td class="num">€0,46</td>
+  </tr>
+  <tr>
+    <td>LLM — Kimi K2 Thinking</td>
+    <td>~80.000 tokens (razonamiento + informe)</td>
+    <td class="num">~€0,07</td>
+  </tr>
+  <tr>
+    <td>Imágenes — OpenAI GPT Image 1</td>
+    <td>6 imágenes × $0,042 (3 cortes × 2 ángulos)</td>
+    <td class="num">~€0,23</td>
+  </tr>
+  <tr>
+    <td>Comisión peluquero</td>
+    <td>Fija por uso de código</td>
+    <td class="num">€3,00</td>
+  </tr>
+  <tr>
+    <td>Infraestructura Railway (parte variable)</td>
+    <td>~€18/mes ÷ estimación 100 clientes</td>
+    <td class="num">~€0,02</td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total costes variables</strong></td>
+    <td><em>Con código de peluquero</em></td>
+    <td class="num"><strong>~€3,78</strong></td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total costes variables</strong></td>
+    <td><em>Sin código de peluquero</em></td>
+    <td class="num"><strong>~€0,78</strong></td>
+  </tr>
+</table>
+
+<h3>Margen bruto por cliente</h3>
+<table>
+  <tr>
+    <th>Escenario</th>
+    <th class="num">Ingresos (ex-IVA)</th>
+    <th class="num">Costes variables</th>
+    <th class="num">Margen bruto</th>
+    <th class="num">%</th>
+  </tr>
+  <tr class="highlight">
+    <td>Análisis base con código peluquero</td>
+    <td class="num">€12,39</td>
+    <td class="num">€3,78</td>
+    <td class="num"><strong>€8,61</strong></td>
+    <td class="num"><strong>69%</strong></td>
+  </tr>
+  <tr>
+    <td>Análisis base sin código</td>
+    <td class="num">€12,39</td>
+    <td class="num">€0,78</td>
+    <td class="num"><strong>€11,61</strong></td>
+    <td class="num"><strong>94%</strong></td>
+  </tr>
+  <tr>
+    <td>Pack completo con código</td>
+    <td class="num">€20,65</td>
+    <td class="num">€4,50</td>
+    <td class="num"><strong>€16,15</strong></td>
+    <td class="num"><strong>78%</strong></td>
+  </tr>
+</table>
+
+<h3>Costes fijos mensuales de infraestructura</h3>
+<table>
+  <tr><th>Servicio</th><th>Función</th><th class="num">€/mes</th></tr>
+  <tr><td>Railway (5 servicios)</td><td>Backend API, base de datos CRM, caché</td><td class="num">~€18–22</td></tr>
+  <tr><td>Vercel</td><td>Web hosting (Next.js)</td><td class="num">€0</td></tr>
+  <tr><td>Resend</td><td>Emails transaccionales (3.000/mes gratis)</td><td class="num">€0</td></tr>
+  <tr><td>n8n (self-hosted)</td><td>Automatizaciones CRM y marketing</td><td class="num">€0</td></tr>
+  <tr><td>OpenRouter</td><td>Acceso a Kimi K2 Thinking (pay-per-use)</td><td class="num">€0 fijo</td></tr>
+  <tr><td>OpenAI</td><td>Generación imágenes GPT Image 1 (pay-per-use)</td><td class="num">€0 fijo</td></tr>
+  <tr class="total"><td colspan="2"><strong>Total fijo infraestructura</strong></td><td class="num"><strong>~€18–22/mes</strong></td></tr>
+</table>
+
+<h3>Punto de equilibrio y proyección de escalabilidad</h3>
+<table>
+  <tr>
+    <th>Clientes/mes</th>
+    <th class="num">Ingresos (ex-IVA)</th>
+    <th class="num">Costes variables</th>
+    <th class="num">Fijos infra</th>
+    <th class="num">Resultado</th>
+  </tr>
+  <tr><td>5</td><td class="num">€62</td><td class="num">€19</td><td class="num">€20</td><td class="num" style="color:#c0392b">−€17</td></tr>
+  <tr class="highlight"><td><strong>20</strong></td><td class="num">€248</td><td class="num">€76</td><td class="num">€20</td><td class="num" style="color:#27ae60"><strong>+€152</strong></td></tr>
+  <tr><td>50</td><td class="num">€620</td><td class="num">€189</td><td class="num">€20</td><td class="num" style="color:#27ae60"><strong>+€411</strong></td></tr>
+  <tr><td>100</td><td class="num">€1.239</td><td class="num">€378</td><td class="num">€20</td><td class="num" style="color:#27ae60"><strong>+€841</strong></td></tr>
+  <tr><td>500</td><td class="num">€6.195</td><td class="num">€1.890</td><td class="num">€30</td><td class="num" style="color:#27ae60"><strong>+€4.275</strong></td></tr>
+</table>
+<p style="font-size:12px;color:var(--muted);">* Estimación con 70% clientes usando código de peluquero. Fijos crecen levemente por debajo de €30/mes hasta miles de clientes.</p>
+
+<h3>Costes adicionales de la SL (no operativos)</h3>
+<table>
+  <tr><th>Concepto</th><th>Periodicidad</th><th class="num">Importe estimado</th></tr>
+  <tr><td>Constitución (notaría + Registro Mercantil)</td><td>Una vez</td><td class="num">€400–600</td></tr>
+  <tr><td>Capital social mínimo (Ley Crea y Crece 2022)</td><td>Una vez</td><td class="num">€1</td></tr>
+  <tr><td>Gestoría / asesoría contable</td><td>Mensual</td><td class="num">€80–150</td></tr>
+  <tr><td>Cuota RETA (autónomo societario)</td><td>Mensual</td><td class="num">€80 (tarifa plana 12 meses) → €293</td></tr>
+  <tr><td>Impuesto de Sociedades</td><td>Anual</td><td class="num">15% primeros 2 años, 25% después</td></tr>
+</table>
+
+
+<!-- ═══════════════════════════════════════════
+     3. TECNOLOGÍA Y DATOS
+═══════════════════════════════════════════ -->
+<h1>03 — Arquitectura tecnológica y datos personales tratados</h1>
+
+<div class="stack-row"><span class="stack-label">Web (frontend)</span><span class="stack-value">Next.js<span class="stack-note">· Vercel, EE.UU.</span></span></div>
+<div class="stack-row"><span class="stack-label">Backend API</span><span class="stack-value">Python / FastAPI<span class="stack-note">· Railway, EE.UU.</span></span></div>
+<div class="stack-row"><span class="stack-label">Análisis facial</span><span class="stack-value">MediaPipe (Google)<span class="stack-note">· Local en servidor Railway</span></span></div>
+<div class="stack-row"><span class="stack-label">IA informe</span><span class="stack-value">Kimi K2 Thinking (Moonshot AI)<span class="stack-note">· vía OpenRouter, EE.UU.</span></span></div>
+<div class="stack-row"><span class="stack-label">IA imágenes</span><span class="stack-value">GPT Image 1 (OpenAI)<span class="stack-note">· OpenAI, EE.UU.</span></span></div>
+<div class="stack-row"><span class="stack-label">Pagos</span><span class="stack-value">Stripe<span class="stack-note">· EE.UU. — VISAI nunca ve datos de tarjeta</span></span></div>
+<div class="stack-row"><span class="stack-label">CRM</span><span class="stack-value">Twenty CRM (open-source)<span class="stack-note">· Railway, EE.UU.</span></span></div>
+<div class="stack-row"><span class="stack-label">Emails</span><span class="stack-value">Resend<span class="stack-note">· EE.UU.</span></span></div>
+
+<h3 style="margin-top:20px">Datos personales tratados</h3>
+<table>
+  <tr><th>Dato</th><th>Categoría GDPR</th><th>¿Se almacena?</th><th>Dónde</th></tr>
+  <tr>
+    <td>Fotos de rostro (3 imágenes)</td>
+    <td><strong style="color:#c0392b">Dato biométrico — Art. 9</strong></td>
+    <td>❌ No — procesamiento en RAM y eliminación inmediata</td>
+    <td>—</td>
+  </tr>
+  <tr>
+    <td>Métricas faciales derivadas (forma, proporciones, puntuaciones)</td>
+    <td>Dato personal ordinario</td>
+    <td>✓ Sí</td>
+    <td>Base de datos Railway (EE.UU.)</td>
+  </tr>
+  <tr>
+    <td>Respuestas del quiz</td>
+    <td>Dato personal ordinario</td>
+    <td>✓ Sí</td>
+    <td>Base de datos Railway (EE.UU.)</td>
+  </tr>
+  <tr>
+    <td>Datos de pago (tarjeta)</td>
+    <td>Dato financiero</td>
+    <td>❌ No — gestionados íntegramente por Stripe</td>
+    <td>Stripe (EE.UU.)</td>
+  </tr>
+  <tr>
+    <td>Email / teléfono (si se facilita)</td>
+    <td>Dato de contacto</td>
+    <td>✓ Sí</td>
+    <td>Base de datos Railway + CRM (EE.UU.)</td>
+  </tr>
+  <tr>
+    <td>Imágenes generadas (virtual try-on)</td>
+    <td>No vinculado a la persona real</td>
+    <td>✓ Temporal (URLs válidas 24h)</td>
+    <td>CDN OpenAI</td>
+  </tr>
+</table>
+
+<div class="alert alert-red">
+  <strong>⚠ Punto crítico — Datos biométricos (Art. 9 GDPR):</strong> Las fotos de rostro son datos biométricos
+  de categoría especial aunque se eliminen tras el procesamiento. El mero procesamiento en memoria está sujeto al
+  régimen del Art. 9. Necesitamos base jurídica específica (Art. 9.2.a — consentimiento explícito) y verificar
+  si se requiere EIPD antes del lanzamiento.
+</div>
+
+<div class="alert alert-yellow">
+  <strong>⚠ Transferencia internacional de datos:</strong> Railway, OpenAI, OpenRouter y Stripe son empresas
+  de EE.UU. Toda la infraestructura técnica reside en el extranjero. Hay que cubrir la transferencia con
+  SCCs (Cláusulas Contractuales Tipo) o verificar que los proveedores estén acogidos al EU-US Data Privacy Framework.
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     4. PREGUNTAS PARA EL ABOGADO
+═══════════════════════════════════════════ -->
+<h1>04 — Preguntas para el abogado</h1>
+
+<h2>A · Protección de datos y GDPR <span style="color:#c0392b; font-size:14px;">(prioritario — bloquea lanzamiento)</span></h2>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 1</div>
+  <div class="q-text">Las fotos de rostro son datos biométricos (Art. 9 GDPR). Las eliminamos en tiempo real tras el análisis —no hay almacenamiento. ¿El procesamiento temporal en memoria RAM sigue estando sujeto al régimen de datos de categoría especial? ¿Qué base jurídica concreta necesitamos y en qué momento exacto del flujo debe obtener el consentimiento el usuario?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 2</div>
+  <div class="q-text">¿Estamos obligados a realizar una <strong>EIPD (Evaluación de Impacto en la Protección de Datos)</strong> antes del lanzamiento? ¿Y a designar un <strong>DPO (Delegado de Protección de Datos)</strong>? ¿Desde qué volumen de usuarios?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 3</div>
+  <div class="q-text">Todo el stack tecnológico está en EE.UU. (Railway, OpenAI, Stripe, OpenRouter). ¿Cómo cubrimos correctamente la <strong>transferencia internacional de datos</strong>? ¿Es suficiente con los DPA estándar de cada proveedor o necesitamos SCCs adicionales?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 4</div>
+  <div class="q-text">¿Qué debe incluir obligatoriamente la <strong>Política de Privacidad</strong>, el <strong>aviso de cookies</strong> y los <strong>Términos y Condiciones</strong> para ser válidos en España? ¿Necesitamos registro en la AEPD?</div>
+</div>
+
+<h2>B · Modelo comercial con peluqueros</h2>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 5</div>
+  <div class="q-text">Los peluqueros reciben €3,00 por cada cliente que refieren mediante su código personal. ¿Qué tipo de relación jurídica es esta? ¿Contrato de agencia comercial (Ley 12/1992)? ¿Contrato de afiliación? ¿Tienen derecho de compensación por clientela si terminamos la relación?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 6</div>
+  <div class="q-text">¿Los peluqueros necesitan emitir factura por las comisiones recibidas? ¿O podemos gestionar esto con un modelo de <strong>autofactura inversa</strong>? ¿Qué obligaciones fiscales tienen ellos y cuáles tenemos nosotros respecto a sus retenciones?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 7</div>
+  <div class="q-text">Si un peluquero promociona VISAI a sus clientes mediante un código de comisión, ¿tiene obligación de informar que recibe remuneración por ello? ¿Entra en conflicto con la <strong>Ley de Competencia Desleal</strong> o la normativa de publicidad encubierta?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 8</div>
+  <div class="q-text">¿Es suficiente con que el peluquero acepte los términos digitalmente (click-through) o necesitamos un <strong>contrato escrito firmado</strong>? ¿Qué cláusulas mínimas debe incluir?</div>
+</div>
+
+<h2>C · Producto y responsabilidad civil</h2>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 9</div>
+  <div class="q-text">VISAI genera recomendaciones de corte de pelo mediante IA. Si un cliente sigue la recomendación y no le gusta el resultado, <strong>¿cuál es nuestra responsabilidad?</strong> ¿Cómo limitamos la responsabilidad contractualmente y qué disclaimers son necesarios y suficientes?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 10</div>
+  <div class="q-text">Los servicios digitales tienen <strong>derecho de desistimiento de 14 días</strong>. Una vez que el usuario recibe el informe, el servicio se ha prestado íntegramente. ¿Podemos excluir el derecho de desistimiento si el usuario da consentimiento expreso en el checkout antes de iniciar? ¿Qué texto exacto debemos usar?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 11</div>
+  <div class="q-text">El informe analiza proporciones faciales y hace referencias a atractivo físico masculino. ¿Hay alguna consideración sobre <strong>discriminación, dignidad o sesgos algorítmicos</strong> que debamos contemplar en los términos de servicio o en el diseño del producto?</div>
+</div>
+
+<h2>D · Estructura societaria, fiscal y expansión</h2>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 12</div>
+  <div class="q-text">Queremos constituir una <strong>SL para VISAI</strong>. El producto se vende 100% online. ¿Dónde debería estar domiciliada? ¿Cuál es el objeto social adecuado? ¿Qué régimen de administración recomienda (administrador único, mancomunado, etc.)?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 13</div>
+  <div class="q-text">El producto puede venderse a clientes de <strong>otros países de la UE</strong>. ¿Debemos tributar el IVA en el país del consumidor (régimen OSS)? ¿A partir de qué umbral de ventas internacionales se activa? ¿Cómo se gestiona operativamente?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 14</div>
+  <div class="q-text">Si Lucas trabaja como administrador de la SL, ¿cuál es la <strong>forma óptima de retribución</strong> desde el punto de vista fiscal — sueldo, dividendos, o combinación? ¿Puede simultanear la actividad con el ecommerce actual como autónomo o todo bajo la SL?</div>
+</div>
+
+<div class="question-block">
+  <div class="q-label">Pregunta 15</div>
+  <div class="q-text">Planeamos dar códigos a peluqueros de grandes cadenas (Frank's Barber Shop, Manners Barbería, etc.) con volúmenes garantizados. ¿Qué tipo de contrato sería adecuado para este nivel — distribución exclusiva, partnership comercial? ¿Necesita estructura diferente a los peluqueros individuales?</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     5. PUNTOS A MENCIONAR
+═══════════════════════════════════════════ -->
+<h1>05 — Puntos relevantes que el abogado debe conocer</h1>
+
+<div class="alert alert-green">
+  <strong>✓ Privacidad by design desde el origen:</strong> Las fotos nunca se almacenan. Es una decisión de arquitectura deliberada, documentada en el código. El análisis facial corre en RAM del servidor y el resultado son métricas numéricas abstractas (no biométricos en el sentido de datos que permiten identificar directamente a la persona), aunque jurídicamente el proceso sí cae bajo Art. 9.
+</div>
+
+<div class="alert alert-yellow">
+  <strong>⚠ Infraestructura 100% americana:</strong> Railway (backend), OpenAI (imágenes), OpenRouter (IA), Stripe (pagos), Vercel (web) son empresas de EE.UU. Esto es estándar en el sector tech, pero hay que cubrir las transferencias internacionales antes de hacer publicidad.
+</div>
+
+<div class="alert alert-yellow">
+  <strong>⚠ Producto generado íntegramente por IA:</strong> Tanto el informe textual como las imágenes del virtual try-on los produce IA sin supervisión humana. El usuario no contrata un asesor humano ni un peluquero. Esto debe quedar muy explícito en los términos para delimitar la responsabilidad.
+</div>
+
+<p>
+  <strong>El negocio tiene dos capas legales distintas</strong> que conviven bajo la misma plataforma:
+  (1) B2C — usuario final que compra el análisis con todos sus derechos de consumidor;
+  (2) B2B — peluqueros que refieren clientes y cobran comisión. Estas dos relaciones necesitan contratos y cláusulas completamente diferentes.
+</p>
+
+<p>
+  <strong>La comisión fija de €3,00 al peluquero</strong> está diseñada para ser simple y escalable.
+  A futuro, si entramos en acuerdos con grandes cadenas de barberías, podría necesitar estructura de
+  contrato de distribución con volúmenes mínimos y exclusividad territorial. Conviene que el framework
+  jurídico actual sea escalable a eso desde el principio.
+</p>
+
+<p>
+  <strong>Cuando escale internacionalmente</strong>, el IVA del país del consumidor aplica en servicios digitales
+  B2C (Directiva 2006/112/CE modificada 2021). Un cliente alemán pagaría 19% IVA alemán que VISAI recaudaría
+  y liquidaría mediante el sistema OSS. Hay que tenerlo preparado antes de abrir campañas en otros países.
+</p>
+
+<p>
+  <strong>El nombre "VISAI"</strong> está siendo utilizado como marca comercial. No se ha realizado verificación
+  de disponibilidad registral en la OEPM ni en EUIPO. Sería conveniente solicitarlo antes del lanzamiento público
+  para proteger la marca en España y en la UE.
+</p>
+
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════ -->
+<div class="footer">
+  <div>VISAI · Lucas Martínez Siciliano · Mayo 2026</div>
+  <div>Documento confidencial · Preparado para reunión con asesor jurídico</div>
+</div>
+
+</body>
+</html>
