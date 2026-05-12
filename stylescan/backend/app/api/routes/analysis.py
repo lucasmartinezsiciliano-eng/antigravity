@@ -373,6 +373,24 @@ async def upload_photos_and_analyze(
         await db.flush()
         raise HTTPException(500, "Error al generar el informe. Inténtalo de nuevo.")
 
+    # --- Generate pre-purchased add-ons (colorimetry / products guide bought via add-ons screen)
+    cuts = report.get("cortes_recomendados", [])
+    if analysis.includes_colorimetry and not analysis.colorimetry_report:
+        try:
+            analysis.colorimetry_report = await asyncio.get_event_loop().run_in_executor(
+                None, lambda: claude_service.generate_colorimetry_report(metrics, quiz)
+            )
+        except Exception as e:
+            logger.error("Colorimetry generation failed for %s: %s", analysis_id, e)
+
+    if analysis.includes_products_guide and not analysis.products_guide:
+        try:
+            analysis.products_guide = await asyncio.get_event_loop().run_in_executor(
+                None, lambda: claude_service.generate_products_guide(metrics, quiz, cuts)
+            )
+        except Exception as e:
+            logger.error("Products guide generation failed for %s: %s", analysis_id, e)
+
     # --- Persist metrics + report
     analysis.face_shape = metrics.face_shape
     analysis.length_width_ratio = metrics.length_width_ratio
