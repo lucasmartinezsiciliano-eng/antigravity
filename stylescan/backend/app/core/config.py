@@ -57,6 +57,7 @@ class Settings(BaseSettings):
 
     # Image generation — Nano Banana Pro via fal.ai
     FAL_KEY: str = ""          # fal.ai API key — required for virtual try-on
+    PEXELS_API_KEY: str = ""   # Pexels API key — free at pexels.com/api, used for barber reference images
     INSTAGRAM_USERNAME: str = ""  # Instagram account for barber reference scraping
     INSTAGRAM_PASSWORD: str = ""  # Instagram password
     # IMAGE_GEN_ENABLED auto-derives from FAL_KEY presence

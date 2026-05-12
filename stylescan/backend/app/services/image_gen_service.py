@@ -141,54 +141,49 @@ def _resolve_kb_reference(
     skin_tone: Optional[str] = None,
 ) -> Optional[str]:
     """
-    Look up a reference image from the barber Instagram KB (SQLite).
-    Returns a file:// URL (curated local image) or an Instagram CDN URL,
-    or None if nothing useful is found.
-
-    Prefers references whose photo_angle matches prefer_angle and skin_tone matches
-    the client's detected skin tone (critical for Nano Banana Pro blending quality).
+    Look up a reference image for a haircut. Priority order:
+    1. Local curated file from Instagram KB (best quality)
+    2. Pexels cache / Pexels API (reliable, no expiry)
+    3. Instagram CDN URL (may expire)
+    Returns None → caller falls back to text-only generation.
     """
+    # 1. Try Instagram SQLite KB (populated by barber_instagram_agent)
     try:
-        from scripts.barber_instagram_agent import find_references, CURATED_DIR
+        from scripts.barber_instagram_agent import find_references, CURATED_DIR, IMG_DIR
+        refs = find_references(
+            face_shape=face_shape,
+            cut_name=nombre_en,
+            limit=5,
+            require_image=False,
+            age_group=age_group,
+            trending_only=False,
+            prefer_angle=prefer_angle,
+            skin_tone=skin_tone,
+        )
+        for ref in refs:
+            curated = ref.get("curated_file")
+            if curated and (CURATED_DIR / curated).exists():
+                return (CURATED_DIR / curated).as_uri()
+        for ref in refs:
+            img_file = ref.get("image_file")
+            if img_file and (IMG_DIR / img_file).exists():
+                return (IMG_DIR / img_file).as_uri()
+        for ref in refs:
+            cdn = ref.get("instagram_cdn_url")
+            if cdn and cdn.startswith(("http://", "https://")):
+                return cdn
     except Exception:
-        return None
+        pass
 
-    refs = find_references(
-        face_shape=face_shape,
-        cut_name=nombre_en,
-        limit=5,
-        require_image=False,  # also consider CDN-only refs
-        age_group=age_group,
-        trending_only=False,
-        prefer_angle=prefer_angle,
-        skin_tone=skin_tone,
-    )
-
-    if not refs:
-        return None
-
-    # Prefer refs with a local curated file (better quality, always available)
-    for ref in refs:
-        curated = ref.get("curated_file")
-        if curated:
-            curated_path = CURATED_DIR / curated
-            if curated_path.exists():
-                return curated_path.as_uri()  # file:// URI
-
-    # Fall back to image_file in images/
-    for ref in refs:
-        img_file = ref.get("image_file")
-        if img_file:
-            from scripts.barber_instagram_agent import IMG_DIR
-            img_path = IMG_DIR / img_file
-            if img_path.exists():
-                return img_path.as_uri()
-
-    # Fall back to Instagram CDN URL (may expire in ~24 h but usable now)
-    for ref in refs:
-        cdn = ref.get("instagram_cdn_url")
-        if cdn and cdn.startswith(("http://", "https://")):
-            return cdn
+    # 2. Pexels cache + API (primary fallback — stable CDN URLs, no expiry)
+    try:
+        from app.services.reference_image_service import get_reference_image_url
+        from app.core.config import settings
+        url = get_reference_image_url(nombre_en, settings.PEXELS_API_KEY)
+        if url:
+            return url
+    except Exception:
+        pass
 
     return None
 
