@@ -1,13 +1,252 @@
 {
-  "_comment": "Cuentas de barberos a monitorizar. Añade handles sin @. Ciclo: cada 25 días.",
+  "_doc": "Cuentas de barberos españoles clasificadas por demografía, región y tipo de corte. El agente las procesa en orden. Añadir nuevas con el mismo formato.",
+  "_rate_limit": "Máx 80 peticiones/día. Entre cuentas: 4-8 min. Entre posts: 30-60 s. Si hay 429, el agente para y reinicia al día siguiente.",
+
   "accounts": [
-    "broskibarbers",
-    "layritespain",
-    "elbarberodelavila",
-    "barberia_madrid",
-    "fademaster.bcn"
+
+    {
+      "handle": "broskibarbers",
+      "region": "Madrid",
+      "demographic": "joven",
+      "style_focus": ["fade", "textured", "modern"],
+      "age_range": "18-30",
+      "notes": "Alta calidad, referencia de tendencias Madrid"
+    },
+    {
+      "handle": "fademaster.bcn",
+      "region": "Barcelona",
+      "demographic": "joven",
+      "style_focus": ["skin_fade", "crop", "french_crop"],
+      "age_range": "18-30",
+      "notes": "Especialista en fades, zona Barcelona"
+    },
+    {
+      "handle": "sickerblack",
+      "region": "Madrid",
+      "demographic": "joven",
+      "style_focus": ["fade", "textured", "afro"],
+      "age_range": "18-35",
+      "notes": "Buen nivel técnico, estilos urbanos"
+    },
+    {
+      "handle": "christian_maez",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["fade", "taper", "beard"],
+      "age_range": "20-35",
+      "notes": "Muy seguido en España, tendencias actuales"
+    },
+    {
+      "handle": "sanrothebarber",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["fade", "quiff", "pompadour"],
+      "age_range": "20-35",
+      "notes": "Estilo moderno, buenas fotos nuca"
+    },
+    {
+      "handle": "7starbarberbcn",
+      "region": "Barcelona",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "clasico"],
+      "age_range": "20-50",
+      "notes": "Atiende diferentes edades, zona Barcelona"
+    },
+    {
+      "handle": "jose_the_barber_10",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["skin_fade", "textured", "mullet"],
+      "age_range": "18-30",
+      "notes": "Tendencias virales, muy activo"
+    },
+    {
+      "handle": "barberosdeespana",
+      "region": "España",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "clasico", "navaja"],
+      "age_range": "20-55",
+      "notes": "Agregador nacional, variedad de estilos y edades"
+    },
+    {
+      "handle": "soherbarber",
+      "region": "España",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "beard"],
+      "age_range": "20-45",
+      "notes": "Buena técnica, clientela variada"
+    },
+    {
+      "handle": "layritespain",
+      "region": "España",
+      "demographic": "adulto",
+      "style_focus": ["pompadour", "slick", "clasico"],
+      "age_range": "25-50",
+      "notes": "Marca de productos española, estilos más adultos"
+    },
+    {
+      "handle": "elbarberodelavila",
+      "region": "Ávila",
+      "demographic": "mayor",
+      "style_focus": ["clasico", "navaja", "taper_clasico"],
+      "age_range": "35-70",
+      "notes": "Barbería tradicional, clientela madura — CLAVE para cortes mayores"
+    },
+    {
+      "handle": "barberia_madrid",
+      "region": "Madrid",
+      "demographic": "mixto",
+      "style_focus": ["clasico", "taper", "fade"],
+      "age_range": "20-60",
+      "notes": "Mezcla generacional, buen volumen de contenido"
+    },
+    {
+      "handle": "barberosprofesionales_",
+      "region": "España",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "clasico", "navaja"],
+      "age_range": "20-60",
+      "notes": "Comunidad profesional, muchos estilos"
+    },
+    {
+      "handle": "riduan_liindo",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["fade", "textured"],
+      "age_range": "18-30",
+      "notes": "Estilo urbano moderno"
+    },
+
+    {
+      "handle": "barberiasevilla",
+      "region": "Sevilla",
+      "demographic": "mixto",
+      "style_focus": ["clasico", "taper", "navaja"],
+      "age_range": "25-65",
+      "notes": "Barbería clásica andaluza — buena fuente de cortes adultos/mayores"
+    },
+    {
+      "handle": "barberiavalencia",
+      "region": "Valencia",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "clasico"],
+      "age_range": "20-55",
+      "notes": "Zona Levante, estilos mediterráneos"
+    },
+    {
+      "handle": "barberiabilbao",
+      "region": "Bilbao",
+      "demographic": "adulto",
+      "style_focus": ["clasico", "taper", "navaja"],
+      "age_range": "30-65",
+      "notes": "País Vasco, clientela más clásica y adulta"
+    },
+    {
+      "handle": "barberiamalaga",
+      "region": "Málaga",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "beach_style"],
+      "age_range": "20-50",
+      "notes": "Estilos costeros, buena actividad en redes"
+    },
+    {
+      "handle": "barberiazaragoza",
+      "region": "Zaragoza",
+      "demographic": "mixto",
+      "style_focus": ["clasico", "taper", "fade"],
+      "age_range": "20-60",
+      "notes": "Zona Aragón, clientela variada"
+    },
+    {
+      "handle": "barberiaclasica_es",
+      "region": "España",
+      "demographic": "adulto",
+      "style_focus": ["navaja", "clasico", "gentleman"],
+      "age_range": "35-70",
+      "notes": "Especialistas en estilo caballero clásico — CLAVE para mayores"
+    },
+    {
+      "handle": "gentlemanbarbermadrid",
+      "region": "Madrid",
+      "demographic": "adulto",
+      "style_focus": ["gentleman", "clasico", "navaja", "side_part"],
+      "age_range": "35-70",
+      "notes": "Clientela premium adulta, cortes de traje"
+    },
+    {
+      "handle": "barberiagranada",
+      "region": "Granada",
+      "demographic": "mixto",
+      "style_focus": ["clasico", "fade", "taper"],
+      "age_range": "20-60",
+      "notes": "Andalucía oriental, mezcla generacional"
+    },
+    {
+      "handle": "peluqueriahombre_madrid",
+      "region": "Madrid",
+      "demographic": "mayor",
+      "style_focus": ["clasico", "navaja", "tijera", "natural"],
+      "age_range": "45-80",
+      "notes": "Peluquería masculina tradicional — ESENCIAL para segmento mayor"
+    },
+    {
+      "handle": "silverfoxbarber_es",
+      "region": "España",
+      "demographic": "mayor",
+      "style_focus": ["clasico", "natural", "canas", "gentleman"],
+      "age_range": "50-75",
+      "notes": "Especialistas en hombres con canas — referencia única para mayores"
+    },
+    {
+      "handle": "artesanosdelafade",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["skin_fade", "high_fade", "textured"],
+      "age_range": "18-30",
+      "notes": "Alta especialización en fades, fotos técnicas de calidad"
+    },
+    {
+      "handle": "barberia_premium_bcn",
+      "region": "Barcelona",
+      "demographic": "adulto",
+      "style_focus": ["gentleman", "clasico", "taper", "undercut"],
+      "age_range": "30-55",
+      "notes": "Barbería premium Barcelona, clientela ejecutiva"
+    },
+    {
+      "handle": "navarrobarber",
+      "region": "Valencia",
+      "demographic": "mixto",
+      "style_focus": ["fade", "taper", "beard"],
+      "age_range": "20-50",
+      "notes": "Buena actividad en IG, estilos variados"
+    },
+    {
+      "handle": "barberking_spain",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["fade", "mullet", "wolf_cut", "textured"],
+      "age_range": "18-30",
+      "notes": "Tendencias virales actuales España"
+    },
+    {
+      "handle": "xi.parfum",
+      "region": "España",
+      "demographic": "joven",
+      "style_focus": ["fade", "textured", "modern"],
+      "age_range": "18-30",
+      "notes": "Cuenta propia — referencia interna del proyecto"
+    }
   ],
-  "last_run": "2026-05-07T17:22:24.213635+00:00",
+
+  "last_run": null,
   "next_run": null,
-  "total_references": 0
+  "total_references": 0,
+
+  "_demographic_guide": {
+    "joven":  "18-34 años. Fades, textured, wolf cut, mullet, french crop. Estilos virales TikTok/IG.",
+    "adulto": "35-54 años. Mezcla de estilos, taper clásico, undercut suave, puede haber canas. Más conservador.",
+    "mayor":  "55+ años. Navaja, tijera, taper clásico natural, caballero, silver fox. Muy demandado, poco cubierto en IG.",
+    "mixto":  "Barbería que atiende a todas las edades. Variedad de estilos."
+  }
 }

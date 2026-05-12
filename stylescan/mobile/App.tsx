@@ -10,6 +10,8 @@ import ConsentScreen from "./screens/ConsentScreen";
 import PaymentPendingScreen from "./screens/PaymentPendingScreen";
 import CaptureScreen from "./screens/CaptureScreen";
 import ResultScreen from "./screens/ResultScreen";
+import UpsellScreen from "./screens/UpsellScreen";
+import VisualsScreen from "./screens/VisualsScreen";
 
 export type RootStackParams = {
   Home: undefined;
@@ -20,6 +22,7 @@ export type RootStackParams = {
   Upload: { analysisId: string; photoUris: string[] };
   Result: { analysisId: string };
   Upsell: { analysisId: string; type: "colorimetry" | "products" };
+  Visuals: { analysisId: string; cuts: { nombre: string; nombre_tecnico: string }[] };
 };
 
 const Stack = createNativeStackNavigator<RootStackParams>();
@@ -66,6 +69,16 @@ export default function App() {
           name="Result"
           component={ResultScreen}
           options={{ title: "Tu análisis", headerBackTitle: "" }}
+        />
+        <Stack.Screen
+          name="Upsell"
+          component={UpsellScreen}
+          options={{ title: "Añadir análisis", headerBackTitle: "" }}
+        />
+        <Stack.Screen
+          name="Visuals"
+          component={VisualsScreen}
+          options={{ title: "Prueba virtual", headerBackTitle: "" }}
         />
       </Stack.Navigator>
     </NavigationContainer>

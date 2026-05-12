@@ -1,12 +1,24 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://172.16.16.110:8001/api/v1";
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+function extractDetail(detail: unknown, fallback: string): string {
+  if (!detail) return fallback;
+  if (typeof detail === "string") return detail;
+  if (typeof detail === "object") {
+    const d = detail as Record<string, unknown>;
+    if (typeof d.message === "string") return d.message;
+    if (Array.isArray(d)) return (d as {msg?: string}[]).map((e) => e.msg ?? JSON.stringify(e)).join(" | ");
+    return JSON.stringify(detail);
+  }
+  return String(detail);
+}
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: { "Content-Type": "application/json", "bypass-tunnel-reminder": "true", ...init?.headers },
   });
   const data = await res.json().catch(() => ({ detail: res.statusText }));
-  if (!res.ok) throw new Error(data.detail ?? `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
   return data as T;
 }
 
@@ -35,12 +47,14 @@ export interface AnalysisResult {
   colorimetry_report: Record<string, any> | null;
   includes_products_guide: boolean;
   products_guide: Record<string, any> | null;
+  includes_seasonal: boolean;
+  seasonal_report: Record<string, any> | null;
   created_at: string;
   expires_at: string;
 }
 
 export const api = {
-  initiate: (body: { barber_code?: string; quiz_answers?: QuizAnswers; marketing_consent?: boolean }) =>
+  initiate: (body: { barber_code?: string; quiz_answers?: QuizAnswers; marketing_consent?: boolean; include_colorimetry?: boolean; include_products_guide?: boolean }) =>
     req<{ analysis_id: string; checkout_url: string; amount_euros: number }>(
       "/analysis/initiate",
       { method: "POST", body: JSON.stringify(body) }
@@ -64,7 +78,7 @@ export const api = {
     fd.append("photos", file);
     const res = await fetch(`${BASE}/analysis/${id}/photos`, { method: "POST", body: fd });
     const data = await res.json().catch(() => ({ detail: res.statusText }));
-    if (!res.ok) throw new Error(data.detail ?? `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
     return data;
   },
 
@@ -73,24 +87,25 @@ export const api = {
     files.forEach((f) => fd.append("photos", f));
     const res = await fetch(`${BASE}/analysis/${id}/photos`, { method: "POST", body: fd });
     const data = await res.json().catch(() => ({ detail: res.statusText }));
-    if (!res.ok) throw new Error(data.detail ?? `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
     return data;
   },
 
   getResult: (id: string) => req<AnalysisResult>(`/analysis/${id}`),
 
-  upsell: (id: string, type: "colorimetry" | "products" | "pack") =>
+  upsell: (id: string, type: "colorimetry" | "products" | "pack" | "seasonal") =>
     req<{ checkout_url: string; amount_euros: number }>(`/analysis/${id}/upsell`, {
       method: "POST",
       body: JSON.stringify({ upsell_type: type }),
     }),
 
-  generateVisuals: async (id: string, file: File) => {
+  generateVisuals: async (id: string, file: File, profileFile?: File) => {
     const fd = new FormData();
     fd.append("photo", file);
+    if (profileFile) fd.append("profile_photo", profileFile);
     const res = await fetch(`${BASE}/analysis/${id}/generate-visuals`, { method: "POST", body: fd });
     const data = await res.json().catch(() => ({ detail: res.statusText }));
-    if (!res.ok) throw new Error(data.detail ?? `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
     return data;
   },
 
@@ -99,6 +114,25 @@ export const api = {
 
   unsubscribe: (id: string) =>
     req<{ unsubscribed: boolean }>(`/analysis/${id}/unsubscribe`, { method: "POST" }),
+
+  getReferences: (id: string) =>
+    req<{
+      face_shape: string;
+      cuts: Array<{
+        cut_name_en: string;
+        cut_name_es: string;
+        references: Array<{
+          image_url: string | null;
+          account: string;
+          post_url: string;
+          face_shape: string;
+          cut_name_es: string;
+          why_this_works: string;
+          photo_quality: number;
+        }>;
+      }>;
+      total_refs: number;
+    }>(`/analysis/${id}/references`),
 
   /**
    * Polls payment / processing status without throwing on expected interim codes.
@@ -109,7 +143,9 @@ export const api = {
   getAnalysisStatus: async (
     id: string,
   ): Promise<{ code: 402 | 202 | 200; result?: AnalysisResult }> => {
-    const res = await fetch(`${BASE}/analysis/${id}`);
+    const res = await fetch(`${BASE}/analysis/${id}`, {
+      headers: { "bypass-tunnel-reminder": "true" },
+    });
     if (res.status === 402) return { code: 402 };
     if (res.status === 202) return { code: 202 };
     if (res.ok) {

@@ -1,7 +1,7 @@
 /**
  * CaptureScreen — Guided photo capture (core UX differentiator)
  *
- * 5 progressive captures with:
+ * 3 progressive captures with:
  * - Animated oval + crosshair positioning guide
  * - Per-step instructions (angle, position, lighting)
  * - Countdown auto-capture (3s) or manual trigger
@@ -59,47 +59,25 @@ const STEPS: CaptureStep[] = [
   },
   {
     id: 2,
-    title: "Perfil izquierdo 45°",
-    instruction: "Gira la cabeza a la izquierda hasta el 45°",
+    title: "Perfil izquierdo",
+    instruction: "Gira la cabeza 90° a la izquierda",
     tips: [
-      "Tu nariz debe quedar alineada con tu mejilla derecha",
-      "No llegues al perfil completo (90°)",
-      "Mantén la barbilla al mismo nivel",
+      "Perfil completo — oreja mirando a la cámara",
+      "Se tiene que ver bien la forma de la cabeza",
+      "Mantén la barbilla al mismo nivel que el suelo",
     ],
     icon: "◀",
   },
   {
     id: 3,
-    title: "Perfil derecho 45°",
-    instruction: "Gira la cabeza a la derecha hasta el 45°",
+    title: "Perfil derecho",
+    instruction: "Gira la cabeza 90° a la derecha",
     tips: [
-      "Espejo del anterior",
-      "Tu nariz alineada con tu mejilla izquierda",
-      "Misma inclinación de cabeza",
+      "Perfil completo — oreja mirando a la cámara",
+      "Se tiene que ver bien la forma de la cabeza",
+      "Misma altura de barbilla que el anterior",
     ],
     icon: "▶",
-  },
-  {
-    id: 4,
-    title: "Vista superior",
-    instruction: "Inclina la cabeza hacia atrás ligeramente",
-    tips: [
-      "Eleva el móvil 15 cm por encima de tus ojos",
-      "Mira al frente, no a la cámara",
-      "Para ver la anchura del cráneo y nacimiento del pelo",
-    ],
-    icon: "▲",
-  },
-  {
-    id: 5,
-    title: "Mentón abajo",
-    instruction: "Baja el mentón ligeramente hacia el pecho",
-    tips: [
-      "Como si miraras la cámara desde arriba",
-      "Enfoca la mandíbula y el mentón",
-      "Clave para recomendaciones de degradado",
-    ],
-    icon: "▼",
   },
 ];
 
@@ -119,6 +97,9 @@ export default function CaptureScreen() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [showTips, setShowTips] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadFailed, setUploadFailed] = useState(false);
+
+  const allCaptured = capturedUris.length >= STEPS.length;
 
   const guideAnim = useRef(new Animated.Value(1)).current;
   const guideColorAnim = useRef(new Animated.Value(0)).current;
@@ -166,7 +147,8 @@ export default function CaptureScreen() {
   }, []);
 
   const capturePhoto = useCallback(async () => {
-    if (!cameraRef.current || isCapturing) return;
+    // Block if already have all photos or capturing
+    if (!cameraRef.current || isCapturing || capturedUris.length >= STEPS.length) return;
     cancelCountdown();
     setIsCapturing(true);
     setCountdown(null);
@@ -185,8 +167,8 @@ export default function CaptureScreen() {
       if (currentStep < STEPS.length - 1) {
         setCurrentStep((s) => s + 1);
       } else {
-        // All 5 done — upload
-        await uploadPhotos(newUris);
+        // All 3 done — upload
+        await uploadPhotos(newUris.slice(0, STEPS.length));
       }
     } catch (e) {
       Alert.alert("Error al capturar", "Inténtalo de nuevo.");
@@ -197,14 +179,27 @@ export default function CaptureScreen() {
 
   const uploadPhotos = async (uris: string[]) => {
     setUploading(true);
+    setUploadFailed(false);
     try {
-      await api.uploadPhotos(analysisId, uris);
+      await api.uploadPhotos(analysisId, uris.slice(0, STEPS.length));
       navigation.replace("Result", { analysisId });
     } catch (e: any) {
-      Alert.alert("Error al subir", e.message ?? "Inténtalo de nuevo.");
+      setUploadFailed(true);
       setUploading(false);
     }
   };
+
+  const retakeLast = useCallback(() => {
+    cancelCountdown();
+    if (currentStep === 0) {
+      // No photos taken yet — go back
+      navigation.goBack();
+      return;
+    }
+    // Remove last captured photo and go back one step
+    setCapturedUris((prev) => prev.slice(0, -1));
+    setCurrentStep((s) => s - 1);
+  }, [currentStep, cancelCountdown, navigation]);
 
   const skipToUpload = () => {
     if (capturedUris.length === 0) {
@@ -236,12 +231,34 @@ export default function CaptureScreen() {
     );
   }
 
+  if (uploadFailed) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.uploadTitle}>Error al enviar las fotos</Text>
+        <Text style={styles.uploadSub}>Comprueba tu conexión y vuelve a intentarlo.</Text>
+        <TouchableOpacity
+          style={[styles.btn, { marginTop: SPACING.lg }]}
+          onPress={() => uploadPhotos(capturedUris)}
+        >
+          <Text style={styles.btnText}>Reintentar →</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ marginTop: SPACING.md }}
+          onPress={() => { setUploadFailed(false); setCurrentStep(STEPS.length - 1); }}
+        >
+          <Text style={{ color: COLORS.textMuted, fontSize: 13 }}>Repetir las fotos</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (uploading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.uploadIcon}>🔬</Text>
         <Text style={styles.uploadTitle}>Analizando tu rostro…</Text>
-        <Text style={styles.uploadSub}>Extrayendo 468 puntos de medición y generando tu informe personalizado.</Text>
+        <Text style={styles.uploadSub}>
+          Extrayendo 468 puntos de medición y generando tu informe personalizado.
+        </Text>
       </View>
     );
   }
@@ -310,32 +327,39 @@ export default function CaptureScreen() {
 
       {/* Bottom controls */}
       <View style={styles.bottom}>
-        {/* Countdown trigger */}
-        {countdown === null ? (
-          <TouchableOpacity style={styles.timerBtn} onPress={startCountdown}>
-            <Text style={styles.timerBtnText}>⏱ Capturar en 3s</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.timerBtn} onPress={cancelCountdown}>
-            <Text style={styles.timerBtnText}>✕ Cancelar</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Manual capture */}
-        <TouchableOpacity
-          style={[styles.captureBtn, isCapturing && { opacity: 0.5 }]}
-          onPress={() => capturePhoto()}
-          disabled={isCapturing}
-        >
-          <View style={styles.captureBtnInner} />
-        </TouchableOpacity>
-
-        {/* Skip / finish early */}
-        <TouchableOpacity style={styles.skipBtn} onPress={skipToUpload}>
-          <Text style={styles.skipBtnText}>
-            {capturedUris.length > 0 ? `Usar ${capturedUris.length} fotos →` : "Saltar"}
+        {/* Retake / back */}
+        <TouchableOpacity style={styles.sideBtn} onPress={retakeLast}>
+          <Text style={styles.sideBtnIcon}>←</Text>
+          <Text style={styles.sideBtnText}>
+            {currentStep === 0 ? "Salir" : "Repetir"}
           </Text>
         </TouchableOpacity>
+
+        {/* Capture */}
+        <TouchableOpacity
+          style={[styles.captureBtn, isCapturing && { opacity: 0.5 }]}
+          onPress={countdown === null ? () => capturePhoto() : cancelCountdown}
+          disabled={isCapturing}
+        >
+          {countdown !== null
+            ? <Text style={styles.countdownInBtn}>{countdown}</Text>
+            : <View style={styles.captureBtnInner} />}
+        </TouchableOpacity>
+
+        {/* Timer or skip */}
+        {countdown === null ? (
+          <TouchableOpacity style={styles.sideBtn} onPress={startCountdown}>
+            <Text style={styles.sideBtnIcon}>3s</Text>
+            <Text style={styles.sideBtnText}>
+              {capturedUris.length > 0 ? `${Math.min(capturedUris.length, STEPS.length)}/3` : "Timer"}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.sideBtn} onPress={cancelCountdown}>
+            <Text style={styles.sideBtnIcon}>✕</Text>
+            <Text style={styles.sideBtnText}>Cancelar</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -413,12 +437,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "rgba(15,15,26,0.85)",
   },
-  timerBtn: { paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, minWidth: 80, alignItems: "center" },
-  timerBtnText: { color: COLORS.textMuted, fontSize: 13, ...FONTS.label },
-  captureBtn: { width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: COLORS.accent, alignItems: "center", justifyContent: "center" },
-  captureBtnInner: { width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.accent },
-  skipBtn: { paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, minWidth: 80, alignItems: "center" },
-  skipBtnText: { color: COLORS.textMuted, fontSize: 13, ...FONTS.label },
+  sideBtn: { alignItems: "center", justifyContent: "center", minWidth: 68, gap: 3 },
+  sideBtnIcon: { color: COLORS.text, fontSize: 18, fontWeight: "600" as const },
+  sideBtnText: { color: COLORS.textMuted, fontSize: 11, ...FONTS.label },
+  captureBtn: { width: 76, height: 76, borderRadius: 38, borderWidth: 3, borderColor: COLORS.accent, alignItems: "center", justifyContent: "center" },
+  captureBtnInner: { width: 58, height: 58, borderRadius: 29, backgroundColor: COLORS.accent },
+  countdownInBtn: { color: COLORS.accent, fontSize: 28, fontWeight: "700" as const },
 
   // Permission / upload screens
   permissionText: { color: COLORS.text, textAlign: "center", lineHeight: 22 },

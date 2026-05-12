@@ -13,23 +13,52 @@ const KEYS = {
 } as const;
 
 export const storage = {
-  saveQuiz: (q: Partial<QuizAnswers>) =>
-    AsyncStorage.setItem(KEYS.QUIZ, JSON.stringify(q)),
-
-  loadQuiz: async (): Promise<Partial<QuizAnswers> | null> => {
-    const raw = await AsyncStorage.getItem(KEYS.QUIZ);
-    return raw ? JSON.parse(raw) : null;
+  saveQuiz: async (q: Partial<QuizAnswers>): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(KEYS.QUIZ, JSON.stringify(q));
+    } catch { /* non-critical — quiz will be re-entered if lost */ }
   },
 
-  saveAnalysisId: (id: string) =>
-    AsyncStorage.setItem(KEYS.ANALYSIS_ID, id),
+  loadQuiz: async (): Promise<Partial<QuizAnswers> | null> => {
+    try {
+      const raw = await AsyncStorage.getItem(KEYS.QUIZ);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
 
-  loadAnalysisId: () => AsyncStorage.getItem(KEYS.ANALYSIS_ID),
+  saveAnalysisId: async (id: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(KEYS.ANALYSIS_ID, id);
+    } catch { /* non-critical */ }
+  },
 
-  saveBarberCode: (code: string) =>
-    AsyncStorage.setItem(KEYS.BARBER_CODE, code),
+  loadAnalysisId: async (): Promise<string | null> => {
+    try {
+      return await AsyncStorage.getItem(KEYS.ANALYSIS_ID);
+    } catch {
+      return null;
+    }
+  },
 
-  loadBarberCode: () => AsyncStorage.getItem(KEYS.BARBER_CODE),
+  saveBarberCode: async (code: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(KEYS.BARBER_CODE, code);
+    } catch { /* non-critical */ }
+  },
 
-  clear: () => AsyncStorage.multiRemove(Object.values(KEYS)),
+  loadBarberCode: async (): Promise<string | null> => {
+    try {
+      return await AsyncStorage.getItem(KEYS.BARBER_CODE);
+    } catch {
+      return null;
+    }
+  },
+
+  clear: async (): Promise<void> => {
+    try {
+      await AsyncStorage.multiRemove(Object.values(KEYS));
+    } catch { /* best-effort */ }
+  },
 };

@@ -150,6 +150,13 @@ export default function ResultScreen() {
         </View>
       </Section>
 
+      {/* ── Ventaja facial ───────────────────────────────────────── */}
+      {report.ventaja_facial && (
+        <Section title="Tu ventaja facial" icon="⭐">
+          <Text style={styles.bodyText}>{report.ventaja_facial}</Text>
+        </Section>
+      )}
+
       {/* ── Cortes recomendados ──────────────────────────────────── */}
       <Section title="Tus 3 cortes ideales" icon="✂️">
         {report.cortes_recomendados?.map((cut, i) => (
@@ -177,6 +184,26 @@ export default function ResultScreen() {
       <Section title="Consejos para tu forma facial" icon="💡">
         <Text style={styles.bodyText}>{report.consejos_especificos}</Text>
       </Section>
+
+      {/* ── Virtual try-on CTA ───────────────────────────────────── */}
+      <TouchableOpacity
+        style={styles.visualsCTA}
+        onPress={() =>
+          navigation.navigate("Visuals", {
+            analysisId: result.analysis_id,
+            cuts: report.cortes_recomendados ?? [],
+          })
+        }
+        activeOpacity={0.85}
+      >
+        <View style={styles.visualsCTALeft}>
+          <Text style={styles.visualsCTATitle}>Ver cómo quedarías ✨</Text>
+          <Text style={styles.visualsCTASub}>
+            IA genera una foto tuya con cada corte recomendado
+          </Text>
+        </View>
+        <Text style={styles.visualsCTAArrow}>→</Text>
+      </TouchableOpacity>
 
       {/* ── Upsell colorimetría ───────────────────────────────────── */}
       {!result.includes_colorimetry && (
@@ -344,6 +371,23 @@ const styles = StyleSheet.create({
   // Avoid
   avoidItem: { paddingVertical: 4 },
   avoidText: { color: COLORS.textMuted, fontSize: 14, lineHeight: 20 },
+
+  // Virtual try-on CTA
+  visualsCTA: {
+    margin: SPACING.lg,
+    backgroundColor: "rgba(201,168,76,0.12)",
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.accent,
+    padding: SPACING.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  visualsCTALeft: { flex: 1, gap: 4 },
+  visualsCTATitle: { color: COLORS.accent, fontSize: 17, ...FONTS.heading },
+  visualsCTASub: { color: COLORS.textMuted, fontSize: 13, lineHeight: 18 },
+  visualsCTAArrow: { color: COLORS.accent, fontSize: 22, marginLeft: SPACING.sm },
 
   // Upsell
   upsellCard: {

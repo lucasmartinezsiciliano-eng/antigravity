@@ -26,37 +26,6 @@ const CONSENT_ITEMS = [
 ];
 const MARKETING_KEY = "marketing_emails";
 
-// Social proof — client names ticker
-const CLIENT_NAMES = [
-  "Carlos M. — Madrid",
-  "Alejandro R. — BCN",
-  "Miguel Á. — Valencia",
-  "Javier S. — Sevilla",
-  "Diego F. — Bilbao",
-  "Pablo G. — Madrid",
-  "Adrián T. — Málaga",
-  "Sergio L. — Zaragoza",
-  "Rubén M. — Murcia",
-  "Iván C. — Las Palmas",
-  "Marcos V. — Valladolid",
-  "Nicolás P. — Alicante",
-];
-
-function ClientTicker() {
-  const items = [...CLIENT_NAMES, ...CLIENT_NAMES];
-  return (
-    <div className="marquee-root marquee-root--card" aria-label="Clientes que ya tienen su análisis" style={{ "--marquee-duration": "30s" } as React.CSSProperties}>
-      <div className="marquee-track" aria-hidden="true">
-        {items.map((name, i) => (
-          <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
-            <span className="marquee-handle">{name}</span>
-            <span className="marquee-sep">✦</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function ConsentCheckbox({ label, checked, onToggle, muted }: { label: string; checked: boolean; onToggle: () => void; muted?: boolean }) {
   return (
@@ -109,43 +78,12 @@ export default function CheckoutPage() {
     setConsent((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function acceptAll() {
-    const all: Record<string, boolean> = {};
-    CONSENT_ITEMS.forEach((item) => { all[item.key] = true; });
-    all[MARKETING_KEY] = true;
-    setConsent(all);
-  }
-
-  async function handlePay() {
+  function handlePay() {
     if (!allRequired) return;
-    setLoading(true);
-    setError("");
-    try {
-      const quiz = storage.getQuiz();
-      const code = barberCode.trim().toUpperCase() || undefined;
-      if (code) storage.saveBarberCode(code);
-
-      storage.saveConsentState(consent);
-
-      const res = await api.initiate({
-        barber_code: code,
-        quiz_answers: quiz,
-        marketing_consent: consent[MARKETING_KEY] === true,
-      });
-      storage.saveAnalysisId(res.analysis_id);
-      storage.saveCheckoutUrl(res.checkout_url);
-
-      await api.consent(res.analysis_id, "v1.0-web");
-
-      if (res.checkout_url.startsWith("https://checkout.stripe.com")) {
-        window.location.href = res.checkout_url;
-      } else {
-        window.location.href = `/capture/${res.analysis_id}`;
-      }
-    } catch (e: any) {
-      setError(e.message || "Error al iniciar el análisis. Inténtalo de nuevo.");
-      setLoading(false);
-    }
+    const code = barberCode.trim().toUpperCase() || undefined;
+    if (code) storage.saveBarberCode(code);
+    storage.saveConsentState(consent);
+    window.location.href = "/add-ons";
   }
 
   return (
@@ -160,16 +98,6 @@ export default function CheckoutPage() {
         {/* Price hero */}
         <div style={{ textAlign: "center", marginBottom: 28, position: "relative" }}>
 
-          <div style={{ position: "absolute", top: 0, right: 0, textAlign: "center" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.4, color: "var(--text-dim)", display: "block" }}>ANTES</span>
-            <span style={{
-              fontSize: 20, fontWeight: 800, color: "#D94F4F",
-              textDecoration: "line-through",
-              textDecorationColor: "#D94F4F",
-              textDecorationThickness: 2,
-            }}>10 €</span>
-          </div>
-
           <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10, letterSpacing: 0.8, fontWeight: 600 }}>
             ANÁLISIS CAPILAR CON IA
           </div>
@@ -177,19 +105,19 @@ export default function CheckoutPage() {
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: 2, lineHeight: 1 }}>
             <span style={{ fontSize: 22, fontWeight: 700, color: "var(--accent)", marginTop: 10 }}>€</span>
             <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: -3 }}>
-              {hasCode ? "6" : "7"}
+              {hasCode ? "11" : "14"}
             </span>
             <span style={{ fontSize: 32, fontWeight: 700, marginTop: 14 }}>,99</span>
           </div>
 
           {hasCode ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 6 }}>
-              <span style={{ color: "var(--text-dim)", fontSize: 14, textDecoration: "line-through" }}>7,99 €</span>
+              <span style={{ color: "var(--text-dim)", fontSize: 14, textDecoration: "line-through" }}>14,99 €</span>
               <span style={{
                 color: "var(--success)", fontSize: 12, fontWeight: 700,
                 background: "rgba(61,184,130,0.1)", padding: "3px 8px", borderRadius: 99,
               }}>
-                −1 € código barbería
+                −3 € código barbería
               </span>
             </div>
           ) : (
@@ -218,24 +146,9 @@ export default function CheckoutPage() {
 
         {/* RGPD Consent — required before paying */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <ShieldCheck size={13} color="var(--text-muted)" strokeWidth={2} />
-              <span className="label">Privacidad y consentimiento</span>
-            </div>
-            {!allRequired && (
-              <button
-                type="button"
-                onClick={acceptAll}
-                style={{
-                  fontSize: 12, fontWeight: 600, color: "var(--text-muted)",
-                  background: "var(--surface)", border: "1px solid var(--border)",
-                  borderRadius: 99, padding: "4px 10px",
-                }}
-              >
-                Aceptar todo
-              </button>
-            )}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <ShieldCheck size={13} color="var(--text-muted)" strokeWidth={2} />
+            <span className="label">Privacidad y consentimiento</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {CONSENT_ITEMS.map((item) => (
@@ -277,17 +190,13 @@ export default function CheckoutPage() {
         {/* Social proof */}
         <div style={{
           background: "var(--surface)", border: "1px solid var(--border)",
-          borderRadius: "var(--r-md)", padding: "12px 0 0", marginBottom: 16,
-          overflow: "hidden",
+          borderRadius: "var(--r-md)", padding: "14px 16px", marginBottom: 16,
+          textAlign: "center",
         }}>
-          <p style={{
-            textAlign: "center", fontSize: 12, letterSpacing: 0.3,
-            color: "var(--text-muted)", margin: "0 0 10px", padding: "0 16px",
-          }}>
-            <span style={{ fontWeight: 900, color: "var(--text)", fontSize: 14 }}>+50</span>
-            {" "}caras ya mejoradas
+          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+            <span style={{ fontWeight: 900, color: "var(--text)", fontSize: 15 }}>+50</span>
+            {" "}análisis ya realizados
           </p>
-          <ClientTicker />
         </div>
 
         {/* Discount code */}
@@ -309,7 +218,7 @@ export default function CheckoutPage() {
           />
           {hasCode && (
             <p style={{ color: "var(--success)", fontSize: 13, marginTop: 6, fontWeight: 600 }}>
-              ✓ Código aplicado — precio 6,99 €
+              ✓ Código aplicado — precio 11,99 €
             </p>
           )}
         </div>
@@ -325,8 +234,8 @@ export default function CheckoutPage() {
         {error && (
           <p style={{ color: "var(--danger)", fontSize: 14, textAlign: "center", marginBottom: 12 }}>{error}</p>
         )}
-        <button type="button" className="btn-primary" onClick={handlePay} disabled={loading || !allRequired}>
-          {loading ? "Iniciando…" : "Pagar →"}
+        <button type="button" className="btn-primary" onClick={handlePay} disabled={!allRequired}>
+          Continuar →
         </button>
 
         {/* Payment method badges */}

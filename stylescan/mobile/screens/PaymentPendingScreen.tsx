@@ -33,18 +33,20 @@ export default function PaymentPendingScreen() {
     intervalRef.current = setInterval(async () => {
       try {
         const result = await api.getResult(analysis_id);
-        // If we get a result back (not 402), payment went through
+        // Got a full result back — payment confirmed and analysis done
         if (result.analysis_id) {
-          clearInterval(intervalRef.current!);
-          navigation.replace("Capture", { analysisId: analysis_id });
-        }
-      } catch (e: any) {
-        if (e.message?.includes("402")) return; // Still pending, keep polling
-        if (e.message?.includes("202")) {
-          // Paid and processing / completed already
           clearInterval(intervalRef.current!);
           navigation.replace("Result", { analysisId: analysis_id });
         }
+      } catch (e: any) {
+        if (e.message?.includes("402")) return; // Unpaid — keep polling
+        if (e.message?.includes("202")) {
+          // Payment confirmed, analysis still processing — go to Capture to submit photos
+          // (202 here means paid but no photos yet, or processing after photos)
+          clearInterval(intervalRef.current!);
+          navigation.replace("Capture", { analysisId: analysis_id });
+        }
+        // Other errors: keep polling silently
       }
     }, 4000);
 

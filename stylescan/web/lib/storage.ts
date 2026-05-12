@@ -28,6 +28,9 @@ export const storage = {
   getBarberCode: (): string | null => {
     try { return localStorage.getItem(KEYS.barberCode); } catch { return null; }
   },
+  clearBarberCode: () => {
+    try { localStorage.removeItem(KEYS.barberCode); } catch {}
+  },
   saveCheckoutUrl: (url: string) => {
     try { localStorage.setItem(KEYS.checkoutUrl, url); } catch {}
   },

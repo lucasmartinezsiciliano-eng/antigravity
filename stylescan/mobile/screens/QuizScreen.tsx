@@ -1,9 +1,3 @@
-/**
- * QuizScreen — Pre-analysis preferences quiz
- * 6 questions, one per screen, swipeable forward/back.
- * Answers are passed to the backend to personalize the Claude report.
- */
-
 import React, { useState } from "react";
 import {
   Animated,
@@ -23,15 +17,7 @@ import { storage } from "../services/storage";
 
 const { width: W } = Dimensions.get("window");
 
-// ─── Quiz step definitions ────────────────────────────────────────────────────
-
-interface Option {
-  value: string;
-  label: string;
-  sublabel?: string;
-  emoji: string;
-}
-
+interface Option { value: string; label: string; sublabel?: string; emoji: string; }
 interface QuizStep {
   key: keyof QuizAnswers;
   question: string;
@@ -45,24 +31,48 @@ const STEPS: QuizStep[] = [
   {
     key: "hair_texture",
     question: "¿Cómo es tu cabello naturalmente?",
-    subtitle: "Sin productos. Recién lavado y seco.",
+    subtitle: "Sin productos. Recién lavado y seco al aire.",
     type: "single",
     options: [
-      { value: "straight", label: "Liso", sublabel: "Cae recto sin forma", emoji: "➖" },
-      { value: "wavy",     label: "Ondulado", sublabel: "Forma olas suaves", emoji: "〰️" },
-      { value: "curly",    label: "Rizado", sublabel: "Rizos definidos", emoji: "🌀" },
-      { value: "coily",    label: "Muy rizado", sublabel: "Afro o coily", emoji: "⬛" },
+      { value: "straight", label: "Liso",        sublabel: "Cae recto sin forma",      emoji: "➖" },
+      { value: "wavy",     label: "Ondulado",     sublabel: "Forma olas suaves",        emoji: "〰️" },
+      { value: "curly",    label: "Rizado",       sublabel: "Rizos definidos",          emoji: "🌀" },
+      { value: "coily",   label: "Muy rizado",   sublabel: "Afro o muy apretado",      emoji: "⬛" },
     ],
   },
   {
     key: "hair_density",
     question: "¿Cuánto pelo tienes?",
-    subtitle: "Agarra un mechón. ¿Cuánto ves entre los dedos?",
+    subtitle: "Agarra un mechón. ¿Cuánto cuero cabelludo ves entre los dedos?",
     type: "single",
     options: [
-      { value: "thin",   label: "Fino / escaso", sublabel: "Se ven mucho el cuero cabelludo", emoji: "🔹" },
-      { value: "medium", label: "Normal", sublabel: "Ni mucho ni poco", emoji: "🔷" },
-      { value: "thick",  label: "Grueso / abundante", sublabel: "Pelo denso, pesa", emoji: "💎" },
+      { value: "thin",   label: "Fino / escaso",        sublabel: "Se ve mucho el cuero",    emoji: "🔹" },
+      { value: "medium", label: "Normal",                sublabel: "Ni mucho ni poco",        emoji: "🔷" },
+      { value: "thick",  label: "Grueso / abundante",   sublabel: "Denso, pesa bastante",    emoji: "💎" },
+    ],
+  },
+  {
+    key: "lifestyle",
+    question: "¿Cuál es tu entorno habitual?",
+    subtitle: "Esto define qué estilos son viables para tu día a día.",
+    type: "single",
+    options: [
+      { value: "professional", label: "Oficina / profesional", sublabel: "Reuniones, clientes, formal",   emoji: "🏢" },
+      { value: "creative",     label: "Sector creativo",       sublabel: "Agencia, arte, casual",         emoji: "🎨" },
+      { value: "active",       label: "Físico / deportivo",    sublabel: "Obra, deporte, aire libre",     emoji: "⚡" },
+      { value: "mixed",        label: "Mixto / desde casa",    sublabel: "Variado, sin código fijo",      emoji: "🏠" },
+    ],
+  },
+  {
+    key: "style_goal",
+    question: "¿Qué quieres conseguir con tu corte?",
+    subtitle: "Sé honesto. Esto guía toda la recomendación.",
+    type: "single",
+    options: [
+      { value: "professional_look", label: "Verme más profesional", sublabel: "Cuidado, serio, imagen sólida",    emoji: "💼" },
+      { value: "trendy_look",       label: "Seguir las tendencias", sublabel: "Actual, llamativo, con personalidad", emoji: "📱" },
+      { value: "effortless_look",   label: "Bien sin esfuerzo",     sublabel: "Natural, sin complicaciones",        emoji: "😎" },
+      { value: "confidence_boost",  label: "Ganar confianza",       sublabel: "Un cambio real, reinventarme",       emoji: "🔥" },
     ],
   },
   {
@@ -71,68 +81,66 @@ const STEPS: QuizStep[] = [
     subtitle: "Tu preferencia ideal, no la que tienes ahora.",
     type: "single",
     options: [
-      { value: "very_short", label: "Muy corto", sublabel: "Rapado o casi rapado", emoji: "⚡" },
-      { value: "short",      label: "Corto", sublabel: "1 a 3 cm en el tope", emoji: "✂️" },
-      { value: "medium",     label: "Medio", sublabel: "3 a 6 cm, peinables", emoji: "🌊" },
-      { value: "long",       label: "Largo", sublabel: "Más de 6 cm", emoji: "🎸" },
+      { value: "very_short", label: "Muy corto",  sublabel: "Rapado o casi",             emoji: "⚡" },
+      { value: "short",      label: "Corto",      sublabel: "1-3 cm en el tope",         emoji: "✂️" },
+      { value: "medium",     label: "Medio",      sublabel: "3-6 cm, peinables",         emoji: "🌊" },
+      { value: "long",       label: "Largo",      sublabel: "Más de 6 cm",               emoji: "🎸" },
     ],
   },
   {
     key: "maintenance_willingness",
-    question: "¿Cuánto tiempo le dedicas al pelo?",
-    subtitle: "Honestidad total. Esto afecta mucho a la recomendación.",
+    question: "¿Cuánto tiempo le dedicas al pelo por las mañanas?",
+    subtitle: "Con total honestidad. Afecta mucho a qué corte funciona contigo.",
     type: "single",
     options: [
-      { value: "low",    label: "Mínimo", sublabel: "Ducha y listo, sin producto", emoji: "😴" },
-      { value: "medium", label: "Algo", sublabel: "2-3 minutos con producto", emoji: "⏱️" },
-      { value: "high",   label: "Lo que haga falta", sublabel: "Me gusta cuidar mi imagen", emoji: "💪" },
-    ],
-  },
-  {
-    key: "style_preference",
-    question: "¿Cómo describes tu estilo?",
-    type: "single",
-    options: [
-      { value: "classic", label: "Clásico", sublabel: "Conservador, formal", emoji: "🎩" },
-      { value: "modern",  label: "Moderno", sublabel: "Urbano, limpio", emoji: "🏙️" },
-      { value: "trendy",  label: "A la moda", sublabel: "Arriesgado, llamativo", emoji: "🔥" },
+      { value: "low",    label: "Menos de 2 min",   sublabel: "Ducha y listo, sin producto",         emoji: "😴" },
+      { value: "medium", label: "Unos 5 min",        sublabel: "Un poco de producto, nada más",      emoji: "⏱️" },
+      { value: "high",   label: "10 min o más",      sublabel: "Secador, producto, lo que toque",   emoji: "💪" },
     ],
   },
   {
     key: "beard",
-    question: "¿Llevas barba?",
+    question: "¿Llevas barba habitualmente?",
+    subtitle: "El corte y la barba se diseñan juntos.",
     type: "single",
     options: [
-      { value: "none",    label: "Sin barba", sublabel: "Afeitado", emoji: "🧼" },
-      { value: "stubble", label: "Barba de días", sublabel: "1-3 días", emoji: "🪒" },
-      { value: "short",   label: "Barba corta", sublabel: "Menos de 2 cm", emoji: "🧔" },
-      { value: "full",    label: "Barba completa", sublabel: "Más de 2 cm", emoji: "🧔‍♂️" },
+      { value: "none",     label: "Sin barba",       sublabel: "Siempre afeitado",             emoji: "" },
+      { value: "stubble",  label: "Barba de días",   sublabel: "3-10 días, perfilada",         emoji: "" },
+      { value: "goatee",   label: "Perilla",          sublabel: "Solo en mentón, sin mejillas", emoji: "" },
+      { value: "mustache", label: "Solo bigote",      sublabel: "Sobre el labio, sin barba",    emoji: "" },
+      { value: "short",    label: "Barba corta",      sublabel: "Menos de 2 cm",                emoji: "" },
+      { value: "full",     label: "Barba completa",   sublabel: "Más de 2 cm, llena",           emoji: "" },
     ],
   },
   {
     key: "problematic_areas",
-    question: "¿Alguna zona problemática?",
-    subtitle: "Selecciona todas las que apliquen (opcional).",
+    question: "¿Hay alguna zona que te preocupe?",
+    subtitle: "Selecciona todas las que apliquen. Es opcional pero muy útil.",
     type: "multi",
     options: [
-      { value: "entradas",     label: "Entradas", sublabel: "Línea de nacimiento retrocediendo", emoji: "↩️" },
-      { value: "coronilla",    label: "Coronilla escasa", sublabel: "Pelándose en el centro", emoji: "⭕" },
-      { value: "remolino",     label: "Remolino fuerte", sublabel: "El pelo no cae bien", emoji: "🌀" },
-      { value: "pelo_fino",    label: "Pelo muy fino", sublabel: "Sin volumen", emoji: "💨" },
-      { value: "asimetria",    label: "Asimetría", sublabel: "Un lado diferente al otro", emoji: "⚖️" },
-      { value: "ninguna",      label: "Ninguna", sublabel: "", emoji: "✅" },
+      { value: "entradas",     label: "Entradas",           sublabel: "Línea retrocediendo",          emoji: "↩️" },
+      { value: "coronilla",    label: "Coronilla escasa",   sublabel: "Pelándose en el centro",       emoji: "⭕" },
+      { value: "remolino",     label: "Remolino fuerte",    sublabel: "El pelo no cae bien",          emoji: "🌀" },
+      { value: "pelo_fino",    label: "Pelo muy fino",      sublabel: "Sin volumen",                  emoji: "💨" },
+      { value: "asimetria",    label: "Asimetría",          sublabel: "Un lado diferente al otro",    emoji: "⚖️" },
+      { value: "ninguna",      label: "Ninguna",            sublabel: "",                             emoji: "✅" },
     ],
   },
   {
-    key: "additional_notes",
-    question: "¿Algo más que quieras que tengamos en cuenta?",
-    subtitle: "Opcional. Cuéntanos lo que quieras.",
+    key: "reference_style",
+    question: "¿Hay algún corte o estilo que te haya gustado antes?",
+    subtitle: "Opcional. Un nombre, una descripción, o nada. Ayuda a afinar la recomendación.",
     type: "text",
-    placeholder: "Ej: Quiero algo que no requiera secador, o que favorezca con gafas...",
+    placeholder: "Ej: Me gustó el degradado que llevaba hace 2 años, o el estilo de Brad Pitt en Fury...",
+  },
+  {
+    key: "additional_notes",
+    question: "¿Algo más que tengamos en cuenta?",
+    subtitle: "Opcional. Lo que quieras que sepa el análisis.",
+    type: "text",
+    placeholder: "Ej: Uso gafas, trabajo en un entorno muy conservador, quiero algo que no requiera secador...",
   },
 ];
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function QuizScreen() {
   const navigation = useNavigation<any>();
@@ -153,7 +161,7 @@ export default function QuizScreen() {
   const animateNext = (dir: 1 | -1) => {
     Animated.sequence([
       Animated.timing(slideAnim, { toValue: -30 * dir, duration: 120, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0,         duration: 180, useNativeDriver: true }),
     ]).start();
   };
 
@@ -178,10 +186,7 @@ export default function QuizScreen() {
     if (!canAdvance) return;
     if (isLast) {
       await storage.saveQuiz(answers);
-      navigation.navigate("Consent", {
-        quizAnswers: answers,
-        barberCode,
-      });
+      navigation.navigate("Consent", { quizAnswers: answers, barberCode });
       return;
     }
     animateNext(1);
@@ -202,7 +207,6 @@ export default function QuizScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
           <Text style={styles.backTxt}>←</Text>
@@ -218,7 +222,6 @@ export default function QuizScreen() {
           <Text style={styles.question}>{current.question}</Text>
           {current.subtitle && <Text style={styles.subtitle}>{current.subtitle}</Text>}
 
-          {/* Single / multi options */}
           {current.options && (
             <View style={styles.options}>
               {current.options.map((opt) => (
@@ -228,22 +231,20 @@ export default function QuizScreen() {
                   onPress={() => handleSelect(opt.value)}
                   activeOpacity={0.75}
                 >
-                  <Text style={styles.optionEmoji}>{opt.emoji}</Text>
                   <View style={styles.optionText}>
                     <Text style={[styles.optionLabel, isSelected(opt.value) && styles.optionLabelSelected]}>
                       {opt.label}
                     </Text>
-                    {opt.sublabel ? (
-                      <Text style={styles.optionSub}>{opt.sublabel}</Text>
-                    ) : null}
+                    {opt.sublabel ? <Text style={styles.optionSub}>{opt.sublabel}</Text> : null}
                   </View>
-                  {isSelected(opt.value) && <Text style={styles.check}>✓</Text>}
+                  {isSelected(opt.value)
+                    ? <Text style={styles.check}>✓</Text>
+                    : <View style={styles.uncheck} />}
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
-          {/* Free text */}
           {current.type === "text" && (
             <TextInput
               style={styles.textInput}
@@ -258,16 +259,19 @@ export default function QuizScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Next button */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.nextBtn, !canAdvance && styles.nextBtnDisabled]}
           onPress={handleNext}
           disabled={!canAdvance}
+          activeOpacity={0.85}
         >
           <Text style={styles.nextBtnText}>
-            {isLast ? "Ver mis resultados →" : "Siguiente →"}
+            {isLast ? "Ver mis resultados" : "Siguiente"}
           </Text>
+          <View style={styles.nextBtnArrow}>
+            <Text style={styles.nextBtnArrowText}>→</Text>
+          </View>
         </TouchableOpacity>
         {current.type !== "single" && (
           <TouchableOpacity onPress={handleNext} style={styles.skipLink}>
@@ -278,8 +282,6 @@ export default function QuizScreen() {
     </View>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
@@ -292,59 +294,80 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   backBtn: { padding: SPACING.sm },
-  backTxt: { color: COLORS.text, fontSize: 22 },
-  progressBar: {
-    flex: 1,
-    height: 3,
-    backgroundColor: COLORS.border,
-    borderRadius: 2,
-    overflow: "hidden",
+  backTxt: { color: COLORS.text, fontSize: 20, fontWeight: "300" as const },
+  progressBar: { flex: 1, height: 2, backgroundColor: COLORS.border, borderRadius: 1, overflow: "hidden" },
+  progressFill: { height: "100%", backgroundColor: COLORS.accent },
+  stepCount: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: "600" as const,
+    letterSpacing: 0.5,
+    width: 32,
+    textAlign: "right" as const,
   },
-  progressFill: { height: "100%", backgroundColor: COLORS.accent, borderRadius: 2 },
-  stepCount: { color: COLORS.textMuted, fontSize: 12, ...FONTS.label, width: 32, textAlign: "right" },
 
-  scroll: { padding: SPACING.lg, paddingBottom: 160 },
-  question: { color: COLORS.text, fontSize: 24, ...FONTS.heading, marginBottom: SPACING.sm },
-  subtitle: { color: COLORS.textMuted, fontSize: 14, lineHeight: 20, marginBottom: SPACING.lg },
+  scroll: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: 160 },
+  question: {
+    color: COLORS.text,
+    fontSize: 26,
+    fontWeight: "700" as const,
+    letterSpacing: -0.8,
+    marginBottom: SPACING.sm,
+    lineHeight: 32,
+  },
+  subtitle: { color: COLORS.textMuted, fontSize: 13, lineHeight: 19, marginBottom: SPACING.lg },
 
-  options: { gap: SPACING.sm },
+  options: { gap: 0 },
   option: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    gap: SPACING.md,
+    borderLeftWidth: 2,
+    borderLeftColor: "transparent",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  optionSelected: { borderLeftColor: COLORS.accent, backgroundColor: "rgba(201,168,76,0.05)" },
+  optionText: { flex: 1 },
+  optionLabel: { color: COLORS.text, fontSize: 15, ...FONTS.label },
+  optionLabelSelected: { color: COLORS.accent },
+  optionSub: { color: COLORS.textMuted, fontSize: 12, marginTop: 2, fontWeight: "400" as const },
+  check: {
+    color: COLORS.accent,
+    fontSize: 14,
+    fontWeight: "700" as const,
+    width: 22,
+    textAlign: "center" as const,
+  },
+  uncheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    padding: SPACING.md,
-    gap: SPACING.md,
   },
-  optionSelected: { borderColor: COLORS.accent, backgroundColor: "rgba(201,168,76,0.08)" },
-  optionEmoji: { fontSize: 24, width: 32, textAlign: "center" },
-  optionText: { flex: 1 },
-  optionLabel: { color: COLORS.text, fontSize: 16, ...FONTS.label },
-  optionLabelSelected: { color: COLORS.accent },
-  optionSub: { color: COLORS.textMuted, fontSize: 12, marginTop: 2 },
-  check: { color: COLORS.accent, fontSize: 18, fontWeight: "700" },
 
   textInput: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
     borderColor: COLORS.border,
+    borderLeftWidth: 2,
+    borderLeftColor: COLORS.accent,
     color: COLORS.text,
     padding: SPACING.md,
     fontSize: 15,
     lineHeight: 22,
     minHeight: 120,
-    textAlignVertical: "top",
+    textAlignVertical: "top" as const,
   },
 
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: SPACING.lg,
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
     paddingBottom: Platform.OS === "ios" ? 40 : SPACING.lg,
     backgroundColor: COLORS.bg,
     borderTopWidth: 1,
@@ -353,12 +376,25 @@ const styles = StyleSheet.create({
   },
   nextBtn: {
     backgroundColor: COLORS.accent,
-    borderRadius: RADIUS.pill,
-    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.md + 2,
+    paddingLeft: SPACING.lg,
+    paddingRight: SPACING.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  nextBtnDisabled: { opacity: 0.35 },
-  nextBtnText: { color: COLORS.primary, fontSize: 17, ...FONTS.heading },
+  nextBtnDisabled: { opacity: 0.3 },
+  nextBtnText: { color: COLORS.primary, fontSize: 16, fontWeight: "700" as const, letterSpacing: -0.3 },
+  nextBtnArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nextBtnArrowText: { color: COLORS.primary, fontSize: 16, fontWeight: "700" as const },
   skipLink: { alignItems: "center", paddingVertical: SPACING.sm },
-  skipLinkText: { color: COLORS.textMuted, fontSize: 13 },
+  skipLinkText: { color: COLORS.textMuted, fontSize: 12, letterSpacing: 0.3 },
 });

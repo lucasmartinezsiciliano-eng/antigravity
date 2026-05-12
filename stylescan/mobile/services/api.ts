@@ -3,8 +3,11 @@
  * All calls to the FastAPI backend.
  */
 
+// DEV: LAN IP — phone and PC must be on same WiFi
+// Switch to tunnel URL for testing on different networks:
+//   npx localtunnel --port 8001 --subdomain stylescan-api
 const BASE_URL = __DEV__
-  ? "http://localhost:8000/api/v1"
+  ? "http://192.168.1.165:8000/api/v1"
   : "https://api.stylescan.app/api/v1";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,11 +15,13 @@ const BASE_URL = __DEV__
 export interface QuizAnswers {
   hair_texture: "straight" | "wavy" | "curly" | "coily";
   hair_density: "thin" | "medium" | "thick";
+  lifestyle: "professional" | "creative" | "active" | "mixed";
+  style_goal: "professional_look" | "trendy_look" | "effortless_look" | "confidence_boost";
   preferred_length: "very_short" | "short" | "medium" | "long";
   maintenance_willingness: "low" | "medium" | "high";
-  style_preference: "classic" | "modern" | "trendy";
-  beard: "none" | "stubble" | "short" | "full";
+  beard: "none" | "stubble" | "goatee" | "mustache" | "short" | "full";
   problematic_areas: string[];
+  reference_style?: string;
   additional_notes?: string;
 }
 
@@ -41,6 +46,7 @@ export interface HaircutRecommendation {
 export interface AnalysisReport {
   resumen_facial: string;
   proporciones_craneales: string;
+  ventaja_facial?: string;
   cortes_recomendados: HaircutRecommendation[];
   cortes_a_evitar: string[];
   consejos_especificos: string;
@@ -69,13 +75,17 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: {
+      "Content-Type": "application/json",
+      "bypass-tunnel-reminder": "true",
+      ...options.headers,
+    },
     ...options,
   });
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(error.detail || `HTTP ${res.status}`);
+    throw new Error(`HTTP ${res.status}: ${error.detail || res.statusText}`);
   }
 
   return res.json();
@@ -118,17 +128,20 @@ export const api = {
     const formData = new FormData();
     for (const uri of photoUris) {
       const filename = uri.split("/").pop() ?? "photo.jpg";
+      const ext = filename.split(".").pop()?.toLowerCase() ?? "jpg";
+      const mimeType = ext === "png" ? "image/png" : "image/jpeg";
       formData.append("photos", {
-        uri,
+        uri: uri.startsWith("file://") ? uri : `file://${uri}`,
         name: filename,
-        type: "image/jpeg",
+        type: mimeType,
       } as any);
     }
 
     const res = await fetch(`${BASE_URL}/analysis/${analysis_id}/photos`, {
       method: "POST",
       body: formData,
-      // No Content-Type header — let fetch set multipart boundary
+      headers: { "bypass-tunnel-reminder": "true" },
+      // No Content-Type — let fetch set multipart boundary
     });
 
     if (!res.ok) {
@@ -146,4 +159,42 @@ export const api = {
   /** RGPD: delete analysis data */
   deleteAnalysis: (analysis_id: string) =>
     request(`/analysis/${analysis_id}`, { method: "DELETE" }),
+
+  /** Trigger virtual try-on generation (photo not stored) */
+  generateVisuals: async (analysis_id: string, photoUri: string) => {
+    const formData = new FormData();
+    const filename = photoUri.split("/").pop() ?? "photo.jpg";
+    const ext = filename.split(".").pop()?.toLowerCase() ?? "jpg";
+    formData.append("photo", {
+      uri: photoUri.startsWith("file://") ? photoUri : `file://${photoUri}`,
+      name: filename,
+      type: ext === "png" ? "image/png" : "image/jpeg",
+    } as any);
+
+    const res = await fetch(`${BASE_URL}/analysis/${analysis_id}/generate-visuals`, {
+      method: "POST",
+      body: formData,
+      headers: { "bypass-tunnel-reminder": "true" },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  /** Poll for visual generation status */
+  getVisuals: (analysis_id: string) =>
+    request<{ visuals_status: string; visuals: any[] }>(`/analysis/${analysis_id}/visuals`),
+
+  /** Purchase upsell (colorimetry | products | pack) — returns Stripe checkout URL */
+  purchaseUpsell: (analysis_id: string, upsell_type: "colorimetry" | "products" | "pack") =>
+    request<{ checkout_url: string; analysis_id: string; upsell_type: string; amount_euros: number }>(
+      `/analysis/${analysis_id}/upsell`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ upsell_type }),
+      }
+    ),
 };
