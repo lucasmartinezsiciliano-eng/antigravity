@@ -40,10 +40,27 @@ async def stripe_webhook(
         raise HTTPException(400, "Invalid signature")
 
     event_type = event["type"]
-    logger.info("Stripe webhook received: %s", event_type)
+    event_id = event.get("id", "")
+    logger.info("Stripe webhook received: %s id=%s", event_type, event_id)
+
+    # Idempotency: skip if we already processed this exact Stripe event
+    if event_id:
+        from app.models.analysis import StripeEventLog
+        existing = (await db.execute(
+            select(StripeEventLog).where(StripeEventLog.stripe_event_id == event_id)
+        )).scalar_one_or_none()
+        if existing:
+            logger.info("Stripe event %s already processed — skipping", event_id)
+            return {"received": True}
+        db.add(StripeEventLog(stripe_event_id=event_id, event_type=event_type))
+        await db.flush()
 
     if event_type == "checkout.session.completed":
-        await _handle_checkout_completed(event, db)
+        session = event["data"]["object"]
+        if session.get("metadata", {}).get("upsell_type"):
+            await _handle_upsell_completed(event, db)
+        else:
+            await _handle_checkout_completed(event, db)
 
     elif event_type == "checkout.session.expired":
         session = event["data"]["object"]
@@ -55,6 +72,9 @@ async def stripe_webhook(
 
 
 async def _handle_checkout_completed(event, db: AsyncSession) -> None:
+    from datetime import datetime, timezone
+    from app.services.email_service import send_payment_confirmed, trigger_n8n_marketing_sequence
+
     session = event["data"]["object"]
     metadata = session.get("metadata", {})
     analysis_id = metadata.get("analysis_id")
@@ -69,7 +89,11 @@ async def _handle_checkout_completed(event, db: AsyncSession) -> None:
         logger.error("Analysis %s not found for completed checkout", analysis_id)
         return
 
-    from datetime import datetime, timezone
+    # B — capture email from Stripe customer_details
+    user_email: str | None = (session.get("customer_details") or {}).get("email")
+    if user_email:
+        analysis.user_email = user_email
+
     analysis.status = "paid"
     analysis.stripe_payment_intent_id = session.get("payment_intent")
     analysis.amount_paid_cents = session.get("amount_total", 0)
@@ -78,9 +102,21 @@ async def _handle_checkout_completed(event, db: AsyncSession) -> None:
     analysis.includes_products_guide = metadata.get("include_products_guide") == "True"
 
     logger.info(
-        "Payment confirmed for analysis %s — amount=%d cents",
-        analysis_id, analysis.amount_paid_cents
+        "Payment confirmed for analysis %s — amount=%d cents — email=%s",
+        analysis_id, analysis.amount_paid_cents, user_email or "unknown",
     )
+
+    # C — transactional email: payment confirmed (always, no marketing consent needed)
+    if user_email:
+        await send_payment_confirmed(user_email, analysis_id)
+
+    # D — n8n marketing sequence (only if user opted in)
+    if user_email and analysis.marketing_consent:
+        await trigger_n8n_marketing_sequence(
+            email=user_email,
+            analysis_id=analysis_id,
+            created_at_iso=analysis.created_at.isoformat(),
+        )
 
     # Record barber commission if a barber code was used
     commission_data = stripe_service.extract_commission_data(event)
@@ -91,6 +127,31 @@ async def _handle_checkout_completed(event, db: AsyncSession) -> None:
             stripe_charge_id=commission_data["stripe_charge_id"],
             db=db,
         )
+
+
+async def _handle_upsell_completed(event, db: AsyncSession) -> None:
+    from app.api.routes.analysis import _generate_upsell_content
+
+    session = event["data"]["object"]
+    metadata = session.get("metadata", {})
+    analysis_id = metadata.get("analysis_id")
+    upsell_type = metadata.get("upsell_type")
+
+    if not analysis_id or not upsell_type:
+        return
+
+    stmt = select(Analysis).where(Analysis.id == analysis_id)
+    analysis = (await db.execute(stmt)).scalar_one_or_none()
+    if not analysis:
+        logger.error("Analysis %s not found for upsell webhook", analysis_id)
+        return
+
+    if upsell_type == "seasonal":
+        analysis.includes_seasonal = True
+    else:
+        _generate_upsell_content(analysis, upsell_type)
+    await db.commit()
+    logger.info("Upsell %s processed for analysis %s", upsell_type, analysis_id)
 
 
 async def _update_analysis_status(analysis_id: str, new_status: str, db: AsyncSession) -> None:

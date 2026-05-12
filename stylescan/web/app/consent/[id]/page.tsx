@@ -22,6 +22,10 @@ const CONSENT_ITEMS = [
     key: "age",
     label: "Confirmo que tengo 18 años o más.",
   },
+  {
+    key: "deletion",
+    label: "Autorizo la eliminación inmediata de mis fotos tras el análisis. Solo se conservan las métricas numéricas derivadas.",
+  },
 ];
 
 export default function ConsentPage() {
@@ -129,7 +133,7 @@ export default function ConsentPage() {
 
       <div style={{ marginTop: 16 }}>
         <p style={{ fontSize: 12, color: "var(--text-dim)", textAlign: "center", margin: "0 0 12px" }}>
-          Responsable: StyleScan · RGPD · Derechos: privacy@stylescan.es
+          Responsable: VISAI · RGPD · Derechos: privacy@visaiapp.com
         </p>
         {error && (
           <p style={{ color: "var(--danger)", fontSize: 14, textAlign: "center", margin: "0 0 10px" }}>{error}</p>

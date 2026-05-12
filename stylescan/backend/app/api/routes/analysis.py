@@ -14,6 +14,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -34,13 +36,16 @@ from app.schemas.analysis import (
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ---------------------------------------------------------------------------
 # Initiate analysis + create checkout
 # ---------------------------------------------------------------------------
 @router.post("/initiate", response_model=AnalysisInitiateResponse, status_code=201)
+@limiter.limit("10/hour")
 async def initiate_analysis(
+    request: Request,
     body: AnalysisInitiateRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -266,7 +271,9 @@ async def _auto_generate_visuals(
 
 
 @router.post("/{analysis_id}/photos", status_code=202)
+@limiter.limit("5/hour")
 async def upload_photos_and_analyze(
+    request: Request,
     analysis_id: str,
     background_tasks: BackgroundTasks,
     photos: list[UploadFile] = File(..., description="Exactamente 5 fotos del rostro (frontal + 4 ángulos)"),

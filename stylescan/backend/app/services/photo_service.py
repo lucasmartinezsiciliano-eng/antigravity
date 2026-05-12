@@ -134,9 +134,11 @@ def validate_and_prepare_photo(
     if not result.valid:
         return result, None
 
-    # Normalize to JPEG for processing (RGPD: no persistent storage)
+    # Normalize to JPEG — strip ALL EXIF/metadata (RGPD: no GPS or device data leaks)
+    clean_img = Image.new(pil_img.mode, pil_img.size)
+    clean_img.putdata(list(pil_img.getdata()))
     output = io.BytesIO()
-    pil_img.save(output, format="JPEG", quality=92)
+    clean_img.save(output, format="JPEG", quality=92)
     prepared_bytes = output.getvalue()
 
     # Immediately clear references (belt-and-suspenders — GC will handle it, but explicit is safer)
@@ -206,23 +208,22 @@ def _compute_quality_score(
     face_ratio: float,
 ) -> float:
     """
-    Composite quality score 0.0–1.0.
-    All conditions below 0.60 = rejected.
+    Composite quality score 0.0–1.0. Threshold: 0.60.
+
+    Face detection is NOT required — profile/chin shots are intentionally angled
+    and Haar cascade can't detect them. Brightness + sharpness alone are enough.
     """
     score = 0.0
 
-    # Brightness: 30% weight
-    score += 0.30 if brightness_ok else 0.0
+    # Brightness: 45% weight
+    score += 0.45 if brightness_ok else 0.0
 
-    # Sharpness: 25% weight (normalized, blur_score 80=ok, 500=excellent)
+    # Sharpness: 40% weight (normalized — blur_score 100=ok, 500=excellent)
     sharpness_norm = min(blur_score / 500, 1.0)
-    score += 0.25 * sharpness_norm
+    score += 0.40 * sharpness_norm
 
-    # Face detected: 30% weight
-    score += 0.30 if has_face else 0.0
-
-    # Face size ratio: 15% weight (ideal 0.08–0.35)
-    if 0.05 <= face_ratio <= 0.50:
+    # Face size bonus: 15% (only adds to well-framed frontal shots)
+    if has_face and 0.05 <= face_ratio <= 0.50:
         ratio_score = 1.0 - abs(face_ratio - 0.20) / 0.30
         score += 0.15 * max(0.0, ratio_score)
 
