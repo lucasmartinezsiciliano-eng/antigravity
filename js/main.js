@@ -38,6 +38,27 @@ const ITP_BASE = {
 
 const CS_LABORAL = { funcionario:100, indefinido:90, fijo_disc:70, func_interino:65, autonomo_cons:60, temporal:40, autonomo_rec:30, otro:20 };
 
+// ============================================
+// SECURITY UTILS
+// ============================================
+const _submit = { last: 0 };
+const SUBMIT_COOLDOWN = 20000; // 20s entre envíos
+
+function sanitize(s) {
+  return String(s ?? '').replace(/[<>"'`\\]/g, '').trim().slice(0, 200);
+}
+
+function validatePhone(s) {
+  return /^[6-9]\d{8}$/.test(s.replace(/[\s\-.]/g, ''));
+}
+
+function canSubmitNow() {
+  const now = Date.now();
+  if (now - _submit.last < SUBMIT_COOLDOWN) return false;
+  _submit.last = now;
+  return true;
+}
+
 function calcEdad(v) {
   if (!v || !v.trim()) return null;
   const n = parseFloat(v);
@@ -146,11 +167,25 @@ function initSimpleForms() {
       btn.textContent = 'Enviando...';
       btn.disabled = true;
       const fd = new FormData(form);
-      // Honeypot: si el bot rellenó el campo oculto, descarta silenciosamente
-      if (fd.get('website')) { btn.textContent = orig; btn.disabled = false; return; }
+      if (fd.get('website')) { btn.textContent = orig; btn.disabled = false; return; } // honeypot
+      const nombre   = sanitize(fd.get('nombre') || '');
+      const telefono = sanitize(fd.get('telefono') || '');
+      if (!nombre || !telefono) {
+        showToast('Rellena nombre y teléfono.', 'error');
+        btn.textContent = orig; btn.disabled = false; return;
+      }
+      if (!validatePhone(telefono)) {
+        showToast('Teléfono no válido (9 dígitos, empieza por 6-9).', 'error');
+        btn.textContent = orig; btn.disabled = false; return;
+      }
+      if (!canSubmitNow()) {
+        showToast('Espera unos segundos antes de volver a enviar.', 'error');
+        btn.textContent = orig; btn.disabled = false; return;
+      }
       const ok = await submitLead({
-        nombre: fd.get('nombre'), telefono: fd.get('telefono'),
-        servicio: fd.get('servicio') || 'General', email: fd.get('email') || '',
+        nombre, telefono,
+        servicio: sanitize(fd.get('servicio') || 'General'),
+        email: sanitize(fd.get('email') || ''),
         _hp: '',
         source: form.dataset.leadForm,
       });
@@ -312,13 +347,26 @@ function initQuiz() {
   }
 
   async function submitQuiz() {
-    const nombre   = qval('q_nombre').trim();
-    const telefono = qval('q_telefono').trim();
-    const email    = qval('q_email').trim();
+    const nombre   = sanitize(qval('q_nombre'));
+    const telefono = sanitize(qval('q_telefono'));
+    const email    = sanitize(qval('q_email'));
     const hp       = qval('q_hp');
 
     if (!nombre || !telefono) {
       showToast('Por favor rellena nombre y teléfono.', 'error');
+      return;
+    }
+    if (!validatePhone(telefono)) {
+      showToast('Teléfono no válido (9 dígitos, empieza por 6-9).', 'error');
+      return;
+    }
+    const consent = quiz.querySelector('[name="q_consent"]');
+    if (consent && !consent.checked) {
+      showToast('Debes autorizar el tratamiento de datos para continuar.', 'error');
+      return;
+    }
+    if (!canSubmitNow()) {
+      showToast('Espera unos segundos antes de volver a enviar.', 'error');
       return;
     }
 
@@ -365,8 +413,10 @@ function initQuiz() {
     const globalMejor = Math.max(sA.global, sB.global);
     const clasificacion = globalMejor >= 75 ? 'A' : globalMejor >= 50 ? 'B' : globalMejor >= 25 ? 'C' : 'D';
 
+    const consentMarketing = quiz.querySelector('[name="q_consent_marketing"]')?.checked ?? false;
     const ok = await submitLead({
       nombre, telefono, email, _hp: hp, source: 'quiz',
+      consent: true, consent_marketing: consentMarketing,
       urgencia, clasificacion,
       n_titulares: nSol,
       contrato1, ingresos1: ingresos1Raw, cuotas1,
