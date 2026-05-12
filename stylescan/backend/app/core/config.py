@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     MAX_BARBER_CODE_USES_PER_PHONE: int = 1
 
     # Image generation — provider selector
-    IMAGE_GEN_PROVIDER: str = "openai"   # openai | falai
+    IMAGE_GEN_PROVIDER: str = "falai"    # openai | falai
     OPENAI_API_KEY: str = ""             # required if IMAGE_GEN_PROVIDER=openai
     FAL_KEY: str = ""          # fal.ai API key — required for virtual try-on
     PEXELS_API_KEY: str = ""   # Pexels API key — free at pexels.com/api, used for barber reference images
