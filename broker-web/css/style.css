@@ -328,6 +328,18 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 .quiz-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .quiz-contact-grid .form-group { margin-bottom: 0; }
 
+/* Honeypot anti-spam */
+.hp-field { display: none !important; position: absolute; left: -9999px; }
+
+/* Quiz consent RGPD */
+.quiz-consent { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.consent-label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.consent-label input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; accent-color: var(--teal); width: 16px; height: 16px; }
+.consent-label span { font-size: 0.78rem; color: var(--gray-500); line-height: 1.5; }
+.consent-label span strong { color: var(--gray-700); }
+.consent-label span a { color: var(--teal); }
+.consent-optional span { font-size: 0.75rem; color: var(--gray-400); }
+
 /* Quiz nav */
 .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 .quiz-back { background: none; border: none; color: var(--gray-500); font-size: 0.9rem; font-weight: 500; cursor: pointer; font-family: var(--font); padding: 8px 0; transition: var(--transition); }

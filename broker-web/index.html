@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://n8n.lukimporta.es https://crm.lukimporta.es; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <link rel="icon" type="image/png" href="img/bh-logo.png" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,10 +34,8 @@
     ],
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Calle González Gallarza, nº 2",
-      "addressLocality": "Autol",
-      "postalCode": "26560",
-      "addressRegion": "La Rioja",
+      "addressLocality": "Tarragona",
+      "addressRegion": "Cataluña",
       "addressCountry": "ES"
     },
     "identifier": {
@@ -108,7 +107,7 @@
       </div>
       <div class="hero-stats">
         <div class="stat-item">
-          <div class="stat-number">+25</div>
+          <div class="stat-number">+20</div>
           <div class="stat-label">años de experiencia</div>
         </div>
         <div class="stat-item">
@@ -427,8 +426,17 @@
             <label>Email (opcional)</label>
             <input type="email" name="q_email" placeholder="tu@email.com" />
           </div>
-          <p style="font-size:0.8rem;margin-bottom:16px;">🔒 <input type="text" name="q_hp" style="display:none!important;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true" value="" />
-          Tus datos están protegidos. No compartimos tu información con terceros.</p>
+          <input type="text" name="q_hp" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" value="" />
+          <div class="quiz-consent">
+            <label class="consent-label">
+              <input type="checkbox" name="q_consent" id="q_consent" required />
+              <span>Autorizo a <strong>Mediterrane Firmax, SL</strong> a tratar mis datos para emitir el pre-estudio hipotecario y contactarme con el resultado. <a href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>.</span>
+            </label>
+            <label class="consent-label consent-optional">
+              <input type="checkbox" name="q_consent_marketing" id="q_consent_marketing" />
+              <span>Acepto recibir comunicaciones comerciales sobre servicios hipotecarios (opcional).</span>
+            </label>
+          </div>
           <div class="quiz-nav">
             <button class="quiz-back">← Atrás</button>
             <button class="btn btn-primary quiz-next quiz-submit">Ver mi análisis →</button>
