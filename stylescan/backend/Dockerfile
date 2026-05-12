@@ -29,6 +29,11 @@ COPY . .
 # Create knowledge_base dirs (may not exist in repo)
 RUN mkdir -p knowledge_base/trending knowledge_base/barber_references/images
 
+# Download MediaPipe face landmarker model (excluded from .dockerignore — fetch at build time)
+RUN mkdir -p models && \
+    python -c "import urllib.request; urllib.request.urlretrieve('https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', 'models/face_landmarker.task')" && \
+    echo "face_landmarker.task downloaded: $(du -sh models/face_landmarker.task)"
+
 # Expose port
 EXPOSE 8000
 
