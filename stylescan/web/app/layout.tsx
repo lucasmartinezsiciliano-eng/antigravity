@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/reembolso">Reembolsos</a>
           </div>
           <div>
-            <a href="mailto:privacy@visai.es">privacy@visai.es</a>
+            <a href="mailto:privacy@visaiapp.com">privacy@visaiapp.com</a>
             &nbsp;·&nbsp; Responsable: VISAI
           </div>
         </footer>

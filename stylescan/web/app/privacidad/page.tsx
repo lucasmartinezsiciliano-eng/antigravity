@@ -35,7 +35,7 @@ export default function PrivacidadPage() {
             <InfoRow label="Denominacion" value="[COMPLETAR]" />
             <InfoRow label="NIF" value="[COMPLETAR]" />
             <InfoRow label="Domicilio" value="[COMPLETAR]" />
-            <InfoRow label="DPO / Contacto privacidad" value="privacy@visai.es" />
+            <InfoRow label="DPO / Contacto privacidad" value="privacy@visaiapp.com" />
           </div>
         </section>
 
@@ -139,8 +139,8 @@ export default function PrivacidadPage() {
           <div className="card">
             <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.65, margin: "0 0 14px" }}>
               Conforme al RGPD (Arts. 15-22), puedes ejercer los siguientes derechos enviando un email a{" "}
-              <a href="mailto:privacy@visai.es" style={{ color: "var(--text)", textDecoration: "underline" }}>
-                privacy@visai.es
+              <a href="mailto:privacy@visaiapp.com" style={{ color: "var(--text)", textDecoration: "underline" }}>
+                privacy@visaiapp.com
               </a>{" "}
               con copia de tu documento de identidad:
             </p>

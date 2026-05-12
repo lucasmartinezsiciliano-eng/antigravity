@@ -43,7 +43,7 @@ export default function AvisoLegalPage() {
               <Row label="Domicilio social" value="[COMPLETAR]" />
               <Row label="Registro Mercantil" value="[COMPLETAR]" />
               <Row label="Correo de contacto" value="info@visai.es" />
-              <Row label="Correo de privacidad" value="privacy@visai.es" />
+              <Row label="Correo de privacidad" value="privacy@visaiapp.com" />
               <Row label="Actividad" value="Analisis biometrico facial mediante inteligencia artificial orientado al sector de la peluqueria y barberia" />
             </div>
           </div>

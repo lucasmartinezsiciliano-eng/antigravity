@@ -19,7 +19,7 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     api.getVisuals(id).then((res) => {
-      if (res.visuals_status === "completed" && res.visuals?.length > 0) {
+      if (res.visuals_status === "ready" && res.visuals?.length > 0) {
         setVisuals(res.visuals);
         setStage("done");
       }
@@ -52,7 +52,7 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
     pollRef.current = setInterval(async () => {
       try {
         const res = await api.getVisuals(id);
-        if (res.visuals_status === "completed" && res.visuals?.length > 0) {
+        if (res.visuals_status === "ready" && res.visuals?.length > 0) {
           clearInterval(pollRef.current!);
           setVisuals(res.visuals);
           setStage("done");

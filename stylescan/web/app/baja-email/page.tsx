@@ -30,8 +30,8 @@ function UnsubscribeContent() {
         </p>
         <p style={{ color: "var(--text-muted)", fontSize: 14, marginTop: 12 }}>
           También puedes escribirnos a{" "}
-          <a href="mailto:privacy@visai.es" style={{ color: "var(--text)", textDecoration: "underline" }}>
-            privacy@visai.es
+          <a href="mailto:privacy@visaiapp.com" style={{ color: "var(--text)", textDecoration: "underline" }}>
+            privacy@visaiapp.com
           </a>
         </p>
       </div>
@@ -53,8 +53,8 @@ function UnsubscribeContent() {
         <h1 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 10px" }}>Algo ha ido mal</h1>
         <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.65 }}>
           No hemos podido procesar tu baja. Por favor escríbenos a{" "}
-          <a href="mailto:privacy@visai.es" style={{ color: "var(--text)", textDecoration: "underline" }}>
-            privacy@visai.es
+          <a href="mailto:privacy@visaiapp.com" style={{ color: "var(--text)", textDecoration: "underline" }}>
+            privacy@visaiapp.com
           </a>{" "}
           y lo gestionamos manualmente en menos de 24 horas.
         </p>
@@ -74,8 +74,8 @@ function UnsubscribeContent() {
       </p>
       <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 16 }}>
         Si fue un error, escríbenos a{" "}
-        <a href="mailto:privacy@visai.es" style={{ color: "var(--text)", textDecoration: "underline" }}>
-          privacy@visai.es
+        <a href="mailto:privacy@visaiapp.com" style={{ color: "var(--text)", textDecoration: "underline" }}>
+          privacy@visaiapp.com
         </a>
       </p>
     </div>

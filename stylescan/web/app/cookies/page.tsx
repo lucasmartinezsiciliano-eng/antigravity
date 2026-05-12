@@ -210,8 +210,8 @@ export default function CookiesPage() {
           <div className="card">
             <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.75, margin: 0 }}>
               Para cualquier consulta sobre esta politica, puedes contactarnos en{" "}
-              <a href="mailto:privacy@visai.es" style={{ color: "var(--text)", textDecoration: "underline" }}>
-                privacy@visai.es
+              <a href="mailto:privacy@visaiapp.com" style={{ color: "var(--text)", textDecoration: "underline" }}>
+                privacy@visaiapp.com
               </a>
               .
             </p>
