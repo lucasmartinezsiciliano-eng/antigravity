@@ -1,0 +1,55 @@
+services:
+
+  twenty:
+    image: twentycrm/twenty:latest
+    container_name: visai-twenty
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      FRONT_BASE_URL: http://100.92.101.93:3000
+      SERVER_URL: http://100.92.101.93:3000
+      APP_SECRET: 2c50f9df6b15ae2be7891472c5e39d6881086e8fabf1c0847fdec3b9c8a10cf6
+      POSTGRES_SERVICE_HOST: db
+      POSTGRES_USER: twenty
+      POSTGRES_PASSWORD: a5f8864a0aa921cae22077a1a7acbf03
+      POSTGRES_DB: twenty
+      REDIS_URL: redis://redis:6379
+      STORAGE_TYPE: local
+      MESSAGE_QUEUE_TYPE: bull-mq
+      ENABLE_BILLING: "false"
+    volumes:
+      - twenty_data:/app/.local-storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:16-alpine
+    container_name: visai-twenty-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: twenty
+      POSTGRES_PASSWORD: a5f8864a0aa921cae22077a1a7acbf03
+      POSTGRES_DB: twenty
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twenty"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: visai-twenty-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  twenty_data:
+  pg_data:
+  redis_data:
