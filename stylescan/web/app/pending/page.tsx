@@ -16,6 +16,7 @@ function PendingInner() {
   const [phase, setPhase] = useState<Phase>("waiting_payment");
   const [errorMsg, setErrorMsg] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const redirectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startRef = useRef(Date.now());
 
   // Resolve analysis_id: URL param → localStorage
@@ -42,10 +43,10 @@ function PendingInner() {
         }
 
         if (code === 202) {
-          // Payment confirmed — no photos yet → go capture
           clearInterval(pollRef.current!);
           setPhase("confirmed");
-          setTimeout(() => { window.location.href = `/capture/${analysisId}`; }, 800);
+          await api.consent(analysisId, "v1.0-web").catch((e) => console.warn("consent:", e));
+          redirectRef.current = setTimeout(() => { window.location.href = `/oto/${analysisId}`; }, 800);
           return;
         }
 
@@ -61,7 +62,10 @@ function PendingInner() {
       }
     }, POLL_INTERVAL_MS);
 
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      if (redirectRef.current) clearTimeout(redirectRef.current);
+    };
   }, [analysisId]);
 
   /* ── Confirmed (brief flash before redirect) ── */

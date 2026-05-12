@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+ENV PYTHONPATH=/app
+
 # setuptools needed for packages that still use setup.py (instagrapi, etc.)
 RUN pip install --no-cache-dir setuptools wheel
 

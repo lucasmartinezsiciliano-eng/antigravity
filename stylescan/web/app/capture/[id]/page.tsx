@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { api } from "@/lib/api";
+import { storage } from "@/lib/storage";
 
 const SHOTS = [
   { label: "Frontal",          hint: "Mira directamente a la cámara" },
@@ -152,6 +153,7 @@ export default function CapturePage() {
   async function handleUpload(files: File[]) {
     setStage("uploading");
     setError("");
+    storage.saveAnalysisId(id);
     try {
       await api.uploadPhotos(id, files);
       setStage("processing");

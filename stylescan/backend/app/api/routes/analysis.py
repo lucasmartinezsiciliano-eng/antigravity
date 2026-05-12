@@ -549,7 +549,7 @@ async def create_upsell(
             analysis.includes_seasonal = True
         else:
             _generate_upsell_content(analysis, body.upsell_type)
-        await db.flush()
+        await db.commit()
         success_url = (
             f"{settings.FRONTEND_URL}/capture/{analysis_id}"
             if body.upsell_type == "seasonal"

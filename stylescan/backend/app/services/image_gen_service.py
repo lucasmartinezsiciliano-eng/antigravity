@@ -172,8 +172,8 @@ def _resolve_kb_reference(
             cdn = ref.get("instagram_cdn_url")
             if cdn and cdn.startswith(("http://", "https://")):
                 return cdn
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("_resolve_kb_reference instagram lookup skipped: %s", e)
 
     # 2. Pexels cache + API (primary fallback — stable CDN URLs, no expiry)
     try:
@@ -182,8 +182,8 @@ def _resolve_kb_reference(
         url = get_reference_image_url(nombre_en, settings.PEXELS_API_KEY)
         if url:
             return url
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("_resolve_kb_reference pexels lookup failed: %s", e)
 
     return None
 

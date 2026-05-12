@@ -23,9 +23,9 @@ export default function OtoPage() {
 
   const month = new Date().getMonth() + 1;
   const upcoming =
-    month >= 3 && month <= 5 ? "verano" :
-    month >= 6 && month <= 8 ? "otoño" :
-    month >= 9 && month <= 11 ? "invierno" : "primavera";
+    month >= 3 && month <= 5 ? "primavera" :
+    month >= 6 && month <= 8 ? "verano" :
+    month >= 9 && month <= 11 ? "otoño" : "invierno";
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
