@@ -15,7 +15,7 @@ VARIABLES DE ENTORNO:
 
 USO:
   pip install locust pillow
-  locust -f locustfile.py --host https://TU-BACKEND.up.railway.app
+  locust -f locustfile.py --host https://api.visaiapp.com
   -> abre http://localhost:8089
 """
 

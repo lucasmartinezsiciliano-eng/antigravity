@@ -46,13 +46,13 @@
       "position": [680, 380],
       "parameters": {
         "method": "POST",
-        "url": "https://twenty-production-8066.up.railway.app/api/people",
+        "url": "https://twenty-production-9c21.up.railway.app/api/people",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer {{TWENTY_API_KEY}}"
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA"
             },
             {
               "name": "Content-Type",
@@ -81,13 +81,13 @@
       "position": [900, 380],
       "parameters": {
         "method": "POST",
-        "url": "https://twenty-production-8066.up.railway.app/api/notes",
+        "url": "https://twenty-production-9c21.up.railway.app/api/notes",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer {{TWENTY_API_KEY}}"
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA"
             },
             {
               "name": "Content-Type",
@@ -234,7 +234,7 @@
       "position": [2220, 380],
       "parameters": {
         "method": "GET",
-        "url": "=https://harmonious-gratitude-production-2c0d.up.railway.app/api/v1/analysis/{{ $('Parse Data').item.json.analysis_id }}",
+        "url": "=https://api.visaiapp.com/api/v1/analysis/{{ $('Parse Data').item.json.analysis_id }}",
         "options": {
           "response": {
             "response": {
