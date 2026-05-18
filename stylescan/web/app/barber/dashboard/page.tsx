@@ -24,10 +24,10 @@ type BarberDashboardData = {
   name: string;
   barbershop_name?: string;
   promo_code: string;
-  clients_all_time: number;
-  clients_this_week: number;
-  all_time_ranking_position: number | null;
-  current_tier: string;
+  clients_all_time?: number;
+  clients_this_week?: number;
+  all_time_ranking_position?: number | null;
+  current_tier?: string;
   reference_photos_count: number;
   reference_photos_validated: number;
   total_earned_euros: number;
@@ -35,7 +35,7 @@ type BarberDashboardData = {
   total_uses?: number;
   total_paid_out_euros?: number;
   is_active?: boolean;
-  recent_uses?: Array<{ date: string; earned: number; [key: string]: unknown }>;
+  recent_uses?: Array<{ date: string; earned_euros: number }>;
 };
 
 type ReferencePhoto = {
@@ -146,7 +146,7 @@ export default function BarberDashboard() {
     );
   }
 
-  const tier = TIER_BADGES[dashboard.current_tier] || TIER_BADGES.bronze;
+  const tier = TIER_BADGES[dashboard.current_tier ?? "bronze"] || TIER_BADGES.bronze;
 
   return (
     <div className="min-h-screen bg-black">
@@ -204,13 +204,13 @@ export default function BarberDashboard() {
           <MetricCard
             icon={<Users className="h-6 w-6" />}
             label="Esta Semana"
-            value={dashboard.clients_this_week}
+            value={dashboard.clients_this_week ?? dashboard.total_uses ?? 0}
             subtext="análisis completados"
           />
           <MetricCard
             icon={<TrendingUp className="h-6 w-6" />}
             label="Total (All-Time)"
-            value={dashboard.clients_all_time}
+            value={dashboard.clients_all_time ?? dashboard.total_uses ?? 0}
             subtext="desde que te registraste"
           />
           <MetricCard
