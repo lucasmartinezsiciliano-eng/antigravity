@@ -11,7 +11,9 @@ import logging
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field
@@ -23,6 +25,7 @@ from app.models.analysis import Analysis
 from app.services import stripe_service
 
 router = APIRouter(prefix="/barbers", tags=["barbers"])
+limiter = Limiter(key_func=get_remote_address)
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +67,9 @@ class BarberDashboard(BaseModel):
 # Register barber
 # ---------------------------------------------------------------------------
 @router.post("/register", response_model=BarberRegisterResponse, status_code=201)
+@limiter.limit("5/hour")
 async def register_barber(
+    request: Request,
     body: BarberRegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -131,7 +136,9 @@ class SignContractRequest(BaseModel):
 
 
 @router.post("/{barber_id}/sign-contract", status_code=200)
+@limiter.limit("10/hour")
 async def sign_contract(
+    request: Request,
     barber_id: str,
     body: SignContractRequest,
     db: AsyncSession = Depends(get_db),
