@@ -135,7 +135,7 @@ async def initiate_analysis(
         logger.warning("DEV_SKIP_PAYMENT active — analysis %s marked as paid without Stripe", analysis_id)
         return AnalysisInitiateResponse(
             analysis_id=analysis_id,
-            checkout_url=f"http://localhost:8001/dev-payment-skipped/{analysis_id}",
+            checkout_url=f"{settings.FRONTEND_URL}/pending?id={analysis_id}",
             amount_euros=0.0,
             discount_applied=False,
         )
