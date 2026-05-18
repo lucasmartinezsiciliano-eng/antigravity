@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import { api } from "@/lib/api";
 
 type State = "idle" | "loading" | "done" | "error";
@@ -84,12 +82,20 @@ function UnsubscribeContent() {
   );
 }
 
-export default function BajaEmailPage() {
+function BajaEmailPageInner() {
   return (
     <div className="screen" style={{ justifyContent: "center", paddingTop: 80 }}>
       <Suspense fallback={<p style={{ color: "var(--text-muted)", textAlign: "center" }}>Cargando…</p>}>
         <UnsubscribeContent />
       </Suspense>
     </div>
+  );
+}
+
+export default function BajaEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-8 w-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+      <BajaEmailPageInner />
+    </Suspense>
   );
 }

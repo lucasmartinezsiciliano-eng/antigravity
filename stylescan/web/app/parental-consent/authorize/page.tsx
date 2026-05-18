@@ -1,15 +1,14 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, AlertCircle, Clock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 type ConsentStatus = "loading" | "authorized" | "expired" | "error";
 
-export default function ParentalConsentAuthorizePage() {
+function ParentalConsentAuthorizePageInner() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -162,5 +161,13 @@ export default function ParentalConsentAuthorizePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ParentalConsentAuthorizePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-8 w-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+      <ParentalConsentAuthorizePageInner />
+    </Suspense>
   );
 }

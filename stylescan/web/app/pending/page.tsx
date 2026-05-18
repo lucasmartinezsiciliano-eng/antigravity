@@ -1,10 +1,8 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
 
@@ -173,7 +171,7 @@ function PendingInner() {
 }
 
 // useSearchParams needs Suspense in Next.js App Router
-export default function PendingPage() {
+function PendingPageInner() {
   return (
     <Suspense fallback={
       <div className="screen" style={{ alignItems: "center", justifyContent: "center" }}>
@@ -185,6 +183,14 @@ export default function PendingPage() {
       </div>
     }>
       <PendingInner />
+    </Suspense>
+  );
+}
+
+export default function PendingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-8 w-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+      <PendingPageInner />
     </Suspense>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,7 +33,7 @@ const TIER_BADGES: Record<string, { emoji: string; color: string }> = {
   bronze: { emoji: "🥉", color: "from-orange-600 to-amber-600" },
 };
 
-export default function LeaderboardPage() {
+function LeaderboardPageInner() {
   const searchParams = useSearchParams();
   const initialPeriod = (searchParams.get("period") || "all_time") as
     | "week"
@@ -249,5 +248,13 @@ export default function LeaderboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-8 w-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+      <LeaderboardPageInner />
+    </Suspense>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -56,7 +54,7 @@ const TIER_BADGES: Record<string, { emoji: string; color: string; label: string 
   bronze: { emoji: "🥉", color: "from-orange-600 to-amber-600", label: "Bronce" },
 };
 
-export default function BarberDashboard() {
+function BarberDashboardInner() {
   const searchParams = useSearchParams();
   const barberId = searchParams.get("id") || "";
 
@@ -345,6 +343,14 @@ export default function BarberDashboard() {
         }}
       />
     </div>
+  );
+}
+
+export default function BarberDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-12 w-12 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+      <BarberDashboardInner />
+    </Suspense>
   );
 }
 
