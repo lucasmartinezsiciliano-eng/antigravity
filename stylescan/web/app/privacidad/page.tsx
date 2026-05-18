@@ -32,9 +32,9 @@ export default function PrivacidadPage() {
         <section>
           <p className="label" style={{ marginBottom: 12 }}>1. Responsable del tratamiento</p>
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <InfoRow label="Denominacion" value="[COMPLETAR]" />
-            <InfoRow label="NIF" value="[COMPLETAR]" />
-            <InfoRow label="Domicilio" value="[COMPLETAR]" />
+            <InfoRow label="Denominacion" value="LUKIMPORTA MEDITERRANEO, S.L." />
+            <InfoRow label="NIF" value="B-[COMPLETAR]" />
+            <InfoRow label="Domicilio" value="Avenida Roma, 7, 7.o — Tarragona (Cataluna)" />
             <InfoRow label="DPO / Contacto privacidad" value="privacy@visaiapp.com" />
           </div>
         </section>

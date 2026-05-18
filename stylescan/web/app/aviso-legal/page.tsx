@@ -38,10 +38,10 @@ export default function AvisoLegalPage() {
               Información y de Comercio Electrónico (LSSI-CE), se facilitan los siguientes datos identificativos:
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <Row label="Denominacion social" value="[COMPLETAR]" />
-              <Row label="NIF" value="[COMPLETAR]" />
-              <Row label="Domicilio social" value="[COMPLETAR]" />
-              <Row label="Registro Mercantil" value="[COMPLETAR]" />
+              <Row label="Denominacion social" value="LUKIMPORTA MEDITERRANEO, S.L." />
+              <Row label="NIF" value="B-[COMPLETAR]" />
+              <Row label="Domicilio social" value="Avenida Roma, 7, 7.o — Tarragona (Cataluna)" />
+              <Row label="Registro Mercantil" value="Registro Mercantil de Tarragona" />
               <Row label="Correo de contacto" value="info@visai.es" />
               <Row label="Correo de privacidad" value="privacy@visaiapp.com" />
               <Row label="Actividad" value="Analisis biometrico facial mediante inteligencia artificial orientado al sector de la peluqueria y barberia" />
