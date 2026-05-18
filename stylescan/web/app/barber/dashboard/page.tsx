@@ -22,6 +22,7 @@ import ReferencePhotoUploadModal from "@/components/ReferencePhotoUploadModal";
 type BarberDashboardData = {
   barber_id: string;
   name: string;
+  barbershop_name?: string;
   promo_code: string;
   clients_all_time: number;
   clients_this_week: number;
@@ -31,6 +32,10 @@ type BarberDashboardData = {
   reference_photos_validated: number;
   total_earned_euros: number;
   pending_payout_euros: number;
+  total_uses?: number;
+  total_paid_out_euros?: number;
+  is_active?: boolean;
+  recent_uses?: Array<{ date: string; earned: number; [key: string]: unknown }>;
 };
 
 type ReferencePhoto = {
@@ -331,7 +336,7 @@ export default function BarberDashboard() {
       <ReferencePhotoUploadModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
-        barber_id={barber_id}
+        barber_id={barberId}
         onSuccess={() => {
           // Refresh dashboard data after successful upload
           window.location.reload();
