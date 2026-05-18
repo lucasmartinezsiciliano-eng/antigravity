@@ -71,11 +71,36 @@ export default function ResultPage() {
 
   useEffect(() => {
     let mounted = true;
+    let pollAttempts = 0;
+    const MAX_POLL = 48; // 48 × 5 s = 4 min max wait
 
-    api.getResult(id)
-      .then((r) => { if (mounted) setResult(r); })
-      .catch((e) => { if (mounted) setError(e.message || "No se pudo cargar el resultado."); })
-      .finally(() => { if (mounted) setLoading(false); });
+    async function loadResult() {
+      try {
+        const r = await api.getResult(id);
+        if (!mounted) return;
+        setResult(r);
+        setLoading(false);
+      } catch (e: any) {
+        if (!mounted) return;
+        const msg: string = e.message || "";
+        // 202 / 402 responses mean the analysis is still in progress — keep polling
+        const stillProcessing =
+          msg.includes("procesadas") ||
+          msg.includes("progreso") ||
+          msg.includes("pendiente") ||
+          msg.includes("202") ||
+          msg.includes("402");
+        if (stillProcessing && pollAttempts < MAX_POLL) {
+          pollAttempts++;
+          setTimeout(loadResult, 5000);
+        } else {
+          setError(msg || "No se pudo cargar el resultado.");
+          setLoading(false);
+        }
+      }
+    }
+
+    loadResult();
 
     api.getReferences(id).then((data) => {
       if (!mounted) return;
@@ -272,22 +297,40 @@ export default function ResultPage() {
 
   if (loading) {
     return (
-      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 20 }}>
+      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 20, textAlign: "center", padding: "0 24px" }}>
+        <span style={{ fontSize: 48 }}>🧠</span>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>Generando tu análisis</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+            Detectando tu morfología y eligiendo los cortes ideales.<br />
+            Suele tardar entre 30 y 90 segundos.
+          </p>
+        </div>
         <div style={{ display: "flex", gap: 6 }}>
           {[0, 1, 2].map((i) => (
             <div key={i} className="dot-pulse" style={{ animationDelay: `${i * 0.4}s` }} />
           ))}
         </div>
-        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Cargando tu análisis…</p>
+        <p style={{ color: "var(--text-muted)", fontSize: 12, maxWidth: 260 }}>
+          Puedes dejar esta pantalla abierta. No pierdas el enlace.
+        </p>
       </div>
     );
   }
 
   if (error || !result) {
     return (
-      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
+      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center", padding: "0 24px" }}>
         <span style={{ fontSize: 48 }}>😕</span>
-        <p style={{ color: "var(--danger)", fontSize: 15 }}>{error || "Resultado no disponible"}</p>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px" }}>No pudimos cargar el resultado</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+            {error || "Resultado no disponible"}
+          </p>
+        </div>
+        <button type="button" className="btn-primary" onClick={() => window.location.reload()} style={{ maxWidth: 280, width: "100%" }}>
+          Reintentar
+        </button>
         <Link href="/" className="btn-secondary" style={{ maxWidth: 280, width: "100%", textDecoration: "none" }}>
           Volver al inicio
         </Link>

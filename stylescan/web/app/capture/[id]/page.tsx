@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { ChevronLeft, Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
@@ -32,6 +33,7 @@ const INTRO_TIPS = [
 ];
 
 type Stage = "intro" | "camera" | "preview" | "uploading" | "processing" | "error";
+type ErrorType = "no_face" | "photo_quality" | "llm_timeout" | "network" | "generic";
 
 export default function CapturePage() {
   const params = useParams();
@@ -56,6 +58,7 @@ export default function CapturePage() {
   const [flashActive,      setFlashActive]      = useState(false);
   const [capturing,        setCapturing]        = useState(false);
   const [error,            setError]            = useState("");
+  const [errorType,        setErrorType]        = useState<ErrorType>("generic");
   const [showProfileAlert, setShowProfileAlert] = useState(false);
 
   /* ── helpers ── */
@@ -230,6 +233,20 @@ export default function CapturePage() {
     setShotIndex(prev);
   }
 
+  /* ── classify backend error messages into UI error types ── */
+  function classifyError(msg: string): ErrorType {
+    const m = msg.toLowerCase();
+    if (m.includes("no detectamos") || m.includes("no se detectó") || m.includes("rostro") || m.includes("cara"))
+      return "no_face";
+    if (m.includes("validación") || m.includes("ninguna foto") || m.includes("iluminación") || m.includes("desenfocada") || m.includes("calidad"))
+      return "photo_quality";
+    if (m.includes("tardó demasiado") || m.includes("504") || m.includes("error al generar") || m.includes("informe"))
+      return "llm_timeout";
+    if (m.includes("fetch") || m.includes("network") || m.includes("load failed") || m.includes("conectar"))
+      return "network";
+    return "generic";
+  }
+
   /* ── upload ── */
   async function handleUpload(files: File[]) {
     storage.saveAnalysisId(id);
@@ -237,25 +254,33 @@ export default function CapturePage() {
     try {
       await api.uploadPhotos(id, files);
       setStage("processing");
-      /* Bug 11: clear any existing interval before starting a new one */
       if (pollRef.current) clearInterval(pollRef.current);
+      let consecutiveErrors = 0;
       pollRef.current = setInterval(async () => {
         try {
           const status = await api.getAnalysisStatus(id);
+          consecutiveErrors = 0;
           if (status.code === 200 && status.result?.face_shape) {
             clearInterval(pollRef.current!);
             pollRef.current = null;
             window.location.href = `/result/${id}`;
           }
-        } catch (e: any) {
-          clearInterval(pollRef.current!);
-          pollRef.current = null;
-          setError(e.message || "Error al obtener el resultado.");
-          setStage("error");
+        } catch {
+          consecutiveErrors++;
+          /* Only give up after 4 consecutive network failures (~12 s) */
+          if (consecutiveErrors >= 4) {
+            clearInterval(pollRef.current!);
+            pollRef.current = null;
+            setErrorType("network");
+            setError("No podemos verificar el estado del análisis. Puede que ya esté listo.");
+            setStage("error");
+          }
         }
       }, 3000);
     } catch (e: any) {
-      setError(e.message || "Error al subir las fotos. Inténtalo de nuevo.");
+      const msg: string = e.message || "Error al subir las fotos.";
+      setErrorType(classifyError(msg));
+      setError(msg);
       setStage("error");
     }
   }
@@ -419,13 +444,100 @@ export default function CapturePage() {
 
   /* ── error ── */
   if (stage === "error") {
+    const ERROR_CONFIGS: Record<ErrorType, {
+      icon: string; title: string; body: string;
+      tips: string[]; cta: string; showResultLink: boolean;
+    }> = {
+      no_face: {
+        icon: "📷",
+        title: "No detectamos tu cara",
+        body: "El sistema no pudo encontrar tu cara. Suele pasar por falta de luz o un ángulo incorrecto.",
+        tips: [
+          "Busca luz de frente — una ventana de día funciona perfecto",
+          "Tu cara debe ocupar más de la mitad del óvalo dorado",
+          "Quítate gafas, gorra y capucha",
+          "Para los perfiles: gira el cuerpo entero, no solo la cabeza",
+        ],
+        cta: "Repetir las fotos",
+        showResultLink: false,
+      },
+      photo_quality: {
+        icon: "💡",
+        title: "Las fotos necesitan más calidad",
+        body: error,
+        tips: [
+          "Luz natural de frente, nunca a tu espalda",
+          "Mantén el móvil quieto y espera a que enfoque",
+          "Cara centrada en el óvalo, sin elementos que la tapen",
+        ],
+        cta: "Repetir las fotos",
+        showResultLink: false,
+      },
+      llm_timeout: {
+        icon: "⏱",
+        title: "El análisis tardó demasiado",
+        body: "Tus fotos estaban bien. El servidor tardó más de lo normal. No se te cobrará nada extra.",
+        tips: [],
+        cta: "Volver a intentarlo",
+        showResultLink: true,
+      },
+      network: {
+        icon: "📡",
+        title: "Problema de conexión",
+        body: "No podemos contactar con el servidor. El análisis puede que ya esté procesándose.",
+        tips: [],
+        cta: "Reintentar",
+        showResultLink: true,
+      },
+      generic: {
+        icon: "😕",
+        title: "Algo no fue bien",
+        body: error,
+        tips: [],
+        cta: "Intentar de nuevo",
+        showResultLink: true,
+      },
+    };
+    const cfg = ERROR_CONFIGS[errorType];
     return (
-      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
-        <span style={{ fontSize: 48 }}>😕</span>
-        <p style={{ color: "var(--danger)", fontSize: 15 }}>{error}</p>
-        <button type="button" className="btn-secondary" onClick={handleRetry} style={{ maxWidth: 280, width: "100%" }}>
-          Intentar de nuevo
-        </button>
+      <div className="screen" style={{ overflowY: "auto", padding: "40px 24px 48px" }}>
+        <div style={{ maxWidth: 380, margin: "0 auto", width: "100%" }}>
+          <div style={{ fontSize: 56, textAlign: "center", marginBottom: 20 }}>{cfg.icon}</div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", margin: "0 0 10px" }}>{cfg.title}</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 14, textAlign: "center", lineHeight: 1.6, margin: cfg.tips.length ? "0 0 28px" : "0 0 32px" }}>
+            {cfg.body}
+          </p>
+
+          {cfg.tips.length > 0 && (
+            <div style={{ background: "var(--surface2)", borderRadius: 14, padding: "16px 18px", marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 12 }}>
+                PARA QUE SALGA BIEN
+              </div>
+              {cfg.tips.map((tip, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: i < cfg.tips.length - 1 ? 10 : 0 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: 7 }} />
+                  <span style={{ fontSize: 14, lineHeight: 1.5 }}>{tip}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", margin: "0 0 14px" }}>
+            Puedes volver a intentarlo sin coste adicional
+          </p>
+
+          <button type="button" className="btn-primary" onClick={handleRetry} style={{ marginBottom: 12 }}>
+            {cfg.cta}
+          </button>
+
+          {cfg.showResultLink && (
+            <Link href={`/result/${id}`} style={{ display: "block" }}>
+              <button type="button" className="btn-secondary" style={{ width: "100%" }}>
+                Ver si mi resultado ya está listo
+              </button>
+            </Link>
+          )}
+        </div>
       </div>
     );
   }

@@ -300,6 +300,22 @@ async def _auto_generate_visuals(
             del photos_bytes
 
 
+async def _generate_extra_with_retry(fn, label: str, timeout_s: float = 90.0, max_attempts: int = 2):
+    """LLM extra generation with timeout + one retry. Returns None if all attempts fail."""
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return await asyncio.wait_for(
+                asyncio.get_event_loop().run_in_executor(None, fn),
+                timeout=timeout_s,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("%s attempt %d/%d timed out after %.0fs", label, attempt, max_attempts, timeout_s)
+        except Exception as exc:
+            logger.warning("%s attempt %d/%d failed: %s", label, attempt, max_attempts, exc)
+    logger.error("%s failed after %d attempts — extra will be missing", label, max_attempts)
+    return None
+
+
 @router.post("/{analysis_id}/photos", status_code=202)
 @limiter.limit("5/hour")
 async def upload_photos_and_analyze(
@@ -315,6 +331,11 @@ async def upload_photos_and_analyze(
     Visuals are generated automatically in background using the frontal photo (index 0).
     """
     analysis = await _get_analysis_or_404(analysis_id, db)
+
+    # Idempotency: already completed — return cached result without reprocessing
+    if analysis.status == "completed":
+        logger.info("Re-upload on already-completed analysis %s — returning cached", analysis_id)
+        return {"message": "Análisis ya completado.", "analysis_id": analysis_id}
 
     # Must be paid
     if analysis.status not in ("paid",):
@@ -384,8 +405,11 @@ async def upload_photos_and_analyze(
         await db.flush()
         raise HTTPException(
             422,
-            "No se detectó ningún rostro en las fotos. "
-            "Asegúrate de que la cara está visible y bien iluminada.",
+            "No detectamos tu cara con claridad. Para que salga bien necesitamos: "
+            "(1) luz de frente, nunca a tu espalda — una ventana de día va perfecto, "
+            "(2) tu cara centrada en el óvalo, sin gorras ni gafas, "
+            "(3) el perfil a 90 grados exactos, girando el cuerpo entero. "
+            "Puedes repetir las fotos sin ningún coste adicional.",
         )
 
     # --- LLM report generation
@@ -414,20 +438,16 @@ async def upload_photos_and_analyze(
     # --- Generate pre-purchased add-ons (colorimetry / products guide bought via add-ons screen)
     cuts = report.get("cortes_recomendados", [])
     if analysis.includes_colorimetry and not analysis.colorimetry_report:
-        try:
-            analysis.colorimetry_report = await asyncio.get_event_loop().run_in_executor(
-                None, lambda: claude_service.generate_colorimetry_report(metrics, quiz)
-            )
-        except Exception as e:
-            logger.error("Colorimetry generation failed for %s: %s", analysis_id, e)
+        analysis.colorimetry_report = await _generate_extra_with_retry(
+            lambda: claude_service.generate_colorimetry_report(metrics, quiz),
+            label=f"colorimetry [{analysis_id}]",
+        )
 
     if analysis.includes_products_guide and not analysis.products_guide:
-        try:
-            analysis.products_guide = await asyncio.get_event_loop().run_in_executor(
-                None, lambda: claude_service.generate_products_guide(metrics, quiz, cuts)
-            )
-        except Exception as e:
-            logger.error("Products guide generation failed for %s: %s", analysis_id, e)
+        analysis.products_guide = await _generate_extra_with_retry(
+            lambda: claude_service.generate_products_guide(metrics, quiz, cuts),
+            label=f"products_guide [{analysis_id}]",
+        )
 
     # --- Persist metrics + report
     analysis.face_shape = metrics.face_shape
