@@ -316,6 +316,130 @@ async def _generate_extra_with_retry(fn, label: str, timeout_s: float = 90.0, ma
     return None
 
 
+async def _run_analysis_background(
+    analysis_id: str,
+    valid_photo_bytes: list[bytes],
+    photos_for_visuals: list[bytes] | None,
+    quiz: dict,
+    includes_seasonal: bool,
+    includes_colorimetry: bool,
+    includes_products_guide: bool,
+    user_email: str | None,
+) -> None:
+    """Run MediaPipe + LLM in background so the HTTP response is immediate."""
+    from app.core.database import AsyncSessionLocal
+    from sqlalchemy import select as sa_select
+
+    async def _reset_to_paid(db):
+        stmt = sa_select(Analysis).where(Analysis.id == analysis_id)
+        a = (await db.execute(stmt)).scalar_one_or_none()
+        if a and a.status == "processing":
+            a.status = "paid"
+            await db.commit()
+
+    async with AsyncSessionLocal() as db:
+        try:
+            # --- MediaPipe face analysis (CPU-bound, run in thread)
+            try:
+                metrics = await asyncio.get_event_loop().run_in_executor(
+                    None, lambda: face_analysis.analyze_photos(valid_photo_bytes)
+                )
+            finally:
+                del valid_photo_bytes
+
+            if not metrics:
+                await _reset_to_paid(db)
+                if photos_for_visuals:
+                    del photos_for_visuals
+                logger.warning("Background analysis %s: no face detected", analysis_id)
+                return
+
+            # --- LLM report generation
+            try:
+                report = await asyncio.wait_for(
+                    asyncio.get_event_loop().run_in_executor(
+                        None, lambda: claude_service.generate_report(metrics, quiz, include_seasonal=includes_seasonal)
+                    ),
+                    timeout=120.0,
+                )
+            except (asyncio.TimeoutError, Exception) as exc:
+                logger.error("Background LLM failed for %s: %s", analysis_id, exc, exc_info=True)
+                await _reset_to_paid(db)
+                if photos_for_visuals:
+                    del photos_for_visuals
+                return
+
+            cuts = report.get("cortes_recomendados", [])
+
+            # --- Optional add-ons
+            colorimetry_report = None
+            if includes_colorimetry:
+                colorimetry_report = await _generate_extra_with_retry(
+                    lambda: claude_service.generate_colorimetry_report(metrics, quiz),
+                    label=f"colorimetry [{analysis_id}]",
+                )
+
+            products_guide = None
+            if includes_products_guide:
+                products_guide = await _generate_extra_with_retry(
+                    lambda: claude_service.generate_products_guide(metrics, quiz, cuts),
+                    label=f"products_guide [{analysis_id}]",
+                )
+
+            # --- Persist
+            stmt = sa_select(Analysis).where(Analysis.id == analysis_id)
+            analysis = (await db.execute(stmt)).scalar_one_or_none()
+            if not analysis:
+                return
+
+            analysis.face_shape = metrics.face_shape
+            analysis.length_width_ratio = metrics.length_width_ratio
+            analysis.forehead_width_ratio = metrics.forehead_to_face_ratio
+            analysis.jaw_width_ratio = metrics.jaw_to_face_ratio
+            analysis.asymmetry_score = metrics.asymmetry_score
+            analysis.cranial_proportion = metrics.cranial_proportion
+            analysis.analysis_confidence = metrics.confidence
+            analysis.photos_analyzed = metrics.photos_used
+            analysis.report = report
+            analysis.status = "completed"
+            analysis.photos_deleted_at = datetime.now(timezone.utc)
+            if colorimetry_report:
+                analysis.colorimetry_report = colorimetry_report
+            if products_guide:
+                analysis.products_guide = products_guide
+            if photos_for_visuals and cuts:
+                analysis.visuals_status = "processing"
+
+            await db.commit()
+
+            logger.info(
+                "Background analysis %s completed: shape=%s confidence=%.0f%% photos=%d",
+                analysis_id, metrics.face_shape, metrics.confidence * 100, metrics.photos_used,
+            )
+
+            # --- Kick off visuals, email, CRM (fire-and-forget)
+            if photos_for_visuals and cuts:
+                asyncio.create_task(_auto_generate_visuals(
+                    analysis_id, photos_for_visuals, cuts,
+                    metrics.face_shape, report.get("hair_attributes"),
+                ))
+            elif photos_for_visuals:
+                del photos_for_visuals
+
+            if user_email:
+                from app.services.email_service import send_analysis_ready
+                asyncio.create_task(send_analysis_ready(user_email, analysis_id))
+
+            asyncio.create_task(_notify_crm(analysis, report))
+
+        except Exception as exc:
+            logger.error("Background analysis crashed for %s: %s", analysis_id, exc, exc_info=True)
+            try:
+                await _reset_to_paid(db)
+            except Exception:
+                pass
+
+
 @router.post("/{analysis_id}/photos", status_code=202)
 @limiter.limit("5/hour")
 async def upload_photos_and_analyze(
@@ -326,18 +450,18 @@ async def upload_photos_and_analyze(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Step 3: Upload EXACTLY 5 photos. Triggers face analysis + LLM report generation.
-    Photos are processed in memory and NEVER stored to disk.
-    Visuals are generated automatically in background using the frontal photo (index 0).
+    Step 3: Upload photos. Validates immediately, runs face analysis + LLM in background.
+    Returns 202 in <1s so Cloudflare never times out. Client polls GET /analysis/{id}.
     """
     analysis = await _get_analysis_or_404(analysis_id, db)
 
-    # Idempotency: already completed — return cached result without reprocessing
     if analysis.status == "completed":
         logger.info("Re-upload on already-completed analysis %s — returning cached", analysis_id)
         return {"message": "Análisis ya completado.", "analysis_id": analysis_id}
 
-    # Must be paid
+    if analysis.status == "processing":
+        return {"message": "El análisis ya está en progreso.", "analysis_id": analysis_id}
+
     if analysis.status not in ("paid",):
         raise HTTPException(
             400,
@@ -345,7 +469,6 @@ async def upload_photos_and_analyze(
             "Completa el pago y vuelve a intentarlo."
         )
 
-    # Must have consent
     stmt = select(ConsentLog).where(ConsentLog.analysis_id == analysis_id)
     consent_log = (await db.execute(stmt)).scalar_one_or_none()
     if not consent_log:
@@ -361,13 +484,9 @@ async def upload_photos_and_analyze(
             "frontal, perfil izquierdo y perfil derecho."
         )
 
-    analysis.status = "processing"
-    await db.flush()
-
-    # --- Validate and prepare photos (all in memory, never to disk)
+    # --- Validate photos (fast — in-memory only)
     valid_photo_bytes: list[bytes] = []
     validation_errors: list[str] = []
-
     for i, photo in enumerate(photos, 1):
         raw_bytes = await photo.read()
         val_result, prepared = photo_service.validate_and_prepare_photo(
@@ -380,8 +499,6 @@ async def upload_photos_and_analyze(
         del raw_bytes
 
     if not valid_photo_bytes:
-        analysis.status = "paid"
-        await db.flush()
         errors_str = " | ".join(validation_errors) if validation_errors else "Calidad insuficiente."
         raise HTTPException(
             422,
@@ -389,113 +506,33 @@ async def upload_photos_and_analyze(
             "Intenta con mejor iluminación y la cara bien encuadrada."
         )
 
-    # Save frontal + left-profile photos for visual generation BEFORE deleting bytes
-    # photo[0]=frontal → used for frontal angle; photo[1]=perfil izquierdo → used for side angle
     photos_for_visuals: list[bytes] | None = valid_photo_bytes[:2] if settings.FAL_KEY else None
 
-    # --- Face analysis (MediaPipe)
-    try:
-        metrics = face_analysis.analyze_photos(valid_photo_bytes)
-    finally:
-        del valid_photo_bytes
+    # Capture analysis attrs before the DB session closes with the response
+    quiz = analysis.quiz_answers or {}
+    includes_seasonal = analysis.includes_seasonal
+    includes_colorimetry = analysis.includes_colorimetry
+    includes_products_guide = analysis.includes_products_guide
+    user_email = analysis.user_email
 
-    if not metrics:
-        analysis.status = "paid"
-        photos_for_visuals = None
-        await db.flush()
-        raise HTTPException(
-            422,
-            "No detectamos tu cara con claridad. Para que salga bien necesitamos: "
-            "(1) luz de frente, nunca a tu espalda — una ventana de día va perfecto, "
-            "(2) tu cara centrada en el óvalo, sin gorras ni gafas, "
-            "(3) el perfil a 90 grados exactos, girando el cuerpo entero. "
-            "Puedes repetir las fotos sin ningún coste adicional.",
-        )
-
-    # --- LLM report generation
-    import asyncio
-    try:
-        quiz = analysis.quiz_answers or {}
-        report = await asyncio.wait_for(
-            asyncio.get_event_loop().run_in_executor(
-                None, lambda: claude_service.generate_report(metrics, quiz, include_seasonal=analysis.includes_seasonal)
-            ),
-            timeout=120.0,
-        )
-    except asyncio.TimeoutError:
-        logger.error("LLM report generation timeout for %s", analysis_id)
-        analysis.status = "paid"
-        photos_for_visuals = None
-        await db.flush()
-        raise HTTPException(504, "El análisis tardó demasiado. Inténtalo de nuevo.")
-    except Exception as e:
-        logger.error("LLM report generation failed for %s: %s", analysis_id, e, exc_info=True)
-        analysis.status = "paid"
-        photos_for_visuals = None
-        await db.flush()
-        raise HTTPException(500, "Error al generar el informe. Inténtalo de nuevo.")
-
-    # --- Generate pre-purchased add-ons (colorimetry / products guide bought via add-ons screen)
-    cuts = report.get("cortes_recomendados", [])
-    if analysis.includes_colorimetry and not analysis.colorimetry_report:
-        analysis.colorimetry_report = await _generate_extra_with_retry(
-            lambda: claude_service.generate_colorimetry_report(metrics, quiz),
-            label=f"colorimetry [{analysis_id}]",
-        )
-
-    if analysis.includes_products_guide and not analysis.products_guide:
-        analysis.products_guide = await _generate_extra_with_retry(
-            lambda: claude_service.generate_products_guide(metrics, quiz, cuts),
-            label=f"products_guide [{analysis_id}]",
-        )
-
-    # --- Persist metrics + report
-    analysis.face_shape = metrics.face_shape
-    analysis.length_width_ratio = metrics.length_width_ratio
-    analysis.forehead_width_ratio = metrics.forehead_to_face_ratio
-    analysis.jaw_width_ratio = metrics.jaw_to_face_ratio
-    analysis.asymmetry_score = metrics.asymmetry_score
-    analysis.cranial_proportion = metrics.cranial_proportion
-    analysis.analysis_confidence = metrics.confidence
-    analysis.photos_analyzed = metrics.photos_used
-    analysis.report = report
-    analysis.status = "completed"
-    analysis.photos_deleted_at = datetime.now(timezone.utc)
-
-    # --- Auto-trigger visual generation in background
-    if photos_for_visuals:
-        cuts = report.get("cortes_recomendados", [])
-        if cuts:
-            analysis.visuals_status = "processing"
-            background_tasks.add_task(
-                _auto_generate_visuals,
-                analysis_id,
-                photos_for_visuals,
-                cuts,
-                metrics.face_shape,
-                report.get("hair_attributes"),
-            )
-            photos_for_visuals = None
-        else:
-            del photos_for_visuals
-
-    # Commit explicitly so concurrent GET /analysis/{id} sees status=completed
-    # before the background task starts (background tasks run after response).
+    # Mark processing and commit so GET /analysis/{id} returns 202 while background runs
+    analysis.status = "processing"
     await db.commit()
 
-    logger.info(
-        "Analysis %s completed: shape=%s confidence=%.0f%% photos=%d",
-        analysis_id, metrics.face_shape, metrics.confidence * 100, metrics.photos_used
+    # Heavy work (MediaPipe + LLM) runs after response is sent
+    background_tasks.add_task(
+        _run_analysis_background,
+        analysis_id,
+        valid_photo_bytes,
+        photos_for_visuals,
+        quiz,
+        includes_seasonal,
+        includes_colorimetry,
+        includes_products_guide,
+        user_email,
     )
 
-    if analysis.user_email:
-        from app.services.email_service import send_analysis_ready
-        asyncio.create_task(send_analysis_ready(analysis.user_email, analysis_id))
-
-    # --- Notificar CRM (n8n) — análisis completado
-    asyncio.create_task(_notify_crm(analysis, report))
-
-    return {"message": "Análisis completado.", "analysis_id": analysis_id}
+    return {"message": "Fotos recibidas. El análisis está en progreso.", "analysis_id": analysis_id}
 
 
 # ---------------------------------------------------------------------------
