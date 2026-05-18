@@ -7,7 +7,7 @@ import {
   Trophy,
   TrendingUp,
   MapPin,
-  Instagram,
+  ExternalLink,
   ChevronRight,
   Search,
   Filter,
@@ -203,7 +203,7 @@ export default function LeaderboardPage() {
                           </span>
                           {entry.instagram_handle && (
                             <span className="flex items-center gap-1">
-                              <Instagram className="h-3 w-3" />
+                              <ExternalLink className="h-3 w-3" />
                               @{entry.instagram_handle}
                             </span>
                           )}
