@@ -40,8 +40,8 @@ RUN mkdir -p models && \
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
-# Python reads PORT from env — avoids shell $PORT expansion issues in Railway
-CMD ["python", "-c", "import os,uvicorn; uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.environ.get('PORT',8000)), workers=2)"]
+# Single worker — MediaPipe uses ~300MB; two workers OOM on Railway 512MB tier
+CMD ["python", "-c", "import os,uvicorn; uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.environ.get('PORT',8000)), workers=1)"]

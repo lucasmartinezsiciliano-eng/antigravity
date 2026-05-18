@@ -7,16 +7,18 @@ export default function OtoPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const skip = () => router.replace(`/capture/${id}`);
 
   const accept = async () => {
     setLoading(true);
+    setError("");
     try {
       const res = await api.upsell(id, "seasonal");
       window.location.href = res.checkout_url;
     } catch (e: any) {
-      alert(e.message || "Error al procesar. Inténtalo de nuevo.");
+      setError(e.message || "Error al procesar. Inténtalo de nuevo.");
       setLoading(false);
     }
   };
@@ -72,6 +74,11 @@ export default function OtoPage() {
         </div>
 
         {/* CTA */}
+        {error && (
+          <p style={{ color: "var(--danger)", fontSize: 13, textAlign: "center", marginBottom: 8, lineHeight: 1.5 }}>
+            {error}
+          </p>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <button
             type="button"

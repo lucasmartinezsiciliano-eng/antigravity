@@ -6,7 +6,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
 
-const POLL_INTERVAL_MS = 2500;
+const POLL_INTERVAL_MS = 2500 + Math.random() * 500; // jitter evita thundering herd
 const TIMEOUT_MS = 90_000; // 90 s — Stripe webhook usually arrives in <5 s
 
 type Phase = "waiting_payment" | "confirmed" | "timeout" | "error";

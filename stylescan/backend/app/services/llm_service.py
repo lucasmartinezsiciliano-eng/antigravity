@@ -99,7 +99,7 @@ def call(system_prompt: str, user_prompt: str) -> str:
 def _call_anthropic(system_prompt: str, user_prompt: str, model: str, max_tokens: int) -> str:
     import anthropic
 
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY, timeout=120.0)
     response = client.messages.create(
         model=model,
         max_tokens=max_tokens,
@@ -131,7 +131,7 @@ def _call_openai_compat(
     }[provider]
     base_url = _BASE_URLS[provider]
 
-    client = OpenAI(api_key=api_key, base_url=base_url)
+    client = OpenAI(api_key=api_key, base_url=base_url, timeout=120.0)
 
     thinking = _is_thinking_model(model)
 

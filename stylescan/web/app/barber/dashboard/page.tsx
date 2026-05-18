@@ -65,6 +65,7 @@ function BarberDashboardInner() {
   const [error, setError] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -113,7 +114,7 @@ function BarberDashboardInner() {
     };
 
     loadDashboard();
-  }, [barberId]);
+  }, [barberId, refreshKey]);
 
   const copyPromoCode = () => {
     if (dashboard?.promo_code) {
@@ -361,8 +362,8 @@ function BarberDashboardInner() {
         onClose={() => setShowUploadModal(false)}
         barber_id={barberId}
         onSuccess={() => {
-          // Refresh dashboard data after successful upload
-          window.location.reload();
+          setShowUploadModal(false);
+          setRefreshKey((k) => k + 1);
         }}
       />
     </div>
