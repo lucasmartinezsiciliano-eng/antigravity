@@ -9,10 +9,10 @@ GET  /barbers               — List all barbers (admin only)
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Header, status
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field
 
@@ -56,6 +56,7 @@ class BarberDashboard(BaseModel):
     total_paid_out_euros: float
     pending_payout_euros: float
     is_active: bool
+    contract_signed_at: str | None
     recent_uses: list[dict]
 
 
@@ -102,7 +103,7 @@ async def register_barber(
         iban=body.iban,
         promo_code=code,
         stripe_promo_code_id=stripe_promo_id,
-        contract_signed_at=datetime.now(timezone.utc),
+        # contract_signed_at left None — set explicitly via POST /barbers/{id}/sign-contract
     )
     db.add(partner)
     await db.flush()
@@ -113,11 +114,46 @@ async def register_barber(
         barber_id=barber_id,
         promo_code=code,
         message=(
-            f"¡Bienvenido a StyleScan, {body.name}! "
+            f"¡Bienvenido a VISAI, {body.name}! "
             f"Tu código es {code}. Compártelo con tus clientes "
-            f"para que paguen €4,99 en vez de €5,99 y tú ganas €1 por cada análisis."
+            f"para que ahorren €2 en el análisis y tú ganes €2 por cada uso."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Sign contract
+# ---------------------------------------------------------------------------
+class SignContractRequest(BaseModel):
+    contract_version: str = "1.0"
+    ip_address: str | None = None
+    user_agent: str | None = None
+
+
+@router.post("/{barber_id}/sign-contract", status_code=200)
+async def sign_contract(
+    barber_id: str,
+    body: SignContractRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Barber explicitly accepts the partnership contract.
+    Sets contract_signed_at — only after this is the promo code considered active.
+    """
+    partner = await _get_partner_or_404(barber_id, db)
+
+    if partner.contract_signed_at is not None:
+        return {"message": "Contrato ya firmado.", "signed_at": partner.contract_signed_at.isoformat()}
+
+    from datetime import timezone
+    partner.contract_signed_at = datetime.now(timezone.utc)
+    await db.flush()
+
+    logger.info(
+        "Contract signed: barber=%s version=%s ip=%s",
+        barber_id, body.contract_version, body.ip_address,
+    )
+    return {"message": "Contrato firmado correctamente.", "signed_at": partner.contract_signed_at.isoformat()}
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +198,7 @@ async def get_barber_dashboard(
         total_paid_out_euros=partner.total_paid_out_cents / 100,
         pending_payout_euros=pending_cents / 100,
         is_active=partner.is_active,
+        contract_signed_at=partner.contract_signed_at.isoformat() if partner.contract_signed_at else None,
         recent_uses=recent_uses,
     )
 

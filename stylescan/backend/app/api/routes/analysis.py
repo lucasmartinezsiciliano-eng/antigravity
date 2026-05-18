@@ -392,9 +392,18 @@ async def upload_photos_and_analyze(
     import asyncio
     try:
         quiz = analysis.quiz_answers or {}
-        report = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: claude_service.generate_report(metrics, quiz, include_seasonal=analysis.includes_seasonal)
+        report = await asyncio.wait_for(
+            asyncio.get_event_loop().run_in_executor(
+                None, lambda: claude_service.generate_report(metrics, quiz, include_seasonal=analysis.includes_seasonal)
+            ),
+            timeout=120.0,
         )
+    except asyncio.TimeoutError:
+        logger.error("LLM report generation timeout for %s", analysis_id)
+        analysis.status = "paid"
+        photos_for_visuals = None
+        await db.flush()
+        raise HTTPException(504, "El análisis tardó demasiado. Inténtalo de nuevo.")
     except Exception as e:
         logger.error("LLM report generation failed for %s: %s", analysis_id, e, exc_info=True)
         analysis.status = "paid"

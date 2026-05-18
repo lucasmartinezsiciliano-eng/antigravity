@@ -54,6 +54,25 @@ CRANIAL_ES = {
     "wide":      "Cráneo relativamente ancho (tendencia braquicéfala). El volumen en el tope alarga visualmente; los lados cerrados lo acentúan positivamente.",
 }
 
+CEPHALIC_ES = {
+    "dolicocéfalo": (
+        "Dolicocéfalo (índice cefálico <75) — cráneo estrecho y largo en el eje antero-posterior. "
+        "Implicaciones de estilo: añadir anchura en sienes (taper o low fade en vez de skin fade alto); "
+        "evitar volumen excesivo en la cima que acentúe la elongación; "
+        "la nuca larga del dolicocéfalo favorece degradados bien terminados por detrás."
+    ),
+    "mesocéfalo": (
+        "Mesocéfalo (índice cefálico 75-80) — proporciones craneales equilibradas. "
+        "Sin restricciones craneales adicionales: la forma facial es el factor determinante."
+    ),
+    "braquicéfalo": (
+        "Braquicéfalo (índice cefálico >80) — cráneo ancho y corto, nuca a menudo plana. "
+        "Implicaciones de estilo: tratar la nuca con cuidado (taper suave evita destacar la planitud); "
+        "añadir altura en el tope compensa la anchura craneal; "
+        "evitar cortes que añadan masa lateral a un cráneo ya ancho."
+    ),
+}
+
 # Jawline threshold — below this, beard is primary recommendation
 _JAW_WEAK_THRESHOLD = 0.88
 # Asymmetry threshold — above this, parting strategy is mandatory
@@ -147,7 +166,98 @@ REGLAS DE FORMATO (ABSOLUTAS)
 5. Tono: asesor experto que habla directamente al usuario. Cercano pero preciso.
 6. Si confianza <0.70, sé honesto sin alarmar — sugiere repetir el proceso con mejor iluminación.
 7. No menciones "estudio", "ciencia" ni "ratio áureo" en el texto final. Solo resultados aplicados.
-8. Si jaw_to_face_ratio < 0.88, la sección de barba en `consejos_especificos` es OBLIGATORIA y prioritaria."""
+8. Si jaw_to_face_ratio < 0.88, la sección de barba en `consejos_especificos` es OBLIGATORIA y prioritaria.
+
+════════════════════════════════════════
+CATÁLOGO DE CORTES MASCULINOS — REGLAS POR FORMA FACIAL
+════════════════════════════════════════
+Usa este catálogo para seleccionar los 3 cortes recomendados y los 2 a evitar. \
+Los cortes que aparecen aquí son los únicos validados para este sistema — no inventes nombres.
+
+── DEGRADADOS Y BASES TÉCNICAS ─────────────────────────────────────────────
+• SKIN FADE / ZERO FADE: Piel al descubierto en la base, 0 hasta el número tope. Máximo contraste. \
+  Ideal: caras redondas, cuadradas. Contraindicado: alargadas, diamante.
+• LOW FADE: Empieza 1-2 cm sobre la oreja. Línea de peso baja. Versátil, casual y profesional. \
+  Ideal: oval, cuadrada (suaviza), corazón. Añade menos anchura que el taper.
+• MID FADE: Empieza a media altura del cráneo. El más popular mundialmente. \
+  Ideal: oval, redonda (slim sides). Equilibrado para casi todos.
+• HIGH FADE: Empieza 4-6 cm sobre la oreja, cerca de la coronilla. Muy moderno, alarga. \
+  Ideal: redonda, cuadrada con mandíbula fuerte. Contraindicado: alargada, diamante.
+• DROP FADE: Curva hacia abajo detrás de la oreja. Moderniza cualquier corte. Muy urbano. \
+  Funciona en oval, cuadrada. Requiere mantenimiento frecuente.
+• LOW TAPER / TAPER FADE: No llega a piel. Borde limpio en nuca y sienes. \
+  Añade anchura visual. Ideal: alargada, diamante, oval clásica. El más "profesional".
+
+── CORTES POR FAMILIA ───────────────────────────────────────────────────────
+• BUZZ CUT / CORTE AL CERO: Uniforme en toda la cabeza (guardia 1-3). \
+  Oval: perfecto. Cuadrada: destaca mandíbula (positivo). Redonda: acentúa redondez (evitar sin fade). \
+  Alargada: lo acorta mínimamente (aceptable). Corazón/diamante: expone sienes estrechas (evitar).
+• CREW CUT: Lados cortos con tijera/máquina (nº 1-2), tope 1.5-3 cm bien definido. Clásico. \
+  Compatible con todas las formas. La base es siempre un fade o taper; el tipo diferencia el resultado.
+• TEXTURED CROP / FRENCH CROP: Tope 1.5-2.5 cm con textura y FLEQUILLO recto o ligeramente \
+  texturizado a la altura de la ceja. Lados: low-to-mid fade o taper. Muy popular 2025-2026. \
+  Ideal: oval (todo funciona), redonda (flequillo acorta cara visualmente), cuadrada (textura suaviza), \
+  corazón (flequillo reduce anchura visual de la frente). \
+  CÓMO PEDIRLO: tope 2 cm, punto-cortado para textura, flequillo recto a la ceja, mid fade en lados. \
+  Contraindicado: alargada (el flequillo acorta más una cara ya larga).
+• QUIFF: Volumen hacia arriba y ligeramente hacia atrás en la zona frontal. Lados: mid-to-high fade. \
+  Ideal: oval, corazón (añade altura en zona superior), triangular (eleva visualmente el tercio superior). \
+  Contraindicado: alargada (añade altura que ya sobra), redonda (solo si el fade es muy alto/skin).
+• POMPADOUR: Barrer el cabello hacia atrás con volumen pronunciado. Alto mantenimiento. \
+  Ideal: oval, cuadrada (alarga), triangular (eleva). Contraindicado: alargada, redonda baja.
+• SLICK BACK / SIDE PART: Peinado hacia atrás o con raya lateral, pegado. Clásico y profesional. \
+  Ideal: oval, cuadrada (la raya lateral suaviza la simetría angular). Requiere cabello liso o ligeramente ondulado.
+• UNDERCUT: Lados rapados desconectados del tope largo. Contraste máximo arriba/abajo. \
+  Ideal: oval, corazón (equilibra forehead ancha), diamante (añade anchura en línea de frente). \
+  Contraindicado: redonda (el tope largo sin estructura visual acentúa la anchura).
+• MODERN MULLET (2026): Lados con skin/low fade muy corto, tope texturizado 3-4 cm, nuca \
+  gradualmente más larga con forma intencionada (5-8 cm). Atrevido pero estructurado. \
+  Ideal: oval, cuadrada (la nuca equilibra la mandíbula), diamante. \
+  Contraindicado: alargada (la nuca larga estira más), redonda (la longitud en nuca alarga sin beneficio lateral).
+• MOHAWK / FOHAWK: Tira de cabello en el centro, lados muy cortos o rapados. \
+  Fohawk = versión más suave (lados con fade, centro texturizado sin afeitar). \
+  Ideal: cuadrada (la fuerza del mohawk combina con la mandíbula), oval. \
+  Contraindicado: corazón (estrecha más el mentón visualmente), diamante (estrecha ya-estrechas sienes).
+• CAESAR CUT: Flequillo hacia adelante horizontal, lados uniformes cortos. Romano. \
+  Ideal: alargada (flequillo añade anchura visual al tercio superior), oval. \
+  Contraindicado: redonda (el fringe horizontal añade anchura).
+
+── REGLAS RÁPIDAS POR FORMA FACIAL ─────────────────────────────────────────
+OVAL:     Cualquier corte. Recomendados: low/mid fade con textura, quiff, undercut, french crop, pompadour.
+REDONDA:  HIGH FADE obligatorio para slim sides. French crop, quiff. Evitar: taper, bowl cut, cortes que \
+          añadan anchura lateral o flequillos horizontales.
+CUADRADA: Low-to-mid fade (suaviza ángulos sin eliminar fuerza). French crop, crew cut, slick back. \
+          Evitar: skin fade muy alto (dureza excesiva), pompadour exagerado.
+ALARGADA: TAPER siempre (mantiene masa lateral). French crop con fringe grueso. Caesar. \
+          Evitar: quiff, pompadour, undercut con tope largo (añaden altura).
+CORAZÓN:  Low fade o taper. Flequillo lateral (reduce anchura frontal). Textured crop. \
+          Evitar: volumen en zona frontal, cortes que anchos en la frente.
+DIAMANTE: Taper. Textured fringe (añade anchura en línea de frente). Undercut. \
+          Evitar: high fade (estrecha más sienes ya estrechas), mohawk.
+TRIANGULAR: Quiff, pompadour, cualquier corte con volumen en la cima (único caso donde se justifica \
+           explícitamente). Low fade. Evitar: lados abiertos sin tope alto.
+
+════════════════════════════════════════
+MORFOLOGÍA CRANEAL — IMPLICACIONES DE ESTILO
+════════════════════════════════════════
+Esto complementa la forma facial (2D) con el volumen real del cráneo (3D).
+
+DOLICOCÉFALO (índice cefálico <75 — cráneo estrecho y largo):
+  - El cráneo proyecta mucho hacia atrás: la nuca es prominente.
+  - Evitar topes con mucho volumen en la coronilla (sube la cima ya elevada).
+  - Preferir taper o low fade que mantengan masa lateral y añadan biparietal visual.
+  - La nuca del dolicocéfalo es larga y permite acabados muy limpios detrás.
+  - High fade contraindicado: estrecha más un cráneo ya estrecho.
+
+MESOCÉFALO (índice cefálico 75-80 — equilibrado):
+  - Sin restricciones adicionales por morfología craneal.
+  - La forma facial 2D es el factor dominante de decisión.
+
+BRAQUICÉFALO (índice cefálico >80 — cráneo ancho y corto):
+  - La nuca suele ser plana o poco prominente: el acabado trasero es crítico.
+  - Taper suave en la nuca (nunca skin fade duro detrás) para no destacar la planitud.
+  - Añadir altura en el tope compensa la anchura craneal — quiff o pompadour funcionan bien.
+  - Evitar cortes que añadan masa lateral (taper de lados anchos empeora la anchura)."""
 
 
 # ---------------------------------------------------------------------------
@@ -275,6 +385,12 @@ def _build_user_prompt(metrics: FaceMetrics, quiz: dict, include_seasonal: bool 
     face_desc = FACE_SHAPE_ES.get(metrics.face_shape, metrics.face_shape)
     cranial_desc = CRANIAL_ES.get(metrics.cranial_proportion, metrics.cranial_proportion)
 
+    # Cephalic type block (from 90° profile silhouettes — more precise than lwr approximation)
+    cephalic_block = ""
+    if getattr(metrics, "cephalic_type", None):
+        ceph_desc = CEPHALIC_ES.get(metrics.cephalic_type, metrics.cephalic_type)
+        cephalic_block = f"\nMorfología craneal 3D: {ceph_desc}"
+
     # Derived clinical flags (pre-computed so Claude has explicit guidance)
     jaw_flag = ""
     if metrics.jaw_to_face_ratio < _JAW_WEAK_THRESHOLD:
@@ -342,6 +458,11 @@ aceite nutritivo en invierno, etc.)",
         "full":     "barba completa",
     }.get(beard_from_quiz, beard_from_quiz)
 
+    _hair_tex_map = {"straight": "straight", "wavy": "wavy", "curly": "curly", "coily": "coily"}
+    _hair_den_map = {"thin": "thin", "medium": "medium", "thick": "thick"}
+    hair_texture_from_quiz = _hair_tex_map.get(quiz.get("hair_texture", "straight"), "straight")
+    hair_density_from_quiz  = _hair_den_map.get(quiz.get("hair_density",  "medium"),  "medium")
+
     return f"""{kb_context}════ MÉTRICAS FACIALES (MediaPipe 468 puntos) ════
 
 Forma facial: {metrics.face_shape.upper()}
@@ -357,8 +478,8 @@ Ratios biométricos:
   - Asimetría facial: {metrics.asymmetry_score:.3f} / 1.00
     ({metrics.asymmetry_description}){asym_flag}
 
-Proporciones craneales: {cranial_desc}
-Fotos procesadas: {metrics.photos_used}/5 (frontal + perfil 90° izquierdo + perfil 90° derecho + vista superior + mentón abajo) | Confianza: {metrics.confidence:.0%}
+Proporciones craneales: {cranial_desc}{cephalic_block}
+Fotos procesadas: {metrics.photos_used}/3 (frontal 0° + perfil 90° izquierdo + perfil 90° derecho) | Confianza: {metrics.confidence:.0%}
 
 Recomendación técnica de base:
   {fade_guidance}{notes_text}
@@ -373,17 +494,25 @@ Recomendación técnica de base:
 Genera el informe en este JSON exacto. Sin texto fuera del JSON.
 
 {{
-  "resumen_facial": "string — 3-4 frases. Describe la forma facial y los ratios más relevantes \
-de forma empática y directa. No uses términos médicos. Explica qué implica para las \
-recomendaciones. Si confianza <0.70, añade honestamente que el análisis puede ganar en \
-precisión con mejor iluminación o más fotos.",
+  "resumen_facial": "string — 3-4 frases en lenguaje natural y cercano. Describe la forma de la \
+cara como lo haría un estilista experto hablando con el cliente: qué rasgos destacan, qué \
+proporciones tiene, y qué implica para el tipo de corte ideal. CERO tecnicismos, CERO números, \
+CERO términos médicos. Si confianza <0.70, añade que el análisis puede afinar con mejor luz o más fotos.",
 
-  "proporciones_craneales": "string — 2 frases. Explica en términos visuales (no médicos) \
-las proporciones craneales y su implicación específica para el volumen y estructura del peinado.",
+  "proporciones_craneales": "string — 2 frases visuales y cotidianas. Explica cómo está \
+distribuido el volumen de la cabeza (ancha arriba, estrecha arriba, equilibrada, etc.) y qué \
+significa para el peinado. Sin tecnicismos: como si se lo dijeras a alguien sentado en la silla.",
 
-  "ventaja_facial": "string — 1-2 frases. Identifica el rasgo facial más favorecedor de \
-este usuario y explica cómo el corte puede potenciarlo. Sea mandíbula, pómulos, \
-línea de frente, simetría, etc. Tono positivo y directo.",
+  "ventaja_facial": "string — 1-2 frases. Identifica el rasgo más favorecedor de este usuario \
+(mandíbula definida, pómulos marcados, frente equilibrada, buena simetría...) y explica en \
+términos visuales cómo el corte puede resaltarlo. Tono positivo y directo.",
+
+  "hair_attributes": {{
+    "type": "string — EXACTLY one of: straight | wavy | curly | coily. Use quiz hint ({hair_texture_from_quiz}) and confirm from photos.",
+    "color": "string — EXACTLY one of: black | dark_brown | brown | light_brown | blonde | red | grey | salt_pepper. From photos.",
+    "density": "string — EXACTLY one of: thick | medium | thin. Use quiz hint ({hair_density_from_quiz}) and confirm from photos.",
+    "hairline": "string — EXACTLY one of: straight | widow_peak | receding | rounded. From photos."
+  }},
 
   "cortes_recomendados": [
     {{
@@ -391,10 +520,11 @@ línea de frente, simetría, etc. Tono positivo y directo.",
       "nombre_tecnico": "string — en inglés para pedir en cualquier barbería (ej: 'Low Fade with Textured Top')",
       "nivel_estilo": "string — exactamente uno de: 'clásico' | 'moderno' | 'atrevido'",
       "nivel_mantenimiento": "string — exactamente uno de: 'bajo' | 'medio' | 'alto'",
-      "descripcion_favorece": "string — 3-4 frases. POR QUÉ este corte favorece ESTA forma facial. \
-Menciona el efecto concreto del fade/taper elegido, la línea de peso, y cómo los ratios biométricos \
-del usuario hacen que este corte funcione. Sé específico: 'el degradado medio elimina el peso \
-lateral que acentúa tu anchura de pómulos, mientras los 5cm en el tope crean verticalidad...'",
+      "descripcion_favorece": "string — 3-4 frases. Explica en lenguaje visual y cotidiano POR QUÉ \
+este corte favorece esta cara. Describe el efecto que el usuario va a ver en el espejo: qué hace \
+el degradado en los laterales, qué aporta la longitud en el tope, cómo cambia la percepción del \
+rostro. Sé concreto y visual: 'el degradado en los laterales afina visualmente la cara y la hace \
+parecer más definida, mientras que los 5 cm en el tope añaden altura y alargan el conjunto'.",
       "como_pedirlo_al_barbero": "string — instrucciones exactas. OBLIGATORIO incluir: \
 número de máquina en laterales, tipo de degradado exacto (skin/zero/low/mid/high fade o taper), \
 longitud en cm en el tope, técnica en el tope (tijera, navaja, clipper over comb), \
@@ -404,26 +534,40 @@ gradualmente a 2 a mitad de la cabeza. En el tope, 5-6 cm con tijera, desmechado
 quitar peso y aportar movimiento. Patillas limpias con navaja. Nuca cuadrada.'",
       "mantenimiento_casa": "string — 2-3 frases. Productos por tipo (no marca: 'cera mate', \
 'aceite de argán', 'espuma de volumen'...), frecuencia de lavado y técnica de secado.",
-      "frecuencia_barberia": "string — cada cuánto ir a retocar y qué deteriora primero."
+      "frecuencia_barberia": "string — cada cuánto ir a retocar y qué deteriora primero.",
+      "haircut_geometry": {{
+        "sides_length_mm": "integer — hair length on the sides in millimetres (0 = shaved/skin, 3 = clipper 1, 6 = clipper 2, 9 = clipper 3, etc.)",
+        "top_length_mm": "integer — hair length on top in millimetres (e.g. 30 = 3cm, 50 = 5cm)",
+        "fade_type": "string — EXACTLY one of: skin | zero | low | mid | high | taper | scissor_taper | none",
+        "fade_start_height": "string — EXACTLY one of: nape | ear_bottom | ear_mid | ear_top | temple | none",
+        "fade_transition": "string — EXACTLY one of: blurry | sharp_line",
+        "top_direction": "string — EXACTLY one of: forward | backward | side_part_left | side_part_right | up | natural",
+        "top_texture": "string — EXACTLY one of: choppy | smooth | slick | curly_natural | tousled | coily_natural",
+        "neckline": "string — EXACTLY one of: straight | rounded | tapered | natural",
+        "sideburns": "string — EXACTLY one of: long | short | none",
+        "parting": "string — EXACTLY one of: none | left_hard | right_hard | center"
+      }}
     }},
     {{...segundo corte, estilo y técnica claramente diferentes al primero...}},
     {{...tercer corte, el más diferente — puede ser más largo, rizado natural, texturizado, clásico si los otros son modernos, etc...}}
   ],
 
   "cortes_a_evitar": [
-    "string — nombre del corte + razón exacta basada en los ratios del usuario. \
-No genérica: 'El bowl cut / corte tazón añade anchura horizontal justo a la altura \
-de tus pómulos (ratio {metrics.forehead_to_face_ratio:.2f}), acentuando lo que queremos reducir.'",
-    "string — segundo corte a evitar con razón igualmente específica"
+    "string — nombre del corte + explicación visual de por qué no funciona para esta cara. \
+Sin números ni tecnicismos. Ejemplo de tono: 'El corte tazón o bowl cut no te favorece porque \
+añade anchura justo a la altura de los pómulos, haciendo la cara parecer más redonda y menos \
+definida de lo que realmente es.'",
+    "string — segundo corte a evitar con la misma claridad visual"
   ],
 
-  "consejos_especificos": "string — 4-5 consejos concretos para este usuario. OBLIGATORIO incluir: \
-(1) si la raya conviene y en qué lado [menciona asimetría si ≥0.15]; \
-(2) consejo de barba adaptado a su jaw_to_face_ratio {metrics.jaw_to_face_ratio:.3f} y barba actual; \
-(3) cómo trabajar el volumen según sus proporciones craneales; \
-(4) si hay textura o rizos, cómo aprovecharlos; \
-(5) cualquier observación específica derivada de las notas del análisis. \
-Cada consejo en una frase accionable. Sin repetir lo dicho en las secciones anteriores."{seasonal_field}
+  "consejos_especificos": "string — 4-5 consejos concretos y accionables. Escríbelos como \
+recomendaciones de un estilista experto en una consulta, no como puntos técnicos. \
+OBLIGATORIO incluir: (1) si le conviene llevar raya y en qué lado, explicando visualmente por qué; \
+(2) consejo de barba según la forma de su mandíbula y rostro, y cómo combinarla con el corte; \
+(3) cómo gestionar el volumen según cómo está distribuida su cabeza; \
+(4) si tiene textura o rizos, cómo aprovecharlos sin luchar contra ellos; \
+(5) cualquier consejo específico de sus características únicas. \
+Sin tecnicismos ni números. Sin repetir lo dicho en las secciones anteriores."{seasonal_field}
 }}"""
 
 

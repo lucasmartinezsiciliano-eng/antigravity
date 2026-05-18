@@ -48,7 +48,13 @@ export default function ResultPage() {
 
   function startVisualsPoll() {
     if (visualsPollRef.current) clearInterval(visualsPollRef.current);
+    const pollStart = Date.now();
     visualsPollRef.current = setInterval(async () => {
+      if (Date.now() - pollStart > 300_000) {
+        clearInterval(visualsPollRef.current!);
+        setVisualsStatus("failed");
+        return;
+      }
       try {
         const data = await api.getVisuals(id);
         if (data.visuals_status === "ready") {

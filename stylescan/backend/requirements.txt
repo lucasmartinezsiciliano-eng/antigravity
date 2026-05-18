@@ -46,3 +46,6 @@ apscheduler==3.10.4
 
 # HTTP (unpinned — let pip resolve compatible version with all deps)
 requests
+
+# Testing (install with: pip install -r requirements.txt -r requirements-test.txt)
+# Kept separate so prod image doesn't include test deps

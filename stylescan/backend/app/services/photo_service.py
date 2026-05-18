@@ -230,6 +230,73 @@ def _compute_quality_score(
     return round(score, 3)
 
 
+def extract_hair_mask(photo_bytes: bytes) -> bytes:
+    """
+    Generates a binary mask for hair-region inpainting.
+
+    WHITE (255) = hair / scalp area  → model regenerates here (new cut)
+    BLACK (0)   = face / background  → model never touches this
+
+    This is the key mechanism that gives mathematical identity preservation:
+    the face pixels cannot change because they are outside the inpainting region.
+
+    Algorithm (no additional model downloads required):
+    1. Detect face bounding box via Haar cascade (same used in validation).
+    2. Build a 'head cap' rectangle: from top-of-image to ~ear level,
+       laterally wider than the face by ~15% on each side.
+    3. Carve out the face oval (ellipse inscribed in the face bbox, slightly
+       shrunk) so skin is preserved.
+    4. Gaussian-blur the edges so inpainting has a smooth transition zone.
+    """
+    pil_img = Image.open(io.BytesIO(photo_bytes)).convert("RGB")
+    w, h = pil_img.size
+    cv_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
+    mask = np.zeros((h, w), dtype=np.uint8)
+
+    # --- Try face detection with Haar (fast, no extra model) ---
+    gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+    cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
+    faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(80, 80))
+
+    if len(faces) == 0:
+        # Fallback: assume face fills the centre; treat top 45% as hair
+        mask[:int(h * 0.45), :] = 255
+        mask = cv2.GaussianBlur(mask, (31, 31), 10)
+        return _mask_to_png(mask)
+
+    # Use the largest detected face
+    fx, fy, fw, fh = max(faces, key=lambda r: r[2] * r[3])
+
+    # Head cap: top of image → ear level (~bottom of face bbox),
+    # sides extended 18% beyond the face width
+    margin_x = int(fw * 0.18)
+    cap_x1 = max(0, fx - margin_x)
+    cap_x2 = min(w, fx + fw + margin_x)
+    cap_y1 = 0
+    cap_y2 = fy + fh  # down to the chin (ears are roughly here)
+    mask[cap_y1:cap_y2, cap_x1:cap_x2] = 255
+
+    # Carve out the face: ellipse centred on the face, 85% of face size
+    face_cx = fx + fw // 2
+    face_cy = fy + fh // 2
+    axes = (int(fw * 0.42), int(fh * 0.48))
+    cv2.ellipse(mask, (face_cx, face_cy), axes, 0, 0, 360, 0, thickness=-1)
+
+    # Soft transition at boundaries (avoids hard seams in Flux Fill output)
+    mask = cv2.GaussianBlur(mask, (25, 25), 9)
+
+    return _mask_to_png(mask)
+
+
+def _mask_to_png(mask: np.ndarray) -> bytes:
+    buf = io.BytesIO()
+    Image.fromarray(mask, mode="L").save(buf, format="PNG")
+    return buf.getvalue()
+
+
 def hash_for_audit(data: str) -> str:
     """SHA-256 hash for RGPD-compliant audit logging (phone, IP, device)."""
     return hashlib.sha256(data.encode()).hexdigest()

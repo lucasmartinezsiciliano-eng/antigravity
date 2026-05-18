@@ -35,6 +35,7 @@ type BarberDashboardData = {
   total_uses?: number;
   total_paid_out_euros?: number;
   is_active?: boolean;
+  contract_signed_at?: string | null;
   recent_uses?: Array<{ date: string; earned_euros: number }>;
 };
 
@@ -147,9 +148,31 @@ function BarberDashboardInner() {
   }
 
   const tier = TIER_BADGES[dashboard.current_tier ?? "bronze"] || TIER_BADGES.bronze;
+  const contractUnsigned = !dashboard.contract_signed_at;
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Contract unsigned banner */}
+      {contractUnsigned && (
+        <div className="bg-amber-900/40 border-b border-amber-700/50">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-400 flex-shrink-0" />
+              <p className="text-amber-200 text-sm">
+                <span className="font-semibold">Tu código está inactivo.</span>{" "}
+                Firma el contrato de colaboración para activarlo.
+              </p>
+            </div>
+            <Link
+              href={`/barber/contrato?id=${barberId}`}
+              className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm px-4 py-1.5 rounded flex-shrink-0 transition-colors"
+            >
+              Firmar →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b border-gray-800 bg-gradient-to-b from-gray-900 to-black">
         <div className="max-w-4xl mx-auto px-4 py-6">

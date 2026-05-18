@@ -110,7 +110,14 @@ export default function CapturePage() {
         await videoRef.current.play();
       }
       setCameraReady(true);
-    } catch {
+    } catch (e: any) {
+      if (e?.name === "NotAllowedError") {
+        setError("Debes permitir el acceso a la cámara. Recarga la página y acepta el permiso cuando el navegador lo pida.");
+      } else if (e?.name === "NotFoundError") {
+        setError("No se detectó ninguna cámara. Usa otro dispositivo o un navegador compatible.");
+      } else {
+        setError("Error al iniciar la cámara. Intenta recargar la página.");
+      }
       setCameraReady(false);
     }
   }

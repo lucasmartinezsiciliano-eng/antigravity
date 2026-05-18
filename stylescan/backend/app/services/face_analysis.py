@@ -1,17 +1,19 @@
 """
-StyleScan — Face Analysis Service
+VISAI — Face Analysis Service
 Uses Google MediaPipe FaceMesh (468 landmarks) to extract facial metrics.
 
-Photo protocol (5 photos):
-  1. Frontal (0°)         — Primary measurement. Face shape, proportions, asymmetry.
-  2. Left 45°             — Reinforces proportions, depth estimate.
-  3. Right 45°            — Bilateral symmetry validation.
-  4. Slight overhead      — Camera ~15° above. Head width, hairline.
-  5. Chin down (~15°)     — Jaw and chin detail for degradado recommendations.
+Photo protocol (3 photos):
+  1. Frontal (0°)          — Primary. Face shape, proportions, asymmetry, jaw analysis.
+  2. Left profile (90°)    — OpenCV silhouette. Cranial depth (AP diameter estimation).
+  3. Right profile (90°)   — OpenCV silhouette. Bilateral cranial depth validation.
 
-Why these angles: MediaPipe fails on 90° profiles (>45° confidence collapse).
-True cephalic index requires 3D scanning. We deliver estimated cranial proportions,
-not medical skull classification — stated clearly in the report.
+Why 90° profiles via OpenCV (not MediaPipe):
+  MediaPipe FaceMesh accuracy collapses above 45° yaw.
+  At 90°, confidence → 0.0 (formula: max(0, 0.90 - (|yaw|-20)/70)).
+  Profile photos go through an independent OpenCV pipeline (skin detection +
+  largest-contour bounding box) to extract the AP (antero-posterior) diameter.
+  Combined with frontal temple width, this gives a cephalic index approximation:
+    dolicocéfalo (<75) / mesocéfalo (75-80) / braquicéfalo (>80).
 """
 
 import math
@@ -116,7 +118,7 @@ ASYMMETRY_PAIRS = [
 # ---------------------------------------------------------------------------
 @dataclass
 class PhotoAnalysis:
-    """Metrics extracted from a single photo."""
+    """Metrics extracted from a single frontal/semi-frontal photo via MediaPipe."""
     face_detected: bool
     confidence: float
     head_pose_yaw: float    # Rotation around Y axis (left/right tilt, degrees)
@@ -145,7 +147,7 @@ class FaceMetrics:
     This is what gets stored in the database and sent to Claude.
     """
     face_shape: str               # oval, round, square, oblong, heart, diamond, triangle
-    cranial_proportion: str       # balanced, elongated, wide
+    cranial_proportion: str       # balanced, elongated, wide (drives illustration archetype)
     face_length: float
     face_width: float
     forehead_width: float
@@ -157,7 +159,9 @@ class FaceMetrics:
     asymmetry_description: str    # Human-readable asymmetry assessment
     photos_used: int
     confidence: float             # Overall confidence 0.0–1.0
-    analysis_notes: list[str]     # Notes for Claude (e.g., limited confidence reasons)
+    analysis_notes: list[str] = field(default_factory=list)
+    # Cephalic classification from 90° profile silhouettes (None if no profiles provided)
+    cephalic_type: Optional[str] = None  # "dolicocéfalo" | "mesocéfalo" | "braquicéfalo"
 
 
 # ---------------------------------------------------------------------------
@@ -275,11 +279,10 @@ def _classify_face_shape(lwr: float, fr: float, jr: float) -> str:
     return "oval"
 
 
-def _cranial_proportion(lwr: float, fr: float = 0.0) -> str:  # noqa: ARG001
+def _cranial_proportion_from_lwr(lwr: float) -> str:
     """
-    Estimate cranial proportion tendency from frontal photo ratios.
-    DISCLAIMER: True cephalic index requires 3D measurement (CT/photogrammetry).
-    This is an approximation from frontal geometry.
+    Fallback cranial proportion estimate from frontal lwr (no profile photos).
+    Returns 'elongated' / 'balanced' / 'wide'. Less accurate than profile silhouette.
     """
     if lwr > 1.65:
         return "elongated"
@@ -299,12 +302,80 @@ def _asymmetry_description(score: float) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Single-photo analysis
+# Profile silhouette analysis (90° photos — OpenCV pipeline)
+# ---------------------------------------------------------------------------
+def _analyze_profile_silhouette(image_bytes: bytes) -> Optional[float]:
+    """
+    Extract the antero-posterior depth / cranial height ratio from a 90° profile photo.
+
+    Method: YCrCb skin detection → morphological cleanup → largest contour bounding box.
+    Returns (bounding_width / bounding_height) or None if extraction fails.
+
+    Interpretation:
+      High ratio → long AP diameter relative to height → dolicocéfalo tendency.
+      Low ratio  → short AP diameter (round skull) → braquicéfalo tendency.
+    """
+    arr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if img is None:
+        return None
+
+    h, w = img.shape[:2]
+
+    # YCrCb skin detection — more robust than HSV across diverse skin tones and lighting
+    ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    lower = np.array([0, 133, 77], dtype=np.uint8)
+    upper = np.array([255, 173, 127], dtype=np.uint8)
+    skin_mask = cv2.inRange(ycrcb, lower, upper)
+
+    # Close small holes within skin region; remove isolated noise patches
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_CLOSE, kernel)
+    skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_OPEN, kernel)
+
+    contours, _ = cv2.findContours(skin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return None
+
+    largest = max(contours, key=cv2.contourArea)
+    # Require at least 3% of image area — filters noise but handles close-up portraits
+    if cv2.contourArea(largest) < h * w * 0.03:
+        return None
+
+    x, y, cw, ch = cv2.boundingRect(largest)
+    if ch < 20:
+        return None
+
+    return round(cw / ch, 3)
+
+
+def _classify_cephalic_type(depth_height_ratio: float) -> str:
+    """
+    Classify cranial morphology from profile silhouette depth/height ratio.
+
+    Standard cephalic index (CI) = (biparietal / AP-diameter) × 100.
+    From profile photo, width ≈ AP diameter, height ≈ cranial height.
+    Large AP relative to height → dolicocéfalo (CI < 75, narrow/long skull).
+    Small AP relative to height → braquicéfalo (CI > 80, wide/round skull).
+
+    Thresholds calibrated on average head proportions:
+      AP ≈ 18-22 cm, cranial height ≈ 22-24 cm → typical ratio 0.75-0.90.
+    """
+    if depth_height_ratio > 0.86:
+        return "dolicocéfalo"
+    if depth_height_ratio < 0.72:
+        return "braquicéfalo"
+    return "mesocéfalo"
+
+
+# ---------------------------------------------------------------------------
+# Single-photo analysis (MediaPipe — frontal/semi-frontal)
 # ---------------------------------------------------------------------------
 def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
     """
-    Extract facial metrics from one image (bytes) using MediaPipe Tasks API.
-    Returns PhotoAnalysis with face_detected=False if no face is found.
+    Extract facial metrics from one image using MediaPipe Tasks API.
+    Returns PhotoAnalysis with face_detected=False if no face is found or yaw > 45°.
+    For 90° profiles, call _analyze_profile_silhouette() instead.
     """
     arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
@@ -327,8 +398,6 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
             head_pose_yaw=0.0, head_pose_pitch=0.0
         )
 
-    # Tasks API returns NormalizedLandmark objects directly (x, y, z in [0,1])
-    # Wrap them to be compatible with our _lm_point / _estimate_head_pose helpers
     raw_lms = result.face_landmarks[0]
 
     class _LM:
@@ -339,19 +408,16 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
 
     lms = [_LM(lm) for lm in raw_lms]
 
-    # Extract yaw/pitch from facial transformation matrix if available
     yaw, pitch = _estimate_head_pose(lms, w, h)
     if result.facial_transformation_matrixes:
         import math as _math
         mat = result.facial_transformation_matrixes[0].data
-        # Rotation matrix row 0 and 2 give yaw; row 1 gives pitch
         try:
             yaw = _math.degrees(_math.atan2(mat[2][0], mat[0][0]))
             pitch = _math.degrees(_math.atan2(-mat[1][2], mat[1][1]))
         except Exception:
             pass  # Fall back to geometry-based estimate
 
-    # Interocular distance as normalization baseline
     iod = _euclidean(
         _lm_point(lms, LM["left_eye_outer"], w, h),
         _lm_point(lms, LM["right_eye_outer"], w, h),
@@ -373,8 +439,8 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
 
     asym_score, asym_details = _calculate_asymmetry(lms, w, h)
 
-    # Confidence: penalize extreme yaw (off-angle reduces reliability)
-    yaw_penalty = max(0.0, abs(yaw) - 20) / 70  # Starts penalizing after 20°
+    # Confidence: penalize yaw > 20° (landmarks become unreliable above that)
+    yaw_penalty = max(0.0, abs(yaw) - 20) / 70
     confidence = max(0.0, min(1.0, 0.90 - yaw_penalty))
 
     return PhotoAnalysis(
@@ -395,86 +461,109 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
 
 
 # ---------------------------------------------------------------------------
-# Multi-photo aggregation
+# Multi-photo aggregation — 3-photo protocol
 # ---------------------------------------------------------------------------
-def analyze_photos(photos: list[bytes]) -> Optional[FaceMetrics]:
+def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
     """
-    Analyze 1–5 photos and aggregate into definitive FaceMetrics.
+    Analyze photos using the 3-photo protocol and aggregate into FaceMetrics.
 
-    Strategy:
-    - Frontal (lowest |yaw|) = primary source for all measurements.
-    - 45° photos = reinforce length/width ratio via weighted average.
-    - Overhead photo = refines forehead width estimate.
-    - Chin-down photo = refines jaw width estimate.
-    - Asymmetry = averaged across all valid photos.
+    Protocol:
+      Photo 1: Frontal (0°)       → MediaPipe 468 landmarks.
+      Photo 2: Left profile (90°) → OpenCV skin silhouette.
+      Photo 3: Right profile (90°)→ OpenCV skin silhouette.
 
-    Returns None if no photo yields a valid face detection.
+    Routing logic:
+      - MediaPipe confidence ≥ 0.50 → frontal/semi-frontal path.
+      - MediaPipe confidence < 0.50 → profile silhouette path.
+      Both profiles contribute to cephalic_type classification.
+
+    Returns None if no frontal photo is usable.
     """
-    results: list[PhotoAnalysis] = []
-    for photo_bytes in photos:
+    mediapipe_results: list[PhotoAnalysis] = []
+    profile_depth_ratios: list[float] = []
+
+    for i, photo_bytes in enumerate(photos):
         pa = analyze_single_photo(photo_bytes)
-        if pa.face_detected and pa.confidence >= 0.50:
-            results.append(pa)
-        else:
-            logger.warning(
-                "Photo rejected: detected=%s confidence=%.2f",
-                pa.face_detected, pa.confidence
-            )
 
-    if not results:
-        return None
+        if pa.face_detected and pa.confidence >= 0.50:
+            mediapipe_results.append(pa)
+        else:
+            # Low/zero confidence → likely a 90° profile → try silhouette extraction
+            ratio = _analyze_profile_silhouette(photo_bytes)
+            if ratio is not None:
+                profile_depth_ratios.append(ratio)
+                logger.info("Photo %d: profile silhouette depth/height=%.3f", i + 1, ratio)
+            else:
+                logger.warning(
+                    "Photo %d: MediaPipe rejected (detected=%s conf=%.2f) and silhouette failed",
+                    i + 1, pa.face_detected, pa.confidence,
+                )
 
     notes: list[str] = []
 
-    # Primary = most frontal (smallest |yaw|)
-    primary = min(results, key=lambda r: abs(r.head_pose_yaw))
+    if not mediapipe_results:
+        logger.error("No usable frontal photo in %d submissions — cannot classify face shape", len(photos))
+        return None
 
-    if len(results) == 1:
-        notes.append("Solo se procesó 1 foto válida. La precisión es menor que con el protocolo completo de 5 fotos.")
+    # Primary source = most frontal photo (smallest |yaw|)
+    primary = min(mediapipe_results, key=lambda r: abs(r.head_pose_yaw))
 
-    # --- Face width: from the most frontal photo (yaw closest to 0°)
+    # --- Face width: from the most frontal photo
     face_width = primary.face_width
 
-    # --- Face length: weighted average by confidence × (1 - yaw_penalty)
-    weights = [r.confidence * max(0.1, 1 - abs(r.head_pose_yaw) / 90) for r in results]
+    # --- LWR: weighted average across all valid frontal photos
+    weights = [r.confidence * max(0.1, 1 - abs(r.head_pose_yaw) / 90) for r in mediapipe_results]
     total_w = sum(weights)
-    avg_lwr = sum(r.length_width_ratio * w for r, w in zip(results, weights)) / max(total_w, 1e-9)
+    avg_lwr = sum(r.length_width_ratio * w for r, w in zip(mediapipe_results, weights)) / max(total_w, 1e-9)
 
-    # --- Forehead: prefer overhead photo (pitch > 5°), fallback to primary
-    overhead_candidates = [r for r in results if r.head_pose_pitch > 5]
-    forehead_width = (
-        overhead_candidates[0].forehead_width if overhead_candidates else primary.forehead_width
-    )
+    # --- Forehead: prefer overhead pitch > 5°; fallback to primary
+    overhead = [r for r in mediapipe_results if r.head_pose_pitch > 5]
+    forehead_width = overhead[0].forehead_width if overhead else primary.forehead_width
 
-    # --- Jaw: prefer chin-down photo (pitch < -5°), fallback to primary
-    chindown_candidates = [r for r in results if r.head_pose_pitch < -5]
-    jaw_width = (
-        chindown_candidates[0].jaw_width if chindown_candidates else primary.jaw_width
-    )
+    # --- Jaw: prefer chin-down pitch < -5°; fallback to primary
+    chindown = [r for r in mediapipe_results if r.head_pose_pitch < -5]
+    jaw_width = chindown[0].jaw_width if chindown else primary.jaw_width
 
     face_length = avg_lwr * face_width
-
     fr = forehead_width / max(face_width, 0.01)
     jr = jaw_width / max(face_width, 0.01)
 
-    # --- Asymmetry: mean across all valid photos
-    avg_asymmetry = float(np.mean([r.asymmetry_score for r in results]))
+    avg_asymmetry = float(np.mean([r.asymmetry_score for r in mediapipe_results]))
 
-    # --- Face shape and cranial proportion
     face_shape = _classify_face_shape(avg_lwr, fr, jr)
-    cranial    = _cranial_proportion(avg_lwr, fr)
 
-    # --- Overall confidence
-    avg_confidence = float(np.mean([r.confidence for r in results]))
+    # --- Cranial classification
+    cephalic_type: Optional[str] = None
+    if profile_depth_ratios:
+        avg_depth = float(np.mean(profile_depth_ratios))
+        cephalic_type = _classify_cephalic_type(avg_depth)
+        # Map to illustration archetype vocabulary
+        cranial = {
+            "dolicocéfalo": "elongated",
+            "braquicéfalo": "wide",
+        }.get(cephalic_type, "balanced")
+        logger.info(
+            "Cephalic type from %d profiles: %s (avg depth/height=%.3f) → cranial=%s",
+            len(profile_depth_ratios), cephalic_type, avg_depth, cranial,
+        )
+    else:
+        cranial = _cranial_proportion_from_lwr(avg_lwr)
+        notes.append(
+            "Proporciones craneales estimadas desde foto frontal (sin perfiles 90° utilizables). "
+            "Incluye perfil izquierdo y derecho para clasificación precisa (dolicocéfalo/mesocéfalo/braquicéfalo)."
+        )
+
+    avg_confidence = float(np.mean([r.confidence for r in mediapipe_results]))
     if avg_confidence < 0.70:
         notes.append(
-            f"Confianza media del análisis: {avg_confidence:.0%}. "
+            f"Confianza del análisis: {avg_confidence:.0%}. "
             "Para mejores resultados, asegúrate de buena iluminación y cara sin obstrucciones."
         )
 
     return FaceMetrics(
         face_shape=face_shape,
         cranial_proportion=cranial,
+        cephalic_type=cephalic_type,
         face_length=round(face_length, 3),
         face_width=round(face_width, 3),
         forehead_width=round(forehead_width, 3),
@@ -484,7 +573,7 @@ def analyze_photos(photos: list[bytes]) -> Optional[FaceMetrics]:
         jaw_to_face_ratio=round(jr, 3),
         asymmetry_score=round(avg_asymmetry, 3),
         asymmetry_description=_asymmetry_description(avg_asymmetry),
-        photos_used=len(results),
+        photos_used=len(mediapipe_results) + len(profile_depth_ratios),
         confidence=round(avg_confidence, 2),
         analysis_notes=notes,
     )

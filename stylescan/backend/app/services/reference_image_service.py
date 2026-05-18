@@ -71,20 +71,66 @@ def _build_query(cut_name: str) -> str:
     return f"{cut_name} men haircut barbershop"
 
 
+def _fuzzy_cache_lookup(cut_name: str, cache: dict[str, str]) -> Optional[str]:
+    """
+    Find a cached reference by approximate token overlap on the cut name.
+    Returns the URL if a good-enough match is found, else None.
+    Covers cases where the LLM names don't exactly match cached keys.
+    """
+    name_tokens = set(cut_name.lower().split())
+    name_tokens.discard("with")
+    name_tokens.discard("and")
+    name_tokens.discard("the")
+
+    best_score, best_url = 0.0, None
+    for key, url in cache.items():
+        if not url:
+            continue
+        key_clean = key.replace("raw::", "")
+        key_tokens = set(key_clean.lower().split())
+        key_tokens.discard("with")
+        key_tokens.discard("and")
+        if not key_tokens:
+            continue
+        overlap = len(name_tokens & key_tokens) / max(len(key_tokens), len(name_tokens))
+        if overlap > best_score:
+            best_score = overlap
+            best_url = url
+
+    if best_score >= 0.5:
+        logger.debug("Fuzzy cache hit (score=%.2f) for '%s'", best_score, cut_name)
+        return best_url
+    return None
+
+
 def get_reference_image_url(cut_name: str, pexels_api_key: str) -> Optional[str]:
     """
     Returns a direct CDN image URL of a reference haircut photo, or None.
     Caches results to disk so each unique cut is fetched only once.
+    Cache is checked FIRST (no API key required for cache hits).
     """
-    if not pexels_api_key:
-        return None
-
     cache_key = cut_name.lower().strip()
     cache = _load_cache()
 
+    # 1. Exact cache hit (no API key needed)
     if cache_key in cache:
         logger.debug("Reference cache hit: %s", cache_key)
         return cache[cache_key] or None  # empty string means "no result" (don't retry)
+
+    # 2. Try raw:: prefix (cached by haircut_reference_service with no catalog match)
+    raw_key = f"raw::{cache_key}"
+    if raw_key in cache and cache[raw_key]:
+        logger.debug("Reference raw cache hit: %s", raw_key)
+        return cache[raw_key]
+
+    # 3. Fuzzy token-overlap match against all cache keys (no API key needed)
+    fuzzy_url = _fuzzy_cache_lookup(cut_name, cache)
+    if fuzzy_url:
+        return fuzzy_url
+
+    # 4. Live Pexels search (requires API key)
+    if not pexels_api_key:
+        return None
 
     query = _build_query(cut_name)
     logger.info("Fetching Pexels reference for: %s (query: %s)", cut_name, query)

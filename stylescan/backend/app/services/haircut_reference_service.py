@@ -295,6 +295,12 @@ async def resolve_many(cut_names: list[str], pexels_api_key: str) -> list[Option
     return await asyncio.gather(*[resolve_reference(n, pexels_api_key) for n in cut_names])
 
 
+def get_cut_id(cut_name: str) -> Optional[str]:
+    """Return catalog cut_id for any LLM cut name, or None if no match."""
+    match = _match_cut(cut_name)
+    return match.cut_id if match else None
+
+
 def debug_match(cut_name: str) -> dict:
     """Diagnostic helper — returns what would be matched, without doing any I/O."""
     match = _match_cut(cut_name)
