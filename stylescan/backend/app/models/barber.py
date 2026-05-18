@@ -59,6 +59,17 @@ class BarberPartner(Base):
     commissions: Mapped[list["Commission"]] = relationship(
         back_populates="barber_partner"
     )
+    reference_photos: Mapped[list["BarberReferencePhoto"]] = relationship(  # noqa: F821
+        back_populates="barber_partner"
+    )
+    leaderboard_stats: Mapped["BarberLeaderboardStats"] = relationship(  # noqa: F821
+        back_populates="barber_partner",
+        uselist=False  # One-to-one relationship
+    )
+    telegram_account: Mapped["BarberTelegramAccount"] = relationship(  # noqa: F821
+        back_populates="barber_partner",
+        uselist=False  # One-to-one relationship
+    )
 
 
 class Commission(Base):

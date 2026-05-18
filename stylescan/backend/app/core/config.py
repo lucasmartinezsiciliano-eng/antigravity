@@ -1,8 +1,13 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
     # App
     APP_NAME: str = "VISAI API"
     APP_VERSION: str = "0.1.0"
@@ -34,12 +39,12 @@ class Settings(BaseSettings):
     STRIPE_BASE_COUPON_ID: str = ""  # Created once, all barber codes reference it
 
     # Pricing (in cents)
-    PRICE_BASE_ANALYSIS: int = 1499      # €14.99
+    PRICE_BASE_ANALYSIS: int = 999       # €9.99
     PRICE_COLORIMETRY: int = 249         # €2.49
     PRICE_PRODUCTS_GUIDE: int = 199      # €1.99
     PRICE_PACK_COMPLETE: int = 2499      # €24.99 (completo: todo incluido)
     PRICE_SEASONAL: int = 499            # €4.99
-    BARBER_COMMISSION_CENTS: int = 300   # €3.00
+    BARBER_COMMISSION_CENTS: int = 200   # €2.00
 
     # Photo processing
     MAX_PHOTO_SIZE_MB: int = 10
@@ -73,13 +78,12 @@ class Settings(BaseSettings):
 
     # n8n — marketing sequence (welcome → 48h tip → day7 upsell check → day30 re-engagement)
     N8N_MARKETING_WEBHOOK_URL: str = ""
+    # n8n — CRM upsert (crea/actualiza persona en Twenty tras análisis completado)
+    N8N_CRM_WEBHOOK_URL: str = ""
 
     # Development bypass — skip Stripe entirely (never use in production)
     DEV_SKIP_PAYMENT: bool = False
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 @lru_cache

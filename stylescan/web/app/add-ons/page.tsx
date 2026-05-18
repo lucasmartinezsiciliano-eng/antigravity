@@ -33,10 +33,10 @@ const OPTIONS: { id: Selection; emoji: string; title: string; sub: string; price
 ];
 
 const TOTAL: Record<Selection, string> = {
-  none: "14,99 €",
+  none: "9,99 €",
   pack: "24,99 €",
-  colorimetry: "17,48 €",
-  products: "16,98 €",
+  colorimetry: "12,48 €",
+  products: "11,98 €",
 };
 
 export default function AddOnsPage() {
@@ -138,7 +138,7 @@ export default function AddOnsPage() {
               Forma facial · 3 cortes · Prueba virtual IA
             </div>
           </div>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--accent)", flexShrink: 0 }}>14,99 €</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--accent)", flexShrink: 0 }}>9,99 €</div>
         </div>
 
         {/* Options */}

@@ -6,12 +6,32 @@ import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
 
 const SHOTS = [
-  { label: "Frontal",          hint: "Mira directamente a la cámara" },
-  { label: "Perfil izquierdo", hint: "Gira la cabeza hacia tu izquierda" },
-  { label: "Perfil derecho",   hint: "Gira la cabeza hacia tu derecha" },
+  {
+    label: "Frontal",
+    sublabel: "Mírame de frente",
+    hint: "Cara centrada en el óvalo · Barbilla recta · Luz en tu cara, no detrás",
+  },
+  {
+    label: "Perfil izquierdo",
+    sublabel: "Gira 90° a tu derecha",
+    hint: "Solo debe verse media cara: un ojo, una oreja, la nariz de lado",
+  },
+  {
+    label: "Perfil derecho",
+    sublabel: "Ahora 90° al otro lado",
+    hint: "Hombro derecho a la cámara · Media cara visible · Igual que antes pero al revés",
+  },
 ];
 
-type Stage = "camera" | "preview" | "uploading" | "processing" | "error";
+const INTRO_TIPS = [
+  { icon: "💡", text: "Luz de frente, nunca a tu espalda. Si la luz viene de atrás, el análisis falla." },
+  { icon: "🧢", text: "Quítate gorra, gafas y capucha. El pelo y la línea de la cara deben verse limpios." },
+  { icon: "📐", text: "Perfiles a 90 grados exactos. Gira el cuerpo entero, no solo los ojos." },
+  { icon: "🤝", text: "Si puedes, pide a alguien que te haga los perfiles. Es la diferencia entre un buen y mal resultado." },
+  { icon: "🔄", text: "Si dudas, repítela. Mejor 10 segundos extra que un resultado que no sirve." },
+];
+
+type Stage = "intro" | "camera" | "preview" | "uploading" | "processing" | "error";
 
 export default function CapturePage() {
   const params = useParams();
@@ -28,14 +48,15 @@ export default function CapturePage() {
   /* Ref for reliable previewUrl cleanup — avoids stale closure on unmount */
   const previewUrlRef = useRef<string>("");
 
-  const [stage,       setStage]       = useState<Stage>("camera");
-  const [cameraReady, setCameraReady] = useState(false);
-  const [shotIndex,   setShotIndex]   = useState(0);
-  const [previewUrl,  setPreviewUrl]  = useState<string>("");
-  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
-  const [flashActive, setFlashActive] = useState(false);
-  const [capturing,   setCapturing]   = useState(false); // blocks double-click
-  const [error,       setError]       = useState("");
+  const [stage,            setStage]            = useState<Stage>("intro");
+  const [cameraReady,      setCameraReady]      = useState(false);
+  const [shotIndex,        setShotIndex]        = useState(0);
+  const [previewUrl,       setPreviewUrl]       = useState<string>("");
+  const [previewBlob,      setPreviewBlob]      = useState<Blob | null>(null);
+  const [flashActive,      setFlashActive]      = useState(false);
+  const [capturing,        setCapturing]        = useState(false);
+  const [error,            setError]            = useState("");
+  const [showProfileAlert, setShowProfileAlert] = useState(false);
 
   /* ── helpers ── */
   const stopStream = useCallback(() => {
@@ -51,9 +72,8 @@ export default function CapturePage() {
     setPreviewUrl(url);
   }
 
-  /* ── mount / unmount ── */
+  /* ── mount / unmount — cámara se inicia cuando el usuario sale del intro ── */
   useEffect(() => {
-    startCamera();
     return () => {
       stopStream();
       if (pollRef.current)       clearInterval(pollRef.current);
@@ -168,7 +188,12 @@ export default function CapturePage() {
       setStage("uploading");
       handleUpload(photosRef.current);
     } else {
-      setStage("camera"); // triggers re-association effect (Bug 9)
+      // Muestra aviso de perfil 90° antes del primer perfil (solo una vez)
+      if (next === 1) {
+        setShowProfileAlert(true);
+      } else {
+        setStage("camera");
+      }
     }
   }
 
@@ -239,6 +264,123 @@ export default function CapturePage() {
     startCamera();
   }
 
+  /* ── intro ── */
+  if (stage === "intro") {
+    return (
+      <div className="screen" style={{ background: "var(--bg)", padding: "0 24px 40px", overflowY: "auto" }}>
+        <div style={{ paddingTop: 56, paddingBottom: 32, maxWidth: 420, margin: "0 auto" }}>
+
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "var(--accent)", marginBottom: 12 }}>
+            ANTES DE EMPEZAR
+          </div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 6px", letterSpacing: -0.6, lineHeight: 1.15 }}>
+            Cómo hacerte las 3 fotos
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 32px", lineHeight: 1.6 }}>
+            El análisis es tan bueno como tus fotos. Dedícale 30 segundos.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 36 }}>
+            {INTRO_TIPS.map((tip, i) => (
+              <div key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                  background: "var(--surface2)", border: "1px solid var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20,
+                }}>
+                  {tip.icon}
+                </div>
+                <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, paddingTop: 10 }}>
+                  {tip.text}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Aviso especial perfiles */}
+          <div style={{
+            background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.25)",
+            borderRadius: 14, padding: "16px 18px", marginBottom: 32,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 8 }}>
+              📐 LOS PERFILES SON LO MÁS IMPORTANTE
+            </div>
+            <p style={{ fontSize: 13, lineHeight: 1.65, margin: 0, color: "var(--text-muted)" }}>
+              Tienen que ser a <strong style={{ color: "var(--text)" }}>exactamente 90 grados</strong> — no "un poco girado". Gira el cuerpo entero. Solo debe verse <strong style={{ color: "var(--text)" }}>media cara</strong>: un ojo, una oreja y la nariz de perfil. Si tienes a alguien cerca, pídele que te la haga.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ fontSize: 16, padding: "16px" }}
+            onClick={() => {
+              setStage("camera");
+              startCamera();
+            }}
+          >
+            Entendido, vamos →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── modal alerta perfil 90° ── */
+  if (showProfileAlert) {
+    return (
+      <div style={{
+        position: "fixed", inset: 0, background: "rgba(8,8,8,0.96)",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        padding: "32px 28px", zIndex: 200,
+      }}>
+        <div style={{ maxWidth: 380, width: "100%" }}>
+          <div style={{ fontSize: 48, textAlign: "center", marginBottom: 20 }}>📐</div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 8px", textAlign: "center", letterSpacing: -0.5 }}>
+            Esta foto es la que más falla
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center", margin: "0 0 28px", lineHeight: 1.6 }}>
+            El perfil tiene que ser a <strong style={{ color: "var(--text)" }}>90 grados literales</strong>, no "un poco de lado".
+          </p>
+
+          <div style={{ background: "var(--surface2)", borderRadius: 14, padding: "18px", marginBottom: 28 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 12 }}>
+              TIENE QUE VERSE:
+            </div>
+            {["Una sola oreja", "Un solo ojo", "La nariz de perfil completo, marcando silueta"].map((item, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: i < 2 ? 10 : 0 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
+                <span style={{ fontSize: 14 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)",
+            borderRadius: 12, padding: "14px 16px", marginBottom: 28,
+          }}>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0, lineHeight: 1.6 }}>
+              <strong style={{ color: "var(--text)" }}>Truco:</strong> gira los pies, no la cabeza. Si solo mueves los ojos hacia la cámara, la foto no sirve. Si tienes a alguien cerca, pídele que te la haga.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ fontSize: 15, padding: "15px" }}
+            onClick={() => {
+              setShowProfileAlert(false);
+              setStage("camera");
+            }}
+          >
+            Listo, hacer el perfil →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   /* ── uploading / processing ── */
   if (stage === "uploading" || stage === "processing") {
     return (
@@ -304,9 +446,10 @@ export default function CapturePage() {
           <p style={{ color: "rgba(201,168,76,0.9)", fontSize: 13, fontWeight: 700, letterSpacing: 1.5, margin: 0 }}>
             ¿ESTÁ BIEN?
           </p>
-          <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "6px 0 0", letterSpacing: -0.3 }}>
-            {shot.label}
+          <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "6px 0 2px", letterSpacing: -0.3 }}>
+            {shot.sublabel}
           </h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>{shot.label}</p>
         </div>
 
         <div style={{
@@ -423,10 +566,13 @@ export default function CapturePage() {
         <div style={{ color: "rgba(201,168,76,0.9)", fontSize: 17, fontWeight: 700, marginBottom: 6 }}>
           {Math.min(shotIndex + 1, SHOTS.length)} / {SHOTS.length}
         </div>
-        <h2 style={{ color: "#ffffff", fontSize: 28, fontWeight: 800, margin: "0 0 6px", letterSpacing: -0.3 }}>
-          {currentShot.label}
+        <h2 style={{ color: "#ffffff", fontSize: 28, fontWeight: 800, margin: "0 0 2px", letterSpacing: -0.3 }}>
+          {currentShot.sublabel}
         </h2>
-        <p style={{ color: "rgba(201,168,76,0.85)", fontSize: 15, margin: 0, fontWeight: 500 }}>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 4px", fontWeight: 500 }}>
+          {currentShot.label}
+        </p>
+        <p style={{ color: "rgba(201,168,76,0.85)", fontSize: 13, margin: 0, fontWeight: 500, lineHeight: 1.5, maxWidth: 280, marginLeft: "auto", marginRight: "auto" }}>
           {currentShot.hint}
         </p>
       </div>
@@ -479,7 +625,7 @@ export default function CapturePage() {
       </div>
 
       <canvas ref={canvasRef} style={{ display: "none" }} />
-      <input ref={fileInputRef} type="file" accept="image/*" capture="user" style={{ display: "none" }} onChange={onFileInput} />
+      <input ref={fileInputRef} type="file" accept="image/*" capture="user" aria-label="Seleccionar foto" style={{ display: "none" }} onChange={onFileInput} />
     </div>
   );
 }

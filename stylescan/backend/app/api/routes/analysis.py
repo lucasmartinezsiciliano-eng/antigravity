@@ -25,7 +25,7 @@ from app.core.database import get_db
 from app.models.analysis import Analysis
 from app.models.barber import BarberPartner
 from app.models.consent import ConsentLog
-from app.services import face_analysis, claude_service, photo_service, stripe_service, image_gen_service
+from app.services import face_analysis, claude_service, photo_service, stripe_service, image_gen_service, illustration_service
 from app.schemas.analysis import (
     AnalysisInitiateRequest,
     AnalysisInitiateResponse,
@@ -232,6 +232,33 @@ async def record_consent(
 
 
 # ---------------------------------------------------------------------------
+# CRM notification
+# ---------------------------------------------------------------------------
+async def _notify_crm(analysis: "Analysis", report: dict) -> None:
+    """Fire-and-forget: POST analysis data to n8n CRM webhook."""
+    import httpx
+    n8n_url = getattr(settings, "N8N_CRM_WEBHOOK_URL", "")
+    if not n8n_url:
+        return
+    cortes = [c.get("nombre", "") for c in report.get("cortes_recomendados", [])]
+    payload = {
+        "email": analysis.user_email or "",
+        "analysis_id": analysis.id,
+        "cortes": cortes,
+        "barber_code": analysis.barber_code or "",
+        "importe": float(analysis.amount_paid or 0),
+        "marketing_consent": bool(analysis.marketing_consent),
+        "result_url": f"https://visaiapp.com/result/{analysis.id}",
+        "created_at": analysis.created_at.isoformat() if analysis.created_at else "",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            await client.post(n8n_url, json=payload)
+    except Exception as exc:
+        logger.warning("CRM webhook failed for %s: %s", analysis.id, exc)
+
+
+# ---------------------------------------------------------------------------
 # Photo upload + analysis execution
 # ---------------------------------------------------------------------------
 async def _auto_generate_visuals(
@@ -239,6 +266,7 @@ async def _auto_generate_visuals(
     photos_bytes: list[bytes],
     cuts: list[dict],
     face_shape: str,
+    hair_attrs: dict | None = None,
 ):
     """Background task: generate visuals using the matching photo per angle."""
     from app.core.database import AsyncSessionLocal
@@ -251,6 +279,7 @@ async def _auto_generate_visuals(
                 cuts=cuts,
                 face_shape=face_shape,
                 fal_key=settings.FAL_KEY,
+                hair_attrs=hair_attrs,
             )
             visuals_dict = image_gen_service.visuals_to_dict(visuals)
             stmt = sa_select(Analysis).where(Analysis.id == analysis_id)
@@ -277,7 +306,7 @@ async def upload_photos_and_analyze(
     request: Request,
     analysis_id: str,
     background_tasks: BackgroundTasks,
-    photos: list[UploadFile] = File(..., description="Exactamente 5 fotos del rostro (frontal + 4 ángulos)"),
+    photos: list[UploadFile] = File(..., description="3 fotos del rostro: (1) frontal 0°, (2) perfil izquierdo 90°, (3) perfil derecho 90°"),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -415,6 +444,7 @@ async def upload_photos_and_analyze(
                 photos_for_visuals,
                 cuts,
                 metrics.face_shape,
+                report.get("hair_attributes"),
             )
             photos_for_visuals = None
         else:
@@ -432,6 +462,9 @@ async def upload_photos_and_analyze(
     if analysis.user_email:
         from app.services.email_service import send_analysis_ready
         asyncio.create_task(send_analysis_ready(analysis.user_email, analysis_id))
+
+    # --- Notificar CRM (n8n) — análisis completado
+    asyncio.create_task(_notify_crm(analysis, report))
 
     return {"message": "Análisis completado.", "analysis_id": analysis_id}
 
@@ -459,6 +492,16 @@ async def get_analysis(
     if analysis.status != "completed":
         raise HTTPException(400, f"Estado inesperado: {analysis.status}")
 
+    # Enrich cuts with illustration URLs (computed at serve time, not stored in DB)
+    report = dict(analysis.report or {})
+    face_shape = analysis.face_shape or "oval"
+    cranial = analysis.cranial_proportion or "balanced"
+    cuts = report.get("cortes_recomendados", [])
+    if cuts:
+        report["cortes_recomendados"] = illustration_service.enrich_cuts_with_illustrations(
+            cuts, face_shape, cranial
+        )
+
     return AnalysisResult(
         analysis_id=analysis.id,
         face_shape=analysis.face_shape,
@@ -466,7 +509,7 @@ async def get_analysis(
         asymmetry_score=analysis.asymmetry_score,
         confidence=analysis.analysis_confidence,
         photos_analyzed=analysis.photos_analyzed,
-        report=analysis.report,
+        report=report,
         includes_colorimetry=analysis.includes_colorimetry,
         colorimetry_report=analysis.colorimetry_report,
         includes_products_guide=analysis.includes_products_guide,

@@ -19,12 +19,24 @@ from slowapi.util import get_remote_address
 from app.core.config import settings
 from app.core.database import init_db
 # Import all models so Base.metadata registers them before init_db runs
-from app.models import analysis as _m_analysis, barber as _m_barber, consent as _m_consent  # noqa: F401
-from app.api.routes import admin, analysis, barbers, payments, visuals, references
+from app.models import (  # noqa: F401
+    analysis as _m_analysis,
+    barber as _m_barber,
+    consent as _m_consent,
+    barber_reference_photos as _m_ref_photos,
+    barber_leaderboard_stats as _m_leaderboard,
+    parental_consent_requests as _m_parental,
+    barber_telegram_accounts as _m_telegram,
+)
+from app.api.routes import admin, analysis, barbers, payments, visuals, references, barber_gamification
 
 # Barber reference images directory (populated by barber_instagram_agent --save-images)
 _BARBER_REFS_DIR = Path(__file__).parent.parent / "knowledge_base" / "barber_references" / "images"
 _BARBER_REFS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Mannequin illustration library (created by Lucas, flat-design per cranial type + cut)
+_ILLUSTRATIONS_DIR = Path(__file__).parent.parent / "knowledge_base" / "haircut_illustrations"
+_ILLUSTRATIONS_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -58,12 +70,28 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database ready")
 
-    # Wire APScheduler for 90-day retention cleanup (runs daily at 03:00 UTC)
+    # Wire APScheduler for background jobs
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    from app.jobs import (
+        recalculate_leaderboard_rankings,
+        send_weekly_telegram_summary,
+        auto_approve_high_quality_photos,
+    )
+
     scheduler = AsyncIOScheduler(timezone="UTC")
-    scheduler.add_job(_purge_expired_analyses, "cron", hour=3, minute=0)
+
+    # Daily jobs at 03:00 UTC
+    scheduler.add_job(_purge_expired_analyses, "cron", hour=3, minute=0, id="purge_analyses")
+    scheduler.add_job(recalculate_leaderboard_rankings, "cron", hour=3, minute=0, id="leaderboard_rankings")
+    scheduler.add_job(auto_approve_high_quality_photos, "cron", hour=3, minute=0, id="approve_photos")
+
+    # Weekly job: Sunday 08:00 UTC
+    scheduler.add_job(send_weekly_telegram_summary, "cron", day_of_week=6, hour=8, minute=0, id="telegram_summary")
+
     scheduler.start()
-    logger.info("APScheduler started — daily retention purge at 03:00 UTC")
+    logger.info("APScheduler started with 4 background jobs")
+    logger.info("  - Daily (03:00 UTC): Data retention purge, leaderboard recalc, photo auto-approval")
+    logger.info("  - Weekly (Sunday 08:00 UTC): Telegram weekly summary")
 
     yield
 
@@ -113,6 +141,7 @@ async def security_headers(request: Request, call_next):
 
 app.include_router(analysis.router, prefix="/api/v1")
 app.include_router(barbers.router, prefix="/api/v1")
+app.include_router(barber_gamification.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(visuals.router, prefix="/api/v1")
 app.include_router(references.router, prefix="/api/v1")
@@ -120,6 +149,9 @@ app.include_router(admin.router, prefix="/api/v1")
 
 # Serve barber reference images (populated by barber_instagram_agent --save-images)
 app.mount("/barber-refs", StaticFiles(directory=str(_BARBER_REFS_DIR)), name="barber-refs")
+
+# Serve mannequin illustration library (flat-design per cranial type + cut)
+app.mount("/illustrations", StaticFiles(directory=str(_ILLUSTRATIONS_DIR)), name="illustrations")
 
 
 @app.get("/health")

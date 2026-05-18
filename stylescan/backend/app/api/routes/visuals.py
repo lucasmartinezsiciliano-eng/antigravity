@@ -30,6 +30,7 @@ async def _run_generation(
     photos_bytes: list[bytes],
     cuts: list[dict],
     face_shape: str,
+    hair_attrs: dict | None = None,
 ):
     """Background task: generate images and update DB."""
     from app.core.database import AsyncSessionLocal
@@ -41,6 +42,7 @@ async def _run_generation(
                 cuts=cuts,
                 face_shape=face_shape,
                 fal_key=settings.FAL_KEY,
+                hair_attrs=hair_attrs,
             )
             visuals_dict = image_gen_service.visuals_to_dict(visuals)
 
@@ -122,12 +124,13 @@ async def generate_visuals(
         raise HTTPException(400, "No hay cortes recomendados en el informe.")
 
     face_shape = analysis.face_shape or "oval"
+    hair_attrs = report.get("hair_attributes")
 
     # Mark as processing
     analysis.visuals_status = "processing"
     await db.commit()
 
-    background_tasks.add_task(_run_generation, analysis_id, photos_bytes, cuts, face_shape)
+    background_tasks.add_task(_run_generation, analysis_id, photos_bytes, cuts, face_shape, hair_attrs)
 
     return {
         "message": "Generación iniciada. Consulta GET /analysis/{id}/visuals en ~30 segundos.",
