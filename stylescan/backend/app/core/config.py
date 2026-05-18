@@ -1,5 +1,10 @@
+import os
+import tempfile
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+
+_DEFAULT_PHOTO_TEMP_DIR = os.path.join(tempfile.gettempdir(), "stylescan")
 
 
 class Settings(BaseSettings):
@@ -50,7 +55,7 @@ class Settings(BaseSettings):
     MAX_PHOTO_SIZE_MB: int = 10
     MIN_FACE_DETECTION_CONFIDENCE: float = 0.70
     MIN_PHOTO_QUALITY_SCORE: float = 0.60
-    PHOTO_TEMP_DIR: str = "/tmp/stylescan"
+    PHOTO_TEMP_DIR: str = _DEFAULT_PHOTO_TEMP_DIR
 
     # RGPD - data retention
     METRICS_RETENTION_DAYS: int = 90

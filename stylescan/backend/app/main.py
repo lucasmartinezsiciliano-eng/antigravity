@@ -105,6 +105,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
 # Attach rate limiter
@@ -118,9 +119,15 @@ _ALLOWED_ORIGINS = [
     "https://www.visai.es",
 ]
 
+_DEBUG_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.DEBUG else _ALLOWED_ORIGINS,
+    allow_origins=_DEBUG_ORIGINS if settings.DEBUG else _ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
