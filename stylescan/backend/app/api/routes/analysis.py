@@ -115,6 +115,25 @@ async def initiate_analysis(
                 detail=f"Máximo {settings.MAX_ANALYSES_PER_PHONE_30D} análisis por número en 30 días.",
             )
 
+    # Idempotency: reuse existing pending analysis if created in the last 10 min from the same phone.
+    # Frontend stores the Stripe checkout URL in localStorage, so returning the analysis_id is enough.
+    if phone_hash:
+        cutoff_idem = datetime.now(timezone.utc) - timedelta(minutes=10)
+        stmt_idem = select(Analysis).where(
+            Analysis.phone_hash == phone_hash,
+            Analysis.status == "pending",
+            Analysis.created_at >= cutoff_idem,
+        ).order_by(Analysis.created_at.desc()).limit(1)
+        existing = (await db.execute(stmt_idem)).scalar_one_or_none()
+        if existing:
+            logger.info("Returning existing pending analysis %s (idempotency)", existing.id)
+            return AnalysisInitiateResponse(
+                analysis_id=existing.id,
+                checkout_url=f"{settings.FRONTEND_URL}/pending?id={existing.id}",
+                amount_euros=settings.PRICE_BASE_ANALYSIS / 100,
+                discount_applied=False,
+            )
+
     analysis_id = str(uuid.uuid4())
     expires_at = datetime.now(timezone.utc) + timedelta(days=settings.METRICS_RETENTION_DAYS)
 

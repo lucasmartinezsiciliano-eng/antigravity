@@ -1,12 +1,29 @@
 from datetime import datetime
 from typing import Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+_MAX_QUIZ_STR = 500   # max chars per free-text quiz field
+_MAX_QUIZ_KEYS = 30   # max number of quiz keys
 
 
 class AnalysisInitiateRequest(BaseModel):
     barber_code: str | None = Field(None, description="Código de barbería colaboradora")
     phone_hash: str | None = Field(None, description="SHA-256 del número de teléfono (para anti-fraude)")
     quiz_answers: dict[str, Any] | None = Field(None, description="Respuestas del quiz previo")
+
+    @model_validator(mode="after")
+    def _sanitize_quiz(self) -> "AnalysisInitiateRequest":
+        if not self.quiz_answers:
+            return self
+        if len(self.quiz_answers) > _MAX_QUIZ_KEYS:
+            raise ValueError(f"quiz_answers: máximo {_MAX_QUIZ_KEYS} campos.")
+        sanitized: dict[str, Any] = {}
+        for k, v in self.quiz_answers.items():
+            if isinstance(v, str) and len(v) > _MAX_QUIZ_STR:
+                raise ValueError(f"quiz_answers[{k!r}]: máximo {_MAX_QUIZ_STR} caracteres.")
+            sanitized[k] = v
+        self.quiz_answers = sanitized
+        return self
     include_colorimetry: bool = False
     include_products_guide: bool = False
     marketing_consent: bool = Field(False, description="RGPD: consentimiento explícito para comunicaciones comerciales por email")

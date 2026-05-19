@@ -97,7 +97,7 @@ export default function CapturePage() {
           router.replace(`/result/${id}`);
           return;
         }
-        if (s.code === 410) {
+        if (s.code === 410 || s.code === 404) {
           router.replace("/");
           return;
         }

@@ -169,9 +169,14 @@ async def sign_contract(
 @router.get("/{barber_id}/dashboard", response_model=BarberDashboard)
 async def get_barber_dashboard(
     barber_id: str,
+    promo_code: str,
     db: AsyncSession = Depends(get_db),
 ):
     partner = await _get_partner_or_404(barber_id, db)
+
+    # Verify the caller knows the barber's own promo code (simple IDOR guard)
+    if partner.promo_code.upper() != promo_code.strip().upper():
+        raise HTTPException(403, "Código de acceso incorrecto.")
 
     # Pending payout
     pending_cents = partner.total_earned_cents - partner.total_paid_out_cents

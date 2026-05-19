@@ -144,7 +144,7 @@ export const api = {
   getAnalysisStatus: async (
     id: string,
   ): Promise<{
-    code: 402 | 202 | 200 | 410;
+    code: 402 | 202 | 200 | 404 | 410;
     result?: AnalysisResult;
     subState?: "paid" | "processing";
   }> => {
@@ -152,6 +152,7 @@ export const api = {
       headers: { "bypass-tunnel-reminder": "true" },
     });
     if (res.status === 402) return { code: 402 };
+    if (res.status === 404) return { code: 404 };
     if (res.status === 202) {
       const data = await res.json().catch(() => ({}));
       const detail: string = typeof data?.detail === "string" ? data.detail : "";

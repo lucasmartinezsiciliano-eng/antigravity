@@ -29,7 +29,9 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, ConfigDict, EmailStr
@@ -50,6 +52,7 @@ from app.models import (
 
 router = APIRouter(prefix="", tags=["gamification"])
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 
 # =============================================================================
@@ -400,7 +403,9 @@ async def delete_reference_photo(
 # =============================================================================
 
 @router.post("/parental-consent/request", response_model=ParentalConsentResponse)
+@limiter.limit("5/hour")
 async def request_parental_consent(
+    request: Request,
     body: ParentalConsentRequestSchema,
     db: AsyncSession = Depends(get_db),
 ):
