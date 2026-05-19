@@ -1,0 +1,30 @@
+name: Deploy VISAI to Hetzner VPS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'stylescan/backend/**'
+      - 'stylescan/web/**'
+      - '.github/workflows/deploy-visai.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VISAI_HOST }}
+          username: ${{ secrets.VISAI_USER }}
+          key: ${{ secrets.VISAI_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/visai/app
+            git pull origin main
+            cd stylescan/backend
+            source .venv/bin/activate
+            pip install -r requirements.txt --quiet
+            sudo systemctl restart visai
+            echo "✓ VISAI deployed at $(date)"
