@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft, Check, SwitchCamera } from "lucide-react";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
 
@@ -60,6 +60,7 @@ export default function CapturePage() {
   const [error,            setError]            = useState("");
   const [errorType,        setErrorType]        = useState<ErrorType>("generic");
   const [showProfileAlert, setShowProfileAlert] = useState(false);
+  const [facingMode,       setFacingMode]       = useState<"user" | "environment">("user");
 
   /* ── helpers ── */
   const stopStream = useCallback(() => {
@@ -95,10 +96,11 @@ export default function CapturePage() {
     }
   }, [stage]);
 
-  async function startCamera() {
+  async function startCamera(facing: "user" | "environment" = facingMode) {
+    stopStream();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
+        video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 960 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -123,6 +125,12 @@ export default function CapturePage() {
       }
       setCameraReady(false);
     }
+  }
+
+  async function flipCamera() {
+    const next: "user" | "environment" = facingMode === "user" ? "environment" : "user";
+    setFacingMode(next);
+    await startCamera(next);
   }
 
   /* ── save thumbnail to sessionStorage for auto-visuals ── */
@@ -552,7 +560,7 @@ export default function CapturePage() {
           <img
             src={previewUrl}
             alt="preview"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transform: facingMode === "user" ? "scaleX(-1)" : undefined }}
           />
         )}
 
@@ -638,7 +646,7 @@ export default function CapturePage() {
           position: "absolute", inset: 0,
           width: "100%", height: "100%",
           objectFit: "cover",
-          transform: "scaleX(-1)",
+          transform: facingMode === "user" ? "scaleX(-1)" : undefined,
           opacity: cameraReady ? 1 : 0,
           transition: "opacity 0.3s",
         }}
@@ -734,13 +742,18 @@ export default function CapturePage() {
           }} />
         </button>
 
-        <div style={{ textAlign: "center", minWidth: 60 }}>
-          {!isDone && (
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
-              {Math.min(shotIndex + 1, SHOTS.length)}/{SHOTS.length}
-            </div>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={flipCamera}
+          disabled={!cameraReady}
+          style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            color: "white", minWidth: 60, opacity: cameraReady ? 1 : 0.3,
+          }}
+        >
+          <SwitchCamera size={26} strokeWidth={2} />
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Voltear</span>
+        </button>
       </div>
 
       <canvas ref={canvasRef} style={{ display: "none" }} />
