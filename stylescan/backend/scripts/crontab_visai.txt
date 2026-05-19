@@ -1,0 +1,20 @@
+# VISAI Automated Agents
+# Install with: crontab scripts/crontab_visai.txt
+#
+# Logs land in /home/visai/logs/ — make sure that directory exists:
+#   mkdir -p /home/visai/logs
+#
+# All jobs run from the backend root so `python -m scripts.X` resolves the
+# module path correctly and reads `.env` next to the working directory.
+
+# Trend scraper — every Sunday at 02:00
+0 2 * * 0 cd /home/visai/app/stylescan/backend && /home/visai/app/stylescan/backend/.venv/bin/python -m scripts.trend_scraper >> /home/visai/logs/trend_scraper.log 2>&1
+
+# Trend analyzer — every Sunday at 03:00 (after scraper)
+0 3 * * 0 cd /home/visai/app/stylescan/backend && /home/visai/app/stylescan/backend/.venv/bin/python -m scripts.trend_analyzer >> /home/visai/logs/trend_analyzer.log 2>&1
+
+# Barber poll — every Wednesday at 11:00
+0 11 * * 3 cd /home/visai/app/stylescan/backend && /home/visai/app/stylescan/backend/.venv/bin/python -m scripts.barber_poll >> /home/visai/logs/barber_poll.log 2>&1
+
+# Weekly report — every Monday at 09:00
+0 9 * * 1 cd /home/visai/app/stylescan/backend && /home/visai/app/stylescan/backend/.venv/bin/python -m scripts.weekly_report >> /home/visai/logs/weekly_report.log 2>&1

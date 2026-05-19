@@ -94,6 +94,9 @@ class Settings(BaseSettings):
     ADMIN_TELEGRAM_BOT_TOKEN: str = ""
     ADMIN_TELEGRAM_ALLOWED_CHAT_IDS: str = ""  # comma-separated chat IDs
 
+    # Barber Telegram bot — weekly reports, trend polls, gamification notifications
+    BARBER_TELEGRAM_BOT_TOKEN: str = ""
+
     # Development bypass — skip Stripe entirely (never use in production)
     DEV_SKIP_PAYMENT: bool = False
 
