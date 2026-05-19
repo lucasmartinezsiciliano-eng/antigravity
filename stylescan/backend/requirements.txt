@@ -1,48 +1,49 @@
 # Core
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
-python-multipart==0.0.12
-pydantic==2.10.3
-pydantic[email]==2.10.3
-pydantic-settings==2.6.1
+fastapi>=0.115.5
+uvicorn[standard]>=0.32.1
+python-multipart>=0.0.12
+pydantic>=2.10.3
+pydantic[email]>=2.10.3
+pydantic-settings>=2.6.1
 
 # Database
-sqlalchemy==2.0.36
-alembic==1.14.0
-aiosqlite==0.20.0
+sqlalchemy>=2.0.36
+alembic>=1.14.0
+aiosqlite>=0.20.0
 
-# AI / Vision
-mediapipe==0.10.18
-opencv-python-headless==4.10.0.84
-numpy==1.26.4
+# AI / Vision — pinned to >= so Python 3.14+ gets compatible wheels
+# mediapipe 0.10.18 only existed for Py3.8-3.11; 0.10.30+ covers Py3.12-3.14
+mediapipe>=0.10.30
+opencv-python-headless>=4.10.0.84
+numpy>=1.26.4
 
 # LLM providers (only the one matching LLM_PROVIDER is used at runtime)
-anthropic==0.40.0   # LLM_PROVIDER=anthropic
+anthropic>=0.40.0   # LLM_PROVIDER=anthropic
 openai>=1.35.0      # LLM_PROVIDER=deepseek OR gemini (OpenAI-compatible)
 
 # Payments
-stripe==11.2.0
+stripe>=11.2.0
 
 # Image processing
-Pillow==11.0.0
-python-magic==0.4.27
+Pillow>=11.0.0
+python-magic>=0.4.27
 
 # Security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-slowapi==0.1.9
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+slowapi>=0.1.9
 
 # HTTP
-httpx==0.27.2
+httpx>=0.27.2
 
 # Utils
-python-dotenv==1.0.1
-structlog==24.4.0
+python-dotenv>=1.0.1
+structlog>=24.4.0
 
 # Trend research + image generation
-duckduckgo-search==6.2.13
-fal-client==0.5.6
-apscheduler==3.10.4
+duckduckgo-search>=6.2.13
+fal-client>=0.5.6
+apscheduler>=3.10.4
 
 # HTTP (unpinned — let pip resolve compatible version with all deps)
 requests
