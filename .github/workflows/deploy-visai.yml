@@ -23,8 +23,16 @@ jobs:
             set -e
             cd /home/visai/app
             git pull origin main
+
+            # Backend: reinstall deps if requirements changed
             cd stylescan/backend
-            source .venv/bin/activate
-            pip install -r requirements.txt --quiet
-            sudo systemctl restart visai
-            echo "✓ VISAI deployed at $(date)"
+            .venv/bin/pip install -r requirements.txt --quiet
+            sudo systemctl restart visai-backend
+
+            # Frontend: rebuild if web changed
+            cd ../web
+            npm ci --silent
+            npm run build
+            sudo systemctl restart visai-frontend
+
+            echo "VISAI deployed at $(date)"
