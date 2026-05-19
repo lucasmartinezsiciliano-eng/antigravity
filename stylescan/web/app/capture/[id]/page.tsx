@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Check, SwitchCamera } from "lucide-react";
 import { api } from "@/lib/api";
@@ -37,6 +37,7 @@ type ErrorType = "no_face" | "photo_quality" | "llm_timeout" | "network" | "gene
 
 export default function CapturePage() {
   const params = useParams();
+  const router = useRouter();
   const id     = params.id as string;
 
   const videoRef      = useRef<HTMLVideoElement>(null);
@@ -61,6 +62,9 @@ export default function CapturePage() {
   const [errorType,        setErrorType]        = useState<ErrorType>("generic");
   const [showProfileAlert, setShowProfileAlert] = useState(false);
   const [facingMode,       setFacingMode]       = useState<"user" | "environment">("user");
+  /* Gate: don't render until we know the analysis isn't already done/in-flight.
+     Prevents back-button re-uploads that would re-trigger Fal.ai + OpenRouter. */
+  const [statusChecked,    setStatusChecked]    = useState(false);
 
   /* ── helpers ── */
   const stopStream = useCallback(() => {
@@ -75,6 +79,37 @@ export default function CapturePage() {
     previewUrlRef.current = url;
     setPreviewUrl(url);
   }
+
+  /* ── on-mount gate: redirect away if analysis is already done or in-flight ──
+     Closes the loophole where the user navigates back to /capture/{id}
+     after the analysis ran and re-uploads photos (re-billing Fal.ai + OpenRouter). */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await api.getAnalysisStatus(id);
+        if (cancelled) return;
+        if (s.code === 200) {
+          router.replace(`/result/${id}`);
+          return;
+        }
+        if (s.code === 202 && s.subState === "processing") {
+          router.replace(`/result/${id}`);
+          return;
+        }
+        if (s.code === 410) {
+          router.replace("/");
+          return;
+        }
+        // 402 (payment pending) or 202+paid → user is in the right place.
+        setStatusChecked(true);
+      } catch {
+        // If we can't reach the API, let the user proceed — upload will fail loudly if needed.
+        if (!cancelled) setStatusChecked(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, router]);
 
   /* ── mount / unmount — cámara se inicia cuando el usuario sale del intro ── */
   useEffect(() => {
@@ -302,6 +337,17 @@ export default function CapturePage() {
     setError("");
     setStage("camera");
     startCamera();
+  }
+
+  /* ── still verifying analysis status — show nothing to avoid flashing the intro ── */
+  if (!statusChecked) {
+    return (
+      <div className="screen" style={{ alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[0, 1, 2].map((i) => <div key={i} className="dot-pulse" style={{ animationDelay: `${i * 0.4}s` }} />)}
+        </div>
+      </div>
+    );
   }
 
   /* ── intro ── */

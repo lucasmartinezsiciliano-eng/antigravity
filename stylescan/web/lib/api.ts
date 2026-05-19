@@ -137,17 +137,32 @@ export const api = {
   /**
    * Polls payment / processing status without throwing on expected interim codes.
    * 402 → payment not yet confirmed by Stripe webhook → keep polling
-   * 202 → payment confirmed, awaiting photos → redirect to /capture
+   * 202 → payment confirmed; sub-state ('paid' awaits photos, 'processing' is in-flight)
    * 200 → analysis complete → redirect to /result
+   * 410 → analysis was deleted (RGPD)
    */
   getAnalysisStatus: async (
     id: string,
-  ): Promise<{ code: 402 | 202 | 200; result?: AnalysisResult }> => {
+  ): Promise<{
+    code: 402 | 202 | 200 | 410;
+    result?: AnalysisResult;
+    subState?: "paid" | "processing";
+  }> => {
     const res = await fetch(`${BASE}/analysis/${id}`, {
       headers: { "bypass-tunnel-reminder": "true" },
     });
     if (res.status === 402) return { code: 402 };
-    if (res.status === 202) return { code: 202 };
+    if (res.status === 202) {
+      const data = await res.json().catch(() => ({}));
+      const detail: string = typeof data?.detail === "string" ? data.detail : "";
+      // Backend distinguishes via the 202 detail message:
+      //  - 'paid'       → "Las fotos están siendo procesadas."   (no photos yet)
+      //  - 'processing' → "El análisis está en progreso."
+      const subState: "paid" | "processing" =
+        detail.toLowerCase().includes("progreso") ? "processing" : "paid";
+      return { code: 202, subState };
+    }
+    if (res.status === 410) return { code: 410 };
     if (res.ok) {
       const data = await res.json().catch(() => null);
       return { code: 200, result: data };

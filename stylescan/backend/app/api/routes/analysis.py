@@ -463,14 +463,27 @@ async def upload_photos_and_analyze(
     """
     analysis = await _get_analysis_or_404(analysis_id, db)
 
+    if analysis.deleted_at:
+        raise HTTPException(410, "Este análisis ha sido eliminado.")
+
+    # Reject re-uploads on analyses already in-flight or finished — prevents
+    # double-charging Fal.ai + OpenRouter if the user navigates back.
     if analysis.status == "completed":
-        logger.info("Re-upload on already-completed analysis %s — returning cached", analysis_id)
-        return {"message": "Análisis ya completado.", "analysis_id": analysis_id}
+        logger.info("Rejected re-upload on completed analysis %s", analysis_id)
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Este análisis ya está completado. Mira tus resultados en /result."
+        )
 
     if analysis.status == "processing":
-        return {"message": "El análisis ya está en progreso.", "analysis_id": analysis_id}
+        logger.info("Rejected re-upload on in-progress analysis %s", analysis_id)
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "El análisis ya está en progreso. Espera a que termine."
+        )
 
-    if analysis.status not in ("paid",):
+    # 'failed' is allowed (user may retry). Only 'paid' is the green-light state.
+    if analysis.status not in ("paid", "failed"):
         raise HTTPException(
             400,
             "El pago debe completarse antes de subir las fotos. "
