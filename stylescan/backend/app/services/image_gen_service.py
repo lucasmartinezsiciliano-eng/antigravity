@@ -316,7 +316,7 @@ async def _generate_one_angle(
                 "mask_url": mask_data_uri,
                 "prompt": prompt,
                 "num_inference_steps": 28,
-                "guidance_scale": 60,
+                "guidance_scale": 10,
                 "num_images": 1,
                 "output_format": "jpeg",
                 "safety_tolerance": "4",
