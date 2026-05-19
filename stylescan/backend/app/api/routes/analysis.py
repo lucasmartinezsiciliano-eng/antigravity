@@ -59,7 +59,8 @@ async def initiate_analysis(
     promo_code_stripe = None
 
     # Internal test code — skips Stripe, price €0, no DB lookup required
-    if body.barber_code and body.barber_code.upper() == "LUKILUU":
+    # Only active when DEV_SKIP_PAYMENT=True (enforced off in production by config validator)
+    if settings.DEV_SKIP_PAYMENT and body.barber_code and body.barber_code.upper() == "LUKILUU":
         analysis_id = str(uuid.uuid4())
         expires_at = datetime.now(timezone.utc) + timedelta(days=settings.METRICS_RETENTION_DAYS)
         analysis = Analysis(
@@ -179,6 +180,7 @@ async def initiate_analysis(
 # RGPD Consent (required before photo upload)
 # ---------------------------------------------------------------------------
 @router.post("/{analysis_id}/consent", status_code=201)
+@limiter.limit("10/hour")
 async def record_consent(
     analysis_id: str,
     body: ConsentRequest,
@@ -205,6 +207,13 @@ async def record_consent(
             400,
             "Todos los consentimientos son obligatorios para proceder con el análisis biométrico."
         )
+
+    # Idempotent: if consent already recorded, return success without duplicating
+    existing = (await db.execute(
+        select(ConsentLog).where(ConsentLog.analysis_id == analysis_id)
+    )).scalar_one_or_none()
+    if existing:
+        return {"message": "Consentimiento ya registrado.", "analysis_id": analysis_id}
 
     # Hash identifying info for audit (never store plaintext)
     ip = request.client.host if request.client else "unknown"
@@ -539,6 +548,9 @@ async def upload_photos_and_analyze(
             "frontal, perfil izquierdo y perfil derecho."
         )
 
+    if len(photos) > 5:
+        raise HTTPException(400, "Máximo 5 fotos permitidas.")
+
     # --- Validate photos (fast — in-memory only)
     valid_photo_bytes: list[bytes] = []
     validation_errors: list[str] = []
@@ -646,8 +658,10 @@ async def get_analysis(
 # Right to Erasure (RGPD Art. 17)
 # ---------------------------------------------------------------------------
 @router.delete("/{analysis_id}", status_code=200)
+@limiter.limit("20/hour")
 async def delete_analysis(
     analysis_id: str,
+    request: Request,  # required by slowapi rate limiter
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -667,6 +681,8 @@ async def delete_analysis(
     analysis.face_shape = "deleted"
     analysis.cranial_proportion = "deleted"
     analysis.phone_hash = None
+    analysis.user_email = None
+    analysis.generated_visuals = None
     analysis.colorimetry_report = None
     analysis.products_guide = None
 

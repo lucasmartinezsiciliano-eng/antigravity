@@ -1,8 +1,12 @@
+import logging
 import os
 import tempfile
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 from functools import lru_cache
+
+_logger = logging.getLogger(__name__)
 
 _DEFAULT_PHOTO_TEMP_DIR = os.path.join(tempfile.gettempdir(), "stylescan")
 
@@ -89,6 +93,14 @@ class Settings(BaseSettings):
     # Development bypass — skip Stripe entirely (never use in production)
     DEV_SKIP_PAYMENT: bool = False
 
+    @model_validator(mode="after")
+    def _guard_dev_skip_payment(self) -> "Settings":
+        if self.DEV_SKIP_PAYMENT and not self.DEBUG:
+            _logger.critical(
+                "DEV_SKIP_PAYMENT=True in non-DEBUG mode — forcing to False to protect production."
+            )
+            self.DEV_SKIP_PAYMENT = False
+        return self
 
 
 @lru_cache

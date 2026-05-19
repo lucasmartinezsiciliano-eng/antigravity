@@ -15,12 +15,17 @@ function PendingInner() {
   const params = useSearchParams();
   const [phase, setPhase] = useState<Phase>("waiting_payment");
   const [errorMsg, setErrorMsg] = useState("");
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const redirectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startRef = useRef(Date.now());
 
   // Resolve analysis_id: URL param → localStorage
   const analysisId = params.get("id") ?? storage.getAnalysisId();
+
+  useEffect(() => {
+    setCheckoutUrl(storage.getCheckoutUrl());
+  }, []);
 
   useEffect(() => {
     if (!analysisId) {
@@ -124,6 +129,11 @@ function PendingInner() {
           >
             Continuar de todas formas →
           </Link>
+          {checkoutUrl && (
+            <a href={checkoutUrl} className="btn-ghost" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: 13 }}>
+              Volver a pagar →
+            </a>
+          )}
         </div>
       </div>
     );

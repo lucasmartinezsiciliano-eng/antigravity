@@ -29,6 +29,8 @@ stylescan/backend/knowledge_base/barber_references/images/
 
 # Archivos con credenciales (NUNCA commitear)
 ai-perfume-influencer/.env
+stylescan/backend/.env
+stylescan/web/.env.local
 Firmax/twilio_recovery_code.txt
 
 # Cloudflare Worker — secretos locales (NUNCA commitear)

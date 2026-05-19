@@ -17,6 +17,8 @@ import cv2
 import numpy as np
 from PIL import Image
 
+Image.MAX_IMAGE_PIXELS = 50_000_000  # decompression bomb guard
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -157,8 +159,8 @@ def _is_valid_image_format(data: bytes) -> bool:
     # PNG
     if data[:8] == b"\x89PNG\r\n\x1a\n":
         return True
-    # HEIC/HEIF (ISO Base Media file format)
-    if data[4:8] == b"ftyp":
+    # HEIC/HEIF — ftyp box must have heic/heix/mif1/msf1 brand (not mp4/mov)
+    if data[4:8] == b"ftyp" and data[8:12] in (b"heic", b"heix", b"mif1", b"msf1", b"hevc", b"hevx"):
         return True
     return False
 
