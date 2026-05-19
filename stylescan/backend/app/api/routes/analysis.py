@@ -426,8 +426,29 @@ async def _run_analysis_background(
             )
 
             # --- Kick off visuals, email, CRM (fire-and-forget)
+            # These tasks are not awaited; if the worker dies they are lost.
+            # Each wrapper catches every exception so a crash never leaves
+            # the analysis dangling in 'processing' / 'processing' visuals.
             if photos_for_visuals and cuts:
-                asyncio.create_task(_auto_generate_visuals(
+                async def _safe_visuals(aid, p, c, fs, ha):
+                    try:
+                        await _auto_generate_visuals(aid, p, c, fs, ha)
+                    except Exception as exc:  # noqa: BLE001
+                        logger.error("Fire-and-forget visuals crashed for %s: %s", aid, exc, exc_info=True)
+                        # _auto_generate_visuals already flips visuals_status on error,
+                        # but if it crashed before reaching that handler we do it here.
+                        try:
+                            from app.core.database import AsyncSessionLocal
+                            from sqlalchemy import select as sa_select
+                            async with AsyncSessionLocal() as db2:
+                                row = (await db2.execute(sa_select(Analysis).where(Analysis.id == aid))).scalar_one_or_none()
+                                if row and row.visuals_status == "processing":
+                                    row.visuals_status = "failed"
+                                    await db2.commit()
+                        except Exception:
+                            logger.exception("Failed to mark visuals_status=failed for %s", aid)
+
+                asyncio.create_task(_safe_visuals(
                     analysis_id, photos_for_visuals, cuts,
                     metrics.face_shape, report.get("hair_attributes"),
                 ))
@@ -436,9 +457,22 @@ async def _run_analysis_background(
 
             if user_email:
                 from app.services.email_service import send_analysis_ready
-                asyncio.create_task(send_analysis_ready(user_email, analysis_id))
 
-            asyncio.create_task(_notify_crm(analysis, report))
+                async def _safe_email(email, aid):
+                    try:
+                        await send_analysis_ready(email, aid)
+                    except Exception as exc:  # noqa: BLE001
+                        logger.error("Fire-and-forget email crashed for %s: %s", aid, exc, exc_info=True)
+
+                asyncio.create_task(_safe_email(user_email, analysis_id))
+
+            async def _safe_crm(a, r):
+                try:
+                    await _notify_crm(a, r)
+                except Exception as exc:  # noqa: BLE001
+                    logger.error("Fire-and-forget CRM crashed for %s: %s", a.id, exc, exc_info=True)
+
+            asyncio.create_task(_safe_crm(analysis, report))
 
         except Exception as exc:
             logger.error("Background analysis crashed for %s: %s", analysis_id, exc, exc_info=True)

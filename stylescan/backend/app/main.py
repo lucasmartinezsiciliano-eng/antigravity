@@ -49,15 +49,44 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 async def _purge_expired_analyses():
-    """Delete analysis rows past their retention window."""
-    from sqlalchemy import delete
+    """Delete analysis rows past their retention window.
+
+    Also fails any analysis stuck in 'processing' for more than 10 minutes —
+    those are orphans from a worker that died mid-flight (SIGTERM, OOM, etc.)
+    and would otherwise keep the frontend polling forever.
+    """
+    from sqlalchemy import delete, update
     from app.core.database import AsyncSessionLocal
     from app.models.analysis import Analysis
 
     async with AsyncSessionLocal() as db:
-        cutoff = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
+
+        # Mark orphaned 'processing' analyses as failed (TTL = 10 min).
+        # The normal pipeline finishes in <2 min, so anything still processing
+        # after 10 min is from a worker that died mid-flight (SIGTERM, OOM…).
+        # paid_at is used as a proxy for processing-start: the gap from payment
+        # to photo upload is generally short, and this daily job is conservative
+        # enough that worst-case false positives are rare.
+        stuck_cutoff = now - timedelta(minutes=10)
+        stuck_result = await db.execute(
+            update(Analysis)
+            .where(
+                Analysis.status == "processing",
+                Analysis.paid_at.isnot(None),
+                Analysis.paid_at < stuck_cutoff,
+            )
+            .values(status="failed")
+        )
+        if stuck_result.rowcount:
+            logger.warning(
+                "Data retention: marked %d orphaned 'processing' analyses as failed (>10min)",
+                stuck_result.rowcount,
+            )
+
+        # Delete rows past their retention window
         result = await db.execute(
-            delete(Analysis).where(Analysis.expires_at < cutoff)
+            delete(Analysis).where(Analysis.expires_at < now)
         )
         await db.commit()
         if result.rowcount:

@@ -19,6 +19,7 @@ Why 90° profiles via OpenCV (not MediaPipe):
 import math
 import logging
 import os
+import threading
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -52,6 +53,9 @@ def _build_landmarker() -> mp_vision.FaceLandmarker:
 
 # Lazy singleton — created on first use
 _landmarker: Optional[mp_vision.FaceLandmarker] = None
+# MediaPipe FaceLandmarker.detect() is NOT thread-safe. The executor pool uses
+# multiple workers, so every call must be serialized through this lock.
+_landmarker_lock = threading.Lock()
 
 def _get_landmarker() -> mp_vision.FaceLandmarker:
     global _landmarker
@@ -390,7 +394,8 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
 
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
     landmarker = _get_landmarker()
-    result = landmarker.detect(mp_image)
+    with _landmarker_lock:
+        result = landmarker.detect(mp_image)
 
     if not result.face_landmarks:
         return PhotoAnalysis(

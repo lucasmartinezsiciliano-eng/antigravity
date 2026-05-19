@@ -49,7 +49,14 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
   }
 
   function startPolling() {
+    const pollStart = Date.now();
     pollRef.current = setInterval(async () => {
+      if (Date.now() - pollStart > 300_000) {
+        clearInterval(pollRef.current!);
+        setError("La generación está tardando demasiado. Inténtalo de nuevo.");
+        setStage("error");
+        return;
+      }
       try {
         const res = await api.getVisuals(id);
         if (res.visuals_status === "ready" && res.visuals?.length > 0) {

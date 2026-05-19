@@ -348,6 +348,48 @@ def generate_report(metrics: FaceMetrics, quiz: dict[str, Any], include_seasonal
         raise
 
 
+_GEOMETRY_INT_FIELDS = ("sides_length_mm", "top_length_mm")
+
+
+def _coerce_int_field(value: Any) -> Any:
+    """
+    Coerce LLM-provided length values to int.
+    The schema asks for an integer but the model may still return "3-6", "30mm",
+    "clipper 2", etc. Extract the first integer found; if none, leave as-is.
+    """
+    if isinstance(value, bool):  # bool is a subclass of int — reject explicitly
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        match = re.search(r"\d+", value)
+        if match:
+            try:
+                return int(match.group())
+            except ValueError:
+                pass
+    return value
+
+
+def _normalize_haircut_geometry(parsed: dict) -> dict:
+    """In-place normalisation of `haircut_geometry.sides_length_mm` / `top_length_mm`."""
+    cuts = parsed.get("cortes_recomendados")
+    if not isinstance(cuts, list):
+        return parsed
+    for cut in cuts:
+        if not isinstance(cut, dict):
+            continue
+        geom = cut.get("haircut_geometry")
+        if not isinstance(geom, dict):
+            continue
+        for field in _GEOMETRY_INT_FIELDS:
+            if field in geom:
+                geom[field] = _coerce_int_field(geom[field])
+    return parsed
+
+
 def _call_llm(user_prompt: str, retry: bool = True) -> dict:
     raw = llm_service.call(SYSTEM_PROMPT, user_prompt)
     logger.debug("LLM raw output length: %d chars (provider=%s)", len(raw), settings.LLM_PROVIDER)
@@ -357,12 +399,12 @@ def _call_llm(user_prompt: str, retry: bool = True) -> dict:
     cleaned = re.sub(r"\s*```$", "", cleaned.strip())
 
     try:
-        return json.loads(cleaned)
+        return _normalize_haircut_geometry(json.loads(cleaned))
     except json.JSONDecodeError:
         match = re.search(r"\{[\s\S]*\}", cleaned)
         if match:
             try:
-                return json.loads(match.group())
+                return _normalize_haircut_geometry(json.loads(match.group()))
             except json.JSONDecodeError:
                 pass
 
@@ -508,10 +550,10 @@ significa para el peinado. Sin tecnicismos: como si se lo dijeras a alguien sent
 términos visuales cómo el corte puede resaltarlo. Tono positivo y directo.",
 
   "hair_attributes": {{
-    "type": "string — EXACTLY one of: straight | wavy | curly | coily. Use quiz hint ({hair_texture_from_quiz}) and confirm from photos.",
-    "color": "string — EXACTLY one of: black | dark_brown | brown | light_brown | blonde | red | grey | salt_pepper. From photos.",
-    "density": "string — EXACTLY one of: thick | medium | thin. Use quiz hint ({hair_density_from_quiz}) and confirm from photos.",
-    "hairline": "string — EXACTLY one of: straight | widow_peak | receding | rounded. From photos."
+    "type": "string — MUST be exactly one of (English values only, lowercase): straight | wavy | curly | coily. NEVER use Spanish translations like 'liso', 'ondulado', 'rizado'. Use quiz hint ({hair_texture_from_quiz}) and confirm from photos.",
+    "color": "string — MUST be exactly one of (English values only, lowercase): black | dark_brown | brown | light_brown | blonde | red | grey | salt_pepper. NEVER use Spanish translations like 'negro', 'castaño', 'rubio'. From photos.",
+    "density": "string — MUST be exactly one of (English values only, lowercase): thick | medium | thin. NEVER use Spanish translations like 'grueso', 'fino'. Use quiz hint ({hair_density_from_quiz}) and confirm from photos.",
+    "hairline": "string — MUST be exactly one of (English values only, lowercase): straight | widow_peak | receding | rounded. From photos."
   }},
 
   "cortes_recomendados": [
@@ -536,16 +578,16 @@ quitar peso y aportar movimiento. Patillas limpias con navaja. Nuca cuadrada.'",
 'aceite de argán', 'espuma de volumen'...), frecuencia de lavado y técnica de secado.",
       "frecuencia_barberia": "string — cada cuánto ir a retocar y qué deteriora primero.",
       "haircut_geometry": {{
-        "sides_length_mm": "integer — hair length on the sides in millimetres (0 = shaved/skin, 3 = clipper 1, 6 = clipper 2, 9 = clipper 3, etc.)",
-        "top_length_mm": "integer — hair length on top in millimetres (e.g. 30 = 3cm, 50 = 5cm)",
-        "fade_type": "string — EXACTLY one of: skin | zero | low | mid | high | taper | scissor_taper | none",
-        "fade_start_height": "string — EXACTLY one of: nape | ear_bottom | ear_mid | ear_top | temple | none",
-        "fade_transition": "string — EXACTLY one of: blurry | sharp_line",
-        "top_direction": "string — EXACTLY one of: forward | backward | side_part_left | side_part_right | up | natural",
-        "top_texture": "string — EXACTLY one of: choppy | smooth | slick | curly_natural | tousled | coily_natural",
-        "neckline": "string — EXACTLY one of: straight | rounded | tapered | natural",
-        "sideburns": "string — EXACTLY one of: long | short | none",
-        "parting": "string — EXACTLY one of: none | left_hard | right_hard | center"
+        "sides_length_mm": "integer — MUST be a single integer number, no units, no ranges, no strings. Example: 6 (NOT '6mm', NOT '3-6', NOT 'clipper 2'). Hair length on the sides in millimetres (0 = shaved/skin, 3 = clipper 1, 6 = clipper 2, 9 = clipper 3, etc.)",
+        "top_length_mm": "integer — MUST be a single integer number, no units, no ranges, no strings. Example: 30 (NOT '30mm', NOT '3cm', NOT '30-50'). Hair length on top in millimetres (e.g. 30 = 3cm, 50 = 5cm)",
+        "fade_type": "string — MUST be exactly one of (English values only, lowercase): skin | zero | low | mid | high | taper | scissor_taper | none",
+        "fade_start_height": "string — MUST be exactly one of (English values only, lowercase): nape | ear_bottom | ear_mid | ear_top | temple | none",
+        "fade_transition": "string — MUST be exactly one of (English values only, lowercase): blurry | sharp_line",
+        "top_direction": "string — MUST be exactly one of (English values only, lowercase): forward | backward | side_part_left | side_part_right | up | natural",
+        "top_texture": "string — MUST be exactly one of (English values only, lowercase): choppy | smooth | slick | curly_natural | tousled | coily_natural",
+        "neckline": "string — MUST be exactly one of (English values only, lowercase): straight | rounded | tapered | natural",
+        "sideburns": "string — MUST be exactly one of (English values only, lowercase): long | short | none",
+        "parting": "string — MUST be exactly one of (English values only, lowercase): none | left_hard | right_hard | center"
       }}
     }},
     {{...segundo corte, estilo y técnica claramente diferentes al primero...}},

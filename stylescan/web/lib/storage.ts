@@ -7,6 +7,16 @@ const KEYS = {
 };
 
 export const storage = {
+  // Clears every key tied to a single analysis run. `barberCode` is reusable across
+  // analyses so it is intentionally preserved.
+  clearAnalysisData: () => {
+    try {
+      localStorage.removeItem(KEYS.analysisId);
+      localStorage.removeItem(KEYS.checkoutUrl);
+      localStorage.removeItem(KEYS.quiz);
+      localStorage.removeItem(KEYS.consentState);
+    } catch {}
+  },
   saveQuiz: (answers: Record<string, any>) => {
     try { localStorage.setItem(KEYS.quiz, JSON.stringify(answers)); } catch {}
   },
@@ -14,6 +24,11 @@ export const storage = {
     try { return JSON.parse(localStorage.getItem(KEYS.quiz) ?? "{}"); } catch { return {}; }
   },
   saveAnalysisId: (id: string) => {
+    // A new analysis is starting — drop stale data from any previous run first.
+    try {
+      localStorage.removeItem(KEYS.checkoutUrl);
+      localStorage.removeItem(KEYS.consentState);
+    } catch {}
     try { localStorage.setItem(KEYS.analysisId, id); } catch {}
   },
   getAnalysisId: (): string | null => {

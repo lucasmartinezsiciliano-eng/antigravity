@@ -308,24 +308,32 @@ async def _generate_one_angle(
     )
 
     try:
-        result = await asyncio.to_thread(
-            fal_client.run,
-            _INPAINT_MODEL,
-            arguments={
-                "image_url": image_data_uri,
-                "mask_url": mask_data_uri,
-                "prompt": prompt,
-                "num_inference_steps": 28,
-                "guidance_scale": 10,
-                "num_images": 1,
-                "output_format": "jpeg",
-                "safety_tolerance": "4",
-            },
+        # Fal can hang indefinitely; cap wall-time at 90s so a stuck worker
+        # doesn't pin the thread pool forever.
+        result = await asyncio.wait_for(
+            asyncio.to_thread(
+                fal_client.run,
+                _INPAINT_MODEL,
+                arguments={
+                    "image_url": image_data_uri,
+                    "mask_url": mask_data_uri,
+                    "prompt": prompt,
+                    "num_inference_steps": 28,
+                    "guidance_scale": 10,
+                    "num_images": 1,
+                    "output_format": "jpeg",
+                    "safety_tolerance": "4",
+                },
+            ),
+            timeout=90.0,
         )
         url = result["images"][0]["url"]
         logger.info("  → angle %s: OK [flux-fill]", angle["id"])
         return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
 
+    except asyncio.TimeoutError:
+        logger.error("  → angle %s TIMEOUT [flux-fill]: exceeded 90s", angle["id"])
+        raise
     except Exception as e:
         logger.error("  → angle %s FAILED [flux-fill]: %s", angle["id"], e)
         return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e))

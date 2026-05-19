@@ -41,6 +41,8 @@ export default function ResultPage() {
   const [cutAngle, setCutAngle] = useState([0, 0, 0]);
   const visualsPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const visualsFileRef = useRef<HTMLInputElement>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   // References — real barber photos from Spanish barbershops
   const [barberRefs, setBarberRefs] = useState<any[]>([]);
@@ -50,13 +52,15 @@ export default function ResultPage() {
     if (visualsPollRef.current) clearInterval(visualsPollRef.current);
     const pollStart = Date.now();
     visualsPollRef.current = setInterval(async () => {
+      if (!mountedRef.current) return;
       if (Date.now() - pollStart > 300_000) {
         clearInterval(visualsPollRef.current!);
-        setVisualsStatus("failed");
+        if (mountedRef.current) setVisualsStatus("failed");
         return;
       }
       try {
         const data = await api.getVisuals(id);
+        if (!mountedRef.current) return;
         if (data.visuals_status === "ready") {
           clearInterval(visualsPollRef.current!);
           setVisuals(data.visuals);
@@ -70,18 +74,18 @@ export default function ResultPage() {
   }
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
     let pollAttempts = 0;
     const MAX_POLL = 48; // 48 × 5 s = 4 min max wait
 
     async function loadResult() {
       try {
         const r = await api.getResult(id);
-        if (!mounted) return;
+        if (!mountedRef.current) return;
         setResult(r);
         setLoading(false);
       } catch (e: any) {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
         const msg: string = e.message || "";
         // 202 / 402 responses mean the analysis is still in progress — keep polling
         const stillProcessing =
@@ -92,7 +96,7 @@ export default function ResultPage() {
           msg.includes("402");
         if (stillProcessing && pollAttempts < MAX_POLL) {
           pollAttempts++;
-          setTimeout(loadResult, 5000);
+          retryTimerRef.current = setTimeout(loadResult, 5000);
         } else {
           setError(msg || "No se pudo cargar el resultado.");
           setLoading(false);
@@ -103,13 +107,13 @@ export default function ResultPage() {
     loadResult();
 
     api.getReferences(id).then((data) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
       setBarberRefs(data.cuts || []);
       setRefsLoaded(true);
-    }).catch(() => { if (mounted) setRefsLoaded(true); });
+    }).catch(() => { if (mountedRef.current) setRefsLoaded(true); });
 
     api.getVisuals(id).then((data) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
       if (data.visuals_status === "ready" && data.visuals.length) {
         setVisuals(data.visuals);
         setVisualsStatus("ready");
@@ -119,7 +123,7 @@ export default function ResultPage() {
       } else {
         // not_started or failed — try auto-generate from sessionStorage photos
         const frontalB64 = (() => { try { return sessionStorage.getItem(`visai_frontal_${id}`); } catch { return null; } })();
-        if (frontalB64 && mounted) {
+        if (frontalB64 && mountedRef.current) {
           triggerAutoGenerate(frontalB64);
         }
         // else: show upload button (idle)
@@ -127,8 +131,9 @@ export default function ResultPage() {
     }).catch(() => {});
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       if (visualsPollRef.current) clearInterval(visualsPollRef.current);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
   }, [id]); // eslint-disable-line
 
@@ -259,7 +264,7 @@ export default function ResultPage() {
 
       ctx.fillStyle = "rgba(255,255,255,0.45)";
       ctx.font = `400 30px -apple-system, system-ui, sans-serif`;
-      ctx.fillText(topCut.nombre_tecnico || "", W / 2, 890);
+      ctx.fillText(topCut.nombre_tecnico ?? "", W / 2, 890);
     }
 
     // Parte baja
@@ -483,7 +488,12 @@ export default function ResultPage() {
           if (!cut) return null;
           const i = selectedCut;
           const maintColor = MAINTENANCE_COLOR[cut.nivel_mantenimiento] || "#888";
-          const cutVisual = visuals[i];
+          // Match visual by cut_index or cut_name (robust), fallback to positional
+          const cutVisual =
+            visuals.find((v: any) => v?.cut_index === i) ||
+            visuals.find((v: any) => v?.cut_name && cut?.nombre && v.cut_name === cut.nombre) ||
+            visuals[i] ||
+            null;
           const angles: any[] = cutVisual?.angles || [];
           const selectedAngle = cutAngle[i] ?? 0;
           const imgUrl = angles[selectedAngle]?.url;
@@ -553,7 +563,9 @@ export default function ResultPage() {
                 <h2 style={{ fontSize: 22, fontWeight: 700, margin: "8px 0 2px", letterSpacing: -0.4, lineHeight: 1.2 }}>
                   {cut.nombre}
                 </h2>
-                <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 10 }}>{cut.nombre_tecnico}</div>
+                {cut.nombre_tecnico && (
+                  <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 10 }}>{cut.nombre_tecnico}</div>
+                )}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 99,
@@ -630,24 +642,30 @@ export default function ResultPage() {
               )}
 
               {/* 6. Footer del corte */}
-              <div style={{
-                display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
-                background: "var(--surface2)", padding: "14px 20px", marginTop: 14,
-                borderTop: "1px solid var(--border)",
-              }}>
-                <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-                  <Home size={13} color="var(--text-dim)" strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
-                    {cut.mantenimiento_casa}
-                  </p>
+              {(cut.mantenimiento_casa || cut.frecuencia_barberia) && (
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+                  background: "var(--surface2)", padding: "14px 20px", marginTop: 14,
+                  borderTop: "1px solid var(--border)",
+                }}>
+                  {cut.mantenimiento_casa && (
+                    <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                      <Home size={13} color="var(--text-dim)" strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
+                        {cut.mantenimiento_casa}
+                      </p>
+                    </div>
+                  )}
+                  {cut.frecuencia_barberia && (
+                    <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                      <CalendarDays size={13} color="var(--text-dim)" strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
+                        {cut.frecuencia_barberia}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-                  <CalendarDays size={13} color="var(--text-dim)" strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
-                    {cut.frecuencia_barberia}
-                  </p>
-                </div>
-              </div>
+              )}
 
             </div>
           );
@@ -742,7 +760,10 @@ export default function ResultPage() {
                 <div style={{ marginBottom: 10 }}>
                   <div className="label" style={{ marginBottom: 8 }}>Paleta recomendada</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {(result.colorimetry_report.paleta_colores_ropa as string[]).map((c: string, i: number) => (
+                    {(Array.isArray(result.colorimetry_report.paleta_colores_ropa)
+                      ? result.colorimetry_report.paleta_colores_ropa
+                      : [result.colorimetry_report.paleta_colores_ropa]
+                    ).map((c: string, i: number) => (
                       <span key={i} style={{
                         padding: "4px 10px", borderRadius: 99,
                         background: "var(--surface2)", fontSize: 13,
@@ -810,7 +831,11 @@ export default function ResultPage() {
             <div className="card-accent" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {result.seasonal_report.longitud_recomendada && (
                 <div>
-                  <div className="label-accent" style={{ marginBottom: 6 }}>Longitud para {result.seasonal_report.temporada}</div>
+                  <div className="label-accent" style={{ marginBottom: 6 }}>
+                    {result.seasonal_report.temporada
+                      ? `Longitud para ${result.seasonal_report.temporada}`
+                      : "Longitud recomendada"}
+                  </div>
                   <p style={{ fontSize: 14, lineHeight: 1.65, margin: 0 }}>{result.seasonal_report.longitud_recomendada}</p>
                 </div>
               )}
