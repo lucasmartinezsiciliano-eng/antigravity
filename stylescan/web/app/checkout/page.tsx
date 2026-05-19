@@ -218,7 +218,7 @@ export default function CheckoutPage() {
           />
           {hasCode && (
             <p style={{ color: "var(--success)", fontSize: 13, marginTop: 6, fontWeight: 600 }}>
-              ✓ Código aplicado — precio 7,99 €
+              ✓ Código aplicado — precio 11,99 €
             </p>
           )}
         </div>
