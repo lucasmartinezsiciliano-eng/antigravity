@@ -700,7 +700,7 @@ export default function ResultPage() {
                   </div>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Colorimetría + Guía de productos</div>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 17, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>24,99 €</div>
+                <div style={{ fontWeight: 800, fontSize: 17, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>5,99 €</div>
               </div>
               <button
                 type="button"
@@ -709,7 +709,7 @@ export default function ResultPage() {
                 disabled={upsellLoading !== null}
                 style={{ fontSize: 14, padding: "14px" }}
               >
-                {upsellLoading === "pack" ? "Procesando…" : "Pack completo — ahorra 22% →"}
+                {upsellLoading === "pack" ? "Procesando…" : "Pack completo — ahorra 25% →"}
               </button>
             </div>
           )}
@@ -721,7 +721,7 @@ export default function ResultPage() {
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 3 }}>🎨 Colorimetría personal</div>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Paleta de ropa, tonos, monturas de gafas</div>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>2,49 €</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>4,99 €</div>
               </div>
               <button
                 type="button"
@@ -767,7 +767,7 @@ export default function ResultPage() {
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 3 }}>🧴 Guía de productos</div>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Productos exactos, rutina diaria, técnica</div>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>1,99 €</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>2,99 €</div>
               </div>
               <button
                 type="button"

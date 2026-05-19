@@ -173,7 +173,7 @@ def get_or_create_base_coupon() -> str:
         amount_off=settings.BARBER_COMMISSION_CENTS,
         currency="eur",
         duration="once",
-        name="Descuento colaborador barbería VISAI (-€3)",
+        name="Descuento colaborador barbería VISAI (-€2)",
         metadata={"program": "barbershop_affiliate"},
     )
     logger.info("Created base coupon: %s", coupon.id)

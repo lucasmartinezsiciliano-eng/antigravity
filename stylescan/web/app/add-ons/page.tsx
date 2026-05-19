@@ -12,8 +12,8 @@ const OPTIONS: { id: Selection; emoji: string; title: string; sub: string; price
     id: "pack",
     emoji: "⭐",
     title: "Pack Completo",
-    sub: "Colorimetría personal + Guía de productos",
-    price: "+10,00 €",
+    sub: "Colorimetría personal + Guía de productos (ahorra 2€)",
+    price: "+5,99 €",
     badge: "MEJOR VALOR",
   },
   {
@@ -21,22 +21,22 @@ const OPTIONS: { id: Selection; emoji: string; title: string; sub: string; price
     emoji: "🎨",
     title: "Colorimetría personal",
     sub: "Paleta de ropa, tonos de piel, monturas de gafas",
-    price: "+2,49 €",
+    price: "+4,99 €",
   },
   {
     id: "products",
     emoji: "🧴",
     title: "Guía de productos",
     sub: "Productos exactos, rutina diaria y técnica de peinado",
-    price: "+1,99 €",
+    price: "+2,99 €",
   },
 ];
 
 const TOTAL: Record<Selection, string> = {
-  none: "9,99 €",
-  pack: "24,99 €",
-  colorimetry: "12,48 €",
-  products: "11,98 €",
+  none: "14,99 €",
+  pack: "20,98 €",
+  colorimetry: "19,98 €",
+  products: "17,98 €",
 };
 
 export default function AddOnsPage() {
@@ -138,7 +138,7 @@ export default function AddOnsPage() {
               Forma facial · 3 cortes · Prueba virtual IA
             </div>
           </div>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--accent)", flexShrink: 0 }}>9,99 €</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--accent)", flexShrink: 0 }}>14,99 €</div>
         </div>
 
         {/* Options */}

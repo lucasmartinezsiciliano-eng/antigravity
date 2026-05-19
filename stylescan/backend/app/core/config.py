@@ -24,8 +24,8 @@ class Settings(BaseSettings):
 
     # LLM Provider — switch without touching code
     # Values: anthropic | deepseek | gemini
-    LLM_PROVIDER: str = "deepseek"
-    LLM_MODEL: str = ""          # empty = use provider default (deepseek-chat / gemini-2.0-flash / claude-haiku-4-5-20251001)
+    LLM_PROVIDER: str = "anthropic"
+    LLM_MODEL: str = "claude-opus-4-7"   # override in .env to switch model
     LLM_MAX_TOKENS: int = 4096
 
     # API keys — only the key matching LLM_PROVIDER is required at runtime
@@ -44,12 +44,12 @@ class Settings(BaseSettings):
     STRIPE_BASE_COUPON_ID: str = ""  # Created once, all barber codes reference it
 
     # Pricing (in cents)
-    PRICE_BASE_ANALYSIS: int = 999       # €9.99
-    PRICE_COLORIMETRY: int = 249         # €2.49
-    PRICE_PRODUCTS_GUIDE: int = 199      # €1.99
-    PRICE_PACK_COMPLETE: int = 2499      # €24.99 (completo: todo incluido)
+    PRICE_BASE_ANALYSIS: int = 1499      # €14.99
+    PRICE_COLORIMETRY: int = 499         # €4.99
+    PRICE_PRODUCTS_GUIDE: int = 299      # €2.99
+    PRICE_PACK_COMPLETE: int = 599       # €5.99 (colorimetría + guía juntos, ahorra €2 vs separado)
     PRICE_SEASONAL: int = 499            # €4.99
-    BARBER_COMMISSION_CENTS: int = 200   # €2.00
+    BARBER_COMMISSION_CENTS: int = 300   # €3.00 (~20% de €14.99)
 
     # Photo processing
     MAX_PHOTO_SIZE_MB: int = 10
