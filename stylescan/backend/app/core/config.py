@@ -90,6 +90,10 @@ class Settings(BaseSettings):
     # n8n — CRM upsert (crea/actualiza persona en Twenty tras análisis completado)
     N8N_CRM_WEBHOOK_URL: str = ""
 
+    # Admin — Telegram bot for reference photo uploads
+    ADMIN_TELEGRAM_BOT_TOKEN: str = ""
+    ADMIN_TELEGRAM_ALLOWED_CHAT_IDS: str = ""  # comma-separated chat IDs
+
     # Development bypass — skip Stripe entirely (never use in production)
     DEV_SKIP_PAYMENT: bool = False
 
