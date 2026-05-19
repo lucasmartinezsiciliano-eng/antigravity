@@ -330,11 +330,19 @@ async def _run_analysis_background(
     from app.core.database import AsyncSessionLocal
     from sqlalchemy import select as sa_select
 
-    async def _reset_to_paid(db):
+    async def _mark_failed(db, reason: str, error_message: str | None = None):
+        """Update status to 'failed' so the frontend stops polling on 202."""
         stmt = sa_select(Analysis).where(Analysis.id == analysis_id)
         a = (await db.execute(stmt)).scalar_one_or_none()
-        if a and a.status == "processing":
-            a.status = "paid"
+        if a and a.status in ("processing", "paid"):
+            a.status = "failed"
+            # Persist error context inside the JSON report (no schema migration needed)
+            existing = dict(a.report or {})
+            existing["error"] = {
+                "reason": reason,
+                "message": (error_message or "")[:500],
+            }
+            a.report = existing
             await db.commit()
 
     async with AsyncSessionLocal() as db:
@@ -348,7 +356,7 @@ async def _run_analysis_background(
                 del valid_photo_bytes
 
             if not metrics:
-                await _reset_to_paid(db)
+                await _mark_failed(db, reason="no_face_detected")
                 if photos_for_visuals:
                     del photos_for_visuals
                 logger.warning("Background analysis %s: no face detected", analysis_id)
@@ -364,7 +372,7 @@ async def _run_analysis_background(
                 )
             except (asyncio.TimeoutError, Exception) as exc:
                 logger.error("Background LLM failed for %s: %s", analysis_id, exc, exc_info=True)
-                await _reset_to_paid(db)
+                await _mark_failed(db, reason="llm_failed", error_message=str(exc))
                 if photos_for_visuals:
                     del photos_for_visuals
                 return
@@ -435,7 +443,7 @@ async def _run_analysis_background(
         except Exception as exc:
             logger.error("Background analysis crashed for %s: %s", analysis_id, exc, exc_info=True)
             try:
-                await _reset_to_paid(db)
+                await _mark_failed(db, reason="background_crashed", error_message=str(exc))
             except Exception:
                 pass
 

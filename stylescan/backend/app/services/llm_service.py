@@ -152,14 +152,23 @@ def _call_openai_compat(
             ],
         )
     else:
+        # Many OpenRouter models (e.g. moonshotai/kimi-k2-instruct) do NOT support
+        # structured-outputs / response_format=json_object. Omit it and rely on
+        # the prompt instructing the model to return JSON; the caller parses it.
         kwargs = dict(
             model=model,
             max_tokens=max_tokens,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {
+                    "role": "user",
+                    "content": (
+                        f"{user_prompt}\n\n"
+                        "IMPORTANTE: responde SOLO con el JSON pedido, sin texto adicional, "
+                        "sin markdown y sin ```json fences."
+                    ),
+                },
             ],
-            response_format={"type": "json_object"},
         )
 
     response = client.chat.completions.create(**kwargs)
