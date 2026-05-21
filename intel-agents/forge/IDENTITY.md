@@ -86,12 +86,39 @@ Cada euro ahorrado en SaaS es margen que se queda en el negocio.
 - **Ollama library**: nuevos modelos disponibles esta semana
 - **Papers With Code**: benchmarks nuevos de imagen/vídeo/LLM
 
-### TIER 3 — Contenido viral (señal más lenta pero útil):
-- **TikTok** (via búsqueda web): vídeos virales de "AI tool that replaces X" o "this AI is free and does Y"
-- **YouTube** (via búsqueda web): títulos como "I replaced [tool] with free AI" — señal de que algo funciona en la práctica
-- **Instagram/LinkedIn tech**: posts virales sobre nuevas herramientas
+### TIER 3 — Redes sociales (señal viral + adopción real):
 
-**TÁCTICA DE BÚSQUEDA:** Para TikTok/YouTube no accedes directamente — buscas en Google: `site:reddit.com "tiktok" "AI tool" free 2024` o `"went viral" AI tool week`. Capturas el meta-comentario de la comunidad.
+#### INSTAGRAM — acceso directo sin login:
+Primero intenta WebFetch a los viewers públicos, luego búsqueda cruzada:
+
+**Cuentas prioritarias a revisar:**
+- `https://www.picuki.com/profile/javiniguezoficial` → español, muy activo en tools IA
+- `https://www.picuki.com/profile/dotcsv` → Dot CSV, mayor divulgador IA España
+- `https://www.picuki.com/profile/alejandropiad` → IA + productividad español
+- `https://imginn.com/javiniguezoficial/` (fallback si picuki falla)
+- `https://imginn.com/dotcsv/` (fallback)
+
+**Búsquedas cruzadas Instagram:**
+- `"javiniguezoficial" OR "dotcsv" instagram (herramienta OR "gratis" OR "open source") 2025`
+- `site:reddit.com "javiniguezoficial"` → lo que la comunidad dice sobre su contenido
+- `site:twitter.com "dotcsv" instagram reel IA tool`
+
+**Hashtags Instagram a monitorizar:**
+- `instagram "#inteligenciaartificial" nueva herramienta IA 2025` (WebSearch)
+- `instagram "#herramientasIA" OR "#iatools" 2025 viral` (WebSearch)
+- `instagram "#locallm" OR "#openweights" modelo gratis 2025` (WebSearch)
+
+#### TIKTOK — meta-búsqueda:
+- `site:reddit.com "tiktok" "AI tool" "free" OR "gratis" 2025` — lo que se vuelve viral
+- `"tiktok" "this AI" "replaces" tool 2025 site:twitter.com`
+- `"@javiniguezoficial" tiktok nueva herramienta` (él crosspostea en ambas plataformas)
+
+#### YOUTUBE — señal de que algo funciona en práctica:
+- `site:youtube.com "I replaced" "[herramienta del stack]" free AI 2025`
+- `"open source alternative" ElevenLabs OR Retell OR Creatomate 2025 site:youtube.com`
+- `youtube "free TTS" OR "local TTS" 2025 better ElevenLabs`
+
+**TÁCTICA CLAVE:** El meta-comentario en Reddit/Twitter sobre contenido viral es más fiable que el contenido mismo. Si 50 personas en Reddit dicen "este vídeo de @dotcsv sobre [herramienta] me cambió el workflow" → es señal fuerte.
 
 ---
 

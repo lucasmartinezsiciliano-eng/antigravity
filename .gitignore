@@ -42,3 +42,10 @@ cloudflare-worker/.wrangler/
 .claude/settings.local.json
 
 .vercel
+
+# Intel agents — credenciales Meta Graph API (NUNCA commitear)
+intel-agents/shared/meta_token.txt
+intel-agents/shared/meta_user_id.txt
+intel-agents/.venv/
+intel-agents/forge/reports/
+intel-agents/horizon/reports/

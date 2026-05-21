@@ -101,14 +101,44 @@ Esta es la parte más valiosa del informe. Busca activamente:
 - **El Confidencial / Expansión**: proptech y fintech español
 - **TechCrunch**: fintech, proptech, AI companies (filtrar por tracción, no hype)
 
-### TIER 3 — Tendencias sociales:
-- **TikTok** (via búsqueda web): vídeos virales sobre "how I make money with AI"
-  - Táctica: buscar en Google `"tiktok" "how I make" "AI" 2024 site:reddit.com` para capturar el meta-comentario
-- **YouTube** (via búsqueda web): títulos "I built AI business that makes €X/month"
-- **Instagram**: cuentas que publican sobre AI income, automatización de negocios
-  - Táctica: buscar `site:reddit.com "instagram" "AI business" "passive income" 2024`
+### TIER 3 — Redes sociales (señal de adopción y revenue real):
 
-**REGLA:** Solo incluir señales con datos de ingresos o tracción real. "Idea interesante" sin validación = descartar.
+#### INSTAGRAM — acceso directo sin login + búsquedas cruzadas:
+
+**Cuentas de negocio IA a revisar:**
+- `https://www.picuki.com/profile/javiniguezoficial` → cubre negocios IA + tools
+- `https://www.picuki.com/profile/dotcsv` → Dot CSV, España, negocios + IA
+- `https://www.picuki.com/profile/emprendedorigital` → emprendimiento digital España
+- `https://imginn.com/javiniguezoficial/` (fallback)
+- `https://imginn.com/dotcsv/` (fallback)
+
+**Búsquedas Instagram negocio:**
+- `"instagram" "negocio IA" "cuánto gano" OR "mis ingresos" 2025`
+- `site:reddit.com instagram "AI business" revenue "$" month 2025`
+- `"@javiniguezoficial" OR "@dotcsv" negocio IA ingresos monetización 2025`
+
+**Hashtags Instagram negocio a monitorizar:**
+- `instagram "#negocioIA" OR "#emprendedordigital" ingresos 2025` (WebSearch)
+- `instagram "#solopreneur" OR "#aibusiness" revenue 2025`
+- `instagram "#tiktokshop" tendencia producto 2025` — para e-commerce Lucas
+- `instagram "#proptech" OR "#hipotecas" innovación 2025` — para Centrum/Broker
+
+#### TIKTOK — señal más directa de ingresos reales:
+- `site:reddit.com "tiktok" "how I make" "AI" money 2025` — videos de gente mostrando revenue
+- `"tiktok" "AI side hustle" "$X per month" 2025`
+- `"tiktok shop" tendencia producto España OR Europa 2025`
+- `"cómo ganar dinero" "inteligencia artificial" tiktok 2025 site:reddit.com`
+
+#### YOUTUBE — validación de modelos de negocio:
+- `site:youtube.com "I make" "$" "month" "AI" business 2025`
+- `youtube "solo founder" "AI agency" revenue 2025`
+- `"broker hipotecario" OR "intermediario hipoteca" IA digital España 2025`
+
+#### TWITTER/X — revenue reports y MRR:
+- `"$X MRR" OR "€X MRR" "AI" business 2025 solo site:twitter.com`
+- `"AI agency" revenue "1 person" 2025 site:twitter.com`
+
+**REGLA ABSOLUTA:** Solo incluir señales con datos de ingresos o tracción real. "Idea interesante" sin revenue ni usuarios = descartar. Sin datos = no existe.
 
 ---
 
