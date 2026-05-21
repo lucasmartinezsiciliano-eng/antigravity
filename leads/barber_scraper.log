@@ -1,0 +1,76 @@
+2026-05-18 08:36:14,545 [INFO] Iniciando barber_scraper | pasos=[1] | limit=0 | output=test_osm.xlsx
+2026-05-18 08:36:14,545 [INFO] === PASO 1: OpenStreetMap / Overpass API ===
+2026-05-18 08:36:14,545 [INFO] Enviando query Overpass (puede tardar 1-3 min)...
+2026-05-18 08:36:34,470 [INFO] Overpass devolvió 13887 elementos
+2026-05-18 08:36:34,561 [INFO] Paso 1 completo: 11123 barberías únicas de OSM
+2026-05-18 08:36:34,637 [INFO] Checkpoint guardado: 11123 registros -> checkpoint.csv
+2026-05-18 08:36:34,637 [INFO] === PASO 5: Exportando Excel ===
+2026-05-18 08:36:34,675 [INFO] Exportando 11123 registros a test_osm.xlsx
+2026-05-18 08:36:36,499 [INFO] Excel generado: test_osm.xlsx
+2026-05-18 08:36:36,499 [INFO] ============================================================
+2026-05-18 08:36:36,499 [INFO] FINALIZADO: 11123 barberías exportadas a test_osm.xlsx
+2026-05-18 08:36:36,500 [INFO] Con teléfono: 2162
+2026-05-18 08:36:36,500 [INFO] Con email:    197
+2026-05-18 08:36:36,501 [INFO] Con Instagram: 104
+2026-05-18 08:36:36,501 [INFO] Con web:       466
+2026-05-18 08:36:36,501 [INFO] ============================================================
+2026-05-18 08:38:15,529 [INFO] Iniciando barber_scraper | pasos=[1, 2, 3, 4] | limit=0 | output=barberias_espana.xlsx
+2026-05-18 08:38:15,529 [INFO] Checkpoint previo encontrado en checkpoint.csv
+2026-05-18 08:38:55,950 [INFO] Iniciando barber_scraper | pasos=[1, 2, 3, 4] | limit=0 | output=barberias_espana.xlsx
+2026-05-18 08:38:55,950 [INFO] === PASO 1: OpenStreetMap / Overpass API ===
+2026-05-18 08:38:55,950 [INFO] Enviando query Overpass (puede tardar 1-3 min)...
+2026-05-18 08:39:16,331 [INFO] Overpass devolvió 13887 elementos
+2026-05-18 08:39:16,469 [INFO] Paso 1 completo: 11123 barberías únicas de OSM
+2026-05-18 08:39:16,612 [INFO] Checkpoint guardado: 11123 registros -> checkpoint.csv
+2026-05-18 08:39:16,615 [INFO] === PASO 2: Google Maps / Fallback ===
+2026-05-18 08:39:16,615 [WARNING] GOOGLE_MAPS_API_KEY no definida — usando Bing/DuckDuckGo como fallback
+2026-05-18 08:47:44,548 [INFO] Paso 2 completo: 11123 registros totales
+2026-05-18 08:47:44,612 [INFO] Checkpoint guardado: 11123 registros -> checkpoint.csv
+2026-05-18 08:47:44,613 [INFO] === PASO 3: Instagram handles ===
+2026-05-18 08:47:44,614 [INFO] 11019 registros sin Instagram de 11123 totales
+2026-05-18 09:12:47,799 [INFO] Rate limit Instagram: esperando 1568 segundos...
+2026-05-18 09:25:57,709 [INFO] Iniciando barber_scraper | pasos=[4, 6] | limit=0 | output=barberias_espana.xlsx
+2026-05-18 09:25:57,742 [INFO] Checkpoint cargado: 11123 registros desde checkpoint.csv
+2026-05-18 09:25:57,815 [INFO] === PASO 4: Emails desde webs ===
+2026-05-18 09:25:57,817 [INFO] 0 registros con web sin email de 11123 totales
+2026-05-18 09:25:57,851 [INFO] Paso 4 completo: 11123 registros con email
+2026-05-18 09:25:57,903 [INFO] Checkpoint guardado: 11123 registros -> checkpoint.csv
+2026-05-18 09:25:57,903 [INFO] === PASO GEOCODIFICACIÓN: Nominatim reverse geocoding ===
+2026-05-18 09:25:57,906 [INFO] 0 registros sin ciudad/provincia con coordenadas → geocodificando
+2026-05-18 09:25:57,907 [INFO] Geocodificación completada. Cache de cuadrículas usadas: 0
+2026-05-18 09:25:57,961 [INFO] Checkpoint guardado: 11123 registros -> checkpoint.csv
+2026-05-18 09:25:57,961 [INFO] === PASO 5: Exportando Excel ===
+2026-05-18 09:25:58,032 [INFO] Exportando 11122 registros a barberias_espana.xlsx
+2026-05-18 09:25:59,959 [INFO] Excel generado: barberias_espana.xlsx
+2026-05-18 09:25:59,959 [INFO] ============================================================
+2026-05-18 09:25:59,959 [INFO] FINALIZADO: 11122 barberías exportadas a barberias_espana.xlsx
+2026-05-18 09:25:59,961 [INFO] Con teléfono:  2162
+2026-05-18 09:25:59,961 [INFO] Con email:     197
+2026-05-18 09:25:59,962 [INFO] Con Instagram: 104
+2026-05-18 09:25:59,962 [INFO] Con web:       466
+2026-05-18 09:25:59,962 [INFO] Con ciudad:    2964
+2026-05-18 09:25:59,963 [INFO] Con provincia: 905
+2026-05-18 09:25:59,963 [INFO] ============================================================
+2026-05-18 09:26:51,742 [INFO] Iniciando barber_scraper | pasos=[6] | limit=0 | output=barberias_espana.xlsx
+2026-05-18 09:26:51,766 [INFO] Checkpoint cargado: 11123 registros desde checkpoint.csv
+2026-05-18 09:26:51,835 [INFO] === PASO GEOCODIFICACIÓN: Nominatim reverse geocoding ===
+2026-05-18 09:26:51,850 [INFO] 10218 registros sin ciudad/provincia con coordenadas → geocodificando
+2026-05-18 09:28:53,460 [INFO] Iniciando barber_scraper | pasos=[6] | limit=0 | output=barberias_espana.xlsx
+2026-05-18 09:28:53,488 [INFO] Checkpoint cargado: 11123 registros desde checkpoint.csv
+2026-05-18 09:28:53,562 [INFO] === PASO GEOCODIFICACIÓN: Nominatim batch reverse geocoding ===
+2026-05-18 09:28:53,578 [INFO] 10218 registros sin ciudad/provincia con coordenadas
+2026-05-18 09:28:53,588 [INFO] Cuadrículas únicas (10km): 1023 → estimado ~34 min
+2026-05-18 10:00:40,548 [INFO] Geocodificación completada. Cuadrículas procesadas: 1011
+2026-05-18 10:00:40,852 [INFO] Checkpoint guardado: 11123 registros -> checkpoint.csv
+2026-05-18 10:00:40,853 [INFO] === PASO 5: Exportando Excel ===
+2026-05-18 10:00:40,993 [INFO] Exportando 11096 registros a barberias_espana.xlsx
+2026-05-18 10:00:43,804 [INFO] Excel generado: barberias_espana.xlsx
+2026-05-18 10:00:43,804 [INFO] ============================================================
+2026-05-18 10:00:43,804 [INFO] FINALIZADO: 11096 barberías exportadas a barberias_espana.xlsx
+2026-05-18 10:00:43,806 [INFO] Con teléfono:  2157
+2026-05-18 10:00:43,808 [INFO] Con email:     197
+2026-05-18 10:00:43,809 [INFO] Con Instagram: 104
+2026-05-18 10:00:43,810 [INFO] Con web:       463
+2026-05-18 10:00:43,811 [INFO] Con ciudad:    11091
+2026-05-18 10:00:43,811 [INFO] Con provincia: 11086
+2026-05-18 10:00:43,812 [INFO] ============================================================

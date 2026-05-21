@@ -1,0 +1,133 @@
+{
+  "name": "Intel - Feedback Logger",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Telegram: Recibir Mensaje",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Filter + Parse: Reacciones Intel",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": {
+        "jsCode": "const message = $input.item.json.message;\nif (!message) return [];\nconst text = message.text || '';\nconst chatId = String(message.chat?.id || '');\n\n// Solo mensajes con emojis de reaccion Intel\nconst intelEmojis = ['👍','👎','💬','⚡','❓'];\nif (!intelEmojis.some(e => text.includes(e))) return [];\n\nconst dateStr = new Date().toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});\nconst todayKey = new Date().toISOString().slice(0,10).replace(/-/g,'');\n\n// Parsear pares emoji+numero: 👍1 👎2 ⚡3\nconst results = [];\nconst matches = [...text.matchAll(/([👍👎💬⚡❓])(\\d+)/gu)];\n\nif (matches.length === 0) return [];\n\nconst comment = text.replace(/[👍👎💬⚡❓]\\d+/gu,'').trim();\n\nfor (const m of matches) {\n  const reaction = m[1];\n  const sigNum = parseInt(m[2]);\n  // forge: señales 1-5, horizon: señales 6-9\n  const agent = sigNum <= 5 ? 'forge' : 'horizon';\n  results.push({\n    json: {\n      date: dateStr,\n      signal_id: `${todayKey}-${agent}-${sigNum}`,\n      agent,\n      signal_num: String(sigNum),\n      reaction,\n      comment: comment || '',\n      chat_id: chatId\n    }\n  });\n}\nreturn results;"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Set: Formatear Entrada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, 300],
+      "parameters": {
+        "mode": "manual",
+        "fields": {
+          "values": [
+            { "name": "date", "type": "string", "value": "={{ $json.date }}" },
+            { "name": "agent", "type": "string", "value": "={{ $json.agent }}" },
+            { "name": "signal_id", "type": "string", "value": "={{ $json.signal_id }}" },
+            { "name": "reaction", "type": "string", "value": "={{ $json.reaction }}" },
+            { "name": "comment", "type": "string", "value": "={{ $json.comment }}" },
+            { "name": "action_taken", "type": "string", "value": "pending" },
+            { "name": "chat_id", "type": "string", "value": "={{ $json.chat_id }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Sheets: Guardar Feedback Intel",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 300],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REEMPLAZAR_CON_ID_SHEET",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Intel-Feedback",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "agent": "={{ $json.agent }}",
+            "signal_id": "={{ $json.signal_id }}",
+            "reaction": "={{ $json.reaction }}",
+            "comment": "={{ $json.comment }}",
+            "action_taken": "={{ $json.action_taken }}"
+          }
+        },
+        "options": {}
+      },
+      "continueOnFail": true,
+      "notes": "⚠️ TODO antes de activar:\n1) Añadir credencial Google Sheets en n8n\n2) Crear Google Sheet con pestaña 'Intel-Feedback'\n   Columnas: date | agent | signal_id | reaction | comment | action_taken\n3) Copiar el ID del Sheet (URL: /spreadsheets/d/[ID]/)\n4) Reemplazar REEMPLAZAR_CON_ID_SHEET con ese ID"
+    },
+    {
+      "id": "n5",
+      "name": "Telegram: Confirmar Feedback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1200, 300],
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ '✅ Intel feedback: ' + $json.reaction + ' señal ' + $json.signal_id + ($json.comment ? ' — ' + $json.comment : '') }}",
+        "operation": "sendMessage",
+        "additionalFields": {}
+      },
+      "notes": "⚠️ TODO: Añadir credencial Telegram Bot (la misma que usa el bot de Centrum/Broker)"
+    },
+    {
+      "id": "n6",
+      "name": "Error: Notificar Fallo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 500],
+      "parameters": {
+        "chatId": "5631114912",
+        "text": "❌ [Intel] Error al guardar feedback en Sheets. Revisar workflow 'Intel - Feedback Logger'.",
+        "operation": "sendMessage",
+        "additionalFields": {}
+      },
+      "notes": "⚠️ TODO: Añadir credencial Telegram Bot"
+    }
+  ],
+  "connections": {
+    "Telegram: Recibir Mensaje": {
+      "main": [[{"node": "Filter + Parse: Reacciones Intel", "type": "main", "index": 0}]]
+    },
+    "Filter + Parse: Reacciones Intel": {
+      "main": [[{"node": "Set: Formatear Entrada", "type": "main", "index": 0}]]
+    },
+    "Set: Formatear Entrada": {
+      "main": [[{"node": "Sheets: Guardar Feedback Intel", "type": "main", "index": 0}]]
+    },
+    "Sheets: Guardar Feedback Intel": {
+      "main": [
+        [{"node": "Telegram: Confirmar Feedback", "type": "main", "index": 0}],
+        [{"node": "Error: Notificar Fallo", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Madrid",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "active": false
+}

@@ -1,0 +1,318 @@
+{
+  "_doc": "Catálogo de cortes del mercado español 2025. Basado en análisis de las barberías españolas con más seguidores en Instagram. Nombres en español tal como los pide el cliente + nombre técnico + aliases LLM. Los pexels_query apuntan a vistas de frente/lateral para referencia visual.",
+  "version": "2.0",
+  "updated_at": "2026-05-09",
+
+  "cuts": {
+
+    "low_fade_textured": {
+      "canonical_es": "Degradado Bajo Texturizado",
+      "canonical_en": "Low Fade with Textured Top",
+      "popularity": 5,
+      "como_lo_pide_el_cliente": "Un degradado bajo, deja arriba con textura",
+      "aliases": [
+        "low fade textured", "low fade with textured top", "degradado bajo texturizado",
+        "degradado bajo con textura", "low fade", "degradado bajo", "fade bajo texturizado",
+        "low taper textured", "low fade with texture", "textured low fade"
+      ],
+      "pexels_query": "low fade textured haircut men side view",
+      "local_image": "low_fade_textured.jpg"
+    },
+
+    "bro_flow": {
+      "canonical_es": "Bro Flow / Melena con Movimiento",
+      "canonical_en": "Bro Flow",
+      "popularity": 5,
+      "como_lo_pide_el_cliente": "Quiero el pelo largo con movimiento, que se mueva",
+      "aliases": [
+        "bro flow", "melena con movimiento", "pelo largo con movimiento",
+        "medium length with movement", "flow haircut", "bro haircut",
+        "medium flow", "cabello con capas y movimiento", "layered flow"
+      ],
+      "pexels_query": "bro flow men medium length hair side view",
+      "local_image": "bro_flow.jpg"
+    },
+
+    "french_crop_fade": {
+      "canonical_es": "French Crop con Degradado",
+      "canonical_en": "French Crop with Fade",
+      "popularity": 5,
+      "como_lo_pide_el_cliente": "Un French crop con degradado",
+      "aliases": [
+        "french crop", "french crop fade", "french crop low fade", "french crop mid fade",
+        "corte francés", "crop francés", "french crop with fade", "crop with fringe fade",
+        "french crop taper", "crop texturizado", "crop con flequillo"
+      ],
+      "pexels_query": "french crop fade men front side view barbershop",
+      "local_image": "french_crop_fade.jpg"
+    },
+
+    "modern_mullet": {
+      "canonical_es": "Mullet Moderno",
+      "canonical_en": "Modern Mullet",
+      "popularity": 5,
+      "como_lo_pide_el_cliente": "Un mullet moderno con degradado",
+      "aliases": [
+        "modern mullet", "mullet moderno", "mullet fade", "mullet con degradado",
+        "mullet with fade", "mullet contemporáneo", "mullet shag",
+        "mullet suave", "european mullet", "mullet mid fade"
+      ],
+      "pexels_query": "modern mullet men side view fade haircut",
+      "local_image": "modern_mullet.jpg"
+    },
+
+    "pompadour_fade": {
+      "canonical_es": "Pompadour con Degradado",
+      "canonical_en": "Pompadour with Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Un pompadour, quiero volumen arriba",
+      "aliases": [
+        "pompadour", "pompadour fade", "pompadour mid fade", "pompadour low fade",
+        "modern pompadour", "pompadour con degradado", "quiff pompadour",
+        "high pompadour", "pompadour sucio", "pompadour texturizado"
+      ],
+      "pexels_query": "pompadour fade men side view professional",
+      "local_image": "pompadour_fade.jpg"
+    },
+
+    "taper_fade": {
+      "canonical_es": "Taper Fade",
+      "canonical_en": "Taper Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Un taper fade, algo profesional",
+      "aliases": [
+        "taper fade", "taper", "corte taper", "taper haircut", "classic taper",
+        "taper bajo", "taper suave", "natural taper", "taper natural",
+        "low taper", "taper fade men", "soft taper"
+      ],
+      "pexels_query": "taper fade men side view clean barbershop",
+      "local_image": "taper_fade.jpg"
+    },
+
+    "librito_fade": {
+      "canonical_es": "Corte Librito con Degradado",
+      "canonical_en": "Middle Part Cut with Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Un corte librito, con raya en el medio",
+      "aliases": [
+        "librito", "corte librito", "middle part", "corte con raya en medio",
+        "libro abierto", "middle part fade", "middle part with fade",
+        "curtains middle part", "librito con degradado", "centro con degradado"
+      ],
+      "pexels_query": "middle part haircut men side view fade",
+      "local_image": "librito_fade.jpg"
+    },
+
+    "skin_fade": {
+      "canonical_es": "Degradado a Piel",
+      "canonical_en": "Skin Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Degradado a piel, bien marcado",
+      "aliases": [
+        "skin fade", "degradado a piel", "skin fade a cero", "zero fade",
+        "fade a cero", "skin fade textured", "skin fade with textured top",
+        "degradado piel", "high skin fade", "skin fade mid"
+      ],
+      "pexels_query": "skin fade men side view barbershop clean",
+      "local_image": "skin_fade.jpg"
+    },
+
+    "high_fade": {
+      "canonical_es": "Degradado Alto",
+      "canonical_en": "High Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Degradado alto, bien marcado arriba",
+      "aliases": [
+        "high fade", "degradado alto", "high skin fade", "fade alto",
+        "high taper fade", "high fade hard part", "degradado muy alto",
+        "side part high fade", "raya marcada high fade"
+      ],
+      "pexels_query": "high fade men side view temple fade barbershop",
+      "local_image": "high_fade.jpg"
+    },
+
+    "mid_fade": {
+      "canonical_es": "Degradado Medio",
+      "canonical_en": "Mid Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Degradado medio",
+      "aliases": [
+        "mid fade", "degradado medio", "medium fade", "mid taper fade",
+        "mid fade textured", "degradado medio texturizado", "mid fade with texture",
+        "mid skin fade", "mid fade men", "degradado a mitad"
+      ],
+      "pexels_query": "mid fade men side view textured top barbershop",
+      "local_image": "mid_fade.jpg"
+    },
+
+    "wolf_shag": {
+      "canonical_es": "Wolf Cut / Shag",
+      "canonical_en": "Wolf Cut / Shag Haircut",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Un wolf cut, tipo shag con capas",
+      "aliases": [
+        "wolf cut", "shag", "wolf cut men", "shag haircut", "men shag",
+        "layered wolf cut", "corte wolf", "shag con capas", "wolf shag",
+        "70s shag", "destructured layers", "capas desordenadas"
+      ],
+      "pexels_query": "wolf cut shag men side view layered haircut",
+      "local_image": "wolf_shag.jpg"
+    },
+
+    "curtain_hair": {
+      "canonical_es": "Corte Cortina",
+      "canonical_en": "Curtain Hair",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Corte cortina, que caiga a los lados",
+      "aliases": [
+        "curtain hair", "curtain bangs", "corte cortina", "curtinas",
+        "curtain hairstyle", "middle part curtains", "men curtains",
+        "cortina larga", "cortina con degradado", "flequillo cortina"
+      ],
+      "pexels_query": "curtain hair men side view middle part fade",
+      "local_image": "curtain_hair.jpg"
+    },
+
+    "burst_fade": {
+      "canonical_es": "Burst Fade",
+      "canonical_en": "Burst Fade",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Burst fade",
+      "aliases": [
+        "burst fade", "burst fade mohawk", "burst fade mullet",
+        "circular fade", "ear fade", "fade en curva"
+      ],
+      "pexels_query": "burst fade men side view ear fade barbershop",
+      "local_image": "burst_fade.jpg"
+    },
+
+    "mohicano_fade": {
+      "canonical_es": "Mohicano con Degradado",
+      "canonical_en": "Mohawk with Fade",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Mohicano, con los lados rapados",
+      "aliases": [
+        "mohicano", "moicano", "mohawk", "mohawk fade", "mohicano con degradado",
+        "mohicano con fade", "faux hawk", "cresta", "mohawk with fade",
+        "skin fade mohawk"
+      ],
+      "pexels_query": "mohawk fade men side view barbershop",
+      "local_image": "mohicano_fade.jpg"
+    },
+
+    "drop_fade": {
+      "canonical_es": "Drop Fade",
+      "canonical_en": "Drop Fade",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Drop fade",
+      "aliases": [
+        "drop fade", "drop taper", "low drop fade", "drop skin fade",
+        "curved fade", "fade curvo"
+      ],
+      "pexels_query": "drop fade men side view curved fade barbershop",
+      "local_image": "drop_fade.jpg"
+    },
+
+    "crew_cut": {
+      "canonical_es": "Corte Crew / Militar",
+      "canonical_en": "Crew Cut",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Bien cortito, estilo militar",
+      "aliases": [
+        "crew cut", "corte crew", "military cut", "corte militar",
+        "ivy league", "short crew cut", "classic crew cut"
+      ],
+      "pexels_query": "crew cut men side view short clean barbershop",
+      "local_image": "crew_cut.jpg"
+    },
+
+    "quiff_fade": {
+      "canonical_es": "Quiff con Degradado",
+      "canonical_en": "Quiff with Fade",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Quiff, con volumen arriba",
+      "aliases": [
+        "quiff", "quiff fade", "quiff mid fade", "modern quiff",
+        "tupé", "quiff con degradado", "textured quiff", "high volume quiff",
+        "quiff taper", "volumen arriba con degradado"
+      ],
+      "pexels_query": "quiff fade men side view volume top barbershop",
+      "local_image": "quiff_fade.jpg"
+    },
+
+    "buzz_cut": {
+      "canonical_es": "Buzz Cut / Rapado",
+      "canonical_en": "Buzz Cut",
+      "popularity": 2,
+      "como_lo_pide_el_cliente": "Al rape, pásame la máquina",
+      "aliases": [
+        "buzz cut", "rapado", "corte al rape", "buzz", "número 1", "número 2",
+        "buzz cut taper", "textured buzz", "buzz con taper"
+      ],
+      "pexels_query": "buzz cut men side view short taper barbershop",
+      "local_image": "buzz_cut.jpg"
+    },
+
+    "comb_over_fade": {
+      "canonical_es": "Raya Lateral con Degradado",
+      "canonical_en": "Comb Over with Fade",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Con raya al lado, peinado hacia un lado",
+      "aliases": [
+        "comb over", "raya lateral", "side part", "comb over fade",
+        "raya lateral con degradado", "classic side part", "hard part",
+        "side part fade", "raya marcada con degradado", "peinado con raya"
+      ],
+      "pexels_query": "comb over side part fade men side view barbershop",
+      "local_image": "comb_over_fade.jpg"
+    },
+
+    "undercut": {
+      "canonical_es": "Undercut",
+      "canonical_en": "Undercut",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Undercut, con salto marcado",
+      "aliases": [
+        "undercut", "corte undercut", "disconnected undercut", "undercut fade",
+        "undercut largo", "slick back undercut", "undercut pompadour"
+      ],
+      "pexels_query": "undercut men side view disconnected fade barbershop",
+      "local_image": "undercut.jpg"
+    },
+
+    "natural_curls_fade": {
+      "canonical_es": "Rizos Naturales con Degradado",
+      "canonical_en": "Natural Curls with Fade",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Tengo rizos, ponme degradado a los lados",
+      "aliases": [
+        "natural curls", "curly fade", "curly taper fade", "rizos con degradado",
+        "rizos taper", "curly hair fade", "afro fade", "rizos naturales con fade",
+        "curls with low fade", "men curly haircut fade"
+      ],
+      "pexels_query": "curly hair fade men side view natural curls barbershop",
+      "local_image": "natural_curls_fade.jpg"
+    }
+  },
+
+  "generic_terms": {
+    "_doc": "Términos sueltos que aparecen en muchos cortes. Fallback cuando el matcher no encuentra corte específico.",
+    "fade": "fade men side view barbershop spain",
+    "degradado": "fade men side view barbershop spain",
+    "low fade": "low fade men side view",
+    "degradado bajo": "low fade men side view",
+    "mid fade": "mid fade men side view",
+    "degradado medio": "mid fade men side view",
+    "high fade": "high fade men side view temple",
+    "degradado alto": "high fade men side view temple",
+    "skin fade": "skin fade men side view",
+    "degradado a piel": "skin fade men side view",
+    "taper": "taper fade men side view",
+    "taper fade": "taper fade men side view",
+    "undercut": "undercut men side view barbershop",
+    "crop": "french crop men side view fade",
+    "mullet": "modern mullet men side view",
+    "librito": "middle part haircut men side view",
+    "cortina": "curtain hair men side view"
+  }
+}

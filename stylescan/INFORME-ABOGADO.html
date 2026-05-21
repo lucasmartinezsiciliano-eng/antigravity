@@ -109,6 +109,14 @@
   /* MARGIN HIGHLIGHT */
   .margin-row td:last-child { font-weight: 900; font-size: 15px; color: var(--gold); }
 
+  /* TIMELINE */
+  .timeline { display: flex; flex-direction: column; gap: 0; margin: 16px 0 24px; }
+  .timeline-item { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .timeline-item:last-child { border-bottom: none; }
+  .timeline-tag { background: var(--gold); color: white; font-family: 'Arial', sans-serif; font-weight: 900; font-size: 10px; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
+  .timeline-text { font-size: 13px; font-family: 'Arial', sans-serif; }
+  .timeline-text strong { display: block; margin-bottom: 2px; color: var(--dark); }
+
   /* FOOTER */
   .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--muted); font-family: 'Arial', sans-serif; }
 
@@ -132,7 +140,7 @@
   <div class="meta-grid">
     <div class="meta-item">
       <div class="label">Fecha</div>
-      <div class="value">12 de mayo de 2026</div>
+      <div class="value">19 de mayo de 2026</div>
     </div>
     <div class="meta-item">
       <div class="label">Preparado por</div>
@@ -160,7 +168,7 @@
   <div class="flow">
     <div class="flow-item"><div class="flow-num">1</div><div>El usuario llega a la web (<strong>visaiapp.com</strong>) — normalmente con un código de peluquero</div></div>
     <div class="flow-item"><div class="flow-num">2</div><div>Responde un quiz de 5 minutos (estilo, zona de vida, hábito de mantenimiento, etc.)</div></div>
-    <div class="flow-item"><div class="flow-num">3</div><div>Paga <strong>€14,99</strong> (IVA incluido) mediante Stripe</div></div>
+    <div class="flow-item"><div class="flow-num">3</div><div>Paga <strong>€9,99</strong> (IVA incluido) mediante Stripe</div></div>
     <div class="flow-item"><div class="flow-num">4</div><div>Hace 3 fotos con el móvil (frontal, perfil izquierdo, perfil derecho)</div></div>
     <div class="flow-item"><div class="flow-num">5</div><div>La IA analiza <strong>468 puntos faciales</strong>, calcula forma del rostro, proporciones y asimetría</div></div>
     <div class="flow-item"><div class="flow-num">6</div><div>Se genera un informe en español con recomendaciones técnicas específicas</div></div>
@@ -169,7 +177,7 @@
   </div>
 
   <h3>Modelo B2B2C — Red de peluqueros</h3>
-  <p>Los peluqueros reciben un código personalizado (ej. <code>CARLOS2026</code>). Cuando un cliente lo usa, el peluquero recibe <strong>€3,00 de comisión</strong> por cada análisis vendido. El cliente puede recibir un descuento. El peluquero no gestiona pagos ni tiene relación contractual directa con el cliente final — solo recibe la comisión.</p>
+  <p>Los peluqueros reciben un código personalizado (ej. <code>CARLOS2026</code>). Cuando un cliente lo usa, el peluquero recibe <strong>€2,00 de comisión</strong> por cada análisis vendido. El cliente puede recibir un descuento. El peluquero no gestiona pagos ni tiene relación contractual directa con el cliente final — solo recibe la comisión.</p>
 
   <h3>Upsells opcionales</h3>
   <table>
@@ -193,54 +201,54 @@
   <h3>Precio al cliente y fiscalidad</h3>
   <table>
     <tr><th>Concepto</th><th class="td-right" style="text-align:right">Importe</th></tr>
-    <tr><td>Precio mostrado al cliente (IVA incl.)</td><td class="td-right">€14,99</td></tr>
-    <tr><td>Base imponible (sin IVA)</td><td class="td-right">€12,39</td></tr>
-    <tr><td>IVA 21% que se recauda</td><td class="td-right td-muted">€2,60 → liquidación trimestral Hacienda (mod. 303)</td></tr>
+    <tr><td>Precio mostrado al cliente (IVA incl.)</td><td class="td-right">€9,99</td></tr>
+    <tr><td>Base imponible (sin IVA)</td><td class="td-right">€8,26</td></tr>
+    <tr><td>IVA 21% que se recauda</td><td class="td-right td-muted">€1,73 → liquidación trimestral Hacienda (mod. 303)</td></tr>
   </table>
 
   <h3>Costes variables por análisis vendido</h3>
   <table>
     <tr><th>Concepto</th><th>Coste</th><th>Notas</th></tr>
-    <tr><td>Comisión Stripe</td><td class="td-right">€0,46</td><td class="td-muted">1,4% × €14,99 + €0,25 fijo</td></tr>
-    <tr><td>LLM — Kimi K2 Thinking (OpenRouter)</td><td class="td-right">~€0,07</td><td class="td-muted">~$0,08 — IA que genera el informe</td></tr>
-    <tr><td>Imágenes — fal.ai (6 imágenes)</td><td class="td-right">~€0,28</td><td class="td-muted">~$0,30 — virtual try-on mínimo</td></tr>
-    <tr><td>Comisión peluquero (barber code)</td><td class="td-right">€3,00</td><td class="td-muted">Aplica si el cliente usa código</td></tr>
-    <tr><td>Infra Railway (parte variable)</td><td class="td-right">~€0,02</td><td class="td-muted">Marginal a escala</td></tr>
-    <tr style="background:#f9f9f9"><td><strong>Total costes variables</strong></td><td class="td-right td-gold"><strong>~€3,83</strong></td><td class="td-muted">Con código de peluquero</td></tr>
-    <tr><td><strong>Total costes variables</strong></td><td class="td-right"><strong>~€0,83</strong></td><td class="td-muted">Sin código de peluquero</td></tr>
+    <tr><td>Comisión Stripe</td><td class="td-right">€0,39</td><td class="td-muted">1,4% × €9,99 + €0,25 fijo</td></tr>
+    <tr><td>LLM — Claude Opus 4.7 (Anthropic API)</td><td class="td-right">~€0,15</td><td class="td-muted">~$0,16 — IA que genera el informe y análisis</td></tr>
+    <tr><td>Imágenes — Flux Pro Fill (fal.ai, 6 imgs)</td><td class="td-right">~€0,28</td><td class="td-muted">~$0,30 — inpainting capilar con cara del usuario</td></tr>
+    <tr><td>Comisión peluquero (barber code)</td><td class="td-right">€2,00</td><td class="td-muted">Aplica si el cliente usa código</td></tr>
+    <tr><td>Infra Hetzner (parte variable)</td><td class="td-right">~€0,02</td><td class="td-muted">Marginal a escala</td></tr>
+    <tr style="background:#f9f9f9"><td><strong>Total costes variables</strong></td><td class="td-right td-gold"><strong>~€2,84</strong></td><td class="td-muted">Con código de peluquero</td></tr>
+    <tr><td><strong>Total costes variables</strong></td><td class="td-right"><strong>~€0,84</strong></td><td class="td-muted">Sin código de peluquero</td></tr>
   </table>
 
   <h3>Margen de contribución por cliente</h3>
   <table>
     <tr><th>Escenario</th><th>Ingresos netos (ex-IVA)</th><th>Costes</th><th>Margen bruto</th></tr>
-    <tr class="margin-row"><td>Con código peluquero</td><td>€12,39</td><td>€3,83</td><td class="td-gold">€8,56 (69%)</td></tr>
-    <tr class="margin-row"><td>Sin código peluquero</td><td>€12,39</td><td>€0,83</td><td class="td-gold">€11,56 (93%)</td></tr>
-    <tr class="margin-row"><td>Pack completo €24,99 (con código)</td><td>€20,65</td><td>€4,60</td><td class="td-gold">€16,05 (78%)</td></tr>
+    <tr class="margin-row"><td>Con código peluquero</td><td>€8,26</td><td>€2,84</td><td class="td-gold">€5,42 (65%)</td></tr>
+    <tr class="margin-row"><td>Sin código peluquero</td><td>€8,26</td><td>€0,84</td><td class="td-gold">€7,42 (90%)</td></tr>
+    <tr class="margin-row"><td>Pack completo €24,99 (con código)</td><td>€20,65</td><td>€3,60</td><td class="td-gold">€17,05 (82%)</td></tr>
   </table>
   <p style="font-size:13px;color:var(--muted);">El margen es alto porque el producto es digital — sin stock, sin logística, sin devoluciones físicas.</p>
 
   <h3>Costes fijos mensuales (infraestructura)</h3>
   <table>
     <tr><th>Servicio</th><th>Coste/mes</th></tr>
-    <tr><td>Railway — 5 servicios (backend + CRM + BD)</td><td class="td-right">~€18–22</td></tr>
+    <tr><td>Hetzner VPS (backend) — CPX22, Nuremberg, Alemania</td><td class="td-right">€10,27 (IVA incl.)</td></tr>
     <tr><td>Vercel — web hosting</td><td class="td-right td-muted">€0 (tier gratuito)</td></tr>
     <tr><td>Resend — emails transaccionales</td><td class="td-right td-muted">€0 (3.000/mes gratis)</td></tr>
     <tr><td>n8n — automatizaciones (self-hosted)</td><td class="td-right td-muted">€0 (infraestructura propia)</td></tr>
-    <tr><td>OpenRouter — pay per use</td><td class="td-right td-muted">€0</td></tr>
-    <tr><td>fal.ai — pay per use</td><td class="td-right td-muted">€0</td></tr>
-    <tr style="background:#f9f9f9"><td><strong>Total fijo infra</strong></td><td class="td-right td-gold"><strong>~€18–22/mes</strong></td></tr>
+    <tr><td>Anthropic API (Claude Opus 4.7) — pay per use</td><td class="td-right td-muted">€0 fijo</td></tr>
+    <tr><td>fal.ai (Flux Pro Fill) — pay per use</td><td class="td-right td-muted">€0 fijo</td></tr>
+    <tr style="background:#f9f9f9"><td><strong>Total fijo infra</strong></td><td class="td-right td-gold"><strong>~€10,27/mes</strong></td></tr>
   </table>
 
   <h3>¿Cuándo cubre la infra?</h3>
   <table>
     <tr><th>Clientes/mes</th><th>Ingresos ex-IVA</th><th>Costes variables</th><th>Fijos</th><th>Resultado</th></tr>
-    <tr><td>5</td><td>€62</td><td>€19</td><td>€20</td><td style="color:#c0392b;font-weight:bold">−€17</td></tr>
-    <tr><td><strong>20</strong></td><td>€248</td><td>€77</td><td>€20</td><td class="td-gold"><strong>+€151</strong></td></tr>
-    <tr><td>50</td><td>€620</td><td>€192</td><td>€20</td><td class="td-gold">+€408</td></tr>
-    <tr><td>100</td><td>€1.240</td><td>€383</td><td>€20</td><td class="td-gold">+€837</td></tr>
+    <tr><td><strong>2</strong></td><td>€16,52</td><td>€5,68</td><td>€10,27</td><td class="td-gold"><strong>+€0,57</strong></td></tr>
+    <tr><td>5</td><td>€41,30</td><td>€14,20</td><td>€10,27</td><td class="td-gold">+€16,83</td></tr>
+    <tr><td>20</td><td>€165,20</td><td>€56,80</td><td>€10,27</td><td class="td-gold">+€98,13</td></tr>
+    <tr><td>100</td><td>€826,00</td><td>€284,00</td><td>€10,27</td><td class="td-gold">+€531,73</td></tr>
   </table>
   <div class="box box-gold">
-    <strong>Break-even: ~20 clientes/mes.</strong> A partir de ahí, todo escala con margen del 69%.
+    <strong>Break-even: ~2 clientes/mes.</strong> A partir de ahí, todo escala con margen del 65% (con código de peluquero) o 90% (sin código).
   </div>
 
   <h3>Costes de la SL (adicionales)</h3>
@@ -254,10 +262,104 @@
   </table>
 </section>
 
-<!-- SECCIÓN 3: TÉCNICO -->
+<!-- SECCIÓN 3: MODELO DE ESCALA -->
 <section>
   <div class="section-header">
     <div class="section-num">3</div>
+    <div>
+      <div class="section-title">MODELO DE ESCALA — Hoja de Ruta €1.000.000</div>
+    </div>
+  </div>
+
+  <h3>Dos motores de ingresos</h3>
+  <table>
+    <tr><th>Motor</th><th>Quién paga</th><th>Precio</th><th>Qué recibe</th></tr>
+    <tr>
+      <td><strong>B2C</strong></td>
+      <td>Clientes finales</td>
+      <td class="td-right">€9,99 (precio actual)</td>
+      <td class="td-muted">Análisis facial + informe + virtual try-on. Precio objetivo fase 2: €14,99–€19,99.</td>
+    </tr>
+    <tr>
+      <td><strong>B2B</strong></td>
+      <td>Peluquerías</td>
+      <td class="td-right">€29/mes suscripción</td>
+      <td class="td-muted">Acceso ilimitado para todos sus clientes + analytics dashboard + badge "Barbería certificada VISAI".</td>
+    </tr>
+  </table>
+
+  <h3>Calculadora de ingresos por escenario</h3>
+  <table>
+    <tr>
+      <th>Barberos activos</th>
+      <th>Clientes/mes (×30)</th>
+      <th>Ingresos B2C (€9,99)</th>
+      <th>Suscripciones B2B (€29)</th>
+      <th>Total mes</th>
+      <th>Total año</th>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>300</td>
+      <td>€2.997</td>
+      <td>€290</td>
+      <td class="td-gold">€3.287</td>
+      <td class="td-gold">€39.444</td>
+    </tr>
+    <tr>
+      <td>50</td>
+      <td>1.500</td>
+      <td>€14.985</td>
+      <td>€1.450</td>
+      <td class="td-gold">€16.435</td>
+      <td class="td-gold">€197.220</td>
+    </tr>
+    <tr>
+      <td><strong>250</strong></td>
+      <td><strong>7.500</strong></td>
+      <td><strong>€74.925</strong></td>
+      <td><strong>€7.250</strong></td>
+      <td class="td-gold"><strong>€82.175</strong></td>
+      <td class="td-gold"><strong>€986.100</strong></td>
+    </tr>
+    <tr>
+      <td>500</td>
+      <td>15.000</td>
+      <td>€149.850</td>
+      <td>€14.500</td>
+      <td class="td-gold">€164.350</td>
+      <td class="td-gold">€1.972.200</td>
+    </tr>
+  </table>
+  <div class="box box-gold">
+    Al precio actual de €9,99, el umbral de <strong>€1.000.000 de facturación anual</strong> se cruza con ~250 barberos activos (cada uno aportando ~30 clientes/mes).
+  </div>
+
+  <h3>Hoja de ruta temporal</h3>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-tag">Meses 1–3</div>
+      <div class="timeline-text"><strong>Validación</strong>10 barberos beta, datos reales, precio confirmado.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-tag">Meses 4–6</div>
+      <div class="timeline-text"><strong>Tracción</strong>50 barberos, lanzar suscripción B2B €29/mes.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-tag">Meses 7–12</div>
+      <div class="timeline-text"><strong>Escala</strong>150 barberos, primer millón en run rate.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-tag">Año 2</div>
+      <div class="timeline-text"><strong>Expansión</strong>Expansión nacional + internacionalización UE.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 4: TÉCNICO -->
+<section>
+  <div class="section-header">
+    <div class="section-num">4</div>
     <div>
       <div class="section-title">INFORME TÉCNICO — Lo que estamos construyendo</div>
     </div>
@@ -266,13 +368,13 @@
   <h3>Stack tecnológico</h3>
   <table>
     <tr><th>Componente</th><th>Tecnología</th><th>Proveedor</th></tr>
-    <tr><td>Backend (análisis, pagos, IA)</td><td>Python / FastAPI</td><td>Railway (EE.UU.)</td></tr>
+    <tr><td>Backend (análisis, pagos, IA)</td><td>Python / FastAPI</td><td>Hetzner VPS CPX22, Nuremberg, Alemania (UE)</td></tr>
     <tr><td>Web (interfaz móvil)</td><td>Next.js</td><td>Vercel (EE.UU.)</td></tr>
     <tr><td>Análisis facial (468 puntos)</td><td>MediaPipe (Google)</td><td>Procesamiento local en servidor</td></tr>
-    <tr><td>IA informe</td><td>Kimi K2 Thinking (Moonshot AI)</td><td>OpenRouter (EE.UU.)</td></tr>
-    <tr><td>IA imágenes (virtual try-on)</td><td>Nano Banana Pro</td><td>fal.ai (EE.UU.)</td></tr>
+    <tr><td>IA informe</td><td>Claude Opus 4.7</td><td>Anthropic API (EE.UU.)</td></tr>
+    <tr><td>IA imágenes (virtual try-on)</td><td>Flux Pro Fill — inpainting capilar enmascarado</td><td>fal.ai (EE.UU.)</td></tr>
     <tr><td>Pagos</td><td>Stripe</td><td>Stripe (EE.UU.)</td></tr>
-    <tr><td>CRM</td><td>Twenty CRM (open-source)</td><td>Railway (self-hosted)</td></tr>
+    <tr><td>CRM</td><td>Twenty CRM (open-source)</td><td>Hetzner VPS (self-hosted)</td></tr>
     <tr><td>Emails transaccionales</td><td>Resend</td><td>Resend (EE.UU.)</td></tr>
     <tr><td>Automatizaciones</td><td>n8n</td><td>Oracle Cloud (propio)</td></tr>
   </table>
@@ -289,16 +391,19 @@
 
   <h3>Estado actual del producto</h3>
   <div class="box box-gold">
-    <strong>Funcional:</strong> análisis facial, informe IA, virtual try-on, pagos Stripe, códigos de barbero, sistema de emails, automatización CRM/n8n.<br><br>
-    <strong>En pruebas:</strong> flujo completo end-to-end.<br><br>
-    <strong>Pendiente:</strong> lanzamiento público, captación de peluqueros, domain verification para emails.
+    <strong>Backend en producción desde 19 mayo 2026</strong> — VPS Hetzner CPX22, Nuremberg, Alemania (UE). API pública: <code>api.visaiapp.com</code> con HTTPS/SSL.<br><br>
+    <strong>Funcional:</strong> análisis facial (468 puntos), informe Claude Opus 4.7, virtual try-on Flux Pro Fill, códigos de barbero, sistema de emails, automatización CRM.<br><br>
+    <strong>Pendiente:</strong> captación masiva de peluqueros, domain verification para emails, suscripción B2B €29/mes.
+  </div>
+  <div class="box box-alert" style="margin-top:16px">
+    <strong>⚠ ATENCIÓN — Pagos desactivados (DEV_SKIP_PAYMENT=true):</strong> Actualmente el sistema de pago Stripe no está activo. Los usuarios pasan directamente al análisis sin cobro real. Esta variable se activará cuando la SL esté constituida y la cuenta Stripe verificada. <strong>Mientras tanto, el producto no genera ingresos reales.</strong>
   </div>
 </section>
 
-<!-- SECCIÓN 4: PREGUNTAS -->
+<!-- SECCIÓN 5: PREGUNTAS -->
 <section>
   <div class="section-header">
-    <div class="section-num">4</div>
+    <div class="section-num">5</div>
     <div>
       <div class="section-title">PREGUNTAS PARA EL ABOGADO</div>
     </div>
@@ -316,7 +421,7 @@
     </div>
     <div class="question">
       <div class="q-num">Pregunta 3</div>
-      <div class="q-text">Los datos faciales se procesan en servidores de Railway (Estados Unidos) y de fal.ai (también EE.UU.). ¿Cómo cubrimos la transferencia internacional de datos con SCCs (Cláusulas Contractuales Tipo)?</div>
+      <div class="q-text">El backend y la base de datos están en Alemania (Hetzner, UE). Sin embargo, fal.ai (imágenes), Anthropic API (IA informe) y Stripe (pagos) son proveedores americanos. ¿Esta arquitectura mixta — procesamiento principal en UE, servicios auxiliares en EE.UU. — simplifica las obligaciones de transferencia internacional? ¿Cuáles de estos proveedores requieren SCCs (Cláusulas Contractuales Tipo) y cuáles están ya cubiertos por el marco EU-US Data Privacy Framework?</div>
     </div>
     <div class="question">
       <div class="q-num">Pregunta 4</div>
@@ -332,7 +437,7 @@
   <div class="questions">
     <div class="question">
       <div class="q-num">Pregunta 6</div>
-      <div class="q-text">Los peluqueros reciben €3,00 por cada cliente que envíen. Desde el punto de vista legal, ¿qué tipo de relación es esta? ¿Contrato de agencia comercial (Ley 12/1992)? ¿Contrato de afiliación/referido? ¿Tienen algún derecho de compensación por clientela si damos por terminada la relación?</div>
+      <div class="q-text">Los peluqueros reciben €2,00 por cada cliente que envíen. Desde el punto de vista legal, ¿qué tipo de relación es esta? ¿Contrato de agencia comercial (Ley 12/1992)? ¿Contrato de afiliación/referido? ¿Tienen algún derecho de compensación por clientela si damos por terminada la relación?</div>
     </div>
     <div class="question">
       <div class="q-num">Pregunta 7</div>
@@ -376,19 +481,39 @@
     </div>
     <div class="question">
       <div class="q-num">Pregunta 15</div>
-      <div class="q-text">La comisión del peluquero (€3,00) es un coste de adquisición de cliente. ¿Es deducible como gasto en el IS? ¿De qué forma hay que documentarlo?</div>
+      <div class="q-text">La comisión del peluquero (€2,00) es un coste de adquisición de cliente. ¿Es deducible como gasto en el IS? ¿De qué forma hay que documentarlo?</div>
     </div>
     <div class="question">
       <div class="q-num">Pregunta 16</div>
       <div class="q-text">Si Lucas trabaja como administrador de la SL, ¿cuál es la forma óptima de retribución (sueldo, dividendos, combinación)?</div>
     </div>
   </div>
+
+  <h4 style="margin-top:28px">E. Modelo de suscripción B2B y escalabilidad</h4>
+  <div class="questions">
+    <div class="question">
+      <div class="q-num">Pregunta 17</div>
+      <div class="q-text">Estamos desarrollando un modelo de suscripción mensual para peluquerías (€29/mes). En este modelo, el peluquero paga a VISAI por acceso a la plataforma para todos sus clientes. ¿Cómo cambia la relación jurídica respecto al modelo de comisión por cliente? ¿Qué tipo de contrato es más adecuado — licencia de software, prestación de servicios SaaS, o acceso a plataforma?</div>
+    </div>
+    <div class="question">
+      <div class="q-num">Pregunta 18</div>
+      <div class="q-text">Con suscripción B2B, el peluquero podría dar acceso a VISAI a sus clientes de forma masiva. ¿Tenemos alguna obligación de informar al cliente final sobre quién es el responsable del tratamiento de sus datos biométricos — VISAI o la peluquería? ¿Existe una relación de corresponsabilidad del tratamiento (Art. 26 GDPR)?</div>
+    </div>
+    <div class="question">
+      <div class="q-num">Pregunta 19</div>
+      <div class="q-text">Con la proyección de superar €1.000.000 de facturación, ¿qué umbral activa el régimen de gran empresa a efectos del IS? ¿Cuándo debería plantearse una estructura holding — SL operativa + SL de control — para optimizar la fiscalidad de dividendos y la reinversión?</div>
+    </div>
+    <div class="question">
+      <div class="q-num">Pregunta 20</div>
+      <div class="q-text">Si en el futuro queremos captar inversión externa (business angel, seed round), ¿qué estructura societaria es más adecuada desde el principio — mantener la SL o constituir una sociedad anónima? ¿Qué cláusulas estatutarias deberíamos prever ahora para no limitar futuras rondas?</div>
+    </div>
+  </div>
 </section>
 
-<!-- SECCIÓN 5: PUNTOS CLAVE -->
+<!-- SECCIÓN 6: PUNTOS CLAVE -->
 <section>
   <div class="section-header">
-    <div class="section-num">5</div>
+    <div class="section-num">6</div>
     <div>
       <div class="section-title">COSAS QUE VALE LA PENA CONTARLE AL ABOGADO</div>
       <div class="section-sub">Contexto que puede cambiar el enfoque del asesoramiento</div>
@@ -399,8 +524,8 @@
     <div class="key-point">
       <div class="key-icon">🌐</div>
       <div class="key-content">
-        <div class="key-title">Infraestructura 100% americana</div>
-        <p>El producto procesa datos biométricos de ciudadanos españoles y europeos, pero toda la infraestructura es americana: Railway (backend), fal.ai (imágenes), Stripe (pagos), OpenRouter (IA). Es la norma en el sector tech, pero hay que cubrir las transferencias internacionales de datos antes de hacer publicidad.</p>
+        <div class="key-title">Infraestructura mixta UE + EE.UU.</div>
+        <p>Backend en Alemania (Hetzner, UE), fal.ai (imágenes, EE.UU.), Anthropic API (IA análisis, EE.UU.), Stripe (pagos, EE.UU.). El backend en Alemania mejora la posición RGPD significativamente — los datos biométricos se procesan en territorio UE. Los servicios auxiliares americanos siguen requiriendo cobertura de transferencia internacional, pero el núcleo del procesamiento está en territorio de protección adecuada.</p>
       </div>
     </div>
     <div class="key-point">
@@ -415,6 +540,13 @@
       <div class="key-content">
         <div class="key-title">Dos partes legalmente distintas: B2C y B2B</div>
         <p>El negocio tiene dos capas: el B2C (usuario final que compra el análisis) y el B2B (peluqueros que refieren clientes). Los peluqueros no son empleados, no son socios, no son distribuidores tradicionales — son referidores con un código. Esa figura necesita estar bien definida en un contrato.</p>
+      </div>
+    </div>
+    <div class="key-point">
+      <div class="key-icon">💼</div>
+      <div class="key-content">
+        <div class="key-title">Evolución del modelo de negocio — de comisión a SaaS</div>
+        <p>El modelo original (€3 comisión por cliente) evoluciona hacia suscripción mensual B2B (€29/mes por peluquería). Este cambio tiene implicaciones en el tipo de contrato con peluqueros, la relación fiscal y la recurrencia de ingresos. El abogado debería preparar un contrato de licencia SaaS escalable desde el inicio.</p>
       </div>
     </div>
     <div class="key-point">
@@ -434,8 +566,15 @@
     <div class="key-point">
       <div class="key-icon">📈</div>
       <div class="key-content">
+        <div class="key-title">Umbral del millón — preparación fiscal anticipada</div>
+        <p>Con la proyección de superar €1M en 12-18 meses, conviene preparar desde ahora la estructura fiscal para la reinversión: reservas voluntarias vs dividendos, optimización del IS al 15%, y planificación de la cuota RETA según el nivel de ingresos real.</p>
+      </div>
+    </div>
+    <div class="key-point">
+      <div class="key-icon">🏪</div>
+      <div class="key-content">
         <div class="key-title">Escalabilidad con grandes cadenas — framework de contrato</div>
-        <p>La comisión de €3 al peluquero es fija por diseño, pero si en el futuro queremos escalar con grandes cadenas (Frank's Barber, Manners, etc.) podríamos necesitar un contrato de distribución diferente con volúmenes mínimos garantizados. Vale la pena que el abogado sugiera un framework de contrato escalable.</p>
+        <p>La comisión de €2 al peluquero es fija por diseño, pero si en el futuro queremos escalar con grandes cadenas (Frank's Barber, Manners, etc.) podríamos necesitar un contrato de distribución diferente con volúmenes mínimos garantizados. Vale la pena que el abogado sugiera un framework de contrato escalable.</p>
       </div>
     </div>
   </div>
@@ -444,7 +583,7 @@
 <!-- FOOTER -->
 <div class="footer">
   <p>VISAI — Documento confidencial preparado para uso interno y asesoramiento jurídico</p>
-  <p style="margin-top:6px">Generado el 12 de mayo de 2026 · Lucas Martínez Siciliano · visaiapp.com</p>
+  <p style="margin-top:6px">Generado el 19 de mayo de 2026 · Lucas Martínez Siciliano · visaiapp.com</p>
 </div>
 
 <button class="print-btn no-print" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>

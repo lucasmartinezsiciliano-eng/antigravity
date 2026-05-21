@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISAI — El cerebro de las imágenes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    padding: 40px 20px;
+  }
+  h1 { text-align:center; font-size:11px; letter-spacing:4px; color:#444; text-transform:uppercase; margin-bottom:8px; }
+  h2 { text-align:center; font-size:28px; font-weight:700; margin-bottom:6px; }
+  .sub { text-align:center; color:#555; font-size:13px; margin-bottom:50px; }
+
+  .section-label {
+    font-size:10px; letter-spacing:3px; color:#444; text-transform:uppercase;
+    text-align:center; margin-bottom:24px; margin-top:10px;
+  }
+
+  /* ── COMPARATIVA MODO CON / SIN REFERENCIAS ── */
+  .compare {
+    display:grid; grid-template-columns:1fr 1fr; gap:16px;
+    max-width:860px; margin:0 auto 60px;
+  }
+  .compare-card {
+    border-radius:16px; padding:28px 24px;
+  }
+  .bad  { background:#1a0f0f; border:1px solid #3a1515; }
+  .good { background:#0f1a10; border:1px solid #1a3a1a; }
+  .compare-card .badge {
+    display:inline-block; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; padding:4px 10px; border-radius:20px;
+    font-weight:700; margin-bottom:16px;
+  }
+  .bad  .badge { background:#2a1010; color:#ff6060; border:1px solid #3a1515; }
+  .good .badge { background:#102010; color:#50d080; border:1px solid #1a3a1a; }
+  .compare-card h3 { font-size:17px; margin-bottom:10px; }
+  .compare-card p  { font-size:13px; color:#888; line-height:1.6; margin-bottom:12px; }
+  .compare-card .result-label { font-size:11px; color:#555; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+  .result-box {
+    background:#111; border-radius:10px; padding:14px;
+    font-size:12px; line-height:1.7; color:#aaa;
+    border:1px solid #1e1e1e;
+  }
+  .result-box .hi { color:#fff; font-weight:600; }
+  .result-box .accent-bad  { color:#ff6060; }
+  .result-box .accent-good { color:#50d080; }
+
+  /* ── CÓMO FUNCIONA POR DENTRO ── */
+  .pipeline {
+    max-width:760px; margin:0 auto 60px;
+  }
+  .pipe-step {
+    display:flex; gap:0; margin-bottom:0;
+    position:relative;
+  }
+  .pipe-left {
+    width:180px; flex-shrink:0; text-align:right;
+    padding:0 20px 30px 0;
+  }
+  .pipe-left .pl-label { font-size:11px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .pipe-left .pl-name  { font-size:14px; font-weight:600; color:#888; }
+
+  .pipe-line {
+    width:2px; background:#1e1e2e; flex-shrink:0; position:relative; margin-top:6px;
+  }
+  .pipe-dot {
+    width:12px; height:12px; border-radius:50%;
+    position:absolute; left:-5px; top:0;
+  }
+
+  .pipe-right {
+    flex:1; padding:0 0 30px 20px;
+  }
+  .pipe-card {
+    background:#111118; border:1px solid #1e1e2e; border-radius:12px;
+    padding:16px 18px;
+  }
+  .pipe-card h4 { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .pipe-card p  { font-size:12px; color:#777; line-height:1.6; }
+  .pipe-card .chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+  .chip {
+    font-size:11px; padding:3px 8px; border-radius:20px;
+    background:#1a1a25; border:1px solid #2a2a3a; color:#888;
+  }
+  .chip.ok  { background:#0f1a10; border-color:#1a3a1a; color:#50d080; }
+  .chip.bad { background:#1a0f0f; border-color:#3a1515; color:#ff6060; }
+  .chip.ai  { background:#1a1535; border-color:#2a2555; color:#9080ff; }
+  .chip.warn { background:#1a150f; border-color:#3a2a15; color:#f0a040; }
+
+  /* ── LO QUE FALTA ── */
+  .missing {
+    max-width:760px; margin:0 auto 60px;
+    background:#111118; border:1px solid #2a1a00; border-radius:16px;
+    padding:28px 28px;
+  }
+  .missing h3 { font-size:18px; margin-bottom:6px; color:#f0a040; }
+  .missing .intro { font-size:13px; color:#777; line-height:1.6; margin-bottom:20px; }
+  .cuts-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  }
+  .cut-item {
+    background:#0f0f15; border:1px solid #1e1e2e; border-radius:10px;
+    padding:12px 14px;
+  }
+  .cut-item .cut-name { font-size:13px; font-weight:600; margin-bottom:4px; }
+  .cut-item .cut-file { font-size:10px; color:#555; font-family:monospace; margin-bottom:6px; }
+  .cut-item .cut-status {
+    font-size:10px; padding:2px 7px; border-radius:10px; display:inline-block;
+  }
+  .status-missing { background:#1a0f0f; color:#ff6060; border:1px solid #3a1515; }
+  .status-ok      { background:#0f1a10; color:#50d080; border:1px solid #1a3a1a; }
+
+  /* ── IMPACTO ── */
+  .impact {
+    max-width:760px; margin:0 auto 40px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;
+  }
+  .impact-card {
+    background:#111118; border:1px solid #1e1e2e; border-radius:12px;
+    padding:20px 18px; text-align:center;
+  }
+  .impact-card .ico { font-size:32px; margin-bottom:10px; }
+  .impact-card h4  { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .impact-card p   { font-size:12px; color:#666; line-height:1.5; }
+
+  /* ── SOLUCIÓN ── */
+  .solution {
+    max-width:760px; margin:0 auto 50px;
+    background:#0f1220; border:1px solid #1e2a4a; border-radius:16px;
+    padding:28px;
+  }
+  .solution h3 { font-size:17px; margin-bottom:14px; color:#4a9eff; }
+  .sol-steps { display:flex; flex-direction:column; gap:12px; }
+  .sol-step { display:flex; gap:14px; align-items:flex-start; }
+  .sol-num {
+    width:28px; height:28px; border-radius:50%; flex-shrink:0;
+    background:#1e2a4a; border:1px solid #2a3a6a; color:#4a9eff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+  }
+  .sol-text { font-size:13px; color:#999; line-height:1.6; }
+  .sol-text strong { color:#fff; }
+
+  @media(max-width:700px){
+    .compare,.cuts-grid,.impact { grid-template-columns:1fr; }
+    .pipe-left { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>El cerebro del producto</h1>
+<h2>Sistema de referencias de cortes</h2>
+<p class="sub">Cómo funciona · Qué falta · Por qué importa tanto</p>
+
+<!-- COMPARATIVA -->
+<p class="section-label">La diferencia entre tenerlo y no tenerlo</p>
+<div class="compare">
+
+  <div class="compare-card bad">
+    <span class="badge">❌ Sin fotos de referencia — AHORA MISMO</span>
+    <h3>La IA trabaja a ciegas</h3>
+    <p>FLUX genera la imagen del cliente con el corte nuevo sin ningún ejemplo visual. Solo tiene texto describiendo el corte.</p>
+    <div class="result-label">Resultado</div>
+    <div class="result-box">
+      Instrucción enviada a FLUX:<br><br>
+      <span class="accent-bad">"Hazle un French Crop con degradado bajo. El degradado debe empezar por encima de la oreja, transición gradual, pelo en la parte de arriba con textura..."</span><br><br>
+      → FLUX "imagina" cómo es ese corte.<br>
+      → El resultado puede ser correcto o puede ser una interpretación rara.
+    </div>
+  </div>
+
+  <div class="compare-card good">
+    <span class="badge">✅ Con fotos de referencia — EL OBJETIVO</span>
+    <h3>La IA ve exactamente qué hacer</h3>
+    <p>FLUX recibe la foto del cliente + una foto real de ese corte exacto (de espaldas, sin cara). Copia el estilo pelo a pelo.</p>
+    <div class="result-label">Resultado</div>
+    <div class="result-box">
+      Lo que ve FLUX:<br><br>
+      📸 Foto 1: <span class="hi">La cara del cliente</span> — no cambies nada de aquí.<br>
+      📸 Foto 2: <span class="accent-good">Foto real del corte en una barbería</span> — copia exactamente este estilo de pelo.<br><br>
+      → FLUX aplica el corte real a la cara real.<br>
+      → Resultado mucho más fiel, parecido a un "antes y después" real.
+    </div>
+  </div>
+
+</div>
+
+<!-- PIPELINE INTERNO -->
+<p class="section-label">Cómo funciona el sistema por dentro</p>
+<div class="pipeline">
+
+  <div class="pipe-step">
+    <div class="pipe-left">
+      <div class="pl-label">Paso 1</div>
+      <div class="pl-name">Claude IA</div>
+    </div>
+    <div class="pipe-line">
+      <div class="pipe-dot" style="background:#9080ff;"></div>
+    </div>
+    <div class="pipe-right">
+      <div class="pipe-card">
+        <h4>Claude recomienda 3 cortes</h4>
+        <p>Basándose en la forma del cráneo + respuestas del quiz, Claude decide: "Este cliente necesita un French Crop con degradado bajo, un Quiff con degradado medio, y un Mullet moderno".</p>
+        <div class="chips">
+          <span class="chip ai">Claude AI</span>
+          <span class="chip ok">Ya funciona</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipe-step">
+    <div class="pipe-left">
+      <div class="pl-label">Paso 2</div>
+      <div class="pl-name">Buscador de referencias</div>
+    </div>
+    <div class="pipe-line">
+      <div class="pipe-dot" style="background:#f0a040;"></div>
+    </div>
+    <div class="pipe-right">
+      <div class="pipe-card">
+        <h4>El sistema busca una foto de ese corte</h4>
+        <p>Para cada corte recomendado, el sistema busca en este orden: ① Foto curada guardada en disco (la mejor) → ② Foto en caché de búsquedas anteriores → ③ Búsqueda en Pexels (banco de imágenes) → ④ Sin foto, trabaja solo con texto.</p>
+        <div class="chips">
+          <span class="chip bad">① Carpeta curada — VACÍA ahora mismo</span>
+          <span class="chip warn">③ Pexels — sin clave configurada</span>
+          <span class="chip ok">Lógica completa construida</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipe-step">
+    <div class="pipe-left">
+      <div class="pl-label">Paso 3</div>
+      <div class="pl-name">FLUX IA</div>
+    </div>
+    <div class="pipe-line">
+      <div class="pipe-dot" style="background:#4a9eff;"></div>
+    </div>
+    <div class="pipe-right">
+      <div class="pipe-card">
+        <h4>FLUX genera la imagen del cliente con el corte</h4>
+        <p>Si tiene foto de referencia → modo avanzado (foto cliente + foto corte → resultado preciso). Si no tiene foto → modo básico (solo texto → resultado variable).</p>
+        <div class="chips">
+          <span class="chip ai">FLUX Kontext Max</span>
+          <span class="chip ok">Integración lista</span>
+          <span class="chip warn">Corriendo en modo básico ahora</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipe-step">
+    <div class="pipe-left">
+      <div class="pl-label">Paso 4</div>
+      <div class="pl-name">Resultado</div>
+    </div>
+    <div class="pipe-line" style="background:transparent;">
+      <div class="pipe-dot" style="background:#50d080;"></div>
+    </div>
+    <div class="pipe-right">
+      <div class="pipe-card">
+        <h4>El cliente ve su "antes y después"</h4>
+        <p>En la web de resultados: foto frontal con el nuevo corte + foto lateral + foto de una barbería real con ese mismo corte para enseñarle al barbero.</p>
+        <div class="chips">
+          <span class="chip ok">Web construida</span>
+          <span class="chip warn">Calidad limitada sin referencias</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LO QUE FALTA -->
+<div class="missing">
+  <h3>⚠ Lo único que falta: 15 fotos</h3>
+  <p class="intro">
+    Todo el sistema está construido y listo. El único hueco es que la carpeta
+    <strong style="color:#f0a040; font-family:monospace;">knowledge_base/barber_references/curated/</strong>
+    está vacía. Necesita 1 foto por corte — de espaldas, sin cara visible, de una barbería real.
+    Con eso, el modo avanzado se activa automáticamente para todos los cortes.
+  </p>
+  <div class="cuts-grid">
+    <div class="cut-item">
+      <div class="cut-name">Degradado bajo texturizado</div>
+      <div class="cut-file">low_fade_textured.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">French Crop con degradado</div>
+      <div class="cut-file">french_crop_fade.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Mullet moderno</div>
+      <div class="cut-file">modern_mullet.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Wolf Cut</div>
+      <div class="cut-file">wolf_cut.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Quiff con degradado medio</div>
+      <div class="cut-file">quiff_mid_fade.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Buzz Cut taper</div>
+      <div class="cut-file">buzz_cut_taper.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">High Fade con raya</div>
+      <div class="cut-file">high_fade_hard_part.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Flequillo cortina</div>
+      <div class="cut-file">curtain_bangs.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Skin Fade con barba</div>
+      <div class="cut-file">zero_fade_beard.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Taper clásico natural</div>
+      <div class="cut-file">classic_taper_natural.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Slick back degradado bajo</div>
+      <div class="cut-file">slick_back_low_fade.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Rizos con taper</div>
+      <div class="cut-file">natural_curls_taper.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Pompadour con fade</div>
+      <div class="cut-file">pompadour_mid_fade.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Flequillo texturizado taper</div>
+      <div class="cut-file">textured_fringe_taper.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+    <div class="cut-item">
+      <div class="cut-name">Número 2 con barba</div>
+      <div class="cut-file">number2_full_beard.jpg</div>
+      <div class="cut-status status-missing">Falta</div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPACTO -->
+<p class="section-label">Por qué esto es la base del producto</p>
+<div class="impact">
+  <div class="impact-card">
+    <div class="ico">🎯</div>
+    <h4>Imágenes más precisas</h4>
+    <p>FLUX copia el corte real pelo a pelo en vez de inventárselo. El resultado es como un "antes y después" de barbería real.</p>
+  </div>
+  <div class="impact-card">
+    <div class="ico">🧠</div>
+    <h4>Claude recomienda mejor</h4>
+    <p>Si el contexto de referencia incluye fotos reales, Claude entiende mejor qué estilos existen de verdad y cuáles funcionan para cada forma de cráneo.</p>
+  </div>
+  <div class="impact-card">
+    <div class="ico">📈</div>
+    <h4>Se mejora solo con el tiempo</h4>
+    <p>Cada foto que se añade a la carpeta mejora el producto automáticamente para todos los usuarios futuros. La base crece y la calidad sube.</p>
+  </div>
+</div>
+
+<!-- SOLUCIÓN -->
+<div class="solution">
+  <h3>¿Cómo lo solucionamos?</h3>
+  <div class="sol-steps">
+    <div class="sol-step">
+      <div class="sol-num">1</div>
+      <div class="sol-text">
+        <strong>Buscar 15 fotos en Pinterest o Instagram.</strong> Cada foto debe ser de espaldas (la nuca), sin cara visible. Busca por ejemplo: "french crop nuca barbería" o "skin fade back nape barbershop". Una foto por corte es suficiente.
+      </div>
+    </div>
+    <div class="sol-step">
+      <div class="sol-num">2</div>
+      <div class="sol-text">
+        <strong>Guardarlas con el nombre exacto en la carpeta.</strong> La ruta es: <code style="color:#4a9eff; background:#1a1a25; padding:2px 6px; border-radius:4px;">stylescan/backend/knowledge_base/barber_references/curated/</code>. El nombre debe coincidir exactamente (ej: <code style="color:#4a9eff; background:#1a1a25; padding:2px 6px; border-radius:4px;">french_crop_fade.jpg</code>).
+      </div>
+    </div>
+    <div class="sol-step">
+      <div class="sol-num">3</div>
+      <div class="sol-text">
+        <strong>El sistema lo detecta automáticamente.</strong> No hace falta cambiar nada de código. La próxima vez que alguien haga un análisis, FLUX usa las fotos reales automáticamente para ese corte.
+      </div>
+    </div>
+    <div class="sol-step">
+      <div class="sol-num">4</div>
+      <div class="sol-text">
+        <strong>A largo plazo: el agente de Instagram lo hace solo.</strong> El scraper de Instagram que está construido puede ir descargando automáticamente fotos nuevas de barberías españolas y añadirlas a la carpeta. Cuantas más, mejor.
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="text-align:center;color:#222;font-size:12px;padding-bottom:40px;">VISAI · Knowledge Base · Mayo 2026</p>
+</body>
+</html>

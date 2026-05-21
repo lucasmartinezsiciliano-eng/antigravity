@@ -2,24 +2,37 @@
   "mcpServers": {
     "github": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
         "GITHUB_TOKEN": "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"
       }
     },
     "obsidian": {
       "command": "npx",
-      "args": [
-        "-y",
-        "mcp-obsidian"
-      ],
+      "args": ["-y", "mcp-obsidian"],
       "env": {
         "OBSIDIAN_API_KEY": "a1f36116f9a418c81c2504baa80fbec6b295a4038608aa66ceae78181fd09fe3",
         "OBSIDIAN_HOST": "https://127.0.0.1:27124/"
       }
+    },
+    "n8n-mcp": {
+      "command": "npx",
+      "args": ["n8n-mcp"],
+      "env": {
+        "MCP_MODE": "stdio",
+        "LOG_LEVEL": "error",
+        "DISABLE_CONSOLE_OUTPUT": "true",
+        "N8N_API_URL": "https://n8n.lukimporta.es/",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlNDE3YjIwOC0xZDcxLTRkYjUtODIxNC03YzFlZTI4ZTdiYjMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3NjEyODM5LCJleHAiOjE3NzAxNTk2MDB9.dif9nIccb4umxx6p__AYprtDP4rnE5xMl5pln4GLVTI"
+      }
+    },
+    "n8n-workflows Docs": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://gitmcp.io/Zie619/n8n-workflows"]
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["--y", "@upstash/context7-mcp"]
     }
   }
 }

@@ -4,6 +4,7 @@
 
 const N8N_WEBHOOK_URL       = 'https://n8n.lukimporta.es/webhook/broker-lead';
 const N8N_WEBHOOK_PADRE_URL = 'https://n8n.lukimporta.es/webhook/broker-lead-padre';
+const GHL_WEBHOOK_URL       = 'https://services.leadconnectorhq.com/hooks/8KjcyGRXhMDKoNIhborg/webhook-trigger/2313df61-3f1e-4370-a373-f01e55eeafe1';
 
 // ============================================
 // TOAST
@@ -141,15 +142,76 @@ function calcScenario(precio, ahorros, ltv, itpEf, cuotasTotales, ingresosTotale
 }
 
 // ============================================
-// ENVÍO A N8N
+// ENVÍO A N8N + GHL
 // ============================================
+function buildGHLPayload(payload) {
+  const parts = (payload.nombre || '').trim().split(/\s+/);
+  const firstName = parts[0] || '';
+  const lastName  = parts.slice(1).join(' ') || '';
+  const phone     = '+34' + (payload.telefono || '').replace(/[\s\-.]/g, '');
+  return {
+    firstName,
+    lastName,
+    phone,
+    email:  payload.email || '',
+    source: 'Broker Hipotecario Web',
+    tags:   ['broker-web', payload.source || 'general', payload.clasificacion || ''].filter(Boolean),
+    customFields: {
+      // Contacto y consentimiento
+      consent:           payload.consent            ?? false,
+      consent_marketing: payload.consent_marketing  ?? false,
+      // Clasificación
+      urgencia:          payload.urgencia            || '',
+      clasificacion:     payload.clasificacion       || '',
+      // Titular 1
+      contrato1:         payload.contrato1           || '',
+      ingresos1:         payload.ingresos1           ?? '',
+      cuotas1:           payload.cuotas1             ?? '',
+      patrimonio1:       payload.patrimonio1         || 'no',
+      edad1:             payload.edad1               ?? '',
+      // Titular 2 (null si solo 1 titular)
+      n_titulares:       payload.n_titulares         ?? 1,
+      contrato2:         payload.contrato2           ?? null,
+      ingresos2:         payload.ingresos2           ?? null,
+      cuotas2:           payload.cuotas2             ?? null,
+      patrimonio2:       payload.patrimonio2         ?? null,
+      edad2:             payload.edad2               ?? null,
+      // Vivienda
+      precio_vivienda:   payload.precio              ?? '',
+      ahorros:           payload.ahorros             ?? '',
+      provincia:         payload.provincia           || '',
+      tipo_compra:       payload.tipo_compra         || '',
+      itp_pct:           payload.itp_pct             ?? '',
+      itp_ccaa:          payload.itp_ccaa            || '',
+      // Escenario 80% LTV
+      score_80:          payload.sc_a?.score         ?? '',
+      hipoteca_80:       payload.sc_a?.hipoteca      ?? '',
+      cuota_80:          payload.sc_a?.cuota         ?? '',
+      dti_80:            payload.sc_a?.dti           ?? '',
+      plazo_80:          payload.sc_a?.plazo         ?? '',
+      suficiente_80:     payload.sc_a?.suficiente    ?? '',
+      // Escenario 90% LTV
+      score_90:          payload.sc_b?.score         ?? '',
+      hipoteca_90:       payload.sc_b?.hipoteca      ?? '',
+      cuota_90:          payload.sc_b?.cuota         ?? '',
+      dti_90:            payload.sc_b?.dti           ?? '',
+      plazo_90:          payload.sc_b?.plazo         ?? '',
+      suficiente_90:     payload.sc_b?.suficiente    ?? '',
+      // Meta
+      pagina:            window.location.pathname,
+    },
+  };
+}
+
 async function submitLead(payload) {
-  const body = JSON.stringify({ ...payload, timestamp: new Date().toISOString(), page: window.location.pathname });
-  const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
+  const fullPayload = { ...payload, timestamp: new Date().toISOString(), page: window.location.pathname };
+  const n8nOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fullPayload) };
+  const ghlOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildGHLPayload(payload)) };
   try {
     const [res] = await Promise.allSettled([
-      fetch(N8N_WEBHOOK_URL, opts),
-      fetch(N8N_WEBHOOK_PADRE_URL, opts),
+      fetch(N8N_WEBHOOK_URL, n8nOpts),
+      fetch(N8N_WEBHOOK_PADRE_URL, n8nOpts),
+      fetch(GHL_WEBHOOK_URL, ghlOpts),
     ]);
     return res.status === 'fulfilled' && res.value.ok;
   } catch {
@@ -419,8 +481,8 @@ function initQuiz() {
       consent: true, consent_marketing: consentMarketing,
       urgencia, clasificacion,
       n_titulares: nSol,
-      contrato1, ingresos1: ingresos1Raw, cuotas1,
-      contrato2: nSol === 2 ? contrato2 : null, ingresos2: ingresos2Raw, cuotas2,
+      contrato1, ingresos1: ingresos1Raw, cuotas1, patrimonio1: pat1, edad1,
+      contrato2: nSol === 2 ? contrato2 : null, ingresos2: nSol === 2 ? ingresos2Raw : null, cuotas2: nSol === 2 ? cuotas2 : null, patrimonio2: nSol === 2 ? pat2 : null, edad2: nSol === 2 ? edad2 : null,
       precio, ahorros, provincia, tipo_compra: tipo,
       itp_pct: itpEf.itp, itp_ccaa: itpEf.ccaa,
       sc_a: {

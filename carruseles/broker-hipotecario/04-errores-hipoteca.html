@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carrusel 02 — 5 Errores al pedir una hipoteca</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding: 48px 24px 64px;
+  }
+  h1 { color: #555; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-bottom: 8px; font-weight: 500; }
+  .subtitle { color: #333; font-size: 11px; text-align: center; margin-bottom: 40px; }
+  .slides-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+  .slide {
+    width: 360px; height: 360px; border-radius: 14px; overflow: hidden;
+    flex-shrink: 0; position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 28px;
+    background: linear-gradient(145deg, #0A1628 0%, #0D2040 60%, #0A1628 100%);
+  }
+  .slide-num { position: absolute; top: 16px; right: 18px; color: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600; }
+  .brand { position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 7px; }
+  .brand-dot { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+  .brand-name { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .error-num {
+    font-size: 64px; font-weight: 800; color: rgba(42,181,207,0.12);
+    position: absolute; top: 40px; right: 20px; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tag { display: inline-block; background: rgba(255,80,80,0.12); border: 1px solid rgba(255,80,80,0.25); color: #FF6060; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 12px; width: fit-content; }
+  .tag-blue { background: rgba(42,181,207,0.12); border-color: rgba(42,181,207,0.25); color: #2AB5CF; }
+  .divider { width: 36px; height: 2px; background: #FF6060; margin-bottom: 14px; border-radius: 2px; }
+  .divider-blue { background: #2AB5CF; }
+  .slide-heading { font-size: 23px; font-weight: 700; line-height: 1.2; color: #fff; margin-bottom: 10px; }
+  .slide-heading em { color: #2AB5CF; font-style: normal; }
+  .slide-sub { font-size: 12.5px; color: rgba(255,255,255,0.5); line-height: 1.55; }
+  .slide-sub strong { color: rgba(255,255,255,0.8); font-weight: 600; }
+
+  /* Hook slide */
+  .s1 { background: linear-gradient(145deg, #1A0A0A 0%, #280D0D 60%, #1A0A0A 100%); }
+  .s1 .slide-heading { font-size: 27px; }
+  .big-num { font-size: 80px; font-weight: 900; color: #FF6060; line-height: 0.9; margin-bottom: 10px; }
+
+  /* CTA slide */
+  .s7 { background: linear-gradient(145deg, #2AB5CF 0%, #1E9BB5 50%, #157A90 100%); justify-content: center; text-align: center; }
+  .s7 .slide-heading { color: #fff; font-size: 22px; }
+  .s7 .slide-sub { color: rgba(255,255,255,0.75); }
+  .s7 .brand-dot { background: rgba(255,255,255,0.2); }
+  .s7 .brand-name { color: rgba(255,255,255,0.45); }
+  .s7 .slide-num { color: rgba(255,255,255,0.3); }
+  .cta-box { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px 20px; margin-top: 18px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<h1>Carrusel 02 — 5 errores al pedir una hipoteca</h1>
+<p class="subtitle">7 slides · 1080×1080 · @brokerhipotecario.es</p>
+
+<div class="slides-row">
+
+  <!-- SLIDE 1: HOOK -->
+  <div class="slide s1">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">1 / 7</span>
+    <div class="big-num">5</div>
+    <div class="slide-heading">Errores que te cuestan<br>miles de euros<br>al pedir la hipoteca</div>
+    <div class="slide-sub">La mayoría los comete. Desliza y evítalos →</div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">2 / 7</span>
+    <div class="error-num">01</div>
+    <div class="tag">Error #1</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Ir directamente<br>a <em>tu banco</em></div>
+    <div class="slide-sub">Tu banco solo te ofrece sus condiciones. Un broker compara <strong>más de 20 entidades</strong> y negocia por ti.</div>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">3 / 7</span>
+    <div class="error-num">02</div>
+    <div class="tag">Error #2</div>
+    <div class="divider"></div>
+    <div class="slide-heading">No calcular<br>el <em>coste real</em><br>de la hipoteca</div>
+    <div class="slide-sub">El tipo de interés no lo es todo. Comisiones, seguros vinculados y gastos disparan el precio final.</div>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">4 / 7</span>
+    <div class="error-num">03</div>
+    <div class="tag">Error #3</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Firmar sin leer<br>la <em>FEIN</em></div>
+    <div class="slide-sub">La Ficha Europea de Información Normalizada es el documento clave. Cada cláusula importa. Léela con un experto.</div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">5 / 7</span>
+    <div class="error-num">04</div>
+    <div class="tag">Error #4</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Pedir el <em>máximo</em><br>que te conceden</div>
+    <div class="slide-sub">Tu cuota mensual no debería superar el 35% de tus ingresos. El banco aprueba más de lo que conviene en muchos casos.</div>
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">6 / 7</span>
+    <div class="error-num">05</div>
+    <div class="tag">Error #5</div>
+    <div class="divider"></div>
+    <div class="slide-heading">No conocer<br>tu <em>perfil</em> real<br>de riesgo</div>
+    <div class="slide-sub">Cada entidad valora el perfil diferente. Un broker sabe exactamente qué banco se adapta mejor a tu situación.</div>
+  </div>
+
+  <!-- SLIDE 7: CTA -->
+  <div class="slide s7">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">7 / 7</span>
+    <div class="slide-heading">Evita estos errores<br>con un experto a tu lado</div>
+    <div class="slide-sub">Estudio gratuito de tu caso.<br>Sin compromiso. Reg. BdE D219.</div>
+    <div class="cta-box">brokerhipotecario.es → Calculadora</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carruseles — BrokerHipotecario.es</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d0d; font-family: 'Segoe UI', system-ui, sans-serif; padding: 56px 40px 80px; color: #fff; }
+
+  .top-label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #3a3a3a; margin-bottom: 6px; }
+  .brand { color: #2AB5CF; font-size: 22px; font-weight: 700; margin-bottom: 36px; }
+
+  /* Section headers */
+  .section { margin-bottom: 48px; }
+  .section-header { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #1e1e1e; }
+  .section-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .section-desc { font-size: 11px; color: #3a3a3a; margin-top: 2px; }
+  .section-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 12px; border-radius: 100px; }
+  .section-badge.ads { background: rgba(255,180,0,0.12); color: #FFB400; border: 1px solid rgba(255,180,0,0.25); }
+  .section-badge.organic { background: rgba(42,181,207,0.1); color: #2AB5CF; border: 1px solid rgba(42,181,207,0.2); }
+
+  /* Cards */
+  .grid { display: flex; flex-direction: column; gap: 7px; max-width: 600px; }
+  .card { background: #161616; border: 1px solid #222; border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; text-decoration: none; transition: border-color 0.18s, background 0.18s; }
+  .card:hover { border-color: #2AB5CF; background: #1a1a1a; }
+
+  .card-left { flex: 1; }
+  .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+  .card-num { font-size: 10px; color: #3a3a3a; font-weight: 700; }
+  .card-stage { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 100px; }
+  .stage-tofu  { background: rgba(42,181,207,0.1);  color: #2AB5CF;  border: 1px solid rgba(42,181,207,0.2);  }
+  .stage-mofu  { background: rgba(255,180,0,0.08);  color: #FFB400;  border: 1px solid rgba(255,180,0,0.18);  }
+  .stage-bofu  { background: rgba(80,220,120,0.08); color: #50DC78;  border: 1px solid rgba(80,220,120,0.18); }
+  .stage-cold  { background: rgba(255,140,0,0.1);   color: #FF8C00;  border: 1px solid rgba(255,140,0,0.22);  }
+  .stage-retarget { background: rgba(200,100,255,0.1); color: #C864FF; border: 1px solid rgba(200,100,255,0.22); }
+  .stage-proof { background: rgba(255,80,80,0.08);  color: #FF6060;  border: 1px solid rgba(255,80,80,0.18);  }
+
+  .card-title { font-size: 14px; color: #e8e8e8; font-weight: 600; }
+  .card-meta  { font-size: 10px; color: #3a3a3a; margin-top: 2px; }
+  .arrow { color: #2AB5CF; font-size: 15px; flex-shrink: 0; }
+
+  /* Ads section accent */
+  .section.ads .section-title { color: #FFB400; }
+  .section.ads .card { border-color: #1e1a10; }
+  .section.ads .card:hover { border-color: #FFB400; }
+  .section.ads .arrow { color: #FFB400; }
+</style>
+</head>
+<body>
+
+  <div class="top-label">Carruseles Instagram</div>
+  <div class="brand">BrokerHipotecario.es · by Firmax</div>
+
+  <!-- ═══════════════════════════════════ ADS ═══════════════════════════════════ -->
+  <div class="section ads">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Meta Ads · Paid</div>
+        <div class="section-desc">AIDA · lenguaje neutro · categoría CREDIT+HOUSING · sin segmentación demográfica</div>
+      </div>
+      <span class="section-badge ads">Paid</span>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="ad-01-cold-traffic.html">
+        <div class="card-left">
+          <div class="card-top">
+            <span class="card-num">AD-01</span>
+            <span class="card-stage stage-cold">Cold traffic</span>
+          </div>
+          <div class="card-title">¿Buscando la mejor hipoteca?</div>
+          <div class="card-meta">5 slides · Audiencia fría · AIDA completo · Hook de identificación</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="ad-02-retargeting.html">
+        <div class="card-left">
+          <div class="card-top">
+            <span class="card-num">AD-02</span>
+            <span class="card-stage stage-retarget">Retargeting</span>
+          </div>
+          <div class="card-title">¿Todavía buscando tu hipoteca ideal?</div>
+          <div class="card-meta">4 slides · Visitantes web + interacciones IG · Elimina objeción "el broker cobra"</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="ad-03-social-proof.html">
+        <div class="card-left">
+          <div class="card-top">
+            <span class="card-num">AD-03</span>
+            <span class="card-stage stage-proof">Social proof</span>
+          </div>
+          <div class="card-title">Casos reales: lo que conseguimos para nuestros clientes</div>
+          <div class="card-meta">5 slides · Cold + warm · Testimonios + ahorro concreto en € · Alta conversión</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ ORGÁNICO ═══════════════════════════════════ -->
+  <div class="section organic">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Contenido Orgánico · Instagram</div>
+        <div class="section-desc">TOFU / MOFU / BOFU · PAS emocional · alta compartibilidad · guardados</div>
+      </div>
+      <span class="section-badge organic">Organic</span>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="01-conseguir-mejor-hipoteca.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">01</span><span class="card-stage stage-tofu">TOFU</span></div>
+          <div class="card-title">Cómo conseguir la mejor hipoteca</div>
+          <div class="card-meta">6 slides · Por qué usar un broker · Hook "no vayas al banco sin leer esto"</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="04-errores-hipoteca.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">04</span><span class="card-stage stage-tofu">TOFU</span></div>
+          <div class="card-title">5 errores al pedir tu hipoteca</div>
+          <div class="card-meta">7 slides · Error #1: ir directo al banco · Formato lista · Alta compartibilidad</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="06-ahorros-necesarios.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">06</span><span class="card-stage stage-tofu">TOFU</span></div>
+          <div class="card-title">¿Cuánto necesitas ahorrado para comprar piso?</div>
+          <div class="card-meta">7 slides · Regla 80% · Ejemplo 200k concreto · Alta búsqueda orgánica</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="07-hipoteca-100.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">07</span><span class="card-stage stage-tofu">TOFU</span></div>
+          <div class="card-title">¿Existe la hipoteca al 100%?</div>
+          <div class="card-meta">6 slides · Mito vs realidad · Aval ICO 2025 · Alta curiosidad</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="02-hipoteca-fija-vs-variable.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">02</span><span class="card-stage stage-mofu">MOFU</span></div>
+          <div class="card-title">Fija vs variable: ¿cuál te conviene?</div>
+          <div class="card-meta">6 slides · Comparativa · Perfil conservador vs arriesgado</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="03-cuanto-puedo-hipotecarme.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">03</span><span class="card-stage stage-mofu">MOFU</span></div>
+          <div class="card-title">¿Cuánto me pueden prestar?</div>
+          <div class="card-meta">6 slides · Regla 35% DTI · 5 factores bancarios · Educativo</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="05-por-que-broker.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">05</span><span class="card-stage stage-mofu">MOFU</span></div>
+          <div class="card-title">¿Para qué sirve un broker hipotecario?</div>
+          <div class="card-meta">6 slides · Banco vs broker · Proceso 4 pasos · Stats y diferencial</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="card" href="08-primera-consulta.html">
+        <div class="card-left">
+          <div class="card-top"><span class="card-num">08</span><span class="card-stage stage-bofu">BOFU</span></div>
+          <div class="card-title">Primera consulta gratuita: qué incluye</div>
+          <div class="card-meta">6 slides · AIDA puro · Objeción respondida · CTA "2 minutos"</div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+    </div>
+  </div>
+
+</body>
+</html>

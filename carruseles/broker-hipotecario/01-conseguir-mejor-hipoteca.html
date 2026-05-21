@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carrusel 01 — Cómo conseguir la mejor hipoteca</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; padding: 48px 24px 64px; }
+  h1 { color: #555; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-bottom: 8px; font-weight: 500; }
+  .subtitle { color: #333; font-size: 11px; text-align: center; margin-bottom: 40px; }
+  .slides-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+  .slide {
+    width: 360px; height: 360px; border-radius: 14px; overflow: hidden;
+    flex-shrink: 0; position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 28px;
+    background: linear-gradient(145deg, #0A1628 0%, #0D2040 60%, #0A1628 100%);
+  }
+  .slide-num { position: absolute; top: 16px; right: 18px; color: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600; }
+  .brand { position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 7px; }
+  .brand-dot { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+  .brand-name { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .tag { display: inline-block; background: rgba(42,181,207,0.12); border: 1px solid rgba(42,181,207,0.25); color: #2AB5CF; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 12px; width: fit-content; }
+  .divider { width: 36px; height: 2px; background: #2AB5CF; margin-bottom: 14px; border-radius: 2px; }
+  .slide-heading { font-size: 24px; font-weight: 700; line-height: 1.2; color: #fff; margin-bottom: 10px; }
+  .slide-heading em { color: #2AB5CF; font-style: normal; }
+  .slide-sub { font-size: 12.5px; color: rgba(255,255,255,0.5); line-height: 1.55; }
+  .slide-sub strong { color: rgba(255,255,255,0.8); }
+
+  /* Stats */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .stat-box { flex: 1; background: rgba(42,181,207,0.08); border: 1px solid rgba(42,181,207,0.15); border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .stat-num { font-size: 24px; font-weight: 800; color: #2AB5CF; line-height: 1; }
+  .stat-label { font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 4px; line-height: 1.3; }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 9px; }
+  .step { display: flex; gap: 10px; align-items: flex-start; }
+  .step-num { width: 20px; height: 20px; background: #2AB5CF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #fff; flex-shrink: 0; margin-top: 1px; }
+  .step-text { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; }
+  .step-text strong { color: #fff; font-weight: 600; }
+
+  /* Pill row */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .pill { background: rgba(42,181,207,0.1); border: 1px solid rgba(42,181,207,0.2); color: #2AB5CF; font-size: 10.5px; font-weight: 600; padding: 5px 12px; border-radius: 100px; }
+
+  /* Slides individuales */
+  .s1 { justify-content: center; text-align: center; background: linear-gradient(145deg, #0A1628 0%, #0D2240 60%, #0A1628 100%); }
+  .s1 .slide-heading { font-size: 27px; }
+
+  .s6 { background: linear-gradient(145deg, #2AB5CF 0%, #1E9BB5 50%, #157A90 100%); justify-content: center; text-align: center; }
+  .s6 .brand-dot { background: rgba(255,255,255,0.2); }
+  .s6 .brand-name { color: rgba(255,255,255,0.45); }
+  .s6 .slide-num { color: rgba(255,255,255,0.3); }
+  .s6 .slide-heading { color: #fff; font-size: 22px; }
+  .s6 .slide-sub { color: rgba(255,255,255,0.75); }
+  .cta-box { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px 20px; margin-top: 18px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<h1>Carrusel 01 — Cómo conseguir la mejor hipoteca</h1>
+<p class="subtitle">6 slides · 1080×1080 · @brokerhipotecario.es</p>
+
+<div class="slides-row">
+
+  <!-- SLIDE 1 -->
+  <div class="slide s1">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">1 / 6</span>
+    <div class="tag">Guía hipotecaria</div>
+    <div class="slide-heading">¿Comprando casa?<br>No vayas al banco<br><em>sin leer esto</em></div>
+    <div class="slide-sub">Lo que los bancos no te cuentan cuando pides tu hipoteca →</div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">2 / 6</span>
+    <div class="tag">El problema</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Tu banco solo<br>te ofrece <em>sus</em><br>condiciones</div>
+    <div class="slide-sub">No compara. No negocia. Te da lo que le conviene a él. Y tú firmas sin saber si es lo mejor que podrías conseguir.</div>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">3 / 6</span>
+    <div class="tag">La solución</div>
+    <div class="divider"></div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num">+20</div>
+        <div class="stat-label">bancos comparados por tu caso</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">20</div>
+        <div class="stat-label">años negociando hipotecas en Cataluña</div>
+      </div>
+    </div>
+    <div class="slide-heading">Nosotros <em>comparamos<br>y negociamos</em><br>por ti</div>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">4 / 6</span>
+    <div class="tag">Cómo funciona</div>
+    <div class="divider"></div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Analizamos tu perfil</strong> — ingresos, ahorros y situación</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Comparamos +20 bancos</strong> y elegimos las mejores ofertas</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Negociamos las condiciones</strong> y gestionamos todo el papeleo</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Firmas en el notario</strong> con total seguridad</div></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">5 / 6</span>
+    <div class="tag">Qué gestionamos</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Todos los tipos<br>de <em>hipoteca</em></div>
+    <div class="pill-row">
+      <span class="pill">Fija</span>
+      <span class="pill">Variable</span>
+      <span class="pill">100%</span>
+      <span class="pill">Segunda vivienda</span>
+      <span class="pill">Funcionarios</span>
+      <span class="pill">No residentes</span>
+    </div>
+    <div class="slide-sub">Tarragona, Reus, Salou y sur de Barcelona.</div>
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide s6">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">6 / 6</span>
+    <div class="slide-heading">Estudio gratuito<br>de tu caso</div>
+    <div class="slide-sub">Sin compromiso. Sin permanencia.<br>Reg. BdE D219.</div>
+    <div class="cta-box">brokerhipotecario.es → Calculadora</div>
+  </div>
+
+</div>
+</body>
+</html>

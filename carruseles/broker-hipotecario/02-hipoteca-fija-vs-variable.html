@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carrusel 02 — Hipoteca fija vs variable</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; padding: 48px 24px 64px; }
+  h1 { color: #555; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-bottom: 8px; font-weight: 500; }
+  .subtitle { color: #333; font-size: 11px; text-align: center; margin-bottom: 40px; }
+  .slides-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+  .slide {
+    width: 360px; height: 360px; border-radius: 14px; overflow: hidden;
+    flex-shrink: 0; position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 28px;
+    background: linear-gradient(145deg, #0A1628 0%, #0D2040 60%, #0A1628 100%);
+  }
+  .slide-num { position: absolute; top: 16px; right: 18px; color: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600; }
+  .brand { position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 7px; }
+  .brand-dot { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+  .brand-name { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .tag { display: inline-block; background: rgba(42,181,207,0.12); border: 1px solid rgba(42,181,207,0.25); color: #2AB5CF; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 12px; width: fit-content; }
+  .divider { width: 36px; height: 2px; background: #2AB5CF; margin-bottom: 14px; border-radius: 2px; }
+  .slide-heading { font-size: 24px; font-weight: 700; line-height: 1.2; color: #fff; margin-bottom: 10px; }
+  .slide-heading em { color: #2AB5CF; font-style: normal; }
+  .slide-sub { font-size: 12.5px; color: rgba(255,255,255,0.5); line-height: 1.55; }
+  .slide-sub strong { color: rgba(255,255,255,0.8); }
+
+  /* Comparativa */
+  .vs-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .vs-col { flex: 1; border-radius: 8px; padding: 10px 12px; }
+  .vs-col.fija { background: rgba(42,181,207,0.1); border: 1px solid rgba(42,181,207,0.2); }
+  .vs-col.variable { background: rgba(255,180,0,0.08); border: 1px solid rgba(255,180,0,0.2); }
+  .vs-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .vs-col.fija .vs-label { color: #2AB5CF; }
+  .vs-col.variable .vs-label { color: #FFB400; }
+  .vs-item { font-size: 10.5px; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 2px; }
+  .vs-item::before { content: '·  '; }
+
+  /* Check list */
+  .check-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .check-list li { display: flex; gap: 10px; font-size: 12.5px; color: rgba(255,255,255,0.65); line-height: 1.4; align-items: flex-start; }
+  .check-list li .icon { color: #2AB5CF; flex-shrink: 0; font-style: normal; margin-top: 1px; }
+
+  /* Conclusión slide */
+  .verdict { background: rgba(42,181,207,0.08); border: 1px solid rgba(42,181,207,0.18); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .verdict-label { font-size: 9px; color: #2AB5CF; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .verdict-text { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+
+  .s1 { justify-content: center; text-align: center; }
+  .s1 .slide-heading { font-size: 27px; }
+
+  .s6 { background: linear-gradient(145deg, #2AB5CF 0%, #1E9BB5 50%, #157A90 100%); justify-content: center; text-align: center; }
+  .s6 .brand-dot { background: rgba(255,255,255,0.2); }
+  .s6 .brand-name { color: rgba(255,255,255,0.45); }
+  .s6 .slide-num { color: rgba(255,255,255,0.3); }
+  .s6 .slide-heading { color: #fff; font-size: 21px; }
+  .s6 .slide-sub { color: rgba(255,255,255,0.75); }
+  .cta-box { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px 20px; margin-top: 18px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<h1>Carrusel 02 — Hipoteca fija vs variable ¿Cuál te conviene?</h1>
+<p class="subtitle">6 slides · 1080×1080 · @brokerhipotecario.es</p>
+
+<div class="slides-row">
+
+  <!-- SLIDE 1 -->
+  <div class="slide s1">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">1 / 6</span>
+    <div class="tag">Hipoteca</div>
+    <div class="slide-heading">Fija o variable:<br>¿cuál te <em>conviene</em><br>a ti?</div>
+    <div class="slide-sub">La respuesta depende de tu perfil. Te lo explicamos →</div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">2 / 6</span>
+    <div class="tag">Hipoteca fija</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Pagas lo mismo<br><em>siempre</em></div>
+    <ul class="check-list">
+      <li><em class="icon">✓</em>Cuota estable desde el primer día</li>
+      <li><em class="icon">✓</em>No depende del Euríbor</li>
+      <li><em class="icon">✓</em>Ideal si valoras la tranquilidad</li>
+      <li><em class="icon">·</em><span style="color:rgba(255,255,255,0.35)">Tipo inicial más alto que la variable</span></li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">3 / 6</span>
+    <div class="tag">Hipoteca variable</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Empieza más barata,<br>depende del<br><em>Euríbor</em></div>
+    <ul class="check-list">
+      <li><em class="icon">✓</em>Tipo inicial más bajo</li>
+      <li><em class="icon">✓</em>Puede bajar si el Euríbor baja</li>
+      <li><em class="icon">·</em><span style="color:rgba(255,255,255,0.35)">Cuota puede subir si el Euríbor sube</span></li>
+      <li><em class="icon">·</em><span style="color:rgba(255,255,255,0.35)">Mayor incertidumbre a largo plazo</span></li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">4 / 6</span>
+    <div class="tag">Comparativa</div>
+    <div class="divider"></div>
+    <div class="vs-row">
+      <div class="vs-col fija">
+        <div class="vs-label">Fija</div>
+        <div class="vs-item">Estabilidad total</div>
+        <div class="vs-item">Perfil conservador</div>
+        <div class="vs-item">Plazo largo</div>
+      </div>
+      <div class="vs-col variable">
+        <div class="vs-label">Variable</div>
+        <div class="vs-item">Cuota inicial baja</div>
+        <div class="vs-item">Plazo corto</div>
+        <div class="vs-item">Ingresos altos</div>
+      </div>
+    </div>
+    <div class="slide-sub">No existe una respuesta universal. Depende de tu situación, tus ingresos y cuánto tiempo vas a vivir en la vivienda.</div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">5 / 6</span>
+    <div class="tag">Nuestra recomendación</div>
+    <div class="divider"></div>
+    <div class="verdict">
+      <div class="verdict-label">Lo que hacemos nosotros</div>
+      <div class="verdict-text">Analizamos tu perfil completo y te presentamos las mejores ofertas de cada tipo para que tomes la decisión con toda la información.</div>
+    </div>
+    <div class="slide-heading">La mejor hipoteca<br>es la que se adapta<br>a <em>ti</em></div>
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide s6">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">6 / 6</span>
+    <div class="slide-heading">Te ayudamos a elegir<br>la hipoteca correcta</div>
+    <div class="slide-sub">Comparamos +20 bancos.<br>Estudio gratuito sin compromiso.</div>
+    <div class="cta-box">brokerhipotecario.es → Empezar</div>
+  </div>
+
+</div>
+</body>
+</html>

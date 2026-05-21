@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referencias Multi-Ángulo — StyleScan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0f; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; padding: 32px 24px; }
+  h1 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 40px; }
+  h2 { font-size: 1.2rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin: 40px 0 16px; }
+  h3 { font-size: 1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+  p { color: #94a3b8; line-height: 1.6; font-size: 0.9rem; }
+
+  /* ALERTA */
+  .alert { background: #1a0a0a; border: 1px solid #7f1d1d; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+  .alert-title { color: #fca5a5; font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+  .alert p { color: #fca5a5; opacity: 0.8; }
+
+  /* GRID ÁNGULOS */
+  .angle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+  .angle-card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; text-align: center; }
+  .angle-icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .angle-label { font-weight: 700; color: #e2e8f0; font-size: 0.95rem; margin-bottom: 4px; }
+  .angle-desc { color: #64748b; font-size: 0.8rem; }
+  .angle-card.main { border-color: #3b82f6; background: #0f172a; }
+  .angle-card.secondary { border-color: #6366f1; background: #0f0f1a; }
+
+  /* FUENTES */
+  .sources-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
+  .source-card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; }
+  .source-card.top { border-color: #22c55e; }
+  .source-card.mid { border-color: #f59e0b; }
+  .source-card.low { border-color: #ef4444; }
+  .source-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .source-name { font-weight: 700; color: #e2e8f0; font-size: 1rem; }
+  .badge { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+  .badge-green { background: #14532d; color: #4ade80; }
+  .badge-yellow { background: #451a03; color: #fbbf24; }
+  .badge-red { background: #450a0a; color: #f87171; }
+  .badge-blue { background: #1e3a5f; color: #60a5fa; }
+  .source-stats { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .stat { background: #1e293b; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; color: #94a3b8; }
+  .source-card ul { list-style: none; }
+  .source-card ul li { color: #94a3b8; font-size: 0.82rem; padding: 3px 0; }
+  .source-card ul li::before { content: "→ "; color: #475569; }
+
+  /* PROBLEMA CLAVE */
+  .problem-box { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin: 16px 0; }
+  .problem-box h3 { color: #f59e0b; margin-bottom: 12px; }
+
+  /* ESTRATEGIA */
+  .strategy-steps { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+  .step { background: #111827; border: 1px solid #1e293b; border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start; }
+  .step-num { background: #3b82f6; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; }
+  .step-body h3 { color: #e2e8f0; margin-bottom: 4px; font-size: 0.95rem; }
+  .step-body p { font-size: 0.83rem; }
+
+  /* ESTRUCTURA BASE DATOS */
+  .schema-box { background: #0a0a14; border: 1px solid #1e293b; border-radius: 10px; padding: 20px; margin: 16px 0; font-family: 'Courier New', monospace; font-size: 0.78rem; color: #a5f3fc; overflow-x: auto; }
+  .schema-key { color: #f472b6; }
+  .schema-val { color: #86efac; }
+  .schema-comment { color: #475569; }
+
+  /* TABLA CORTES */
+  .cuts-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.82rem; }
+  .cuts-table th { background: #1e293b; color: #94a3b8; text-align: left; padding: 10px 14px; font-weight: 600; }
+  .cuts-table td { padding: 10px 14px; border-top: 1px solid #1e293b; color: #94a3b8; }
+  .cuts-table tr:hover td { background: #111827; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot-green { background: #22c55e; }
+  .dot-yellow { background: #f59e0b; }
+  .dot-red { background: #ef4444; }
+
+  /* VERCEL EXPLICACION */
+  .info-box { background: #0f1729; border: 1px solid #1d4ed8; border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+  .info-box h3 { color: #60a5fa; margin-bottom: 8px; }
+
+  /* ACCION */
+  .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+  .action-card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; }
+  .action-phase { color: #64748b; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+  .action-title { color: #e2e8f0; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+  .action-card p { font-size: 0.8rem; }
+
+  hr { border: none; border-top: 1px solid #1e293b; margin: 32px 0; }
+</style>
+</head>
+<body>
+
+<h1>Referencias Multi-Ángulo</h1>
+<p class="subtitle">Análisis: dónde conseguir fotos de cortes desde todos los ángulos y cómo estructurar la base de datos — StyleScan 2026</p>
+
+<!-- CORRECCIÓN -->
+<div class="alert">
+  <div class="alert-title">⚠️ Corrección: lo que necesitamos NO es solo la nuca</div>
+  <p>El agente estaba buscando fotos de espaldas (nuca). <strong>Eso está mal.</strong> Para que FLUX genere bien el resultado visual, necesita ver el corte desde FRENTE, PERFIL y opcionalmente espalda — como hace cualquier barbero antes de cortar. Un ángulo solo no da información suficiente del estilo.</p>
+</div>
+
+<!-- LOS 3 ÁNGULOS -->
+<h2>Los 3 ángulos que necesita FLUX</h2>
+<div class="angle-grid">
+  <div class="angle-card main">
+    <div class="angle-icon">🧑</div>
+    <div class="angle-label">FRENTE (0°)</div>
+    <div class="angle-desc">El más importante. Muestra forma del corte en la frente, flequillo, y proporciones cara–pelo.</div>
+  </div>
+  <div class="angle-card main">
+    <div class="angle-icon">👤</div>
+    <div class="angle-label">PERFIL (90°)</div>
+    <div class="angle-desc">Clave. Revela el fade lateral, largo de los costados y cómo cae el pelo sobre la oreja.</div>
+  </div>
+  <div class="angle-card secondary">
+    <div class="angle-icon">🔄</div>
+    <div class="angle-label">ESPALDA / NUCA (180°)</div>
+    <div class="angle-desc">Complementario. Muestra el degradado trasero, línea de nuca y transición. No siempre necesario.</div>
+  </div>
+</div>
+<p style="margin-top:8px;">Para FLUX, el set mínimo útil es <strong>frente + perfil</strong>. Con eso puede entender el corte completo y generar la imagen del cliente con ese estilo.</p>
+
+<hr>
+
+<!-- VERCEL ACLARACIÓN -->
+<div class="info-box">
+  <h3>Sobre "las skills de Vercel para ver webs"</h3>
+  <p>Vercel es una plataforma de hosting (donde está desplegada la web de StyleScan), no un navegador. Lo que existe aquí es <strong>WebFetch</strong> (descarga páginas HTML simples) y <strong>WebSearch</strong> (busca en Google). <br><br>
+  Instagram requiere login y renderizado JavaScript — WebFetch no puede abrirlo. Para scraping visual de Instagram necesitaríamos <strong>Playwright o Puppeteer</strong> (navegador headless que simula clicks reales), que es una herramienta distinta que se podría añadir. De momento, el agente usa instaloader que sí accede con sesión real.</p>
+</div>
+
+<hr>
+
+<!-- FUENTES ANALIZADAS -->
+<h2>Fuentes analizadas — ¿Dónde hay fotos multi-ángulo?</h2>
+
+<div class="sources-grid">
+
+  <div class="source-card top">
+    <div class="source-header">
+      <div class="source-name">Reddit — r/malehairadvice</div>
+      <span class="badge badge-green">⭐ MEJOR</span>
+    </div>
+    <div class="source-stats">
+      <span class="stat">Acceso: público sin login</span>
+      <span class="stat">Precio: gratis</span>
+      <span class="stat">Ángulos: 3-4 por post</span>
+    </div>
+    <ul>
+      <li>Los usuarios suben SIEMPRE frente + perfil + espalda para pedir consejo</li>
+      <li>Personas reales, no fotos de estudio — más natural para FLUX</li>
+      <li>Se puede buscar por corte: "fade front side back"</li>
+      <li>API pública de Reddit permite descarga automatizada</li>
+      <li>Millones de posts. Alta variedad de edades y tipos de pelo</li>
+    </ul>
+  </div>
+
+  <div class="source-card top">
+    <div class="source-header">
+      <div class="source-name">TikTok — "360 haircut view"</div>
+      <span class="badge badge-green">⭐ MEJOR</span>
+    </div>
+    <div class="source-stats">
+      <span class="stat">Acceso: público</span>
+      <span class="stat">Precio: gratis</span>
+      <span class="stat">Ángulos: 360° en vídeo</span>
+    </div>
+    <ul>
+      <li>Tendencia real: barberos suben vídeo girando al cliente 360°</li>
+      <li>Un vídeo = 3+ ángulos extraíbles como frames</li>
+      <li>Hashtags: #360haircut #barbercut #haircuttransformation</li>
+      <li>Muy actualizado — tendencias de España en tiempo real</li>
+      <li>Desventaja: requiere herramienta de descarga de vídeos (yt-dlp)</li>
+    </ul>
+  </div>
+
+  <div class="source-card mid">
+    <div class="source-header">
+      <div class="source-name">Pexels / Unsplash</div>
+      <span class="badge badge-yellow">BUENO</span>
+    </div>
+    <div class="source-stats">
+      <span class="stat">Acceso: API gratuita</span>
+      <span class="stat">Comercial: sí</span>
+      <span class="stat">Ángulos: 1 por foto</span>
+    </div>
+    <ul>
+      <li>80,000+ fotos de fades y tapers en Pexels — gratis y comerciales</li>
+      <li>API lista (ya la usamos en haircut_reference_service.py)</li>
+      <li>Problema: cada foto es un ángulo distinto, no sets del mismo corte</li>
+      <li>Solución: buscar mismo corte desde "front", "side", "back" separado</li>
+      <li>Bueno para relleno pero no para análisis completo</li>
+    </ul>
+  </div>
+
+  <div class="source-card mid">
+    <div class="source-header">
+      <div class="source-name">Pinterest — boards de barberos</div>
+      <span class="badge badge-yellow">BUENO</span>
+    </div>
+    <div class="source-stats">
+      <span class="stat">Acceso: parcial sin login</span>
+      <span class="stat">Precio: gratis</span>
+      <span class="stat">Ángulos: variable</span>
+    </div>
+    <ul>
+      <li>Boards como "Barber Reference" con 500+ fotos organizadas</li>
+      <li>Muchos pins son sets de 2-3 ángulos del mismo corte</li>
+      <li>"Taper Fade Back of Head" — board específico de ángulos traseros</li>
+      <li>Sin API pública — scraping requiere sesión o Playwright</li>
+      <li>Buena fuente manual para curar imágenes a mano</li>
+    </ul>
+  </div>
+
+  <div class="source-card mid">
+    <div class="source-header">
+      <div class="source-name">Instagram (barber accounts)</div>
+      <span class="badge badge-yellow">EXISTENTE</span>
+    </div>
+    <div class="source-stats">
+      <span class="stat">Acceso: sesión propia</span>
+      <span class="stat">Precio: gratis</span>
+      <span class="stat">Ángulos: 1-2 por post</span>
+    </div>
+    <ul>
+      <li>Lo que ya tenemos. Funciona pero con limitaciones</li>
+      <li>Muchos posts son carruseles con varios ángulos — no los captamos todos</li>
+      <li>Rate limit severo — 80 req/día máximo seguro</li>
+      <li>Mejora pendiente: descargar todos los slides del carrusel</li>
+    </ul>
+  </div>
+
+  <div class="source-card low">
+    <div class="source-header">
+      <div class="source-name">iStock / Getty</div>
+      <span class="badge badge-red">DESCARTADO</span>
+    </div>
+    <div class="source-stats">
+      <span class="stat">Precio: de pago</span>
+      <span class="stat">13,600+ fotos</span>
+    </div>
+    <ul>
+      <li>13,600+ fotos de espalda, 205,000+ de barbería en general</li>
+      <li>Alta calidad — fotos de estudio profesional</li>
+      <li>Requieren suscripción de pago</li>
+      <li>No tiene sentido pagar si Pexels/Reddit son gratis</li>
+    </ul>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- EL PROBLEMA REAL -->
+<h2>El problema real: la mayoría tienen 1 ángulo, no 3</h2>
+
+<div class="problem-box">
+  <h3>¿Por qué es difícil encontrar sets multi-ángulo?</h3>
+  <p style="margin-bottom:12px;">Instagram, Pexels, Pinterest — casi todo el contenido de barbería son fotos individuales. Un barbero sube 1 foto del resultado final, normalmente de frente o de perfil. <strong>Muy pocos suben las 3 vistas del mismo corte.</strong></p>
+  <p>Excepciones donde SÍ existen sets completos:</p>
+</div>
+
+<table class="cuts-table">
+  <thead>
+    <tr>
+      <th>Fuente</th>
+      <th>¿Sets multi-ángulo?</th>
+      <th>Cómo acceder</th>
+      <th>Dificultad</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Reddit r/malehairadvice</td>
+      <td><span class="dot dot-green"></span>Sí — siempre 3+ fotos por post</td>
+      <td>API pública Reddit (JSON)</td>
+      <td>Baja</td>
+    </tr>
+    <tr>
+      <td>TikTok #360haircut</td>
+      <td><span class="dot dot-green"></span>Sí — vídeo 360° completo</td>
+      <td>yt-dlp + extraer frames con ffmpeg</td>
+      <td>Media</td>
+    </tr>
+    <tr>
+      <td>Instagram (carruseles)</td>
+      <td><span class="dot dot-yellow"></span>Parcial — el agente solo baja foto 1</td>
+      <td>Mejora: descargar todos los slides</td>
+      <td>Media</td>
+    </tr>
+    <tr>
+      <td>YouTube (tutoriales barbero)</td>
+      <td><span class="dot dot-green"></span>Sí — 15-30 min mostrando todo</td>
+      <td>yt-dlp + extraer frames en momentos clave</td>
+      <td>Alta</td>
+    </tr>
+    <tr>
+      <td>Pinterest (boards curados)</td>
+      <td><span class="dot dot-yellow"></span>Parcial — algunos pins son sets</td>
+      <td>Manual o Playwright</td>
+      <td>Alta</td>
+    </tr>
+    <tr>
+      <td>Pexels API</td>
+      <td><span class="dot dot-red"></span>No — fotos sueltas</td>
+      <td>API gratuita ya integrada</td>
+      <td>Baja</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ESTRUCTURA NUEVA BASE DE DATOS -->
+<h2>Cómo debe estructurarse la base de datos</h2>
+<p style="margin-bottom:16px;">En lugar de almacenar fotos sueltas, la base de datos debería agrupar por <strong>SET</strong>: un grupo de 2-3 fotos del mismo corte desde distintos ángulos.</p>
+
+<div class="schema-box">
+{
+  <span class="schema-key">"set_id"</span>: <span class="schema-val">"fade_low_joven_01"</span>,         <span class="schema-comment">// ID único del set</span>
+  <span class="schema-key">"cut_name_es"</span>: <span class="schema-val">"Fade bajo texturizado"</span>,
+  <span class="schema-key">"cut_type"</span>: <span class="schema-val">"fade"</span>,
+  <span class="schema-key">"age_group"</span>: <span class="schema-val">"joven"</span>,
+  <span class="schema-key">"region"</span>: <span class="schema-val">"Madrid"</span>,
+  <span class="schema-key">"face_shape"</span>: <span class="schema-val">"ovalada"</span>,
+  <span class="schema-key">"is_trending_spain"</span>: <span class="schema-val">true</span>,
+  <span class="schema-key">"trending_score"</span>: <span class="schema-val">0.95</span>,
+  <span class="schema-key">"source"</span>: <span class="schema-val">"instagram:broskibarbers"</span>,
+
+  <span class="schema-key">"photos"</span>: {
+    <span class="schema-key">"front"</span>: <span class="schema-val">"images/sets/fade_low_joven_01_front.jpg"</span>,    <span class="schema-comment">// OBLIGATORIO</span>
+    <span class="schema-key">"side_left"</span>: <span class="schema-val">"images/sets/fade_low_joven_01_side.jpg"</span>,   <span class="schema-comment">// OBLIGATORIO</span>
+    <span class="schema-key">"back"</span>: <span class="schema-val">"images/sets/fade_low_joven_01_back.jpg"</span>,    <span class="schema-comment">// opcional</span>
+    <span class="schema-key">"detail"</span>: <span class="schema-val">null</span>                                              <span class="schema-comment">// detalle textura, opcional</span>
+  },
+
+  <span class="schema-key">"angles_available"</span>: <span class="schema-val">["front", "side_left", "back"]</span>,
+  <span class="schema-key">"complete_set"</span>: <span class="schema-val">true</span>,                                       <span class="schema-comment">// front+side = true</span>
+  <span class="schema-key">"quality_score"</span>: <span class="schema-val">0.87</span>,
+
+  <span class="schema-key">"flux_prompt_hint"</span>: <span class="schema-val">"Low skin fade, textured top with slight quiff, clean line-up"</span>
+}
+</div>
+
+<p style="margin-top:8px; color:#64748b; font-size:0.82rem;">Un set con <code>front + side_left</code> = completo. Si solo tiene uno de los dos = incompleto, útil pero secundario.</p>
+
+<hr>
+
+<!-- CORTES POR ÁNGULO -->
+<h2>Cortes prioritarios que necesitan sus 3 ángulos</h2>
+<p style="margin-bottom:16px;">Lista de los cortes más pedidos en España 2025-2026, organizados por lo que más falta en la base de datos actual.</p>
+
+<table class="cuts-table">
+  <thead>
+    <tr>
+      <th>Corte</th>
+      <th>Edad objetivo</th>
+      <th>Lo que más falta</th>
+      <th>Prioridad</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Fade bajo / Low taper</strong></td>
+      <td>18-35</td>
+      <td>Perfil lateral completo</td>
+      <td><span class="dot dot-green"></span>Alta</td>
+    </tr>
+    <tr>
+      <td><strong>French crop + fade</strong></td>
+      <td>18-30</td>
+      <td>Vista frontal con flequillo</td>
+      <td><span class="dot dot-green"></span>Alta</td>
+    </tr>
+    <tr>
+      <td><strong>Mullet moderno</strong></td>
+      <td>18-28</td>
+      <td>Espalda (largo trasero)</td>
+      <td><span class="dot dot-green"></span>Alta</td>
+    </tr>
+    <tr>
+      <td><strong>Wolf cut texturizado</strong></td>
+      <td>20-30</td>
+      <td>Frente + perfil</td>
+      <td><span class="dot dot-green"></span>Alta</td>
+    </tr>
+    <tr>
+      <td><strong>Taper clásico</strong></td>
+      <td>30-55</td>
+      <td>Los 3 ángulos — muy poco en bases de datos</td>
+      <td><span class="dot dot-yellow"></span>Media-alta</td>
+    </tr>
+    <tr>
+      <td><strong>Corte navaja / gentleman</strong></td>
+      <td>40-70</td>
+      <td>Los 3 ángulos — prácticamente inexistente online</td>
+      <td><span class="dot dot-yellow"></span>Media-alta</td>
+    </tr>
+    <tr>
+      <td><strong>Silver fox / canas natural</strong></td>
+      <td>50-75</td>
+      <td>Todo — este segmento no existe en bases de datos</td>
+      <td><span class="dot dot-red"></span>CRÍTICA — vacío total</td>
+    </tr>
+    <tr>
+      <td><strong>Buzz cut / máquina</strong></td>
+      <td>20-50</td>
+      <td>Frente (variaciones de guardia)</td>
+      <td><span class="dot dot-green"></span>Alta</td>
+    </tr>
+    <tr>
+      <td><strong>Undercut pompadour</strong></td>
+      <td>25-45</td>
+      <td>Perfil + frente con volumen</td>
+      <td><span class="dot dot-yellow"></span>Media</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- PLAN DE ACCIÓN -->
+<h2>Plan de acción: 3 fases</h2>
+
+<div class="strategy-steps">
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Reddit API — ya disponible, gratis, multi-ángulo por defecto</h3>
+      <p>Añadir al agente una fuente nueva: Reddit r/malehairadvice y r/hairstylist. Los posts casi siempre tienen 3-4 fotos (frente, perfil, espalda). La API JSON de Reddit es pública: <code>reddit.com/r/malehairadvice/search.json?q=fade+spain&limit=100</code>. Sin login. Sin rate limit agresivo. Se pueden descargar sets completos de fotos y agruparlos por post_id (= mismo corte, varios ángulos).</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Instagram carruseles — el agente ya tiene sesión, solo falta bajar todos los slides</h3>
+      <p>El agente actual descarga solo la foto 1 del post. Muchos barberos publican carruseles de 3-6 fotos: frente + perfil + espalda + detalle. Con instaloader se pueden bajar todos los slides de un carrusel (<code>post.get_sidecar_nodes()</code>). Esto multiplica los ángulos sin necesitar nuevas cuentas ni más requests a Instagram.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>TikTok 360° — frames extraídos con yt-dlp + ffmpeg</h3>
+      <p>El hashtag <code>#360haircut</code> tiene miles de vídeos donde el barbero gira al cliente. Descargando el vídeo con <code>yt-dlp</code> y extrayendo frames con <code>ffmpeg -ss 00:00:05 -frames:v 1 front.jpg</code> se obtienen 3 imágenes de alta calidad de un solo vídeo. Solución perfecta para cortes de mayores (barberos clásicos también publican en TikTok). Se puede automatizar buscando los hashtags correctos.</p>
+    </div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- PRÓXIMOS PASOS -->
+<h2>Próximos pasos concretos</h2>
+<div class="action-grid">
+  <div class="action-card">
+    <div class="action-phase">Paso inmediato</div>
+    <div class="action-title">Corregir agente Instagram</div>
+    <p>Modificar para descargar todos los slides del carrusel, no solo foto 1. Duplica o triplica ángulos sin más requests.</p>
+  </div>
+  <div class="action-card">
+    <div class="action-phase">Esta semana</div>
+    <div class="action-title">Añadir fuente Reddit</div>
+    <p>Nuevo módulo en el agente: scraper de r/malehairadvice. Sin login, multi-ángulo nativo, gratis. Agrupa fotos por post_id = set completo.</p>
+  </div>
+  <div class="action-card">
+    <div class="action-phase">Cuando quieras</div>
+    <div class="action-title">Reestructurar índice a SETs</div>
+    <p>Cambiar index.json de "lista de fotos" a "lista de sets". Cada set agrupa frente + perfil + espalda del mismo corte.</p>
+  </div>
+</div>
+
+<hr>
+<p style="color:#475569; font-size:0.78rem; text-align:center;">StyleScan · Análisis de referencias multi-ángulo · Mayo 2026</p>
+
+</body>
+</html>

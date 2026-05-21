@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISAI — Cómo funciona el producto</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h2 {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 60px;
+  }
+
+  /* SECCIÓN: Los 3 "mundos" del producto */
+  .worlds {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    max-width: 960px;
+    margin: 0 auto 60px;
+  }
+
+  .world {
+    background: #111118;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+  }
+  .world-icon {
+    font-size: 36px;
+    margin-bottom: 14px;
+    display: block;
+  }
+  .world-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .world-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .world-desc {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.6;
+  }
+  .world-tag {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .tag-mobile { background: #1a2535; color: #4a9eff; border: 1px solid #1e3a5f; }
+  .tag-web    { background: #1a2520; color: #4adf8a; border: 1px solid #1e4f35; }
+  .tag-brain  { background: #251a35; color: #b07aff; border: 1px solid #3f1e5f; }
+
+  /* FLUJO PASO A PASO */
+  .section-title {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #444;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    margin-top: 20px;
+  }
+
+  .flow {
+    max-width: 760px;
+    margin: 0 auto 60px;
+    position: relative;
+  }
+  .flow-line {
+    position: absolute;
+    left: 31px;
+    top: 40px;
+    bottom: 40px;
+    width: 2px;
+    background: linear-gradient(to bottom, #4a9eff22, #b07aff44, #4adf8a22);
+  }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 4px;
+    position: relative;
+  }
+  .step-num {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .step-body {
+    background: #111118;
+    border: 1px solid #222;
+    border-radius: 14px;
+    padding: 20px 22px;
+    flex: 1;
+    margin-bottom: 12px;
+  }
+  .step-who {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .step-desc {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.6;
+  }
+  .step-detail {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: #1a1a25;
+    border: 1px solid #2a2a3a;
+    color: #999;
+  }
+  .chip.highlight { background: #1a2535; color: #4a9eff; border-color: #1e3a5f; }
+  .chip.money { background: #1f2a1a; color: #4adf8a; border-color: #2a4a25; }
+  .chip.ai { background: #251a35; color: #b07aff; border-color: #3f1e5f; }
+
+  /* SERVICIOS EXTERNOS */
+  .services {
+    max-width: 760px;
+    margin: 0 auto 60px;
+  }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .service {
+    background: #111118;
+    border: 1px solid #1e1e2e;
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+  }
+  .service-icon { font-size: 28px; margin-bottom: 8px; }
+  .service-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .service-role { font-size: 11px; color: #666; line-height: 1.4; }
+  .service-cost { font-size: 10px; margin-top: 8px; color: #4adf8a; }
+
+  /* ESTADO ACTUAL */
+  .status-section {
+    max-width: 760px;
+    margin: 0 auto 40px;
+  }
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .status-item {
+    background: #111118;
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1px solid #1e1e2e;
+  }
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .dot-green { background: #4adf8a; box-shadow: 0 0 6px #4adf8a88; }
+  .dot-yellow { background: #f0c040; box-shadow: 0 0 6px #f0c04088; }
+  .dot-red { background: #ff5a5a; box-shadow: 0 0 6px #ff5a5a88; }
+  .status-text { font-size: 13px; color: #aaa; line-height: 1.5; }
+  .status-text strong { color: #fff; }
+
+  @media (max-width: 700px) {
+    .worlds { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: 1fr 1fr; }
+    .status-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mapa del producto</h1>
+<h2>VISAI — Cómo está hecho</h2>
+<p class="subtitle">Explicado sin tecnicismos · Mayo 2026</p>
+
+<!-- LOS 3 MUNDOS -->
+<p class="section-title">Las 3 partes del producto</p>
+
+<div class="worlds">
+  <div class="world">
+    <span class="world-icon">📱</span>
+    <div class="world-label">Parte 1</div>
+    <div class="world-title">La app del barbero</div>
+    <div class="world-desc">
+      Una aplicación que el barbero tiene en su móvil. El cliente la usa para hacer el quiz y las fotos. Es la "puerta de entrada" al análisis.
+    </div>
+    <span class="world-tag tag-mobile">App de móvil</span>
+  </div>
+
+  <div class="world">
+    <span class="world-icon">🌐</span>
+    <div class="world-label">Parte 2</div>
+    <div class="world-title">La web de resultados</div>
+    <div class="world-desc">
+      Una página web donde el cliente ve su análisis completo. Se abre en cualquier móvil o ordenador con un enlace único. Aquí también puede comprar extras.
+    </div>
+    <span class="world-tag tag-web">Página web</span>
+  </div>
+
+  <div class="world">
+    <span class="world-icon">⚙️</span>
+    <div class="world-label">Parte 3</div>
+    <div class="world-title">El cerebro</div>
+    <div class="world-desc">
+      El programa que corre detrás de todo. Recibe las fotos, las analiza con IA, genera los cortes recomendados, gestiona los pagos y guarda los datos.
+    </div>
+    <span class="world-tag tag-brain">Servidor</span>
+  </div>
+</div>
+
+<!-- FLUJO PASO A PASO -->
+<p class="section-title">El viaje del cliente, paso a paso</p>
+
+<div class="flow">
+  <div class="flow-line"></div>
+
+  <div class="step">
+    <div class="step-num" style="background:#1a2535; border: 2px solid #1e3a5f;">1️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Cliente · App del barbero</div>
+      <div class="step-title">Entra a la app e introduce el código del barbero</div>
+      <div class="step-desc">El barbero tiene un código único (ej: "MARIO01"). El cliente lo mete y automáticamente se aplica su descuento. Sin código, también puede entrar.</div>
+      <div class="step-detail">
+        <span class="chip highlight">Código barbero</span>
+        <span class="chip money">Descuento automático</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:#1a2535; border: 2px solid #1e3a5f;">2️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Cliente · App del barbero</div>
+      <div class="step-title">Responde un quiz de 5 preguntas</div>
+      <div class="step-desc">Preguntas simples sobre su tipo de pelo, estilo de vida, cuánto tiempo dedica al cabello al día, etc. Esto ayuda a la IA a dar cortes realistas y no solo bonitos en foto.</div>
+      <div class="step-detail">
+        <span class="chip">Tipo de pelo</span>
+        <span class="chip">Estilo de vida</span>
+        <span class="chip">Tiempo de mantenimiento</span>
+        <span class="chip">Zona calva</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:#251a35; border: 2px solid #3f1e5f;">3️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Cliente · App del barbero</div>
+      <div class="step-title">Se hace 5 fotos guiadas</div>
+      <div class="step-desc">La app guía al cliente con un óvalo animado en pantalla para que se coloque bien. 5 ángulos distintos (frente, perfil izquierdo, derecho, arriba, nuca). Cada foto tiene validación automática de calidad — si está borrosa o mal iluminada, pide repetirla.</div>
+      <div class="step-detail">
+        <span class="chip">Frontal</span>
+        <span class="chip">Perfil izquierdo</span>
+        <span class="chip">Perfil derecho</span>
+        <span class="chip">45° izquierda</span>
+        <span class="chip">45° derecha</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:#1f2a1a; border: 2px solid #2a4a25;">4️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Cliente · Stripe (pasarela de pago)</div>
+      <div class="step-title">Paga</div>
+      <div class="step-desc">La app abre el navegador del móvil con una página de pago de Stripe (como pagar en cualquier tienda online). El cliente mete su tarjeta y paga. Cuando confirma el pago, Stripe avisa automáticamente al servidor.</div>
+      <div class="step-detail">
+        <span class="chip money">€14.99 sin código barbero</span>
+        <span class="chip money">Descuento con código</span>
+        <span class="chip">Tarjeta / Apple Pay / Google Pay</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:#251a35; border: 2px solid #3f1e5f;">5️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Servidor · Inteligencia artificial</div>
+      <div class="step-title">El servidor analiza las fotos</div>
+      <div class="step-desc">Aquí pasan 2 cosas automáticamente. Primero, un programa especializado (MediaPipe, de Google) mide 468 puntos del rostro para calcular la forma de cráneo, proporciones y simetría. Luego, Claude (la IA de Anthropic, como ChatGPT pero diferente) combina ese análisis con las respuestas del quiz y genera los 3 cortes recomendados con instrucciones específicas para el barbero.</div>
+      <div class="step-detail">
+        <span class="chip ai">MediaPipe — forma de cráneo</span>
+        <span class="chip ai">Claude IA — 3 cortes</span>
+        <span class="chip">~30-60 segundos</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:#1a2520; border: 2px solid #1e4f35;">6️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Cliente · Web de resultados</div>
+      <div class="step-title">Ve su análisis completo en una web</div>
+      <div class="step-desc">El cliente recibe un enlace único (como "visai.es/result/abc123"). Al abrirlo ve: forma de su cráneo, los 3 cortes recomendados con foto de referencia de barbería real, instrucciones exactas para su barbero (número de máquina, tipo de degradado, técnica), guía de barba si la tiene.</div>
+      <div class="step-detail">
+        <span class="chip highlight">Enlace único e intransferible</span>
+        <span class="chip">Funciona en móvil y ordenador</span>
+        <span class="chip">Fotos de barberías reales</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num" style="background:#1f2a1a; border: 2px solid #2a4a25;">7️⃣</div>
+    <div class="step-body">
+      <div class="step-who">Cliente · Web de resultados</div>
+      <div class="step-title">Puede comprar extras (opcional)</div>
+      <div class="step-desc">Desde la misma web puede añadir Colorimetría personalizada (qué colores de ropa te quedan mejor según tu tono de piel) o Guía de productos (qué productos usar para su tipo de pelo). Son compras opcionales que se añaden al análisis.</div>
+      <div class="step-detail">
+        <span class="chip money">Colorimetría +€2.49</span>
+        <span class="chip money">Guía productos +€1.99</span>
+        <span class="chip money">Pack completo +€4.99</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SERVICIOS EXTERNOS -->
+<p class="section-title">Herramientas externas que usa el producto</p>
+<div class="services">
+  <div class="services-grid">
+    <div class="service">
+      <div class="service-icon">🤖</div>
+      <div class="service-name">Claude AI</div>
+      <div class="service-role">Genera los 3 cortes recomendados con instrucciones</div>
+      <div class="service-cost">~€0.30 por análisis</div>
+    </div>
+    <div class="service">
+      <div class="service-icon">💳</div>
+      <div class="service-name">Stripe</div>
+      <div class="service-role">Procesa los pagos de los clientes</div>
+      <div class="service-cost">~€0.46 por transacción</div>
+    </div>
+    <div class="service">
+      <div class="service-icon">🌩️</div>
+      <div class="service-name">Vercel</div>
+      <div class="service-role">Publica la web de resultados en internet</div>
+      <div class="service-cost">Gratis</div>
+    </div>
+    <div class="service">
+      <div class="service-icon">🎨</div>
+      <div class="service-name">FAL / FLUX</div>
+      <div class="service-role">Genera imágenes IA de cómo quedaría el corte en el cliente</div>
+      <div class="service-cost">~€0.05 por imagen</div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTADO ACTUAL -->
+<p class="section-title">Estado actual del producto</p>
+<div class="status-section">
+  <div class="status-grid">
+    <div class="status-item">
+      <div class="status-dot dot-green"></div>
+      <div class="status-text"><strong>App del barbero</strong> — Construida y funcional. Quiz, fotos guiadas, todo ahí. Falta distribuirla (subirla a la App Store / Google Play o dar el .apk directo).</div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot dot-green"></div>
+      <div class="status-text"><strong>Web de resultados</strong> — Funcional. El cliente puede ver su análisis, los cortes y comprar extras. Está en Vercel (internet abierto).</div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot dot-yellow"></div>
+      <div class="status-text"><strong>Servidor (cerebro)</strong> — Funciona en tu PC local. Falta un sitio estable donde alojarlo (ahora mismo Railway está roto, lo estamos migrando).</div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot dot-yellow"></div>
+      <div class="status-text"><strong>Pagos</strong> — Stripe está en modo prueba. Los pagos reales aún no están activados porque el producto no está acabado.</div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot dot-yellow"></div>
+      <div class="status-text"><strong>Precio</strong> — La app muestra €4.99 / €5.99 pero el servidor tiene €14.99. Hay que unificar antes de lanzar.</div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot dot-red"></div>
+      <div class="status-text"><strong>Distribución</strong> — No hay ningún barbero real usando el producto todavía. La app no está en tiendas, se instala a mano.</div>
+    </div>
+  </div>
+</div>
+
+<p style="text-align:center; color:#333; font-size:12px; margin-top:40px; padding-bottom:40px;">
+  Generado por Claude Code · VISAI · Mayo 2026
+</p>
+
+</body>
+</html>

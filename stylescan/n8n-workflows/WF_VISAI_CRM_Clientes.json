@@ -1,0 +1,354 @@
+{
+  "name": "VISAI — CRM Clientes (Upsert)",
+  "nodes": [
+    {
+      "id": "sticky-info",
+      "name": "Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 60],
+      "parameters": {
+        "content": "## VISAI — CRM Clientes\n\n**Webhook:** POST `/webhook/visai-crm-cliente`\n\n**Payload del backend:**\n```json\n{\n  \"email\": \"user@email.com\",\n  \"analysis_id\": \"uuid\",\n  \"cortes\": [\"Fade lateral\", \"Drop fade\"],\n  \"barber_code\": \"BARBER01\",\n  \"importe\": 12.39,\n  \"marketing_consent\": true,\n  \"result_url\": \"https://visaiapp.com/result/uuid\",\n  \"created_at\": \"2026-05-13T...\"\n}\n```\n\n**Flujo:**\n1. Busca si el cliente ya existe por email\n2. Si existe → actualiza cortes + importe\n3. Si no existe → crea persona nueva\n4. Si hay barber_code → busca/crea la barbería y la vincula",
+        "height": 420,
+        "width": 440,
+        "color": 7
+      }
+    },
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook — VISAI Backend",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 540],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "visai-crm-cliente",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "visai-crm-cliente-webhook"
+    },
+    {
+      "id": "parse-payload",
+      "name": "Parse Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 540],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst email = (body.email || '').trim().toLowerCase();\nif (!email) throw new Error('email requerido');\n\nconst cortes = body.cortes || [];\nconst cortesStr = Array.isArray(cortes) ? cortes.join(' · ') : String(cortes);\n\nreturn [{\n  json: {\n    email,\n    analysis_id: body.analysis_id || '',\n    cortes_str: cortesStr,\n    barber_code: (body.barber_code || '').toUpperCase().trim(),\n    importe: body.importe || 0,\n    marketing_consent: body.marketing_consent === true || body.marketing_consent === 'true',\n    result_url: body.result_url || '',\n    created_at: body.created_at || new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "buscar-persona",
+      "name": "Twenty — Buscar Persona",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 540],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://twenty-production-9c21.up.railway.app/rest/people?filter=emails.primaryEmail[eq]:\"{{ $('Parse Payload').item.json.email }}\"",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA"
+            }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "check-existe",
+      "name": "¿Persona existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 540],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst people = data?.data?.people || [];\nconst persona = people[0] || null;\n\nconst parsed = $('Parse Payload').item.json;\n\nreturn [{\n  json: {\n    ...parsed,\n    persona_existe: !!persona,\n    persona_id: persona?.id || null\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-existe",
+      "name": "IF — ¿Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1080, 540],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-existe",
+              "leftValue": "={{ $('¿Persona existe?').item.json.persona_existe }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "actualizar-persona",
+      "name": "Twenty — Actualizar Persona",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 420],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://twenty-production-9c21.up.railway.app/rest/people/{{ $('¿Persona existe?').item.json.persona_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jobTitle\": \"Cortes: {{ $('¿Persona existe?').item.json.cortes_str }}\"\n}",
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "crear-persona",
+      "name": "Twenty — Crear Persona",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 660],
+      "parameters": {
+        "method": "POST",
+        "url": "https://twenty-production-9c21.up.railway.app/rest/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": {\n    \"firstName\": \"{{ $('¿Persona existe?').item.json.email.split('@')[0] }}\",\n    \"lastName\": \"\"\n  },\n  \"emails\": {\n    \"primaryEmail\": \"{{ $('¿Persona existe?').item.json.email }}\"\n  },\n  \"jobTitle\": \"Cortes: {{ $('¿Persona existe?').item.json.cortes_str }}\"\n}",
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "merge-persona-id",
+      "name": "Merge — ID Persona",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1520, 540],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst data = input?.data;\n\n// Viene de PATCH (updatePerson) o POST (createPerson)\nconst persona = data?.updatePerson || data?.createPerson || {};\nconst personaId = persona?.id || $('¿Persona existe?').item.json.persona_id;\n\nreturn [{\n  json: {\n    ...$('¿Persona existe?').item.json,\n    persona_id: personaId\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-barber",
+      "name": "IF — ¿Barber Code?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1740, 540],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-barber",
+              "leftValue": "={{ $('Merge — ID Persona').item.json.barber_code }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "buscar-barberia",
+      "name": "Twenty — Buscar Barbería",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1960, 420],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://twenty-production-9c21.up.railway.app/rest/companies?filter=name[eq]:\"{{ $('Merge — ID Persona').item.json.barber_code }}\"",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "check-barberia",
+      "name": "¿Barbería existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2180, 420],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst companies = data?.data?.companies || [];\nconst company = companies[0] || null;\n\nconst merged = $('Merge — ID Persona').item.json;\n\nreturn [{\n  json: {\n    ...merged,\n    barberia_existe: !!company,\n    barberia_id: company?.id || null\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-barberia-existe",
+      "name": "IF — ¿Barbería existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2400, 420],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-barberia",
+              "leftValue": "={{ $('¿Barbería existe?').item.json.barberia_existe }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "crear-barberia",
+      "name": "Twenty — Crear Barbería",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2620, 540],
+      "parameters": {
+        "method": "POST",
+        "url": "https://twenty-production-9c21.up.railway.app/rest/companies",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $('¿Barbería existe?').item.json.barber_code }}\"\n}",
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "merge-barberia-id",
+      "name": "Merge — ID Barbería",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2840, 420],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst data = input?.data;\n\n// Viene de crear-barberia (POST) o de IF=true (ya existe)\nconst company = data?.createCompany || {};\nconst barberiaId = company?.id || $('¿Barbería existe?').item.json.barberia_id;\n\nreturn [{\n  json: {\n    ...$('¿Barbería existe?').item.json,\n    barberia_id: barberiaId\n  }\n}];"
+      }
+    },
+    {
+      "id": "vincular-barberia",
+      "name": "Twenty — Vincular Persona a Barbería",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3060, 420],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://twenty-production-9c21.up.railway.app/rest/people/{{ $('Merge — ID Barbería').item.json.persona_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYzNmMmE4My03ZTQ1LTQyMGMtOWEwZC01YjY1ZDM0MzBhZGIiLCJ0eXBlIjoiQVBJX0tFWSIsIndvcmtzcGFjZUlkIjoiM2MzZjJhODMtN2U0NS00MjBjLTlhMGQtNWI2NWQzNDMwYWRiIiwiaWF0IjoxNzc4NjU3Njc5LCJleHAiOjQ5MzIyNTc2NzgsImp0aSI6ImIzZTg3ZTc5LTgyNjItNDJkZi04OTAxLTkzM2I5N2ExMjRmYSJ9.QA2ygBuVZ6zUuWraDqvMOroz30hZGOs6cu2Yy2R4fxA" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"companyId\": \"{{ $('Merge — ID Barbería').item.json.barberia_id }}\"\n}",
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "fin",
+      "name": "Respuesta OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [3280, 420],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"persona_id\": \"{{ $('Merge — ID Barbería').item.json.persona_id }}\" }"
+      }
+    },
+    {
+      "id": "fin-sin-barber",
+      "name": "Respuesta OK (sin barber)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1960, 660],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"persona_id\": \"{{ $('Merge — ID Persona').item.json.persona_id }}\" }"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — VISAI Backend": {
+      "main": [[{ "node": "Parse Payload", "type": "main", "index": 0 }]]
+    },
+    "Parse Payload": {
+      "main": [[{ "node": "Twenty — Buscar Persona", "type": "main", "index": 0 }]]
+    },
+    "Twenty — Buscar Persona": {
+      "main": [[{ "node": "¿Persona existe?", "type": "main", "index": 0 }]]
+    },
+    "¿Persona existe?": {
+      "main": [[{ "node": "IF — ¿Existe?", "type": "main", "index": 0 }]]
+    },
+    "IF — ¿Existe?": {
+      "main": [
+        [{ "node": "Twenty — Actualizar Persona", "type": "main", "index": 0 }],
+        [{ "node": "Twenty — Crear Persona", "type": "main", "index": 0 }]
+      ]
+    },
+    "Twenty — Actualizar Persona": {
+      "main": [[{ "node": "Merge — ID Persona", "type": "main", "index": 0 }]]
+    },
+    "Twenty — Crear Persona": {
+      "main": [[{ "node": "Merge — ID Persona", "type": "main", "index": 0 }]]
+    },
+    "Merge — ID Persona": {
+      "main": [[{ "node": "IF — ¿Barber Code?", "type": "main", "index": 0 }]]
+    },
+    "IF — ¿Barber Code?": {
+      "main": [
+        [{ "node": "Twenty — Buscar Barbería", "type": "main", "index": 0 }],
+        [{ "node": "Respuesta OK (sin barber)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Twenty — Buscar Barbería": {
+      "main": [[{ "node": "¿Barbería existe?", "type": "main", "index": 0 }]]
+    },
+    "¿Barbería existe?": {
+      "main": [[{ "node": "IF — ¿Barbería existe?", "type": "main", "index": 0 }]]
+    },
+    "IF — ¿Barbería existe?": {
+      "main": [
+        [{ "node": "Merge — ID Barbería", "type": "main", "index": 0 }],
+        [{ "node": "Twenty — Crear Barbería", "type": "main", "index": 0 }]
+      ]
+    },
+    "Twenty — Crear Barbería": {
+      "main": [[{ "node": "Merge — ID Barbería", "type": "main", "index": 0 }]]
+    },
+    "Merge — ID Barbería": {
+      "main": [[{ "node": "Twenty — Vincular Persona a Barbería", "type": "main", "index": 0 }]]
+    },
+    "Twenty — Vincular Persona a Barbería": {
+      "main": [[{ "node": "Respuesta OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": ["VISAI", "CRM"]
+}

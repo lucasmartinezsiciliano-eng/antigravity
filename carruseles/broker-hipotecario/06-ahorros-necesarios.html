@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carrusel 06 — ¿Cuánto necesitas ahorrado para comprar piso?</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; padding: 48px 24px 64px; }
+  h1 { color: #555; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-bottom: 8px; font-weight: 500; }
+  .subtitle { color: #333; font-size: 11px; text-align: center; margin-bottom: 40px; }
+  .slides-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+  .slide {
+    width: 360px; height: 360px; border-radius: 14px; overflow: hidden;
+    flex-shrink: 0; position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 28px;
+    background: linear-gradient(145deg, #0A1628 0%, #0D2040 60%, #0A1628 100%);
+  }
+  .slide-num { position: absolute; top: 16px; right: 18px; color: rgba(255,255,255,0.2); font-size: 11px; font-weight: 600; }
+  .brand { position: absolute; top: 16px; left: 18px; display: flex; align-items: center; gap: 7px; }
+  .brand-dot { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+  .brand-name { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .tag { display: inline-block; background: rgba(42,181,207,0.12); border: 1px solid rgba(42,181,207,0.25); color: #2AB5CF; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; margin-bottom: 12px; width: fit-content; }
+  .divider { width: 36px; height: 2px; background: #2AB5CF; margin-bottom: 14px; border-radius: 2px; }
+  .slide-heading { font-size: 24px; font-weight: 700; line-height: 1.2; color: #fff; margin-bottom: 10px; }
+  .slide-heading em { color: #2AB5CF; font-style: normal; }
+  .slide-sub { font-size: 12.5px; color: rgba(255,255,255,0.5); line-height: 1.55; }
+  .slide-sub strong { color: rgba(255,255,255,0.8); }
+
+  /* Big number hook */
+  .big-q { font-size: 56px; font-weight: 900; color: #2AB5CF; line-height: 1; margin-bottom: 8px; }
+
+  /* Money breakdown bar */
+  .breakdown { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .bar-row { display: flex; flex-direction: column; gap: 4px; }
+  .bar-label { display: flex; justify-content: space-between; align-items: center; }
+  .bar-name { font-size: 11px; color: rgba(255,255,255,0.6); }
+  .bar-val { font-size: 12px; font-weight: 700; color: #2AB5CF; }
+  .bar-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #2AB5CF; border-radius: 3px; }
+  .bar-fill.orange { background: #FFA000; }
+  .bar-fill.total { background: linear-gradient(90deg, #2AB5CF, #5ECDE3); }
+
+  /* Example box */
+  .example-box { background: rgba(42,181,207,0.08); border: 1px solid rgba(42,181,207,0.18); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .example-label { font-size: 9px; color: #2AB5CF; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .example-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.55); padding: 3px 0; }
+  .example-row:last-child { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: 4px; font-weight: 700; color: #fff; }
+  .example-row span:last-child { color: #2AB5CF; font-weight: 700; }
+  .example-row:last-child span:last-child { font-size: 14px; }
+
+  /* Alert message */
+  .alert-box { background: rgba(255,160,0,0.08); border: 1px solid rgba(255,160,0,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+  .alert-text { font-size: 11.5px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+  .alert-text strong { color: #FFA000; }
+
+  /* Tips list */
+  .tip-list { display: flex; flex-direction: column; gap: 9px; }
+  .tip { display: flex; gap: 9px; align-items: flex-start; }
+  .tip-icon { font-style: normal; color: #2AB5CF; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .tip-text { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; }
+  .tip-text strong { color: #fff; font-weight: 600; }
+
+  .s1 { justify-content: flex-end; }
+  .s1 .slide-heading { font-size: 26px; }
+
+  .s7 { background: linear-gradient(145deg, #2AB5CF 0%, #1E9BB5 50%, #157A90 100%); justify-content: center; text-align: center; }
+  .s7 .brand-name { color: rgba(255,255,255,0.45); }
+  .s7 .slide-num { color: rgba(255,255,255,0.3); }
+  .s7 .slide-heading { color: #fff; font-size: 22px; }
+  .s7 .slide-sub { color: rgba(255,255,255,0.75); }
+  .cta-box { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 10px 20px; margin-top: 18px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<h1>Carrusel 06 — ¿Cuánto necesitas ahorrado para comprar piso? (TOFU)</h1>
+<p class="subtitle">7 slides · 1080×1080 · @brokerhipotecario.es</p>
+
+<div class="slides-row">
+
+  <!-- SLIDE 1: HOOK -->
+  <div class="slide s1">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">1 / 7</span>
+    <div class="big-q">€?</div>
+    <div class="tag">Primera compra</div>
+    <div class="slide-heading">¿Cuánto dinero<br>necesitas ahorrado<br>para comprar piso?</div>
+    <div class="slide-sub">La respuesta exacta que nadie te da →</div>
+  </div>
+
+  <!-- SLIDE 2: LA REGLA 80% -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">2 / 7</span>
+    <div class="tag">La regla del 80%</div>
+    <div class="divider"></div>
+    <div class="breakdown">
+      <div class="bar-row">
+        <div class="bar-label"><span class="bar-name">El banco financia</span><span class="bar-val">80%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span class="bar-name">Tú pones (entrada)</span><span class="bar-val">20%</span></div>
+        <div class="bar-track"><div class="bar-fill orange" style="width:20%"></div></div>
+      </div>
+    </div>
+    <div class="slide-sub">El banco rara vez financia más del 80% del valor de tasación. El <strong>20% restante</strong> tienes que aportarlo tú.</div>
+  </div>
+
+  <!-- SLIDE 3: LOS GASTOS -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">3 / 7</span>
+    <div class="tag">Gastos adicionales</div>
+    <div class="divider"></div>
+    <div class="tip-list">
+      <div class="tip"><em class="tip-icon">·</em><div class="tip-text"><strong>Notaría y registro:</strong> 1-2% del precio</div></div>
+      <div class="tip"><em class="tip-icon">·</em><div class="tip-text"><strong>Gestoría:</strong> 300-600 €</div></div>
+      <div class="tip"><em class="tip-icon">·</em><div class="tip-text"><strong>Tasación:</strong> 300-500 €</div></div>
+      <div class="tip"><em class="tip-icon">·</em><div class="tip-text"><strong>ITP (segunda mano):</strong> 5-10% según comunidad</div></div>
+      <div class="tip"><em class="tip-icon">·</em><div class="tip-text"><strong>IVA (obra nueva):</strong> 10%</div></div>
+    </div>
+    <div class="slide-sub" style="margin-top:10px">En total: <strong>entre el 10 y el 12%</strong> del precio de la vivienda.</div>
+  </div>
+
+  <!-- SLIDE 4: EJEMPLO CONCRETO -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">4 / 7</span>
+    <div class="tag">Ejemplo real</div>
+    <div class="divider"></div>
+    <div class="example-box">
+      <div class="example-label">Piso de 200.000 €</div>
+      <div class="example-row"><span>Entrada (20%)</span><span>40.000 €</span></div>
+      <div class="example-row"><span>Gastos (10-12%)</span><span>22.000 €</span></div>
+      <div class="example-row"><span>Total ahorros mínimos</span><span>~62.000 €</span></div>
+    </div>
+    <div class="slide-sub">Y el banco te financia los <strong>160.000 € restantes</strong>.</div>
+  </div>
+
+  <!-- SLIDE 5: ALERTA -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">5 / 7</span>
+    <div class="tag">Cuidado</div>
+    <div class="divider"></div>
+    <div class="alert-box">
+      <div class="alert-text"><strong>Error frecuente:</strong> calcular solo la entrada y no los gastos. Muchos llegan al banco pensando que con el 20% es suficiente. No lo es.</div>
+    </div>
+    <div class="slide-heading" style="font-size:20px">Necesitas el <em>20% + 10-12%</em><br>antes de empezar</div>
+  </div>
+
+  <!-- SLIDE 6: EXCEPCIONES -->
+  <div class="slide">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">6 / 7</span>
+    <div class="tag">¿Hay excepciones?</div>
+    <div class="divider"></div>
+    <div class="slide-heading">Sí. Algunos bancos<br>van más allá<br>del <em>80%</em></div>
+    <div class="slide-sub">Menores de 35 años, funcionarios, perfil sólido y ciertos bancos con los que un broker negocia directamente. Cada caso es diferente.</div>
+  </div>
+
+  <!-- SLIDE 7: CTA -->
+  <div class="slide s7">
+    <div class="brand"><img src="../../broker-web/img/bh-logo.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="BH" /><span class="brand-name">BrokerHipotecario.es</span></div>
+    <span class="slide-num">7 / 7</span>
+    <div class="slide-heading">Calcula si estás<br>listo para comprar</div>
+    <div class="slide-sub">Estudio gratuito de tu viabilidad.<br>Sin compromiso. Tarragona, Reus, Salou.</div>
+    <div class="cta-box">brokerhipotecario.es → Calculadora</div>
+  </div>
+
+</div>
+</body>
+</html>
