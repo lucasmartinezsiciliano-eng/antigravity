@@ -1,9 +1,9 @@
 # INTEL-CALIBRATION.md
 # Archivo de calibración compartido — forge + horizon
-# Actualizado automáticamente cada DOMINGO por los agentes
+# Actualizado automáticamente cada DOMINGO por calibrate.py
 
 last_updated: 2026-05-21
-version: 1.0-seed
+version: 1.1-seed
 calibrated_weeks: 0
 total_signals_logged: 0
 total_acted: 0
@@ -13,19 +13,21 @@ total_acted: 0
 ## PESOS DE FUENTES — FORGE
 
 > Calculado como: señales accionadas / señales totales de esa fuente (últimas 4 semanas)
-> Semilla inicial basada en conocimiento del ecosistema. Se actualiza con datos reales.
+> Semilla inicial basada en conocimiento del ecosistema. Se actualiza con datos reales cada domingo.
 
 | Fuente | Peso inicial | Datos reales | Notas |
 |--------|-------------|--------------|-------|
+| r/LocalLLaMA | 0.85 | pending | Comunidad técnica real, señales OSS con benchmarks |
+| Ollama releases (GitHub) | 0.90 | pending | Impacto directo en stack local |
 | Hugging Face trending | 0.85 | pending | Alta densidad de modelos nuevos relevantes |
 | GitHub trending | 0.80 | pending | Alta ratio señal útil vs ruido |
-| r/LocalLLaMA | 0.75 | pending | Comunidad técnica, mucho contexto de DGX/Ollama |
-| Ollama releases | 0.90 | pending | Impacto directo en stack local de Lucas |
-| OpenClaw changelog | 0.95 | pending | Impacto directo en motor de agentes |
-| Hacker News | 0.55 | pending | Mucho volumen, ratio señal menor |
-| Papers With Code | 0.40 | pending | Benchmarks útiles pero pocas releases prácticas |
-| Twitter/X | 0.30 | pending | Alto ruido, bajo ratio señal |
-| TechCrunch AI | 0.25 | pending | Noticias tarde, pocas OSS |
+| r/AITools | 0.80 | pending | Herramientas nuevas con usuarios reales |
+| r/artificial | 0.65 | pending | Mix amplio, filtrar por upvotes y comentarios |
+| Hacker News (Show/Ask) | 0.70 | pending | Alta calidad, proyectos con tracción real |
+| Twitter/X (cuentas técnicas) | 0.55 | pending | @karpathy, @simonw, @reach_vb — señal antes que en otros sitios |
+| TikTok/YouTube meta (Reddit) | 0.50 | pending | Captura viral tech — señal más lenta pero valida adopción masiva |
+| Papers With Code | 0.35 | pending | Benchmarks útiles pero pocas releases prácticas inmediatas |
+| TechCrunch AI | 0.20 | pending | Noticias tardías, bajo impacto en stack OSS |
 
 ---
 
@@ -33,121 +35,131 @@ total_acted: 0
 
 | Fuente | Peso inicial | Datos reales | Notas |
 |--------|-------------|--------------|-------|
-| Indie Hackers (con revenue) | 0.85 | pending | Negocios validados con datos reales |
-| Product Hunt | 0.70 | pending | Lanzamientos reales, tracción inicial visible |
-| Hacker News Ask/Show | 0.75 | pending | Alta calidad, discusión con métricas reales |
-| r/Entrepreneur | 0.60 | pending | Mezcla de calidad, filtrar por upvotes |
-| EU-Startups | 0.65 | pending | Contexto europeo relevante |
-| TechCrunch | 0.50 | pending | Noticias tardías pero valida tracción |
+| r/Entrepreneur (con revenue) | 0.85 | pending | "I make €X/month" — validación real |
+| r/SideProject + r/AIBusinessIdeas | 0.80 | pending | Proyectos con tracción + discusión de monetización |
+| Indie Hackers (con revenue) | 0.85 | pending | Fuente más fiable: ingresos verificados públicamente |
+| Hacker News Ask/Show HN | 0.75 | pending | Alta calidad, discusión real con métricas |
+| TikTok meta (Reddit) | 0.70 | pending | "how I make money with AI" viral — señal de demanda real |
+| YouTube meta (títulos) | 0.65 | pending | "I built AI business €X/month" — valida que es replicable |
+| Product Hunt | 0.65 | pending | Lanzamientos reales, tracción inicial visible |
+| Twitter/X revenue reports | 0.60 | pending | MRR reports, "$X ARR" — alta señal si hay datos |
 | El Confidencial / Expansión | 0.70 | pending | Proptech y fintech español — muy relevante para Centrum/Broker |
-| LinkedIn España | 0.35 | pending | Mucho ruido, pocos datos duros |
+| EU-Startups | 0.60 | pending | Contexto europeo, funding = tracción validada |
+| TechCrunch | 0.45 | pending | Noticias tardías pero confirma tracción |
 
 ---
 
 ## PERFIL DE GUSTO DE LUCAS — FORGE
 
-> Lo que Lucas actúa vs lo que ignora. Semilla inicial desde contexto conocido.
-> Se actualiza con feedback real semana a semana.
+> Semilla inicial desde contexto conocido del proyecto. Se actualiza con feedback real.
 
 ### ACTÚA SIEMPRE (peso 1.0)
-- **Sustitución OSS de servicio de pago con ahorro > €20/mes** — patrón confirmado: Chatterbox vs ElevenLabs, Pipecat vs Retell, Whisper vs Deepgram
-- **Nuevo modelo Ollama con benchmark mejor que el tier actual** — Lucas actualiza modelos con regularidad
-- **Alerta de seguridad crítica (CVE alto)** en cualquier herramienta del stack — siempre requiere acción
+- **Sustitución OSS de servicio de pago con ahorro > €15/mes** — patrón confirmado múltiples veces: Chatterbox vs ElevenLabs, Pipecat vs Retell, Whisper vs Deepgram
+- **Nuevo modelo local que supera al tier actual en benchmark** — Lucas actualiza modelos regularmente
+- **CVE crítico en herramienta del stack** — siempre requiere acción, va siempre en informe
+- **Workflow o método que multiplica productividad** — Lucas opera solo, cualquier multiplicador es valioso
 
 ### ACTÚA CON ALTA PROBABILIDAD (peso 0.75)
-- **Upgrade de OpenClaw con nueva feature** que cambia cómo funcionan los agentes
-- **Nuevo MCP útil** para capacidades que los agentes no tienen hoy (especialmente browser, calendar, comms)
-- **Modelo que sustituya Claude Sonnet local** con calidad similar — objetivo de reducción de coste cloud
-- **Herramienta de vídeo/imagen open source** que mejore pipeline de contenido Centrum
+- **Nuevo modelo Ollama con mejor rendimiento que el tier actual** para agentes específicos
+- **Herramienta que elimina una tarea manual recurrente** (especialmente en e-commerce o broker)
+- **Método viral de trabajo con IA** que la comunidad está usando (Reddit/TikTok fuente)
+- **Alternativa a Claude API** con calidad similar para reducir coste cloud
 
 ### ACTÚA OCASIONALMENTE (peso 0.45)
-- **Benchmark de modelo nuevo** sin release disponible aún — Lucas lo marca para seguimiento
-- **Herramienta de infraestructura** (monitoring, logging) que no sea urgente
-- **Alternativa a Oracle Cloud** — interesante pero cambio tiene fricción alta
+- **Nueva herramienta de generación de vídeo/imagen** con mejor calidad para contenido
+- **Herramienta de infraestructura** (monitoring, logging) no urgente
+- **Benchmark de modelo** sin release disponible aún — Lucas lo marca para seguimiento
 
-### IGNORA (peso 0.10 — no incluir salvo datos muy sólidos)
-- Papers académicos sin release asociado
+### IGNORA CONSISTENTEMENTE (peso 0.05 — no incluir)
+- Papers académicos sin release o demo funcional
 - Herramientas enterprise > €200/mes
-- Tecnología que no corre en DGX 128GB ni en hardware local
-- Updates menores (patch versions) sin cambio de funcionalidad
+- Tecnología que no tiene soporte en hardware de Lucas y no tiene alternativa cloud asequible
+- Updates de patch version sin cambio de funcionalidad relevante
+- Hype sin datos (cualquier "revolucionario" sin demo o benchmarks)
 
 ---
 
 ## PERFIL DE GUSTO DE LUCAS — HORIZON
 
 ### ACTÚA SIEMPRE (peso 1.0)
-- **Oportunidad directa para Centrum** con modelo de negocio claro — Lucas está muy enfocado aquí
-- **Estrategia de captación digital** que otro broker está usando con éxito demostrado
-- **Competidor directo de Centrum** con tracción — necesita saber para calibrar estrategia
+- **Negocio IA de 1 persona con revenue confirmado (€2k+/mes) y modelo replicable** — el patrón más valioso
+- **Oportunidad directa para Centrum** con modelo de negocio claro y urgencia
+- **Competidor directo de Centrum** con tracción real — siempre incluir con flag AMENAZA
+- **Estrategia de captación que otro broker/proptech está usando con éxito demostrado**
 
 ### ACTÚA CON ALTA PROBABILIDAD (peso 0.75)
-- **Modelo de e-commerce 1-persona con agentes IA** que genera €5k+/mes — transferible directamente
-- **Nueva categoría TikTok Shop** que está creciendo y encaja con el proveedor DDP actual
-- **Proptech / fintech español** lanzando algo que valide o amenace el mercado Centrum
-- **Oportunidad de "IA-as-a-service"** donde Lucas podría vender su expertise en agentes
+- **Modelo de negocio AI-native** que Lucas puede montar en ≤4 semanas con sus capacidades
+- **Nueva categoría TikTok Shop** con demanda creciente que encaja con proveedor DDP
+- **Servicio IA para pymes españolas** donde Lucas tiene ventaja por su stack
+- **Proptech/fintech español** que valide o amenace el mercado de Centrum o Broker
 
 ### ACTÚA OCASIONALMENTE (peso 0.45)
-- **Mercados nuevos** que requieran <€1.000 de inversión y 1 semana de validación
-- **Modelos de afiliación** en sectores donde Lucas tiene acceso (hipotecas, seguros)
-- **Tendencias de contenido** que cambien la estrategia de distribución del broker
+- **Mercados nuevos** que requieran <€1.000 y 1 semana de validación
+- **Modelos de afiliación** en sectores con acceso natural (hipotecas, seguros)
+- **Tendencias de contenido** que cambien la estrategia de distribución
 
-### IGNORA (peso 0.10 — no incluir)
-- Oportunidades en mercados fuera de España (salvo que sea online puro y escalable)
-- Negocios que requieran equipo > 2 personas
-- B2B enterprise con ciclos de venta > 6 meses
-- Ideas sin ninguna validación de mercado
+### IGNORA CONSISTENTEMENTE (peso 0.05 — no incluir)
+- Ideas sin ningún dato de validación (ni revenue, ni usuarios, ni crecimiento)
+- Negocios que requieran equipo > 2 personas para operar
+- Mercados fuera de España/Europa para negocios no-digitales
+- B2B enterprise con ciclos > 3 meses sin cashflow temprano
+- Oportunidades con capex inicial > €5.000 sin fase de validación previa
 
 ---
 
 ## ANTI-PATRONES CONFIRMADOS
 
-> Señales que se han incluido antes pero que Lucas ignoró consistentemente.
-> Actualizar aquí para no repetir el error.
+> Señales que han sido ignoradas consistentemente. Actualiza cada domingo.
+> Formato: [semana] [agente]: tipo de señal → razón del descarte
 
 ```
-[Semana 1+] — A COMPLETAR CON DATOS REALES
-Ejemplo de formato:
-- [fecha] forge: "Paper sobre nuevo modelo 40B" → ignorado × 3 veces → no incluir papers sin release
-- [fecha] horizon: "Startup USA con AI mortgage" → ignorado → Lucas no actúa en mercados USA
+[semana 0 — seed]
+- forge: papers sin release → Lucas no actúa en investigación sin producto
+- forge: herramientas enterprise caras → fuera del rango de precio aceptable
+- horizon: negocios USA-only → Lucas foca en España/Europa
+- horizon: ideas sin datos → no hay validación que justifique tiempo de análisis
 ```
 
 ---
 
 ## SINERGIAS FORGE ↔ HORIZON
 
-> Patrones donde una señal técnica de forge habilita una oportunidad de horizon.
-> El sistema aprende a conectar ambos streams.
+> Horizon debe leer la salida de forge antes de ejecutar.
+> Patrones detectados donde una señal técnica habilita una oportunidad de negocio.
 
 ```
-PATRÓN SEMILLA (seed knowledge):
-- Mejora en TTS local (forge) → habilita clonar voz de asesores financieros (horizon: Centrum)
-- Nuevo modelo ligero para tool use (forge) → reduce coste de agentes Centrum (horizon: margen)
-- Herramienta de scraping más potente (forge) → permite monitorizar leads hipotecarios online (horizon)
+PATRONES SEED (conocimiento previo):
+- Nuevo TTS local gratuito (forge) → habilita clonar voces para servicios de contenido IA (horizon)
+- Modelo local que iguala Claude Haiku (forge) → reduce coste de agentes → mejora margen de SaaS IA (horizon)
+- Herramienta de scraping más potente (forge) → permite lead gen hipotecario automatizado (horizon: Centrum)
+- Modelo multimodal nuevo gratuito (forge) → habilita análisis facial VISAI más barato (horizon)
+- Framework de agentes nuevo (forge) → puede habilitar nuevo producto de "agentes IA para pymes" (horizon)
 
-PATRONES APRENDIDOS (se actualizan con datos):
-[vacío — se rellenará en semanas siguientes]
+PATRONES APRENDIDOS: [vacío — se rellenará con datos reales]
+```
+
+---
+
+## CONTEXTO FIJO DEL NEGOCIO (no cambia con calibración)
+
+```
+Prioridades de negocio de Lucas (orden de importancia para filtrar):
+1. Centrum de la Vivienda — el proyecto más grande y más urgente
+2. E-commerce TikTok Shop — ingresos activos, escalar sin carga operativa
+3. Broker Firmax — digitalización y captación de leads
+4. Nuevas oportunidades — siempre bienvenidas si son ejecutables con stack actual
+
+Stack que cuesta dinero y es objetivo prioritario de sustitución OSS:
+1. ElevenLabs (TTS) — objetivo prioritario
+2. Retell AI (call IA) — en evaluación activa
+3. Creatomate (render vídeo) — objetivo secundario
+4. Claude API en agentes no críticos — reducir donde haiku sea suficiente
 ```
 
 ---
 
 ## HISTORIAL DE CALIBRACIÓN
 
-| Semana | Fecha | Forge: actuadas/total | Horizon: actuadas/total | Cambios en pesos |
-|--------|-------|----------------------|------------------------|-----------------|
-| seed | 2026-05-21 | 0/0 | 0/0 | Valores iniciales |
-
----
-
-## INSTRUCCIONES PARA LA CALIBRACIÓN DOMINICAL
-
-Cada domingo, el agente que ejecuta primero la calibración debe:
-
-1. Leer INTEL-FEEDBACK-LOG.md completo de la semana
-2. Para cada señal de forge: buscar la reacción de Lucas (👍/👎/comentario)
-3. Para cada señal de horizon: idem
-4. Calcular nuevos pesos por fuente: `señales_actuadas / señales_totales`
-5. Actualizar tabla de pesos con datos reales (mantener histórico, no borrar)
-6. Si hay ≥3 ignorados del mismo tipo → añadir a ANTI-PATRONES
-7. Si hay ≥2 actuados del mismo tipo nuevo → añadir a ACTÚA SIEMPRE / ALTA PROBABILIDAD
-8. Actualizar `last_updated`, `calibrated_weeks`, counters
-9. Escribir resumen en INTEL-FEEDBACK-LOG.md: "CALIBRACIÓN SEMANA X completada"
+| Semana | Fecha | Forge actuadas/total | Horizon actuadas/total | Ratio global | Cambios clave |
+|--------|-------|---------------------|----------------------|-------------|---------------|
+| seed | 2026-05-21 | 0/0 | 0/0 | — | Valores iniciales + scope ampliado (Reddit/TikTok/nuevos modelos negocio IA) |
