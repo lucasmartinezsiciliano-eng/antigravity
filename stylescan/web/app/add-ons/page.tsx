@@ -32,7 +32,7 @@ export default function AddOnsPage() {
     setBarberCode(null);
   }
 
-  async function doInitiate(code: string | undefined) {
+  async function doInitiate(code: string | undefined, bypass = false) {
     const quiz = storage.getQuiz();
     const consent = storage.getConsentState();
     const res = await api.initiate({
@@ -46,8 +46,7 @@ export default function AddOnsPage() {
     });
     storage.saveAnalysisId(res.analysis_id);
     storage.saveCheckoutUrl(res.checkout_url);
-    const isBypass = (code ?? "").toUpperCase() === "LUKILUU";
-    if (isBypass) {
+    if (bypass) {
       window.location.href = `/capture/${res.analysis_id}`;
     } else if (res.checkout_url.startsWith("https://checkout.stripe.com")) {
       window.location.href = res.checkout_url;
@@ -74,7 +73,8 @@ export default function AddOnsPage() {
         } catch { /* ignore — proceed to create new analysis */ }
       }
 
-      await doInitiate(barberCode ?? undefined);
+      const isLukiluu = (barberCode ?? "").toUpperCase() === "LUKILUU";
+      await doInitiate(isLukiluu ? undefined : (barberCode ?? undefined), isLukiluu);
       // Successfully redirecting — do NOT reset mutex (blocks double-click during navigation)
       return;
     } catch (e: any) {
