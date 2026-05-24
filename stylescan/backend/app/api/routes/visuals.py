@@ -31,6 +31,7 @@ async def _run_generation(
     cuts: list[dict],
     face_shape: str,
     hair_attrs: dict | None = None,
+    barber_refs: dict | None = None,
 ):
     """Background task: generate images and update DB."""
     from app.core.database import AsyncSessionLocal
@@ -43,6 +44,7 @@ async def _run_generation(
                 face_shape=face_shape,
                 fal_key=settings.FAL_KEY,
                 hair_attrs=hair_attrs,
+                barber_refs=barber_refs,
             )
             visuals_dict = image_gen_service.visuals_to_dict(visuals)
 
@@ -117,7 +119,7 @@ async def generate_visuals(
         else:
             logger.info("Profile photo invalid (%s) — lateral will use text-only", val_p.error)
 
-    # Extract cuts from the stored report
+    # Extract cuts and pre-resolved barber references from the stored report
     report = analysis.report or {}
     cuts = report.get("cortes_recomendados", [])
     if not cuts:
@@ -126,11 +128,15 @@ async def generate_visuals(
     face_shape = analysis.face_shape or "oval"
     hair_attrs = report.get("hair_attributes")
 
+    # Load pre-resolved barber references (stored during analysis)
+    raw_refs = report.get("matched_barber_refs", {})
+    barber_refs = {int(k): v for k, v in raw_refs.items()} if raw_refs else None
+
     # Mark as processing
     analysis.visuals_status = "processing"
     await db.commit()
 
-    background_tasks.add_task(_run_generation, analysis_id, photos_bytes, cuts, face_shape, hair_attrs)
+    background_tasks.add_task(_run_generation, analysis_id, photos_bytes, cuts, face_shape, hair_attrs, barber_refs)
 
     return {
         "message": "Generación iniciada. Consulta GET /analysis/{id}/visuals en ~30 segundos.",

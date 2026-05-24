@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 # ─── Paths ────────────────────────────────────────────────────────────
 KB_DIR = Path(__file__).parent.parent.parent / "knowledge_base"
 ALIASES_FILE = KB_DIR / "haircut_aliases.json"
+REFS_2026_FILE = KB_DIR / "referencias_2026.json"
 CURATED_DIR = KB_DIR / "barber_references" / "curated"
 CACHE_FILE = KB_DIR / "barber_references" / "reference_cache.json"
 
@@ -46,6 +47,8 @@ PEXELS_SEARCH_URL = "https://api.pexels.com/v1/search"
 # ─── Module state ─────────────────────────────────────────────────────
 _aliases_data: Optional[dict] = None
 _aliases_lock = threading.Lock()
+_refs2026_data: Optional[dict] = None
+_refs2026_lock = threading.Lock()
 _memory_cache: dict[str, Optional[str]] = {}
 _cache_lock = threading.Lock()
 
@@ -65,6 +68,43 @@ def _load_aliases() -> dict:
             logger.warning("haircut_aliases.json load failed: %s — running without curated mapping", e)
             _aliases_data = {"cuts": {}, "generic_terms": {}}
         return _aliases_data
+
+
+# ─── Referencias 2026 catalog ────────────────────────────────────────
+def _load_refs2026() -> dict:
+    """Lazy-load referencias_2026.json (cached for process lifetime)."""
+    global _refs2026_data
+    if _refs2026_data is not None:
+        return _refs2026_data
+    with _refs2026_lock:
+        if _refs2026_data is not None:
+            return _refs2026_data
+        try:
+            _refs2026_data = json.loads(REFS_2026_FILE.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning("referencias_2026.json load failed: %s — running without 2026 catalog", e)
+            _refs2026_data = {"cuts": {}}
+        return _refs2026_data
+
+
+def _face_query_from_refs2026(cut_id: str, face_shape: Optional[str]) -> Optional[str]:
+    """
+    Return the face-shape-specific pexels query for a cut from referencias_2026.json.
+
+    Falls back to the 'general' query in refs_2026 if face_shape is None or not found.
+    Returns None if the cut isn't in referencias_2026 at all.
+    """
+    data = _load_refs2026()
+    entry = data.get("cuts", {}).get(cut_id)
+    if not entry:
+        return None
+    queries: dict = entry.get("pexels_queries", {})
+    if not queries:
+        return None
+    # Face-shape-specific > general > None
+    if face_shape and face_shape in queries:
+        return queries[face_shape]
+    return queries.get("general")
 
 
 @dataclass
@@ -193,9 +233,14 @@ def _save_disk_cache(cache: dict[str, str]) -> None:
     CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _cache_key(cut_name: str, match: Optional[CutMatch]) -> str:
-    """Use catalog id when matched (stable across LLM phrasings); raw name otherwise."""
-    return match.cut_id if match else f"raw::{_normalize(cut_name)}"
+def _cache_key(cut_name: str, match: Optional[CutMatch], face_shape: Optional[str] = None) -> str:
+    """
+    Use catalog id when matched (stable across LLM phrasings); raw name otherwise.
+    When face_shape is provided, it is appended so different face shapes get
+    independent cache entries (their Pexels queries differ).
+    """
+    base = match.cut_id if match else f"raw::{_normalize(cut_name)}"
+    return f"{base}::shape:{face_shape}" if face_shape else base
 
 
 # ─── Pexels search ───────────────────────────────────────────────────
@@ -225,9 +270,17 @@ def _pexels_search(query: str, api_key: str) -> Optional[str]:
 
 
 # ─── Public API ──────────────────────────────────────────────────────
-def resolve_reference_sync(cut_name: str, pexels_api_key: str) -> Optional[str]:
+def resolve_reference_sync(
+    cut_name: str,
+    pexels_api_key: str,
+    face_shape: Optional[str] = None,
+) -> Optional[str]:
     """
     Sync resolver — returns a public URL or a `file://` path to a curated image.
+
+    face_shape: when provided, uses the face-shape-specific pexels query from
+                referencias_2026.json (more precise results) instead of the
+                generic query from haircut_aliases.json.
 
     Returns None if no reference can be obtained (caller falls back to text-only).
     """
@@ -235,7 +288,7 @@ def resolve_reference_sync(cut_name: str, pexels_api_key: str) -> Optional[str]:
         return None
 
     match = _match_cut(cut_name)
-    key = _cache_key(cut_name, match)
+    key = _cache_key(cut_name, match, face_shape)
 
     # 1. In-memory cache
     with _cache_lock:
@@ -244,7 +297,9 @@ def resolve_reference_sync(cut_name: str, pexels_api_key: str) -> Optional[str]:
             return cached if cached else None
 
     # 2. Curated local image (highest quality — manually selected)
-    if match and match.local_image and match.local_image.exists():
+    #    Curated images are not face-shape-specific, so skip this step when
+    #    face_shape is given (we want the tailored Pexels result instead).
+    if match and match.local_image and match.local_image.exists() and not face_shape:
         url = match.local_image.resolve().as_uri()  # file:///...
         logger.info("Reference (curated) for '%s' → %s [score=%.2f]", cut_name, match.cut_id, match.score)
         with _cache_lock:
@@ -265,8 +320,23 @@ def resolve_reference_sync(cut_name: str, pexels_api_key: str) -> Optional[str]:
             _memory_cache[key] = None
         return None
 
-    query = match.pexels_query if match else _generic_query_fallback(cut_name)
-    logger.info("Reference (Pexels) lookup for '%s' (key=%s, query=%r)", cut_name, key, query)
+    # Query priority:
+    #   1. referencias_2026.json face-shape-specific query  (most precise)
+    #   2. referencias_2026.json general query              (still 2026 data)
+    #   3. haircut_aliases.json pexels_query                (legacy fallback)
+    #   4. generic_terms map / free-form fallback           (last resort)
+    query: Optional[str] = None
+    if match:
+        query = _face_query_from_refs2026(match.cut_id, face_shape)
+        if not query:
+            query = match.pexels_query
+    if not query:
+        query = _generic_query_fallback(cut_name)
+
+    logger.info(
+        "Reference (Pexels) lookup for '%s' (key=%s, shape=%s, query=%r)",
+        cut_name, key, face_shape or "—", query,
+    )
     url = _pexels_search(query, pexels_api_key)
 
     # Persist (negative cache stored as empty string so we don't retry on every request)
@@ -276,23 +346,35 @@ def resolve_reference_sync(cut_name: str, pexels_api_key: str) -> Optional[str]:
         _memory_cache[key] = url or None
 
     if url:
-        logger.info("Reference (Pexels) for '%s' → %s", cut_name, url)
+        logger.info("Reference (Pexels) for '%s' [shape=%s] → %s", cut_name, face_shape or "—", url)
     else:
-        logger.info("Reference (Pexels) MISS for '%s' (cached negative)", cut_name)
+        logger.info("Reference (Pexels) MISS for '%s' [shape=%s] (cached negative)", cut_name, face_shape or "—")
     return url
 
 
-async def resolve_reference(cut_name: str, pexels_api_key: str) -> Optional[str]:
+async def resolve_reference(
+    cut_name: str,
+    pexels_api_key: str,
+    face_shape: Optional[str] = None,
+) -> Optional[str]:
     """Async wrapper — runs the (network-bound) sync resolver in the default executor."""
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, resolve_reference_sync, cut_name, pexels_api_key)
+    return await loop.run_in_executor(
+        None, resolve_reference_sync, cut_name, pexels_api_key, face_shape
+    )
 
 
-async def resolve_many(cut_names: list[str], pexels_api_key: str) -> list[Optional[str]]:
+async def resolve_many(
+    cut_names: list[str],
+    pexels_api_key: str,
+    face_shape: Optional[str] = None,
+) -> list[Optional[str]]:
     """Resolve N references in parallel. Used by image_gen_service."""
     if not cut_names:
         return []
-    return await asyncio.gather(*[resolve_reference(n, pexels_api_key) for n in cut_names])
+    return await asyncio.gather(
+        *[resolve_reference(n, pexels_api_key, face_shape) for n in cut_names]
+    )
 
 
 def get_cut_id(cut_name: str) -> Optional[str]:
@@ -301,14 +383,19 @@ def get_cut_id(cut_name: str) -> Optional[str]:
     return match.cut_id if match else None
 
 
-def debug_match(cut_name: str) -> dict:
+def debug_match(cut_name: str, face_shape: Optional[str] = None) -> dict:
     """Diagnostic helper — returns what would be matched, without doing any I/O."""
     match = _match_cut(cut_name)
+    refs_query = _face_query_from_refs2026(match.cut_id, face_shape) if match else None
+    alias_query = match.pexels_query if match else _generic_query_fallback(cut_name)
     return {
         "input": cut_name,
+        "face_shape": face_shape,
         "matched": bool(match),
         "cut_id": match.cut_id if match else None,
         "score": match.score if match else 0.0,
-        "pexels_query": match.pexels_query if match else _generic_query_fallback(cut_name),
+        "refs_2026_query": refs_query,        # face-shape-specific (new)
+        "alias_query": alias_query,            # legacy generic query
+        "effective_query": refs_query or alias_query,  # what would actually be used
         "has_local_image": bool(match and match.local_image and match.local_image.exists()),
     }

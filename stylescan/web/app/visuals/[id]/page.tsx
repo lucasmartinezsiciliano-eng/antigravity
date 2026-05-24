@@ -1,8 +1,12 @@
 "use client";
 import { use, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ChevronLeft, X, Sparkles, Camera } from "lucide-react";
 import { api } from "@/lib/api";
+import { GeneratingScreen } from "@/components/ui/generating-screen";
+import { CutCard } from "@/components/ui/cut-card";
+import { GlowButton } from "@/components/ui/glow-button";
 
 type Stage = "intro" | "pick" | "preview" | "generating" | "done" | "error";
 
@@ -16,20 +20,43 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<any | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Mutex: prevent double-tap from firing two generateVisuals calls (each costs Fal.ai credit)
+  const generatingRef = useRef(false);
 
   useEffect(() => {
     api.getVisuals(id).then((res) => {
       if (res.visuals_status === "ready" && res.visuals?.length > 0) {
         setVisuals(res.visuals);
         setStage("done");
+      } else if (res.visuals_status === "processing") {
+        // Already generating (e.g. from /result auto-trigger) — join the poll, don't re-submit
+        setStage("generating");
+        startPolling();
       }
-    }).catch(() => {});
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [id]);
+    }).catch(() => {
+      // If we can't reach the API, let the user proceed — the generate call will fail loudly
+    });
+    return () => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    };
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
+    // Validate file type — allow empty MIME (iOS HEIC arrives with no type), reject clearly wrong types
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+    const knownBadExts = ["pdf", "doc", "docx", "xls", "zip", "mp4", "mov", "avi"];
+    if (f.type && !f.type.startsWith("image/") && knownBadExts.includes(ext)) {
+      setError("El archivo no es una imagen válida.");
+      setStage("error");
+      return;
+    }
+    if (f.size === 0) {
+      setError("La foto está vacía. Elige otra.");
+      setStage("error");
+      return;
+    }
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setStage("preview");
@@ -37,6 +64,9 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
 
   async function handleGenerate() {
     if (!file) return;
+    // Mutex: block concurrent calls — onClick fires once but rapid taps can queue multiple
+    if (generatingRef.current) return;
+    generatingRef.current = true;
     setStage("generating");
     setError("");
     try {
@@ -45,14 +75,21 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
     } catch (e: any) {
       setError(e.message || "Error al iniciar la prueba virtual.");
       setStage("error");
+      generatingRef.current = false;
     }
   }
 
   function startPolling() {
+    // Always clear an existing interval first — prevents orphaned polls on rapid re-generate
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     const pollStart = Date.now();
     pollRef.current = setInterval(async () => {
+      // Pause while tab is hidden — saves battery + avoids spurious errors
+      if (document.hidden) return;
+
       if (Date.now() - pollStart > 300_000) {
-        clearInterval(pollRef.current!);
+        clearInterval(pollRef.current!); pollRef.current = null;
+        generatingRef.current = false;
         setError("La generación está tardando demasiado. Inténtalo de nuevo.");
         setStage("error");
         return;
@@ -60,127 +97,130 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
       try {
         const res = await api.getVisuals(id);
         if (res.visuals_status === "ready" && res.visuals?.length > 0) {
-          clearInterval(pollRef.current!);
+          clearInterval(pollRef.current!); pollRef.current = null;
+          generatingRef.current = false;
           setVisuals(res.visuals);
           setStage("done");
         } else if (res.visuals_status === "failed") {
-          clearInterval(pollRef.current!);
+          clearInterval(pollRef.current!); pollRef.current = null;
+          generatingRef.current = false;
           setError("La generación de imágenes falló. Inténtalo de nuevo.");
           setStage("error");
         }
-      } catch {}
+      } catch { /* keep retrying silently */ }
     }, 3000);
   }
 
   /* ── Generating ── */
   if (stage === "generating") {
-    return (
-      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 24, textAlign: "center" }}>
-        <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          background: "var(--accent-subtle)",
-          border: "1px solid rgba(201,168,76,0.2)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <Sparkles size={30} color="var(--accent)" strokeWidth={1.75} />
-        </div>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px" }}>Generando tu prueba virtual</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 15, maxWidth: 280, lineHeight: 1.6, margin: "0 auto" }}>
-            Aplicando tus 3 cortes recomendados. Esto puede tardar 1–2 minutos…
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="dot-pulse" style={{ animationDelay: `${i * 0.4}s` }} />
-          ))}
-        </div>
-      </div>
-    );
+    return <GeneratingScreen />;
   }
 
-  /* ── Done — grid of visuals ── */
+  /* ── Done — animated stacked cards (frontal + lateral) ── */
   if (stage === "done" && visuals.length > 0) {
-    const cutGroups: Record<string, any[]> = {};
-    for (const v of visuals) {
-      const key = v.cut_name || v.cut_index || "Corte";
-      if (!cutGroups[key]) cutGroups[key] = [];
-      cutGroups[key].push(v);
-    }
-
     return (
       <div style={{ background: "var(--bg)", minHeight: "100dvh" }}>
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "24px 20px 60px" }}>
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}
+          >
             <Link href={`/result/${id}`} className="back-btn" aria-label="Volver">
               <ChevronLeft size={20} strokeWidth={2} />
             </Link>
             <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Tu prueba virtual</h1>
-          </div>
+          </motion.div>
 
           {/* Lightbox */}
-          {selected && (
-            <div style={{
-              position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 100,
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              padding: 20,
-            }}>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                onPointerDown={(e) => { e.preventDefault(); setSelected(null); }}
-                aria-label="Cerrar"
+          <AnimatePresence>
+            {selected && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 style={{
-                  position: "absolute", top: 20, right: 20,
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: "rgba(255,255,255,0.1)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "white",
+                  position: "fixed", inset: 0, background: "rgba(0,0,0,0.96)", zIndex: 100,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  padding: 20,
                 }}
               >
-                <X size={18} strokeWidth={2} />
-              </button>
-              <img
-                src={selected.url || selected.image_url}
-                alt={selected.cut_name}
-                style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain", borderRadius: 14 }}
-              />
-              {selected.cut_name && (
-                <p style={{ color: "rgba(255,255,255,0.7)", marginTop: 14, fontSize: 14 }}>{selected.cut_name}</p>
-              )}
-            </div>
-          )}
-
-          {/* Cut groups */}
-          {Object.entries(cutGroups).map(([cutName, items]) => (
-            <div key={cutName} style={{ marginBottom: 28 }}>
-              <div className="label-accent" style={{ marginBottom: 10 }}>{cutName}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-                {items.map((v: any, i: number) => (
-                  <button
-                    type="button"
-                    key={i}
-                    onClick={() => setSelected(v)}
-                    onPointerDown={(e) => { e.preventDefault(); setSelected(v); }}
-                    aria-label={`${cutName} ángulo ${i + 1}`}
-                    style={{ aspectRatio: "3/4", borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)" }}
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  aria-label="Cerrar"
+                  style={{
+                    position: "absolute", top: 20, right: 20,
+                    width: 40, height: 40, borderRadius: "50%",
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "white",
+                  }}
+                >
+                  <X size={18} strokeWidth={2} />
+                </button>
+                <motion.img
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.94, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                  src={selected.url}
+                  alt={selected.label}
+                  style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain", borderRadius: 16 }}
+                />
+                {selected.cutName && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    style={{ color: "rgba(255,255,255,0.5)", marginTop: 16, fontSize: 13, letterSpacing: "0.04em" }}
                   >
-                    <img
-                      src={v.url || v.image_url}
-                      alt={`${cutName} ángulo ${i + 1}`}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+                    {selected.cutName} — {selected.label}
+                  </motion.p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <button type="button" className="btn-secondary" onClick={() => { setStage("pick"); setVisuals([]); }} onPointerDown={(e) => { e.preventDefault(); setStage("pick"); setVisuals([]); }}>
-            Generar con otra foto
-          </button>
+          {/* Animated cut cards */}
+          {visuals.map((cut: any) => {
+            const cutName = cut.nombre_en || `Corte ${(cut.cut_index ?? 0) + 1}`;
+            const frontalAngle = (cut.angles ?? []).find((a: any) => a.angle_id === "frontal");
+            const lateralAngle = (cut.angles ?? []).find((a: any) => a.angle_id === "lateral");
+            return (
+              <CutCard
+                key={cut.cut_index ?? cutName}
+                cutName={cutName}
+                cutIndex={cut.cut_index ?? 0}
+                frontal={frontalAngle?.url ? { url: frontalAngle.url, label: "Frontal" } : undefined}
+                lateral={lateralAngle?.url ? { url: lateralAngle.url, label: "Lateral" } : undefined}
+                onPhotoTap={(url, label, name) => setSelected({ url, label, cutName: name })}
+              />
+            );
+          })}
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+                generatingRef.current = false;
+                setStage("pick");
+                setVisuals([]);
+              }}
+            >
+              Generar con otra foto
+            </button>
+          </motion.div>
         </div>
       </div>
     );
@@ -200,11 +240,11 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
             <div style={{
               width: 72, height: 72, borderRadius: 20,
-              background: "var(--accent-subtle)",
-              border: "1px solid rgba(201,168,76,0.2)",
+              background: "var(--gold-subtle)",
+              border: "1px solid var(--gold-border)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Sparkles size={30} color="var(--accent)" strokeWidth={1.75} />
+              <Sparkles size={30} color="var(--gold)" strokeWidth={1.75} />
             </div>
             <div style={{ textAlign: "center" }}>
               <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px", letterSpacing: -0.5 }}>Prueba virtual</h1>
@@ -215,7 +255,7 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
             <div className="card" style={{ width: "100%", padding: "16px 18px" }}>
               {[
                 "IA aplica el corte a tu foto real",
-                "3 ángulos por cada corte (9 imágenes)",
+                "Frontal + lateral por cada corte (6 imágenes)",
                 "Foto procesada y eliminada al instante",
               ].map((t, i) => (
                 <div key={i} style={{
@@ -224,14 +264,14 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
                   borderBottom: i < 2 ? "1px solid var(--border)" : "none",
                 }}>
                   <svg width="14" height="12" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M1 4L3.5 6.5L9 1" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span style={{ fontSize: 14, color: "var(--text-muted)" }}>{t}</span>
                 </div>
               ))}
             </div>
           </div>
-          <button type="button" className="btn-primary" onClick={() => setStage("pick")} onPointerDown={(e) => { e.preventDefault(); setStage("pick"); }}>
+          <button type="button" className="btn-primary" onClick={() => setStage("pick")}>
             Hacer mi prueba virtual →
           </button>
         </>
@@ -246,7 +286,6 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            onPointerDown={(e) => { e.preventDefault(); inputRef.current?.click(); }}
             style={{
               flex: 1, border: "1.5px dashed var(--border)", borderRadius: 20,
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -255,17 +294,17 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
           >
             <div style={{
               width: 56, height: 56, borderRadius: 16,
-              background: "var(--accent-subtle)", border: "1px solid rgba(201,168,76,0.2)",
+              background: "var(--gold-subtle)", border: "1px solid var(--gold-border)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Camera size={26} color="var(--accent)" strokeWidth={1.75} />
+              <Camera size={26} color="var(--gold)" strokeWidth={1.75} />
             </div>
             <div style={{ textAlign: "center" }}>
               <p style={{ color: "var(--text-muted)", fontSize: 15, margin: "0 0 4px", fontWeight: 600 }}>Toca para abrir cámara</p>
               <p className="caption" style={{ margin: 0 }}>o elige de galería</p>
             </div>
           </button>
-          <button type="button" className="btn-primary" onClick={() => inputRef.current?.click()} onPointerDown={(e) => { e.preventDefault(); inputRef.current?.click(); }}>
+          <button type="button" className="btn-primary" onClick={() => inputRef.current?.click()}>
             Abrir cámara →
           </button>
         </>
@@ -286,10 +325,10 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
           </div>
           {error && <p style={{ color: "var(--danger)", fontSize: 14, textAlign: "center", marginBottom: 10 }}>{error}</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button type="button" className="btn-primary" onClick={handleGenerate} onPointerDown={(e) => { e.preventDefault(); handleGenerate(); }}>
+            <button type="button" className="btn-primary" onClick={handleGenerate}>
               Generar mi prueba virtual →
             </button>
-            <button type="button" className="btn-secondary" onClick={() => inputRef.current?.click()} onPointerDown={(e) => { e.preventDefault(); inputRef.current?.click(); }}>
+            <button type="button" className="btn-secondary" onClick={() => inputRef.current?.click()}>
               Cambiar foto
             </button>
           </div>
@@ -300,9 +339,12 @@ export default function VisualsPage({ params }: { params: Promise<{ id: string }
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>
           <span style={{ fontSize: 48 }}>😕</span>
           <p style={{ color: "var(--danger)", fontSize: 15 }}>{error}</p>
-          <button type="button" className="btn-secondary" style={{ maxWidth: 260, width: "100%" }}
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ maxWidth: 260, width: "100%" }}
             onClick={() => { setStage("pick"); setError(""); }}
-            onPointerDown={(e) => { e.preventDefault(); setStage("pick"); setError(""); }}>
+          >
             Intentar de nuevo
           </button>
         </div>

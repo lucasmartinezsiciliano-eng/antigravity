@@ -1,0 +1,927 @@
+{
+  "_doc": "Base de datos de referencias visuales para VISAI 2026. Mapa de cortes × forma de rostro con pexels_queries, páginas de referencia y notas de compatibilidad. Construido el 2026-05-24.",
+  "version": "1.0",
+  "updated_at": "2026-05-24",
+  "face_shapes": ["oval", "round", "square", "oblong", "heart", "diamond", "triangle"],
+
+  "cuts": {
+
+    "textured_crop": {
+      "canonical_es": "Corte Texturizado / Textured Crop",
+      "canonical_en": "Textured Crop",
+      "popularity": 5,
+      "best_for_faces": ["oval", "square", "oblong", "heart", "diamond"],
+      "works_with_adjustment": ["round"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Funciona perfecto — textura sin añadir anchura. Cualquier variación válida.",
+        "round": "Requiere volumen alto y lados muy cortos para elongar. Fringe corto y textura en punta.",
+        "square": "Bordes suaves y top desconectado suavizan la mandíbula cuadrada. Muy favorecedor.",
+        "oblong": "Fringe más largo equilibra la longitud facial. Evitar demasiado volumen en la cima.",
+        "heart": "Lados con cuerpo en la zona de la mandíbula. Fringe recto equilibra la frente ancha.",
+        "diamond": "Añade anchura en frente y mejillas. Muy favorecedor con textura horizontal.",
+        "triangle": "Volumen en la cima reduce el peso de la mandíbula ancha. Recomendado."
+      },
+      "pexels_queries": {
+        "general": "textured crop haircut men barbershop side front view 2026",
+        "oval": "textured crop men oval face side view professional",
+        "round": "textured crop high volume men round face front view",
+        "square": "textured crop soft edges men square face side view",
+        "oblong": "textured crop fringe men long face front view",
+        "heart": "textured crop men heart face side view",
+        "diamond": "textured crop wide sides men diamond face",
+        "triangle": "textured crop volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://www.menshairstylesnow.com/textured-crop-haircut/",
+        "https://forteseries.com/blogs/hairstyles/textured-crop",
+        "https://www.thefashionisto.com/articles/textured-crop-haircuts/",
+        "https://www.pinterest.com/ideas/textured-crop-haircut-men-oval-face/907934461761/",
+        "https://www.pinterest.com/ideas/textured-crop-haircut/949477630802/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": [
+        "https://uk.pinterest.com/tonsmit666/textured-crop/",
+        "https://www.pinterest.com/colmfitzmaurice/textured-crop/"
+      ]
+    },
+
+    "low_fade_textured": {
+      "canonical_es": "Degradado Bajo Texturizado",
+      "canonical_en": "Low Fade with Textured Top",
+      "popularity": 5,
+      "best_for_faces": ["oval", "square", "heart", "diamond", "oblong"],
+      "works_with_adjustment": ["round", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El fade bajo mantiene las proporciones naturales. Cualquier top texturizado funciona.",
+        "round": "Preferir mid o high fade en lugar de low para crear más verticalidad.",
+        "square": "El fade bajo con top texturizado suaviza sin eliminar la estructura. Ideal.",
+        "oblong": "Mantiene anchura lateral. Evitar textura excesiva en la cima.",
+        "heart": "Mantiene cuerpo en los lados, equilibra frente ancha.",
+        "diamond": "Añade anchura visual en mejillas y mandíbula.",
+        "triangle": "Funciona con top voluminoso para equilibrar mandíbula ancha."
+      },
+      "pexels_queries": {
+        "general": "low fade textured haircut men side view barbershop",
+        "oval": "low fade textured top men oval face clean",
+        "round": "low fade textured men round face elongate",
+        "square": "low taper fade textured men square face",
+        "oblong": "low fade textured men long face side view",
+        "heart": "low fade textured men heart face",
+        "diamond": "low fade textured men diamond face",
+        "triangle": "low fade textured top men triangle face"
+      },
+      "reference_urls": [
+        "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide",
+        "https://blog.cutmuse.com/en/blog/low-taper-fade-face-shape-2026",
+        "https://forteseries.com/blogs/hairstyles/low-taper"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "french_crop_fade": {
+      "canonical_es": "French Crop con Degradado",
+      "canonical_en": "French Crop with Fade",
+      "popularity": 5,
+      "best_for_faces": ["oval", "square", "heart", "oblong"],
+      "works_with_adjustment": ["round", "diamond", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Cualquier variación del French Crop: low, mid o high fade. Muy versátil.",
+        "round": "French Crop con fringe corto y lados muy tapereados/skin fade para elongar.",
+        "square": "Fringe suave y bordes redondeados suavizan la mandíbula. Evitar fringe demasiado recto.",
+        "oblong": "Fringe más largo equilibra la longitud. Evitar demasiado volumen arriba.",
+        "heart": "Fringe swept-side o levemente asimétrico equilibra frente ancha. Low fade recomendado.",
+        "diamond": "Añade anchura visual en la frente. Fringe horizontal funciona bien.",
+        "triangle": "Top con fringe añade volumen donde el rostro es más estrecho."
+      },
+      "pexels_queries": {
+        "general": "french crop fade men front side view barbershop 2026",
+        "oval": "french crop fade men oval face side view professional",
+        "round": "french crop short fringe fade men round face",
+        "square": "french crop soft fringe fade men square face",
+        "oblong": "french crop long fringe fade men long face",
+        "heart": "french crop swept fringe men heart face low fade",
+        "diamond": "french crop men diamond face side view",
+        "triangle": "french crop volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://www.thefashionisto.com/articles/french-crop-haircuts/",
+        "https://forteseries.com/blogs/hairstyles/french-crop",
+        "https://www.apetogentleman.com/best-french-crop-haircuts/",
+        "https://frenchcrophaircut.com/french-crop-fade-hairstyle/",
+        "https://beardbeasts.com/blogs/news/the-french-crop-mid-fade-featured-style-guide",
+        "https://www.menshairstylesnow.com/french-crop-haircut/"
+      ],
+      "instagram_posts": ["DYhcHCwDT_o"],
+      "pinterest_boards": []
+    },
+
+    "modern_mullet": {
+      "canonical_es": "Mullet Moderno",
+      "canonical_en": "Modern Mullet",
+      "popularity": 5,
+      "best_for_faces": ["oval", "square", "oblong"],
+      "works_with_adjustment": ["round", "heart", "diamond", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Prácticamente cualquier variación de mullet moderno funciona. Muy versátil.",
+        "round": "Volumen en la cima y lados muy ajustados (burst fade) para añadir verticalidad.",
+        "square": "Lados con fade estructurado y back largo. Suaviza con capas en el back.",
+        "oblong": "Capas suaves y fringe corto o medio equilibran la longitud facial.",
+        "heart": "Back largo equilibra frente ancha. Low o mid fade mantiene cuerpo en mandíbula.",
+        "diamond": "Adds volume at cheeks level via side texture. Back adds length.",
+        "triangle": "Top y back añaden volumen hacia arriba, equilibrando mandíbula ancha."
+      },
+      "pexels_queries": {
+        "general": "modern mullet men side view fade haircut 2026",
+        "oval": "modern mullet men oval face side view barbershop",
+        "round": "burst fade mullet men round face front view",
+        "square": "modern mullet fade men square face side view",
+        "oblong": "modern mullet soft layers men long face",
+        "heart": "modern mullet men heart face low fade",
+        "diamond": "modern mullet men diamond face side view",
+        "triangle": "modern mullet volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://forteseries.com/blogs/hairstyles/modern-mullet",
+        "https://lowfadestyles.com/modern-mullet-haircut/",
+        "https://magentahairstudio.com/modern-mullet-fade/",
+        "https://freshmangrooming.com/modern-mullet-fade-haircut-men/",
+        "https://experthairstylist.com/mens-hairstyles/modern-mullet/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "pompadour_fade": {
+      "canonical_es": "Pompadour con Degradado",
+      "canonical_en": "Pompadour with Fade",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "round", "triangle"],
+      "works_with_adjustment": ["oblong", "heart", "diamond"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Funciona con cualquier variación. El pompadour clásico o texturizado son excelentes.",
+        "round": "Pompadour alto crea verticalidad que elonga el rostro. Muy recomendado.",
+        "square": "La altura añade drama a la estructura ya angulada. High fade complementa.",
+        "oblong": "Pompadour bajo o moderado para no alargar aún más. Anchura lateral importante.",
+        "heart": "Volumen alto puede accentuar frente ancha. Mejor con pompadour moderno texturizado.",
+        "diamond": "Añade anchura en la cima. Funciona bien con mid fade.",
+        "triangle": "Crea prominencia en la parte superior, equilibrando mandíbula ancha."
+      },
+      "pexels_queries": {
+        "general": "pompadour fade men side view professional barbershop",
+        "oval": "pompadour fade men oval face classic side view",
+        "round": "high pompadour fade men round face front view",
+        "square": "textured pompadour fade men square face side view",
+        "oblong": "low pompadour fade men long face",
+        "heart": "modern pompadour men heart face mid fade",
+        "diamond": "pompadour men diamond face side view",
+        "triangle": "pompadour fade men triangle face volume top"
+      },
+      "reference_urls": [
+        "https://forteseries.com/blogs/hairstyles/pompadour",
+        "https://experthairstylist.com/mens-hairstyles/pompadour-hairstyle-for-men/",
+        "https://bookofbarbering.com/pompadour-haircut/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "taper_fade": {
+      "canonical_es": "Taper Fade",
+      "canonical_en": "Taper Fade",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "oblong", "diamond"],
+      "works_with_adjustment": ["round", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El taper clásico mantiene proporciones. Muy limpio y profesional.",
+        "round": "Low taper es más adecuado que high para no exponer demasiado las sienes.",
+        "square": "El taper fade acentúa la mandíbula fuerte. Ideal para look ejecutivo.",
+        "oblong": "Taper fade con top moderado. Evitar altura excesiva.",
+        "heart": "Low taper mantiene cuerpo lateral en mandíbula. Equilibra frente ancha.",
+        "diamond": "El taper estrecho complementa la estructura.",
+        "triangle": "Taper con top voluminoso equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "taper fade men side view clean barbershop professional",
+        "oval": "classic taper fade men oval face side view",
+        "round": "low taper fade men round face front view",
+        "square": "taper fade clean men square face side view",
+        "oblong": "taper fade moderate top men long face",
+        "heart": "low taper fade men heart face",
+        "diamond": "taper fade men diamond face side view",
+        "triangle": "taper fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide",
+        "https://forteseries.com/blogs/hairstyles/low-taper",
+        "https://locksandlooks.com/taper-fade-hairstyles-for-men/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "librito_fade": {
+      "canonical_es": "Corte Librito con Degradado",
+      "canonical_en": "Middle Part / Curtain Hair with Fade",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "oblong", "diamond"],
+      "works_with_adjustment": ["round", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Funciona perfectamente. La raya central equilibra las proporciones naturales.",
+        "round": "Preferir con textura y movimiento, no raya demasiado rígida. Ligeramente asimétrica.",
+        "square": "Suaviza la mandíbula cuadrada. La cortina de cabello enmarca el rostro.",
+        "oblong": "Añade anchura visual. Muy recomendado para rostros largos.",
+        "heart": "Equilibra frente ancha al enmarcar el rostro simétricamente.",
+        "diamond": "Añade volumen en la zona de la frente.",
+        "triangle": "Funciona con largo moderado y top texturizado."
+      },
+      "pexels_queries": {
+        "general": "middle part haircut men side view fade barbershop",
+        "oval": "middle part fade men oval face side view clean",
+        "round": "curtain hair textured men round face",
+        "square": "middle part fade men square face side view",
+        "oblong": "curtain hair men long face wide sides",
+        "heart": "middle part men heart face symmetric",
+        "diamond": "middle part haircut men diamond face",
+        "triangle": "middle part men triangle face balanced"
+      },
+      "reference_urls": [
+        "https://menshairstyleempire.com/hairstyles/middle-part/",
+        "https://forteseries.com/blogs/hairstyles/curtain-hairstyles",
+        "https://www.haiirology.com/blog/curtain-bangs"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": [
+        "https://www.pinterest.com/ideas/men-hairstyles-for-round-faces/927704728103/"
+      ]
+    },
+
+    "skin_fade": {
+      "canonical_es": "Degradado a Piel",
+      "canonical_en": "Skin Fade",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "round", "oblong"],
+      "works_with_adjustment": ["diamond", "triangle"],
+      "avoid_faces": ["heart"],
+      "face_shape_notes": {
+        "oval": "Casi cualquier skin fade funciona. El más versátil de todos los tipos de face.",
+        "round": "High skin fade añade verticalidad y elongación. Muy recomendado con top voluminoso.",
+        "square": "Accentúa la mandíbula fuerte. High skin fade con top texturizado crea look poderoso.",
+        "oblong": "Skin fade bajo o medio para no alargar más el rostro. Mantener algo de cuerpo lateral.",
+        "heart": "CUIDADO: el skin fade muy alto accentúa la frente ancha. Preferir low fade.",
+        "diamond": "Mid skin fade equilibra la cara. Evitar extremos muy altos.",
+        "triangle": "Low skin fade. Con top voluminoso equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "skin fade men side view barbershop clean 2026",
+        "oval": "skin fade textured top men oval face side view",
+        "round": "high skin fade volume top men round face",
+        "square": "skin fade men square face sharp jawline",
+        "oblong": "low skin fade men long face moderate top",
+        "heart": "low skin fade men heart face balanced",
+        "diamond": "mid skin fade men diamond face side view",
+        "triangle": "low skin fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://montanafades.com/blogs/news/skin-fade-haircut-styles",
+        "https://beardbeasts.com/blogs/news/16-popular-skin-fade-hairstyles-for-men",
+        "https://www.apetogentleman.com/best-skin-fade-haircuts/",
+        "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "high_fade": {
+      "canonical_es": "Degradado Alto",
+      "canonical_en": "High Fade",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "round", "oblong"],
+      "works_with_adjustment": ["diamond", "triangle"],
+      "avoid_faces": ["heart"],
+      "face_shape_notes": {
+        "oval": "Cualquier variación de high fade funciona bien.",
+        "round": "El high fade es uno de los mejores para rostros redondos: crea verticalidad.",
+        "square": "Accentúa la mandíbula. Crea look muy masculino y estructurado.",
+        "oblong": "Con top moderado para no alargar. El high fade puede accentuar la longitud.",
+        "heart": "EVITAR: El high fade accentúa la frente ancha y hace el rostro ver más triangular.",
+        "diamond": "El high fade puede hacer el cráneo verse muy estrecho en la cima. Mejor mid.",
+        "triangle": "Con top voluminoso puede equilibrar la mandíbula ancha."
+      },
+      "pexels_queries": {
+        "general": "high fade men side view temple fade barbershop",
+        "oval": "high fade men oval face textured top side view",
+        "round": "high skin fade men round face volume top",
+        "square": "high fade men square face sharp jawline",
+        "oblong": "high fade moderate top men oblong face",
+        "heart": "high fade men heart face balanced side view",
+        "diamond": "high fade men diamond face barbershop",
+        "triangle": "high fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://fadetaperhaircut.com/best-high-fade-haircuts-for-men-2026/",
+        "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide",
+        "https://beardburys.com/en/blog/news-beardburys/types-of-fades-for-men-in-2026"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "mid_fade": {
+      "canonical_es": "Degradado Medio",
+      "canonical_en": "Mid Fade",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "round", "heart", "diamond"],
+      "works_with_adjustment": ["oblong", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El fade medio es el más versátil. Complementa la mayoría de tops.",
+        "round": "Buena opción: crea más definición que el low fade sin ser tan extremo como el high.",
+        "square": "Equilibrado para la mandíbula cuadrada. Muy recomendado.",
+        "oblong": "Mejor que el high fade. Mantiene algo de anchura lateral.",
+        "heart": "Buen equilibrio. No accentúa demasiado la frente.",
+        "diamond": "Equilibra la estructura del rostro. Muy recomendado para esta forma.",
+        "triangle": "Con top con cuerpo equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "mid fade men side view textured top barbershop",
+        "oval": "mid fade men oval face textured top side view",
+        "round": "mid fade men round face elongate front view",
+        "square": "mid fade men square face clean side view",
+        "oblong": "mid fade men long face balanced",
+        "heart": "mid fade men heart face balanced temples",
+        "diamond": "mid fade men diamond face side view",
+        "triangle": "mid fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://www.thefashionisto.com/articles/mid-fade-haircuts/",
+        "https://forteseries.com/blogs/hairstyles/mid-fade",
+        "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "wolf_shag": {
+      "canonical_es": "Wolf Cut / Shag",
+      "canonical_en": "Wolf Cut / Shag Haircut",
+      "popularity": 4,
+      "best_for_faces": ["oval", "oblong", "round"],
+      "works_with_adjustment": ["square", "heart", "diamond", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Funciona perfecto. El oval puede llevar cualquier variación del wolf cut.",
+        "round": "El volumen en la cima añade altura. Las piezas laterales largas crean ilusión de adelgazamiento. Muy recomendado.",
+        "square": "Las capas suaves suavizan la mandíbula angular. Wolf cut + taper fade en lados funciona.",
+        "oblong": "Mejor opción junto con el oval. Las capas laterales añaden anchura y equilibrio.",
+        "heart": "Wolf cut puede accentuar la frente. Mejor con flequillo de cortina y capas suaves.",
+        "diamond": "Las capas añaden anchura en las mejillas. Funciona bien.",
+        "triangle": "Capas en la cima reducen el foco en la mandíbula. Recomendado."
+      },
+      "pexels_queries": {
+        "general": "wolf cut shag men side view layered haircut",
+        "oval": "wolf cut men oval face side view layered",
+        "round": "wolf cut men round face volume top curtain bangs",
+        "square": "wolf cut taper fade men square face soft layers",
+        "oblong": "wolf cut men long face wide sides",
+        "heart": "wolf shag men heart face curtain fringe",
+        "diamond": "wolf cut men diamond face side view",
+        "triangle": "wolf cut layers top men triangle face"
+      },
+      "reference_urls": [
+        "https://forteseries.com/blogs/hairstyles/wolf-cut",
+        "https://wolfcutmen.net/",
+        "https://mynewhaircuts.com/blog/wolf-cut-guide",
+        "https://www.hairstyletryon.ai/blog/wolf-cut-hairstyles-guide-every-face-shape",
+        "https://www.faceshapedetector.net/blog/wolf-cut-face-shape",
+        "https://www.pinterest.com/ideas/wolfcut-on-oval-face/916171765668/",
+        "https://www.pinterest.com/ideas/wolfcut-on-square-face/906403962429/"
+      ],
+      "instagram_posts": ["DYXGz43Dl-6"],
+      "pinterest_boards": [
+        "https://www.pinterest.com/ideas/wolf-cut-oval-face/921570268052/",
+        "https://www.pinterest.com/ideas/oval-face-wolf-cut/945704909377/"
+      ]
+    },
+
+    "curtain_hair": {
+      "canonical_es": "Corte Cortina",
+      "canonical_en": "Curtain Hair",
+      "popularity": 4,
+      "best_for_faces": ["oval", "square", "oblong", "diamond"],
+      "works_with_adjustment": ["round", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Las proporciones equilibradas hacen que cualquier variación de cortina funcione.",
+        "round": "Añadir textura y movimiento. No demasiado pesado ni plano. Ligera asimetría ayuda.",
+        "square": "El flequillo de cortina suaviza la mandíbula cuadrada. Muy favorecedor.",
+        "oblong": "Añade anchura visual horizontal. De los mejores cortes para rostros largos.",
+        "heart": "Enmarca el rostro simétricamente, equilibrando la frente ancha.",
+        "diamond": "El flequillo añade anchura en la frente estrecha.",
+        "triangle": "Con longitud suficiente para enmarcar, equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "curtain hair men side view middle part fade",
+        "oval": "curtain hair men oval face side view clean",
+        "round": "curtain hair textured movement men round face",
+        "square": "curtain hair men square face soft jawline",
+        "oblong": "curtain hair men long face wide sides",
+        "heart": "curtain hair symmetric men heart face",
+        "diamond": "curtain hair men diamond face front view",
+        "triangle": "curtain hair men triangle face framing"
+      },
+      "reference_urls": [
+        "https://forteseries.com/blogs/hairstyles/curtain-hairstyles",
+        "https://menshairstyleempire.com/hairstyles/middle-part/",
+        "https://artistsandarchitects.com/the-ultimate-guide-to-styling-layers-with-curtain-bangs-for-every-face-shape/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "burst_fade": {
+      "canonical_es": "Burst Fade",
+      "canonical_en": "Burst Fade",
+      "popularity": 3,
+      "best_for_faces": ["oval", "round", "diamond"],
+      "works_with_adjustment": ["square", "oblong", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El fade en arco circular complementa las proporciones equilibradas del óvalo.",
+        "round": "High burst fade añade altura que elongla el rostro. Muy recomendado.",
+        "square": "Mejor con fade medio-bajo para no accentuar demasiado la mandíbula.",
+        "oblong": "Con top de altura moderada para no alargar más.",
+        "heart": "Low burst fade mantiene algo de cuerpo en los lados.",
+        "diamond": "El burst fade crea un efecto visual que complementa la cara de diamante.",
+        "triangle": "Con top voluminoso puede equilibrar la mandíbula ancha."
+      },
+      "pexels_queries": {
+        "general": "burst fade men side view ear fade barbershop",
+        "oval": "burst fade men oval face side view",
+        "round": "burst fade mohawk men round face high",
+        "square": "burst fade men square face mid fade",
+        "oblong": "burst fade men long face moderate top",
+        "heart": "burst fade low men heart face",
+        "diamond": "burst fade men diamond face side view",
+        "triangle": "burst fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://forteseries.com/blogs/hairstyles/burst-fade",
+        "https://mytaperfade.com/burst-fade-haircut/",
+        "https://www.latest-hairstyles.com/mens/burst-fade-haircut.html",
+        "https://www.latest-hairstyles.com/mens/burst-fade-mohawk.html"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "mohicano_fade": {
+      "canonical_es": "Mohicano con Degradado",
+      "canonical_en": "Mohawk with Fade",
+      "popularity": 3,
+      "best_for_faces": ["oval", "oblong", "diamond"],
+      "works_with_adjustment": ["square", "round"],
+      "avoid_faces": ["heart", "triangle"],
+      "face_shape_notes": {
+        "oval": "El mohicano complementa las proporciones equilibradas. Faux hawk o mohawk completo.",
+        "round": "High fade + mohawk añade altura. Mejor faux hawk para no verse demasiado extremo.",
+        "square": "Faux hawk o mohawk bajo suaviza la mandíbula. Evitar líneas demasiado duras.",
+        "oblong": "Funciona bien si el mohawk no es demasiado alto. El largo facial ya es prominente.",
+        "heart": "CUIDADO: El mohicano puede accentuar la frente ancha. Preferir faux hawk muy suave.",
+        "diamond": "Añade altura donde la cara ya es estrecha en la cima. Equilibra la estructura.",
+        "triangle": "EVITAR: Accentúa la mandíbula ancha versus la parte superior estrecha."
+      },
+      "pexels_queries": {
+        "general": "mohawk fade men side view barbershop",
+        "oval": "mohawk fade men oval face front view",
+        "round": "faux hawk high fade men round face",
+        "square": "mohawk fade men square face side view",
+        "oblong": "mohawk fade men long face moderate",
+        "heart": "faux hawk soft men heart face",
+        "diamond": "mohawk fade men diamond face",
+        "triangle": "faux hawk men triangle face balanced top"
+      },
+      "reference_urls": [
+        "https://therighthairstyles.com/mohawk-fade-haircuts/",
+        "https://experthairstylist.com/mens-hairstyles/faux-hawk-modern-mohawk-styles-for-men/",
+        "https://mendeserve.com/blogs/hair/mohawk-haircuts-for-men"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "drop_fade": {
+      "canonical_es": "Drop Fade",
+      "canonical_en": "Drop Fade",
+      "popularity": 3,
+      "best_for_faces": ["oval", "square", "oblong", "diamond"],
+      "works_with_adjustment": ["round", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El drop fade curvo complementa las proporciones suaves del óvalo.",
+        "round": "El arco curvo del drop fade puede acentuar la redondez. Preferir drop fade + top alto.",
+        "square": "El drop fade añade un contraste suave. Menos agresivo que el skin fade.",
+        "oblong": "La curva baja mantiene algo de cuerpo lateral. Favorable para rostros largos.",
+        "heart": "El drop fade bajo mantiene cuerpo en la zona de la mandíbula. Recomendado.",
+        "diamond": "Complementa la estructura facial. Drop fade medio funciona bien.",
+        "triangle": "Con top texturizado equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "drop fade men side view curved fade barbershop",
+        "oval": "drop fade men oval face side view",
+        "round": "drop fade volume top men round face",
+        "square": "drop fade men square face side view clean",
+        "oblong": "drop fade men long face body sides",
+        "heart": "low drop fade men heart face",
+        "diamond": "drop fade men diamond face side view",
+        "triangle": "drop fade textured top men triangle face"
+      },
+      "reference_urls": [
+        "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide",
+        "https://beardburys.com/en/blog/news-beardburys/types-of-fades-for-men-in-2026"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "crew_cut": {
+      "canonical_es": "Corte Crew / Militar",
+      "canonical_en": "Crew Cut",
+      "popularity": 3,
+      "best_for_faces": ["oval", "square", "oblong"],
+      "works_with_adjustment": ["round", "diamond", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El crew cut clásico es muy limpio y favorecedor para el óvalo.",
+        "round": "Añadir un poco de textura y altura en la cima. Evitar versiones demasiado cortas y planas.",
+        "square": "El crew cut acentúa la mandíbula fuerte. Look muy masculino.",
+        "oblong": "Mantenlo bajo para no alargar más. Con algo de anchura en los lados.",
+        "heart": "Versión con algo de textura en la cima. Low taper en lados.",
+        "diamond": "Crew cut con algo de textura en la cima funciona bien.",
+        "triangle": "Textura en la cima para equilibrar. Taper suave en lados."
+      },
+      "pexels_queries": {
+        "general": "crew cut men side view short clean barbershop",
+        "oval": "crew cut men oval face clean side view",
+        "round": "crew cut textured top men round face",
+        "square": "crew cut men square face sharp jawline",
+        "oblong": "crew cut men long face moderate",
+        "heart": "crew cut textured men heart face",
+        "diamond": "crew cut men diamond face side view",
+        "triangle": "crew cut textured top men triangle face"
+      },
+      "reference_urls": [
+        "https://www.thefashionisto.com/articles/hairstyles-men/",
+        "https://therighthairstyles.com/ai-hairstyle-changer-male/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "quiff_fade": {
+      "canonical_es": "Quiff con Degradado",
+      "canonical_en": "Quiff with Fade",
+      "popularity": 3,
+      "best_for_faces": ["oval", "round", "square", "oblong"],
+      "works_with_adjustment": ["heart", "diamond", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El quiff texturizado o clásico con fade funciona perfectamente.",
+        "round": "Quiff alto crea verticalidad. Uno de los mejores cortes para rostros redondos.",
+        "square": "El quiff texturizado funciona bien. El volumen hacia adelante equilibra la mandíbula.",
+        "oblong": "Quiff moderado. Evitar demasiado volumen en la cima que alargue más.",
+        "heart": "Quiff suave con textura. Puede accentuar frente ancha si es muy pronunciado.",
+        "diamond": "Quiff añade anchura en la cima. Complementa la estructura de diamante.",
+        "triangle": "El volumen en la cima equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "quiff fade men side view volume top barbershop",
+        "oval": "quiff fade men oval face side view",
+        "round": "high quiff fade men round face front view",
+        "square": "textured quiff fade men square face",
+        "oblong": "moderate quiff fade men long face",
+        "heart": "soft quiff men heart face fade",
+        "diamond": "quiff fade men diamond face side view",
+        "triangle": "quiff volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://forteseries.com/blogs/hairstyles/quiff-haircut",
+        "https://www.hair-style.app/modern-quiff-vs-pompadour",
+        "https://smytten.com/blogs/haircare/quiff-vs-pompadour-expert-styling-insights"
+      ],
+      "instagram_posts": ["DYUjqYQDjm1"],
+      "pinterest_boards": []
+    },
+
+    "buzz_cut": {
+      "canonical_es": "Buzz Cut / Rapado",
+      "canonical_en": "Buzz Cut",
+      "popularity": 2,
+      "best_for_faces": ["oval", "square", "oblong"],
+      "works_with_adjustment": ["diamond", "heart"],
+      "avoid_faces": ["round", "triangle"],
+      "face_shape_notes": {
+        "oval": "El buzz cut es muy favorable para el óvalo. La estructura facial natural brilla.",
+        "round": "CUIDADO: El buzz cut puede hacer el rostro verse más redondo. Agregar taper.",
+        "square": "La mandíbula cuadrada con buzz cut = look clásico muy masculino.",
+        "oblong": "Con taper suave en lados funciona bien para rostros largos.",
+        "heart": "Puede accentuar la frente. Buzz cut taper funciona mejor que skin buzz.",
+        "diamond": "Funciona bien si la estructura facial es equilibrada.",
+        "triangle": "EVITAR: Accentúa la desproporción mandíbula/cráneo."
+      },
+      "pexels_queries": {
+        "general": "buzz cut men side view short taper barbershop",
+        "oval": "buzz cut men oval face clean side view",
+        "round": "buzz cut taper men round face",
+        "square": "buzz cut men square face strong jaw",
+        "oblong": "buzz cut taper men long face",
+        "heart": "buzz cut taper men heart face",
+        "diamond": "buzz cut men diamond face side view",
+        "triangle": "buzz cut taper men triangle face"
+      },
+      "reference_urls": [
+        "https://www.thefashionisto.com/articles/hairstyles-men/",
+        "https://blumaan.com/blogs/learn/best-mens-hairstyles-2026"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "comb_over_fade": {
+      "canonical_es": "Raya Lateral con Degradado",
+      "canonical_en": "Comb Over with Fade",
+      "popularity": 3,
+      "best_for_faces": ["oval", "square", "oblong", "diamond"],
+      "works_with_adjustment": ["round", "heart", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "La raya lateral clásica es muy limpia y favorecedora para el óvalo.",
+        "round": "La asimetría de la raya lateral ayuda a reducir la apariencia circular. Buen option.",
+        "square": "Clásico y ejecutivo. La raya lateral complementa la mandíbula cuadrada.",
+        "oblong": "Añade anchura visual horizontal. Muy recomendado.",
+        "heart": "La asimetría equilibra la frente ancha. Recomendado.",
+        "diamond": "Comb over añade volumen en un lado. Equilibra bien.",
+        "triangle": "Con parte alta y top voluminoso puede equilibrar."
+      },
+      "pexels_queries": {
+        "general": "comb over side part fade men side view barbershop",
+        "oval": "comb over fade men oval face classic side view",
+        "round": "side part fade men round face asymmetric",
+        "square": "hard part comb over fade men square face",
+        "oblong": "comb over men long face wide sides",
+        "heart": "side part fade men heart face balanced",
+        "diamond": "comb over fade men diamond face",
+        "triangle": "side part fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://taperhaircut.com/side-part-haircuts-for-men/",
+        "https://www.thefashionisto.com/articles/hairstyles-men/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "undercut": {
+      "canonical_es": "Undercut",
+      "canonical_en": "Undercut",
+      "popularity": 3,
+      "best_for_faces": ["oval", "oblong", "square"],
+      "works_with_adjustment": ["diamond", "heart", "triangle"],
+      "avoid_faces": ["round"],
+      "face_shape_notes": {
+        "oval": "El undercut clásico o desconectado funciona muy bien para el óvalo.",
+        "round": "CUIDADO: El contraste brusco del undercut puede accentuar la redondez del rostro.",
+        "square": "Undercut desconectado con top peinado crea look muy estructurado.",
+        "oblong": "El volumen en la cima del undercut puede alargar más el rostro. Mantener moderado.",
+        "heart": "Undercut con top moderado y sin demasiado volumen. Evitar disconnected extremo.",
+        "diamond": "Undercut funciona bien para la estructura de diamante.",
+        "triangle": "Con top voluminoso peinado hacia atrás puede equilibrar."
+      },
+      "pexels_queries": {
+        "general": "undercut men side view disconnected fade barbershop",
+        "oval": "undercut men oval face side view clean",
+        "round": "disconnected undercut men round face",
+        "square": "undercut side part men square face",
+        "oblong": "undercut moderate top men long face",
+        "heart": "undercut men heart face balanced",
+        "diamond": "undercut men diamond face side view",
+        "triangle": "undercut volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://www.thefashionisto.com/articles/hairstyles-men/",
+        "https://blumaan.com/blogs/learn/best-mens-hairstyles-2026"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "natural_curls_fade": {
+      "canonical_es": "Rizos Naturales con Degradado",
+      "canonical_en": "Natural Curls with Fade",
+      "popularity": 3,
+      "best_for_faces": ["oval", "square", "oblong", "round"],
+      "works_with_adjustment": ["heart", "diamond", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "Cualquier variación de rizos con fade. El óvalo es la forma más versátil.",
+        "round": "Afro taper con lados delgados y cima alta elongla el rostro. Muy recomendado.",
+        "square": "Rizo con low fade suaviza la mandíbula. Textura natural complementa los ángulos.",
+        "oblong": "Mid fade con rizos en la cima. Evitar demasiado volumen hacia arriba.",
+        "heart": "Low fade con rizo natural. El cuerpo en la mandíbula equilibra la frente ancha.",
+        "diamond": "Curls añaden anchura visual. Mid fade funciona bien.",
+        "triangle": "Curly top alto + lados ajustados equilibran la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "curly hair fade men side view natural curls barbershop",
+        "oval": "natural curls fade men oval face side view",
+        "round": "afro taper fade men round face tall volume",
+        "square": "curly hair low fade men square face",
+        "oblong": "curly mid fade men long face balanced",
+        "heart": "natural curls low fade men heart face",
+        "diamond": "curly hair mid fade men diamond face",
+        "triangle": "curly high top fade men triangle face"
+      },
+      "reference_urls": [
+        "https://www.honesthairfactory.com/blog/best-hairstyles-for-black-men-in-2026---trending-black-male-haircuts-2026",
+        "https://taperhaircut.com/mid-taper-fade-curly-hair/",
+        "https://crewcuthair.com/afro-blowout-low-taper-fade-curly-hair/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "edgar_cut": {
+      "canonical_es": "Corte Edgar",
+      "canonical_en": "Edgar Cut",
+      "popularity": 4,
+      "best_for_faces": ["oval", "oblong", "square"],
+      "works_with_adjustment": ["round", "diamond", "heart"],
+      "avoid_faces": ["triangle"],
+      "face_shape_notes": {
+        "oval": "El Edgar funciona perfecto para el óvalo. Cualquier variación es válida.",
+        "round": "Fringe recto + alto con mucha textura en la cima para añadir altura y ángulos.",
+        "square": "Bordes suaves del fringe y low taper equilibran la mandíbula cuadrada.",
+        "oblong": "Fringe corto con algo de cuerpo a los lados. Evitar demasiada altura.",
+        "heart": "Fringe recto con fade bajo mantiene proporciones. Funciona con ajuste.",
+        "diamond": "El fringe del Edgar añade anchura en la frente.",
+        "triangle": "CUIDADO: El fringe recto puede accentuar la desproporción del rostro triangular."
+      },
+      "pexels_queries": {
+        "general": "edgar cut men front side view high fade barbershop 2026",
+        "oval": "edgar haircut men oval face side view clean",
+        "round": "edgar cut high fade textured men round face",
+        "square": "edgar cut low taper men square face",
+        "oblong": "edgar haircut men long face moderate",
+        "heart": "edgar cut low fade men heart face",
+        "diamond": "edgar cut men diamond face front view",
+        "triangle": "edgar cut men triangle face balanced"
+      },
+      "reference_urls": [
+        "https://taperhaircut.com/edgar-haircuts-for-men/",
+        "https://haircutvibes.com/edgar-haircut/",
+        "https://forteseries.com/blogs/hairstyles/edgar-cut",
+        "https://therighthairstyles.com/edgar-haircut/",
+        "https://mendeserve.com/blogs/hair/edgar-haircuts-for-men",
+        "https://www.rush.co.uk/blog/edgar-haircut/77793"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "blowout_fade": {
+      "canonical_es": "Blowout Fade",
+      "canonical_en": "Blowout Fade / Blowout Taper",
+      "popularity": 4,
+      "best_for_faces": ["oval", "round", "diamond"],
+      "works_with_adjustment": ["square", "heart", "oblong", "triangle"],
+      "avoid_faces": [],
+      "face_shape_notes": {
+        "oval": "El blowout taper funciona perfectamente para el óvalo.",
+        "round": "El volumen hacia afuera y arriba crea verticalidad. Muy favorable.",
+        "square": "Versión más suave del blowout. Evitar demasiado volumen lateral.",
+        "oblong": "Mid blowout fade. El volumen puede alargar más si es muy alto.",
+        "heart": "Blowout con textura moderada. Evitar demasiada anchura en la parte alta.",
+        "diamond": "El blowout añade anchura en la cima y las mejillas. Muy recomendado.",
+        "triangle": "Volumen en la cima equilibra la mandíbula prominente."
+      },
+      "pexels_queries": {
+        "general": "blowout fade men side view volume hair barbershop 2026",
+        "oval": "blowout taper men oval face side view",
+        "round": "blowout fade volume top men round face",
+        "square": "blowout fade soft men square face",
+        "oblong": "blowout mid fade men long face",
+        "heart": "blowout fade moderate men heart face",
+        "diamond": "blowout fade men diamond face side view",
+        "triangle": "blowout fade volume top men triangle face"
+      },
+      "reference_urls": [
+        "https://taperhaircut.com/blowout-taper-haircut-styles/",
+        "https://skinfadebarbers.com/blowout-taper/",
+        "https://forteseries.com/blogs/hairstyles/blowout-taper",
+        "https://crewcuthair.com/afro-blowout-low-taper-fade-curly-hair/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    },
+
+    "bro_flow": {
+      "canonical_es": "Bro Flow / Melena con Movimiento",
+      "canonical_en": "Bro Flow",
+      "popularity": 5,
+      "best_for_faces": ["oval", "oblong", "square"],
+      "works_with_adjustment": ["round", "diamond", "heart"],
+      "avoid_faces": ["triangle"],
+      "face_shape_notes": {
+        "oval": "El bro flow con longitud lateral crea encuadre horizontal hermoso.",
+        "round": "Puede funcionar con capas y taper lateral. El volumen lateral puede verse redondo.",
+        "square": "Las capas suavizan la mandíbula angulada. El flujo natural del pelo complementa.",
+        "oblong": "El mejor corte para el óvalo largo. Las capas laterales añaden anchura y equilibrio.",
+        "heart": "Funciona con el pelo hacia atrás y capas suaves. Evitar demasiada anchura en la cima.",
+        "diamond": "Largo lateral añade anchura visual en mejillas. Muy favorable.",
+        "triangle": "CUIDADO: El largo lateral puede accentuar la mandíbula ancha."
+      },
+      "pexels_queries": {
+        "general": "bro flow men medium length hair side view",
+        "oval": "bro flow men oval face side view natural",
+        "round": "bro flow taper men round face balanced",
+        "square": "bro flow soft layers men square face",
+        "oblong": "bro flow wide sides men long face",
+        "heart": "bro flow men heart face back sides",
+        "diamond": "bro flow men diamond face side view",
+        "triangle": "bro flow men triangle face moderate length"
+      },
+      "reference_urls": [
+        "https://www.daimonbarber.com/blogs/journal/the-flow-cut-effortless-medium-length-hair-for-modern-men",
+        "https://www.chicagomalesalon.com/blogs/flow-haircut-guide-the-2026-comeback-style-for-men",
+        "https://menshairstyleempire.com/hairstyles/bro-flow/",
+        "https://trends.mendeserve.com/bro-flow-hairstyle/",
+        "https://oblongfaceshape.com/oblong-face-shape-men/"
+      ],
+      "instagram_posts": [],
+      "pinterest_boards": []
+    }
+
+  },
+
+  "face_shape_summary": {
+    "_doc": "Qué cortes son TOP para cada tipo de rostro. Usar para recomendación primaria cuando se detecta la forma facial.",
+    "oval": {
+      "top_picks": ["textured_crop", "french_crop_fade", "wolf_shag", "bro_flow", "low_fade_textured"],
+      "note": "El óvalo es la forma más versátil. Casi cualquier corte funciona. Enfocarse en las tendencias actuales.",
+      "avoid": []
+    },
+    "round": {
+      "top_picks": ["textured_crop", "pompadour_fade", "quiff_fade", "skin_fade", "high_fade"],
+      "note": "Priorizar ALTURA y lados ajustados. Crear verticalidad para elongar el rostro.",
+      "avoid": ["buzz_cut", "undercut", "drop_fade_low"]
+    },
+    "square": {
+      "top_picks": ["french_crop_fade", "wolf_shag", "curtain_hair", "modern_mullet", "bro_flow"],
+      "note": "Los cortes con textura suave y bordes redondeados suavizan la mandíbula cuadrada.",
+      "avoid": []
+    },
+    "oblong": {
+      "top_picks": ["curtain_hair", "librito_fade", "wolf_shag", "bro_flow", "comb_over_fade"],
+      "note": "Añadir ANCHURA lateral y evitar demasiada altura. El flequillo y las cortinas son clave.",
+      "avoid": ["mohicano_fade", "high_fade_extreme"]
+    },
+    "heart": {
+      "top_picks": ["low_fade_textured", "french_crop_fade", "curtain_hair", "natural_curls_fade", "librito_fade"],
+      "note": "Mantener cuerpo en la mandíbula. Low fades y cortes con anchura en la zona baja del rostro.",
+      "avoid": ["skin_fade_high", "mohicano_fade", "buzz_cut"]
+    },
+    "diamond": {
+      "top_picks": ["textured_crop", "mid_fade", "wolf_shag", "blowout_fade", "curtain_hair"],
+      "note": "Añadir anchura en frente y mandíbula. Los cortes con volumen horizontal son muy favorables.",
+      "avoid": []
+    },
+    "triangle": {
+      "top_picks": ["textured_crop", "quiff_fade", "pompadour_fade", "blowout_fade", "natural_curls_fade"],
+      "note": "Crear volumen en la CIMA para equilibrar la mandíbula prominente. Evitar anchura lateral.",
+      "avoid": ["bro_flow", "mohicano_fade", "edgar_cut"]
+    }
+  },
+
+  "sources_consulted": [
+    "https://trendstarterhaircare.com/blogs/news/best-fade-haircuts-for-every-face-shape-the-complete-guide",
+    "https://forteseries.com/blogs/hairstyles/",
+    "https://www.thefashionisto.com/articles/hairstyles-men/",
+    "https://faceshapedetector.app/blog/best-hairstyles-face-shape-2026",
+    "https://mynewhaircuts.com/blog/wolf-cut-guide",
+    "https://www.hairstyletryon.ai/blog/wolf-cut-hairstyles-guide-every-face-shape",
+    "https://experthairstylist.com/mens-hairstyles/",
+    "https://www.menshairstylesnow.com/",
+    "https://therighthairstyles.com/",
+    "https://menshairstyleempire.com/",
+    "https://blumaan.com/blogs/learn/best-mens-hairstyles-2026",
+    "https://blog.cutmuse.com/en/blog/low-taper-fade-face-shape-2026",
+    "https://oblongfaceshape.com/oblong-face-shape-men/"
+  ]
+}

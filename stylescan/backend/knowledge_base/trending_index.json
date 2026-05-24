@@ -1,15 +1,163 @@
 {
-  "last_updated": null,
-  "month": null,
-  "note": "Populated automatically by trend_worker.py — run weekly",
-  "global_trends": [],
+  "last_updated": "2026-05-24",
+  "month": "2026-05",
+  "note": "Poblado manualmente el 2026-05-24 basado en análisis de tendencias 2026 (Later, Vaizle, Blumaan, Instagram). Próxima actualización automática via trend_worker.py.",
+  "global_trends": [
+    {
+      "cut_id": "textured_crop",
+      "rank": 1,
+      "score": 98,
+      "trend_direction": "up",
+      "note": "El corte más pedido en barberías 2026. Viral en TikTok e Instagram. #texturedcrop"
+    },
+    {
+      "cut_id": "low_fade_textured",
+      "rank": 2,
+      "score": 96,
+      "trend_direction": "up",
+      "note": "Low taper fade = búsqueda #1 en 2026. +9000 búsquedas mensuales solo en inglés."
+    },
+    {
+      "cut_id": "french_crop_fade",
+      "rank": 3,
+      "score": 95,
+      "trend_direction": "stable",
+      "note": "'Gran momento en 2026' según barbers. Sin mantenimiento, muy pedido."
+    },
+    {
+      "cut_id": "edgar_cut",
+      "rank": 4,
+      "score": 90,
+      "trend_direction": "up",
+      "note": "Viral en barbería urbana. Muy pedido por jóvenes 18-24. Fluffy edgar = tendencia 2025-2026."
+    },
+    {
+      "cut_id": "modern_mullet",
+      "rank": 5,
+      "score": 88,
+      "trend_direction": "stable",
+      "note": "Sigue viral en TikTok e Instagram. Especialmente burst fade + mullet."
+    },
+    {
+      "cut_id": "wolf_shag",
+      "rank": 6,
+      "score": 85,
+      "trend_direction": "stable",
+      "note": "Wolf cut sigue siendo top. Capas + textura = muy pedido en Reels."
+    },
+    {
+      "cut_id": "blowout_fade",
+      "rank": 7,
+      "score": 83,
+      "trend_direction": "up",
+      "note": "Tendencia emergente 2026. Volumen aéreo + taper = estética IG muy popular."
+    },
+    {
+      "cut_id": "curtain_hair",
+      "rank": 8,
+      "score": 82,
+      "trend_direction": "stable",
+      "note": "Corte cortina sigue fuerte especialmente en 20-30. Middle part muy buscado."
+    },
+    {
+      "cut_id": "skin_fade",
+      "rank": 9,
+      "score": 80,
+      "trend_direction": "stable",
+      "note": "Siempre en tendencia. El skin fade está ligeramente más suave en 2026."
+    },
+    {
+      "cut_id": "bro_flow",
+      "rank": 10,
+      "score": 78,
+      "trend_direction": "up",
+      "note": "Flow cut viral 2026. Pelo largo con movimiento de vuelta con fuerza."
+    }
+  ],
   "by_face_shape": {
-    "oval": [],
-    "round": [],
-    "square": [],
-    "oblong": [],
-    "heart": [],
-    "diamond": [],
-    "triangle": []
+    "oval": [
+      {"cut_id": "textured_crop", "score": 98, "rank": 1},
+      {"cut_id": "french_crop_fade", "score": 96, "rank": 2},
+      {"cut_id": "wolf_shag", "score": 94, "rank": 3},
+      {"cut_id": "bro_flow", "score": 92, "rank": 4},
+      {"cut_id": "low_fade_textured", "score": 91, "rank": 5},
+      {"cut_id": "edgar_cut", "score": 90, "rank": 6},
+      {"cut_id": "modern_mullet", "score": 88, "rank": 7},
+      {"cut_id": "curtain_hair", "score": 86, "rank": 8},
+      {"cut_id": "pompadour_fade", "score": 84, "rank": 9},
+      {"cut_id": "blowout_fade", "score": 82, "rank": 10}
+    ],
+    "round": [
+      {"cut_id": "pompadour_fade", "score": 95, "rank": 1, "note": "Altura que elongala el rostro"},
+      {"cut_id": "quiff_fade", "score": 94, "rank": 2, "note": "Quiff alto crea verticalidad"},
+      {"cut_id": "skin_fade", "score": 92, "rank": 3, "note": "High skin fade con top alto"},
+      {"cut_id": "high_fade", "score": 91, "rank": 4, "note": "Añade verticalidad"},
+      {"cut_id": "textured_crop", "score": 88, "rank": 5, "note": "Con fringe corto y top texturizado"},
+      {"cut_id": "burst_fade", "score": 86, "rank": 6, "note": "High burst fade + top"},
+      {"cut_id": "blowout_fade", "score": 85, "rank": 7, "note": "Volumen hacia arriba"},
+      {"cut_id": "edgar_cut", "score": 82, "rank": 8, "note": "Alto + fringe + textura"},
+      {"cut_id": "natural_curls_fade", "score": 80, "rank": 9, "note": "Afro taper alto"},
+      {"cut_id": "modern_mullet", "score": 78, "rank": 10, "note": "Burst fade mullet con volumen"}
+    ],
+    "square": [
+      {"cut_id": "french_crop_fade", "score": 96, "rank": 1, "note": "Fringe suave suaviza mandíbula"},
+      {"cut_id": "wolf_shag", "score": 94, "rank": 2, "note": "Capas suavizan ángulos"},
+      {"cut_id": "curtain_hair", "score": 92, "rank": 3, "note": "Enmarca el rostro suavemente"},
+      {"cut_id": "modern_mullet", "score": 90, "rank": 4, "note": "Capas en el back equilibran"},
+      {"cut_id": "bro_flow", "score": 88, "rank": 5, "note": "Flujo natural suaviza ángulos"},
+      {"cut_id": "low_fade_textured", "score": 87, "rank": 6, "note": "Textura sin eliminar estructura"},
+      {"cut_id": "textured_crop", "score": 85, "rank": 7, "note": "Top textured suaviza"},
+      {"cut_id": "librito_fade", "score": 84, "rank": 8, "note": "Raya central enmarca"},
+      {"cut_id": "mid_fade", "score": 82, "rank": 9, "note": "Equilibrado para la mandíbula"},
+      {"cut_id": "comb_over_fade", "score": 80, "rank": 10, "note": "Clásico ejecutivo"}
+    ],
+    "oblong": [
+      {"cut_id": "curtain_hair", "score": 96, "rank": 1, "note": "Añade anchura horizontal"},
+      {"cut_id": "librito_fade", "score": 95, "rank": 2, "note": "Raya central + anchura lateral"},
+      {"cut_id": "wolf_shag", "score": 93, "rank": 3, "note": "Capas laterales añaden anchura"},
+      {"cut_id": "bro_flow", "score": 92, "rank": 4, "note": "Largo lateral = anchura visual"},
+      {"cut_id": "comb_over_fade", "score": 88, "rank": 5, "note": "Anchura horizontal"},
+      {"cut_id": "french_crop_fade", "score": 85, "rank": 6, "note": "Fringe largo equilibra"},
+      {"cut_id": "mid_fade", "score": 83, "rank": 7, "note": "Mantiene anchura lateral"},
+      {"cut_id": "low_fade_textured", "score": 82, "rank": 8, "note": "Mantiene cuerpo lateral"},
+      {"cut_id": "natural_curls_fade", "score": 80, "rank": 9, "note": "Rizos añaden anchura"},
+      {"cut_id": "modern_mullet", "score": 78, "rank": 10, "note": "Capas suaves equilibran"}
+    ],
+    "heart": [
+      {"cut_id": "low_fade_textured", "score": 94, "rank": 1, "note": "Mantiene cuerpo en mandíbula"},
+      {"cut_id": "french_crop_fade", "score": 92, "rank": 2, "note": "Low fade con fringe equilibra"},
+      {"cut_id": "curtain_hair", "score": 91, "rank": 3, "note": "Enmarca el rostro simétricamente"},
+      {"cut_id": "natural_curls_fade", "score": 88, "rank": 4, "note": "Low fade + rizos = cuerpo mandíbula"},
+      {"cut_id": "librito_fade", "score": 86, "rank": 5, "note": "Equilibra frente ancha"},
+      {"cut_id": "mid_fade", "score": 84, "rank": 6, "note": "Equilibrado para corazón"},
+      {"cut_id": "taper_fade", "score": 82, "rank": 7, "note": "Low taper conserva cuerpo lateral"},
+      {"cut_id": "modern_mullet", "score": 80, "rank": 8, "note": "Back largo equilibra"},
+      {"cut_id": "blowout_fade", "score": 78, "rank": 9, "note": "Moderado para corazón"},
+      {"cut_id": "wolf_shag", "score": 76, "rank": 10, "note": "Capas suaves equilibran"}
+    ],
+    "diamond": [
+      {"cut_id": "textured_crop", "score": 95, "rank": 1, "note": "Añade anchura en frente y mejillas"},
+      {"cut_id": "mid_fade", "score": 93, "rank": 2, "note": "Equilibra la estructura"},
+      {"cut_id": "wolf_shag", "score": 91, "rank": 3, "note": "Capas añaden anchura visual"},
+      {"cut_id": "blowout_fade", "score": 90, "rank": 4, "note": "Volumen lateral muy favorable"},
+      {"cut_id": "curtain_hair", "score": 88, "rank": 5, "note": "Anchura en la frente"},
+      {"cut_id": "french_crop_fade", "score": 86, "rank": 6, "note": "Fringe horizontal = anchura"},
+      {"cut_id": "low_fade_textured", "score": 84, "rank": 7, "note": "Mantiene anchura"},
+      {"cut_id": "edgar_cut", "score": 82, "rank": 8, "note": "Fringe añade anchura en frente"},
+      {"cut_id": "bro_flow", "score": 80, "rank": 9, "note": "Largo lateral añade anchura"},
+      {"cut_id": "natural_curls_fade", "score": 78, "rank": 10, "note": "Rizos añaden anchura visual"}
+    ],
+    "triangle": [
+      {"cut_id": "textured_crop", "score": 94, "rank": 1, "note": "Volumen en cima reduce foco en mandíbula"},
+      {"cut_id": "quiff_fade", "score": 93, "rank": 2, "note": "Volumen en cima equilibra"},
+      {"cut_id": "pompadour_fade", "score": 92, "rank": 3, "note": "Altura en cima equilibra mandíbula"},
+      {"cut_id": "blowout_fade", "score": 90, "rank": 4, "note": "Volumen hacia arriba"},
+      {"cut_id": "natural_curls_fade", "score": 88, "rank": 5, "note": "Afro top + lados ajustados"},
+      {"cut_id": "modern_mullet", "score": 85, "rank": 6, "note": "Top + back añaden volumen arriba"},
+      {"cut_id": "french_crop_fade", "score": 83, "rank": 7, "note": "Top con fringe añade volumen"},
+      {"cut_id": "mid_fade", "score": 80, "rank": 8, "note": "Con top voluminoso"},
+      {"cut_id": "low_fade_textured", "score": 78, "rank": 9, "note": "Top texturizado equilibra"},
+      {"cut_id": "high_fade", "score": 75, "rank": 10, "note": "Con top muy voluminoso"}
+    ]
   }
 }

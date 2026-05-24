@@ -91,8 +91,8 @@ export default function ConsentPage() {
           style={{
             display: "flex", alignItems: "center", gap: 10,
             padding: "12px 16px", marginBottom: 12, borderRadius: 10,
-            border: "1px dashed var(--accent)", background: "rgba(201,168,76,0.06)",
-            color: "var(--accent)", fontWeight: 600, fontSize: 14, width: "100%",
+            border: "1px dashed var(--gold)", background: "rgba(201,168,76,0.06)",
+            color: "var(--gold)", fontWeight: 600, fontSize: 14, width: "100%",
             cursor: "pointer",
           }}
         >
@@ -110,15 +110,15 @@ export default function ConsentPage() {
             style={{
               display: "flex", alignItems: "flex-start", gap: 14,
               padding: "16px", borderRadius: 14, textAlign: "left",
-              border: `2px solid ${checked[item.key] ? "var(--accent)" : "var(--border)"}`,
+              border: `2px solid ${checked[item.key] ? "var(--gold)" : "var(--border)"}`,
               background: checked[item.key] ? "rgba(201,168,76,0.08)" : "var(--surface)",
               cursor: "pointer",
             }}
           >
             <div style={{
               width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1,
-              border: `2px solid ${checked[item.key] ? "var(--accent)" : "var(--border)"}`,
-              background: checked[item.key] ? "var(--accent)" : "transparent",
+              border: `2px solid ${checked[item.key] ? "var(--gold)" : "var(--border)"}`,
+              background: checked[item.key] ? "var(--gold)" : "transparent",
               display: "flex", alignItems: "center", justifyContent: "center",
               pointerEvents: "none",
             }}>

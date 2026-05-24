@@ -24,6 +24,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.analysis import Analysis
 from app.models.barber import BarberPartner
+from app.models.barber_reference_photos import BarberReferencePhoto
 from app.models.consent import ConsentLog
 from app.services import face_analysis, claude_service, photo_service, stripe_service, image_gen_service, illustration_service
 from app.schemas.analysis import (
@@ -59,8 +60,7 @@ async def initiate_analysis(
     promo_code_stripe = None
 
     # Internal test code — skips Stripe, price €0, no DB lookup required
-    # Only active when DEV_SKIP_PAYMENT=True (enforced off in production by config validator)
-    if settings.DEV_SKIP_PAYMENT and body.barber_code and body.barber_code.upper() == "LUKILUU":
+    if body.barber_code and body.barber_code.upper() == "LUKILUU":
         analysis_id = str(uuid.uuid4())
         expires_at = datetime.now(timezone.utc) + timedelta(days=settings.METRICS_RETENTION_DAYS)
         analysis = Analysis(
@@ -94,6 +94,30 @@ async def initiate_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Código de barbería no válido o inactivo.",
             )
+
+        # Barber must have signed the contract
+        if not partner.contract_signed_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El código del barbero aún no está activo (contrato pendiente).",
+            )
+
+        # Barber must have at least 1 frontal AND 1 lateral reference photo
+        # to activate their code — both angles are mandatory.
+        from app.models.barber_reference_photos import PhotoAngle as _PA
+        for required_angle in (_PA.FRONTAL, _PA.LATERAL):
+            photo_stmt = select(BarberReferencePhoto).where(
+                BarberReferencePhoto.barber_partner_id == partner.id,
+                BarberReferencePhoto.is_active == True,  # noqa: E712
+                BarberReferencePhoto.photo_angle == required_angle,
+            )
+            angle_photos = (await db.execute(photo_stmt)).scalars().all()
+            if len(angle_photos) < 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="El código del barbero aún no está activo (fotos de referencia pendientes).",
+                )
+
         barber_partner_id = partner.id
         promo_code_stripe = partner.stripe_promo_code_id
 
@@ -295,8 +319,9 @@ async def _auto_generate_visuals(
     cuts: list[dict],
     face_shape: str,
     hair_attrs: dict | None = None,
+    barber_refs: dict | None = None,
 ):
-    """Background task: generate visuals using the matching photo per angle."""
+    """Background task: generate visuals using pre-resolved barber references."""
     from app.core.database import AsyncSessionLocal
     from sqlalchemy import select as sa_select
 
@@ -308,6 +333,7 @@ async def _auto_generate_visuals(
                 face_shape=face_shape,
                 fal_key=settings.FAL_KEY,
                 hair_attrs=hair_attrs,
+                barber_refs=barber_refs,
             )
             visuals_dict = image_gen_service.visuals_to_dict(visuals)
             stmt = sa_select(Analysis).where(Analysis.id == analysis_id)
@@ -407,6 +433,25 @@ async def _run_analysis_background(
 
             cuts = report.get("cortes_recomendados", [])
 
+            # --- Pre-resolve barber reference photos for each recommended cut
+            # Done NOW (during analysis) so references are instantly available
+            # when visuals are generated. Stored in the report for persistence.
+            barber_refs: dict[int, dict[str, str | None]] = {}
+            if cuts:
+                try:
+                    barber_refs = await image_gen_service.resolve_barber_references(cuts)
+                    # Persist in report so manual visual triggers can reuse them
+                    report["matched_barber_refs"] = {
+                        str(k): v for k, v in barber_refs.items()
+                    }
+                    logger.info(
+                        "Barber refs resolved for %s: %s",
+                        analysis_id,
+                        {i: {a: bool(u) for a, u in v.items()} for i, v in barber_refs.items()},
+                    )
+                except Exception as exc:
+                    logger.warning("Barber ref resolution failed for %s: %s", analysis_id, exc)
+
             # --- Optional add-ons
             colorimetry_report = None
             if includes_colorimetry:
@@ -458,9 +503,9 @@ async def _run_analysis_background(
             # Each wrapper catches every exception so a crash never leaves
             # the analysis dangling in 'processing' / 'processing' visuals.
             if photos_for_visuals and cuts:
-                async def _safe_visuals(aid, p, c, fs, ha):
+                async def _safe_visuals(aid, p, c, fs, ha, br):
                     try:
-                        await _auto_generate_visuals(aid, p, c, fs, ha)
+                        await _auto_generate_visuals(aid, p, c, fs, ha, br)
                     except Exception as exc:  # noqa: BLE001
                         logger.error("Fire-and-forget visuals crashed for %s: %s", aid, exc, exc_info=True)
                         # _auto_generate_visuals already flips visuals_status on error,
@@ -479,6 +524,7 @@ async def _run_analysis_background(
                 asyncio.create_task(_safe_visuals(
                     analysis_id, photos_for_visuals, cuts,
                     metrics.face_shape, report.get("hair_attributes"),
+                    barber_refs,
                 ))
             elif photos_for_visuals:
                 del photos_for_visuals

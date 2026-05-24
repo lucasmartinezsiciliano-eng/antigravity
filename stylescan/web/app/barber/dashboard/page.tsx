@@ -126,21 +126,19 @@ function BarberDashboardInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin">
-          <div className="h-12 w-12 border-4 border-gold border-t-transparent rounded-full" />
-        </div>
+      <div style={{ minHeight: "100dvh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" style={{ width: 48, height: 48 }} />
       </div>
     );
   }
 
   if (error || !dashboard) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-white text-lg">{error || "Dashboard not found"}</p>
-          <Link href="/" className="text-gold hover:underline mt-4 inline-block">
+      <div style={{ minHeight: "100dvh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", padding: "0 24px" }}>
+          <AlertCircle style={{ width: 48, height: 48, color: "var(--danger)", margin: "0 auto 16px" }} />
+          <p style={{ color: "var(--text)", fontSize: 17, marginBottom: 16 }}>{error || "Dashboard not found"}</p>
+          <Link href="/" style={{ color: "var(--gold)", textDecoration: "underline" }}>
             Volver al inicio
           </Link>
         </div>
@@ -169,6 +167,27 @@ function BarberDashboardInner() {
               className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm px-4 py-1.5 rounded flex-shrink-0 transition-colors"
             >
               Firmar →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Photos missing banner — contract signed but no back-angle reference photo */}
+      {!contractUnsigned && dashboard.reference_photos_count < 1 && (
+        <div className="bg-amber-900/40 border-b border-amber-700/50">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Camera className="h-4 w-4 text-amber-400 flex-shrink-0" />
+              <p className="text-amber-200 text-sm">
+                <span className="font-semibold">Tu código sigue inactivo.</span>{" "}
+                Sube al menos 1 foto frontal de un corte para activarlo.
+              </p>
+            </div>
+            <Link
+              href={`/barber/fotos-referencia?id=${barberId}`}
+              className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm px-4 py-1.5 rounded flex-shrink-0 transition-colors"
+            >
+              Subir fotos →
             </Link>
           </div>
         </div>
@@ -218,7 +237,10 @@ function BarberDashboardInner() {
               </button>
             </div>
             <p className="text-xs text-gray-400 mt-2">
-              Comparte con tus clientes • Ellos ahorran €2 • Tú ganas €2
+              Comparte con tus clientes • Ellos ahorran €3 • Tú ganas €3 por análisis
+            </p>
+            <p className="text-xs text-green-400 mt-1 font-semibold">
+              ✓ Totalmente gratis para ti — solo compartes el código
             </p>
           </div>
         </div>
@@ -372,7 +394,11 @@ function BarberDashboardInner() {
 
 export default function BarberDashboard() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-12 w-12 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: "100dvh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" style={{ width: 48, height: 48 }} />
+      </div>
+    }>
       <BarberDashboardInner />
     </Suspense>
   );

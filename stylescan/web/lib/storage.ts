@@ -4,6 +4,8 @@ const KEYS = {
   barberCode: "ss_barber_code",
   checkoutUrl: "ss_checkout_url",
   consentState: "ss_consent",
+  email: "ss_email",
+  phone: "ss_phone",
 };
 
 export const storage = {
@@ -25,9 +27,11 @@ export const storage = {
   },
   saveAnalysisId: (id: string) => {
     // A new analysis is starting — drop stale data from any previous run first.
+    // Also clear quiz so old answers don't bleed into a new analysis (reported bug).
     try {
       localStorage.removeItem(KEYS.checkoutUrl);
       localStorage.removeItem(KEYS.consentState);
+      localStorage.removeItem(KEYS.quiz);
     } catch {}
     try { localStorage.setItem(KEYS.analysisId, id); } catch {}
   },
@@ -52,10 +56,25 @@ export const storage = {
   getCheckoutUrl: (): string | null => {
     try { return localStorage.getItem(KEYS.checkoutUrl); } catch { return null; }
   },
+  clearCheckoutUrl: () => {
+    try { localStorage.removeItem(KEYS.checkoutUrl); } catch {}
+  },
   saveConsentState: (state: Record<string, boolean>) => {
     try { localStorage.setItem(KEYS.consentState, JSON.stringify(state)); } catch {}
   },
   getConsentState: (): Record<string, boolean> => {
     try { return JSON.parse(localStorage.getItem(KEYS.consentState) ?? "{}"); } catch { return {}; }
+  },
+  saveEmail: (email: string) => {
+    try { localStorage.setItem(KEYS.email, email); } catch {}
+  },
+  getEmail: (): string | null => {
+    try { return localStorage.getItem(KEYS.email); } catch { return null; }
+  },
+  savePhone: (phone: string) => {
+    try { localStorage.setItem(KEYS.phone, phone); } catch {}
+  },
+  getPhone: (): string | null => {
+    try { return localStorage.getItem(KEYS.phone); } catch { return null; }
   },
 };

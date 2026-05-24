@@ -3,28 +3,54 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 function extractDetail(detail: unknown, fallback: string): string {
   if (!detail) return fallback;
   if (typeof detail === "string") return detail;
+  // FastAPI returns validation errors as an array [{loc, msg, type}]
+  if (Array.isArray(detail)) {
+    return (detail as {msg?: string; message?: string}[])
+      .map((e) => e.msg ?? e.message ?? "")
+      .filter(Boolean).join(" · ") || fallback;
+  }
   if (typeof detail === "object") {
     const d = detail as Record<string, unknown>;
     if (typeof d.message === "string") return d.message;
-    if (Array.isArray(d)) return (d as {msg?: string}[]).map((e) => e.msg ?? JSON.stringify(e)).join(" | ");
-    return JSON.stringify(detail);
+    try { return JSON.stringify(detail); } catch { return fallback; }
   }
   return String(detail);
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const hasBody = Boolean(init?.body);
   const res = await fetch(`${BASE}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", "bypass-tunnel-reminder": "true", ...init?.headers },
+    // 20 s timeout on all JSON requests (prevents infinite hangs on flaky mobile)
+    signal: init?.signal ?? AbortSignal.timeout(20_000),
+    headers: {
+      // Content-Type only on requests with a body — avoids CORS preflight on GETs
+      ...(hasBody ? { "Content-Type": "application/json" } : {}),
+      "bypass-tunnel-reminder": "true",
+      ...init?.headers,
+    },
   });
   const data = await res.json().catch(() => ({ detail: res.statusText }));
-  if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
+  // Try detail, then common alternative error fields
+  if (!res.ok) throw new Error(extractDetail(data.detail ?? data.error ?? data.message, `HTTP ${res.status}`));
   return data as T;
 }
 
 export interface QuizAnswers {
+  // v2 visagismo fields (pre-payment, 7 steps)
+  main_goal?: string;
   hair_texture?: string;
+  beard_status?: string;
+  focus_areas?: string[];
   hair_density?: string;
+  styling_time?: string;
+  style_identity?: string;
+  // v2 post-payment fields (future /refine/[id])
+  hair_history?: string[];
+  lifestyle_context?: string[];
+  age_and_salon_frequency?: string;
+  scalp_and_concerns?: string[];
+  // v1 legacy fields (kept for backward compat)
   lifestyle?: string;
   style_goal?: string;
   preferred_length?: string;
@@ -54,7 +80,7 @@ export interface AnalysisResult {
 }
 
 export const api = {
-  initiate: (body: { barber_code?: string; quiz_answers?: QuizAnswers; marketing_consent?: boolean; include_colorimetry?: boolean; include_products_guide?: boolean }) =>
+  initiate: (body: { barber_code?: string; quiz_answers?: QuizAnswers; marketing_consent?: boolean; include_colorimetry?: boolean; include_products_guide?: boolean; email?: string; phone?: string }) =>
     req<{ analysis_id: string; checkout_url: string; amount_euros: number }>(
       "/analysis/initiate",
       { method: "POST", body: JSON.stringify(body) }
@@ -76,18 +102,19 @@ export const api = {
   uploadPhoto: async (id: string, file: File) => {
     const fd = new FormData();
     fd.append("photos", file);
-    const res = await fetch(`${BASE}/analysis/${id}/photos`, { method: "POST", body: fd });
+    // 60 s — photo uploads on 3G can take 20–40 s
+    const res = await fetch(`${BASE}/analysis/${id}/photos`, { method: "POST", body: fd, signal: AbortSignal.timeout(60_000) });
     const data = await res.json().catch(() => ({ detail: res.statusText }));
-    if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
+    if (!res.ok) throw new Error(extractDetail(data.detail ?? data.error ?? data.message, `HTTP ${res.status}`));
     return data;
   },
 
   uploadPhotos: async (id: string, files: File[]) => {
     const fd = new FormData();
     files.forEach((f) => fd.append("photos", f));
-    const res = await fetch(`${BASE}/analysis/${id}/photos`, { method: "POST", body: fd });
+    const res = await fetch(`${BASE}/analysis/${id}/photos`, { method: "POST", body: fd, signal: AbortSignal.timeout(60_000) });
     const data = await res.json().catch(() => ({ detail: res.statusText }));
-    if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
+    if (!res.ok) throw new Error(extractDetail(data.detail ?? data.error ?? data.message, `HTTP ${res.status}`));
     return data;
   },
 
@@ -103,9 +130,9 @@ export const api = {
     const fd = new FormData();
     fd.append("photo", file);
     if (profileFile) fd.append("profile_photo", profileFile);
-    const res = await fetch(`${BASE}/analysis/${id}/generate-visuals`, { method: "POST", body: fd });
+    const res = await fetch(`${BASE}/analysis/${id}/generate-visuals`, { method: "POST", body: fd, signal: AbortSignal.timeout(60_000) });
     const data = await res.json().catch(() => ({ detail: res.statusText }));
-    if (!res.ok) throw new Error(extractDetail(data.detail, `HTTP ${res.status}`));
+    if (!res.ok) throw new Error(extractDetail(data.detail ?? data.error ?? data.message, `HTTP ${res.status}`));
     return data;
   },
 
@@ -148,7 +175,9 @@ export const api = {
     result?: AnalysisResult;
     subState?: "paid" | "processing";
   }> => {
+    // 10 s timeout — this endpoint is polled every 2.5–3 s; hangs must not outlive the interval
     const res = await fetch(`${BASE}/analysis/${id}`, {
+      signal: AbortSignal.timeout(10_000),
       headers: { "bypass-tunnel-reminder": "true" },
     });
     if (res.status === 402) return { code: 402 };

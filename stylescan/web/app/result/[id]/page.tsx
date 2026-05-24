@@ -9,9 +9,9 @@ type UpsellType = "colorimetry" | "products" | "pack";
 type VisualsStatus = "idle" | "uploading" | "processing" | "ready" | "failed";
 
 const MAINTENANCE_COLOR: Record<string, string> = {
-  bajo: "#3DB882",
-  medio: "#C9A84C",
-  alto: "#D94F4F",
+  bajo: "var(--success)",
+  medio: "var(--gold)",
+  alto: "var(--danger)",
 };
 
 const FACE_SHAPE_LABEL: Record<string, string> = {
@@ -48,13 +48,18 @@ export default function ResultPage() {
   const [barberRefs, setBarberRefs] = useState<any[]>([]);
   const [refsLoaded, setRefsLoaded] = useState(false);
 
+  const autoGenStartedRef = useRef(false); // dedup: prevents double Fal.ai charge on re-render
+  const [upsellError, setUpsellError] = useState(""); // replaces alert() in handleUpsell
+
   function startVisualsPoll() {
-    if (visualsPollRef.current) clearInterval(visualsPollRef.current);
+    // Always clear before starting — orphaned interval prevention
+    if (visualsPollRef.current) { clearInterval(visualsPollRef.current); visualsPollRef.current = null; }
     const pollStart = Date.now();
     visualsPollRef.current = setInterval(async () => {
       if (!mountedRef.current) return;
+      if (document.hidden) return; // pause on background tab (mobile battery + error prevention)
       if (Date.now() - pollStart > 300_000) {
-        clearInterval(visualsPollRef.current!);
+        clearInterval(visualsPollRef.current!); visualsPollRef.current = null;
         if (mountedRef.current) setVisualsStatus("failed");
         return;
       }
@@ -62,11 +67,11 @@ export default function ResultPage() {
         const data = await api.getVisuals(id);
         if (!mountedRef.current) return;
         if (data.visuals_status === "ready") {
-          clearInterval(visualsPollRef.current!);
+          clearInterval(visualsPollRef.current!); visualsPollRef.current = null;
           setVisuals(data.visuals);
           setVisualsStatus("ready");
         } else if (data.visuals_status === "failed") {
-          clearInterval(visualsPollRef.current!);
+          clearInterval(visualsPollRef.current!); visualsPollRef.current = null;
           setVisualsStatus("failed");
         }
       } catch {}
@@ -132,28 +137,44 @@ export default function ResultPage() {
 
     return () => {
       mountedRef.current = false;
-      if (visualsPollRef.current) clearInterval(visualsPollRef.current);
+      if (visualsPollRef.current) { clearInterval(visualsPollRef.current); visualsPollRef.current = null; }
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
   }, [id]); // eslint-disable-line
 
   async function triggerAutoGenerate(frontalB64: string) {
+    // Mutex: only one auto-generate per mount — prevents re-render from firing duplicate Fal.ai calls
+    if (autoGenStartedRef.current) return;
+    autoGenStartedRef.current = true;
     const profileB64 = (() => { try { return sessionStorage.getItem(`visai_profile_${id}`); } catch { return null; } })();
+    if (!mountedRef.current) return;
     setVisualsStatus("processing");
     try {
       const frontalFile = b64ToFile(frontalB64, "frontal.jpg");
       const profileFile = profileB64 ? b64ToFile(profileB64, "profile.jpg") : undefined;
       await api.generateVisuals(id, frontalFile, profileFile);
-      startVisualsPoll();
+      if (mountedRef.current) startVisualsPoll();
     } catch {
-      setVisualsStatus("idle");
+      // Only reset on error so user can retry manually; do NOT reset on success (navigation pending)
+      autoGenStartedRef.current = false;
+      if (mountedRef.current) setVisualsStatus("idle");
     }
   }
 
   function b64ToFile(dataUrl: string, name: string): File {
-    const [header, data] = dataUrl.split(",");
+    const commaIdx = dataUrl.indexOf(",");
+    if (commaIdx === -1) throw new Error("Datos de imagen inválidos");
+    const header = dataUrl.slice(0, commaIdx);
+    const data = dataUrl.slice(commaIdx + 1);
     const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
-    const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+    let raw: string;
+    try {
+      raw = atob(data);
+    } catch {
+      throw new Error("Imagen en sessionStorage corrupta");
+    }
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
     return new File([bytes], name, { type: mime });
   }
 
@@ -161,19 +182,24 @@ export default function ResultPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
+    // Mutex: input fires once but rapid taps (or React StrictMode double-invoke) can queue two calls
+    if (autoGenStartedRef.current) return;
+    autoGenStartedRef.current = true;
     setVisualsStatus("processing");
     try {
       const profileB64 = (() => { try { return sessionStorage.getItem(`visai_profile_${id}`); } catch { return null; } })();
       const profileFile = profileB64 ? b64ToFile(profileB64, "profile.jpg") : undefined;
       await api.generateVisuals(id, file, profileFile);
-      startVisualsPoll();
+      if (mountedRef.current) startVisualsPoll();
     } catch {
-      setVisualsStatus("failed");
+      autoGenStartedRef.current = false; // only reset on error — allow retry
+      if (mountedRef.current) setVisualsStatus("failed");
     }
   }
 
   async function handleUpsell(type: UpsellType) {
     setUpsellLoading(type);
+    setUpsellError("");
     try {
       const res = await api.upsell(id, type);
       if (res.checkout_url.startsWith("https://checkout.stripe.com")) {
@@ -183,7 +209,7 @@ export default function ResultPage() {
         setResult(updated);
       }
     } catch (e: any) {
-      alert(e.message || "Error al procesar la compra.");
+      setUpsellError(e.message || "Error al procesar la compra. Inténtalo de nuevo.");
     } finally {
       setUpsellLoading(null);
     }
@@ -196,7 +222,14 @@ export default function ResultPage() {
     if (navigator.share) {
       navigator.share({ title: "Mi análisis VISAI", text, url: `${window.location.origin}/result/${id}` }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(`${text}\n${window.location.origin}/result/${id}`).then(() => alert("Enlace copiado al portapapeles"));
+      navigator.clipboard.writeText(`${text}\n${window.location.origin}/result/${id}`)
+        .then(() => {
+          // Brief visual confirmation — no blocking alert()
+          setUpsellError(""); // clear any existing error
+          const btn = document.activeElement as HTMLButtonElement | null;
+          if (btn) { const orig = btn.textContent; btn.textContent = "✓ Enlace copiado"; setTimeout(() => { if (btn) btn.textContent = orig; }, 2000); }
+        })
+        .catch(() => {});
     }
   }
 
@@ -296,7 +329,8 @@ export default function ResultPage() {
       a.href = url;
       a.download = "visai-story.png";
       a.click();
-      URL.revokeObjectURL(url);
+      // Delay revoke so browser has time to start the download before the object URL is released
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, "image/png");
   }
 
@@ -346,7 +380,9 @@ export default function ResultPage() {
   const report = result.report || {};
   const cuts: any[] = report.cortes_recomendados || [];
   const avoid: string[] = report.cortes_a_evitar || [];
-  const shapeLabel = FACE_SHAPE_LABEL[result.face_shape] || result.face_shape;
+  const shapeLabel = result.face_shape
+    ? (FACE_SHAPE_LABEL[result.face_shape] || result.face_shape)
+    : "Desconocida";
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100dvh", paddingBottom: 60 }}>
@@ -470,9 +506,9 @@ export default function ResultPage() {
                 onClick={() => setSelectedCut(i)}
                 style={{
                   fontSize: 13, fontWeight: 700, padding: "6px 16px", borderRadius: 99,
-                  background: selectedCut === i ? "var(--accent)" : "var(--surface2)",
+                  background: selectedCut === i ? "var(--gold)" : "var(--surface2)",
                   color: selectedCut === i ? "#080808" : "var(--text-muted)",
-                  border: `1px solid ${selectedCut === i ? "var(--accent)" : "var(--border)"}`,
+                  border: `1px solid ${selectedCut === i ? "var(--gold)" : "var(--border)"}`,
                   transition: "all 0.15s",
                 }}
               >
@@ -488,11 +524,10 @@ export default function ResultPage() {
           if (!cut) return null;
           const i = selectedCut;
           const maintColor = MAINTENANCE_COLOR[cut.nivel_mantenimiento] || "#888";
-          // Match visual by cut_index or cut_name (robust), fallback to positional
+          // Match visual by cut_index or cut_name — NO positional fallback (wrong image risk)
           const cutVisual =
             visuals.find((v: any) => v?.cut_index === i) ||
             visuals.find((v: any) => v?.cut_name && cut?.nombre && v.cut_name === cut.nombre) ||
-            visuals[i] ||
             null;
           const angles: any[] = cutVisual?.angles || [];
           const selectedAngle = cutAngle[i] ?? 0;
@@ -519,9 +554,9 @@ export default function ResultPage() {
                         onClick={() => setCutAngle((prev) => { const next = [...prev]; next[i] = ai; return next; })}
                         style={{
                           fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 99,
-                          background: cutAngle[i] === ai ? "var(--accent)" : "var(--surface)",
+                          background: cutAngle[i] === ai ? "var(--gold)" : "var(--surface)",
                           color: cutAngle[i] === ai ? "#080808" : "var(--text-muted)",
-                          border: `1px solid ${cutAngle[i] === ai ? "var(--accent)" : "var(--border)"}`,
+                          border: `1px solid ${cutAngle[i] === ai ? "var(--gold)" : "var(--border)"}`,
                           transition: "all 0.15s",
                         }}
                       >
@@ -596,7 +631,7 @@ export default function ResultPage() {
                   borderRadius: 14, padding: 16, margin: "14px 20px 0",
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div className="label" style={{ color: "var(--accent)" }}>Díselo al barbero</div>
+                    <div className="label" style={{ color: "var(--gold)" }}>Díselo al barbero</div>
                     <button
                       type="button"
                       onClick={() => navigator.clipboard.writeText(cut.como_pedirlo_al_barbero)}
@@ -705,20 +740,26 @@ export default function ResultPage() {
 
         {/* Upsells */}
         <div style={{ margin: "32px 0 24px" }}>
-          <h2 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 4px", letterSpacing: -0.3 }}>Añade más a tu análisis</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "0 0 16px" }}>Un solo pago · Sin suscripción</p>
+          <h2 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 4px", letterSpacing: -0.3 }}>Completa tu análisis</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "0 0 16px" }}>Pago único · Sin suscripción · Se añade aquí mismo</p>
+
+          {upsellError && (
+            <p style={{ color: "var(--danger)", fontSize: 13, textAlign: "center", marginBottom: 12, lineHeight: 1.5 }}>
+              {upsellError}
+            </p>
+          )}
 
           {!result.includes_colorimetry && !result.includes_products_guide && (
             <div className="card-accent" style={{ marginBottom: 10 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <Star size={14} color="var(--accent)" strokeWidth={2} fill="var(--accent)" />
+                    <Star size={14} color="var(--gold)" strokeWidth={2} fill="var(--gold)" />
                     <span style={{ fontWeight: 700, fontSize: 15 }}>Pack completo</span>
                   </div>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Colorimetría + Guía de productos</div>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 17, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>5,99 €</div>
+                <div style={{ fontWeight: 800, fontSize: 17, color: "var(--gold)", flexShrink: 0, marginLeft: 12 }}>5,99 €</div>
               </div>
               <button
                 type="button"
@@ -739,7 +780,7 @@ export default function ResultPage() {
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 3 }}>🎨 Colorimetría personal</div>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Paleta de ropa, tonos, monturas de gafas</div>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>4,99 €</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--gold)", flexShrink: 0, marginLeft: 12 }}>4,99 €</div>
               </div>
               <button
                 type="button"
@@ -788,7 +829,7 @@ export default function ResultPage() {
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 3 }}>🧴 Guía de productos</div>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Productos exactos, rutina diaria, técnica</div>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)", flexShrink: 0, marginLeft: 12 }}>2,99 €</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--gold)", flexShrink: 0, marginLeft: 12 }}>2,99 €</div>
               </div>
               <button
                 type="button"
@@ -853,7 +894,7 @@ export default function ResultPage() {
               )}
               {result.seasonal_report.timing_barberia && (
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start", paddingTop: 4, borderTop: "1px solid var(--border)" }}>
-                  <CalendarDays size={15} color="var(--accent)" strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <CalendarDays size={15} color="var(--gold)" strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 2 }} />
                   <p style={{ fontSize: 13, margin: 0, lineHeight: 1.5 }}>{result.seasonal_report.timing_barberia}</p>
                 </div>
               )}
@@ -874,8 +915,14 @@ export default function ResultPage() {
               Compartir análisis
             </button>
 
-            {/* Botón historia Instagram */}
-            <button type="button" onClick={handleShareStory} className="btn-secondary" style={{ gap: 8, position: "relative" }}>
+            {/* Botón historia Instagram — disabled until cuts are loaded */}
+            <button
+              type="button"
+              onClick={handleShareStory}
+              className="btn-secondary"
+              disabled={cuts.length === 0}
+              style={{ gap: 8, position: "relative", opacity: cuts.length === 0 ? 0.4 : 1 }}
+            >
               <span style={{ fontSize: 15 }}>📸</span>
               Compartir como historia de Instagram
             </button>

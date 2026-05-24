@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -8,18 +8,30 @@ export default function OtoPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Mutex: prevents double-click from creating two Stripe sessions (double-charge risk)
+  const initiatingRef = useRef(false);
+
+  // Guard: id is required — move side-effect out of render to avoid React warning
+  useEffect(() => {
+    if (!id) router.replace("/");
+  }, [id, router]);
+  if (!id) return null;
 
   const skip = () => router.replace(`/capture/${id}`);
 
   const accept = async () => {
+    if (initiatingRef.current) return; // block concurrent clicks
+    initiatingRef.current = true;
     setLoading(true);
     setError("");
     try {
       const res = await api.upsell(id, "seasonal");
+      // Navigate away — do NOT reset initiatingRef so a second click during navigation is blocked
       window.location.href = res.checkout_url;
     } catch (e: any) {
       setError(e.message || "Error al procesar. Inténtalo de nuevo.");
       setLoading(false);
+      initiatingRef.current = false; // only unlock on error
     }
   };
 
@@ -33,26 +45,29 @@ export default function OtoPage() {
     <div style={{ background: "var(--bg)", minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
       <div style={{ maxWidth: 420, width: "100%" }}>
 
-        {/* Badge */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
+        {/* Badge — urgency */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 2,
             padding: "5px 14px", borderRadius: 99,
-            background: "var(--accent-subtle)", color: "var(--accent)",
-            border: "1px solid rgba(201,168,76,0.25)",
+            background: "var(--gold-subtle)", color: "var(--gold)",
+            border: "1px solid var(--gold-border)",
           }}>
-            SOLO ANTES DE SUBIR TU FOTO
+            OFERTA QUE DESAPARECE AL SUBIR TU FOTO
           </span>
         </div>
 
-        {/* Headline */}
-        <h1 style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.15, letterSpacing: -1, textAlign: "center", margin: "0 0 16px" }}>
-          ¿Cómo llegar perfecto al {upcoming}?
+        {/* Headline — loss aversion */}
+        <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.2, letterSpacing: -0.5, textAlign: "center", margin: "0 0 12px" }}>
+          Tu corte del {upcoming} sin esto puede fallar
         </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: 15, lineHeight: 1.65, textAlign: "center", margin: "0 0 32px" }}>
-          Añade el <strong style={{ color: "var(--text)" }}>análisis de temporada</strong> y recibe en tu resultado:
-          longitud óptima para el {upcoming}, cómo adaptar tu corte al calor/frío, productos de la estación
-          y cuándo ir a la barbería para llegar perfecto.
+        <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.65, textAlign: "center", margin: "0 0 8px" }}>
+          El análisis base no tiene en cuenta la estación. Con el{" "}
+          <strong style={{ color: "var(--text)" }}>análisis de temporada</strong> sabrás exactamente:
+        </p>
+        {/* Mini anchor */}
+        <p style={{ fontSize: 12, color: "var(--text-dim)", textAlign: "center", margin: "0 0 24px" }}>
+          Un estilista te cobra <span style={{ textDecoration: "line-through" }}>€20–30</span> por esto. Aquí es +6,99 €.
         </p>
 
         {/* Value props */}
@@ -86,14 +101,14 @@ export default function OtoPage() {
             disabled={loading}
             style={{
               width: "100%", padding: "18px 20px", borderRadius: 14,
-              background: "var(--accent)", color: "#080808",
+              background: "var(--gold)", color: "#080808",
               fontSize: 17, fontWeight: 800, letterSpacing: -0.3,
               display: "flex", alignItems: "center", justifyContent: "space-between",
               opacity: loading ? 0.7 : 1,
             }}
           >
-            <span>{loading ? "Procesando…" : "Sí, añadir análisis de temporada"}</span>
-            {!loading && <span style={{ fontSize: 15, fontWeight: 600 }}>+4,99 €</span>}
+            <span>{loading ? "Procesando…" : `Sí, quiero llegar perfecto al ${upcoming}`}</span>
+            {!loading && <span style={{ fontSize: 15, fontWeight: 600 }}>+6,99 €</span>}
           </button>
 
           <button

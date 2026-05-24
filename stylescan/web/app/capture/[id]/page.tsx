@@ -45,9 +45,10 @@ export default function CapturePage() {
   const streamRef     = useRef<MediaStream | null>(null);
   const fileInputRef  = useRef<HTMLInputElement>(null);
   const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null);
-  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const shotIdxRef    = useRef(0);
-  const photosRef     = useRef<File[]>([]);
+  const flashTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startingCamRef = useRef(false); // mutex: prevents concurrent getUserMedia calls
+  const shotIdxRef     = useRef(0);
+  const photosRef      = useRef<File[]>([]);
   /* Ref for reliable previewUrl cleanup — avoids stale closure on unmount */
   const previewUrlRef = useRef<string>("");
 
@@ -132,6 +133,10 @@ export default function CapturePage() {
   }, [stage]);
 
   async function startCamera(facing: "user" | "environment" = facingMode) {
+    // Mutex: rapid double-taps (flip button) can call this concurrently; the first
+    // stream would be orphaned (camera LED stays on). Block while one is in-flight.
+    if (startingCamRef.current) return;
+    startingCamRef.current = true;
     stopStream();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -159,6 +164,8 @@ export default function CapturePage() {
         setError("Error al iniciar la cámara. Intenta recargar la página.");
       }
       setCameraReady(false);
+    } finally {
+      startingCamRef.current = false;
     }
   }
 
@@ -175,7 +182,7 @@ export default function CapturePage() {
     const img   = document.createElement("img");
     const url   = URL.createObjectURL(blob);
     img.onload = () => {
-      const scale = Math.min(1, 640 / img.width);
+      const scale = Math.min(1, 1024 / img.width);
       src.width  = img.width;  src.height = img.height;
       src.getContext("2d")?.drawImage(img, 0, 0);
       small.width  = Math.round(img.width  * scale);
@@ -188,7 +195,7 @@ export default function CapturePage() {
           try { sessionStorage.setItem(key, reader.result as string); } catch {}
         };
         reader.readAsDataURL(b);
-      }, "image/jpeg", 0.65);
+      }, "image/jpeg", 0.85);
       URL.revokeObjectURL(url);
     };
     img.src = url;
@@ -262,6 +269,14 @@ export default function CapturePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
+    /* Reject files > 15 MB before they reach the server */
+    const MAX_MB = 15;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setErrorType("photo_quality");
+      setError(`La foto pesa demasiado (${(file.size / 1024 / 1024).toFixed(1)} MB). Máximo ${MAX_MB} MB.`);
+      setStage("error");
+      return;
+    }
     /* Bug 2: use file directly, not file.slice() which creates a nameless Blob */
     setPreviewUrlSafe(URL.createObjectURL(file));
     setPreviewBlob(file);
@@ -299,10 +314,32 @@ export default function CapturePage() {
       setStage("processing");
       if (pollRef.current) clearInterval(pollRef.current);
       let consecutiveErrors = 0;
+      const pollStart = Date.now();
       pollRef.current = setInterval(async () => {
+        /* 5-minute hard cap — prevents polling forever on a slow/stuck backend */
+        if (Date.now() - pollStart > 300_000) {
+          clearInterval(pollRef.current!);
+          pollRef.current = null;
+          setErrorType("llm_timeout");
+          setError("El análisis tardó demasiado. Tus fotos estaban bien — el servidor tardó más de lo normal.");
+          setStage("error");
+          return;
+        }
         try {
           const status = await api.getAnalysisStatus(id);
           consecutiveErrors = 0;
+          // Deleted or not found — don't keep polling forever
+          if (status.code === 410 || status.code === 404) {
+            clearInterval(pollRef.current!);
+            pollRef.current = null;
+            setErrorType("generic");
+            setError(status.code === 410
+              ? "Este análisis fue eliminado (RGPD, 90 días). Inicia uno nuevo."
+              : "Análisis no encontrado. Vuelve al inicio."
+            );
+            setStage("error");
+            return;
+          }
           if (status.code === 200 && status.result?.face_shape) {
             clearInterval(pollRef.current!);
             pollRef.current = null;
@@ -328,12 +365,32 @@ export default function CapturePage() {
     }
   }
 
-  function handleRetry() {
+  async function handleRetry() {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-    stopStream(); // Bug 10: stop any lingering stream before starting a new one
+    if (flashTimerRef.current) { clearTimeout(flashTimerRef.current); flashTimerRef.current = null; }
+
+    // Before restarting camera, check if the analysis actually completed during the error window.
+    // This prevents re-uploading photos after an LLM timeout, which would re-bill Fal.ai + OpenRouter.
+    try {
+      const s = await api.getAnalysisStatus(id);
+      if (s.code === 200 && s.result?.face_shape) {
+        window.location.href = `/result/${id}`;
+        return;
+      }
+      if (s.code === 202 && s.subState === "processing") {
+        window.location.href = `/result/${id}`;
+        return;
+      }
+    } catch { /* continue to retry */ }
+
+    stopStream();
     photosRef.current  = [];
     shotIdxRef.current = 0;
     setShotIndex(0);
+    setPreviewBlob(null);
+    setPreviewUrlSafe("");
+    setFlashActive(false);
+    setShowProfileAlert(false);
     setError("");
     setStage("camera");
     startCamera();
@@ -356,14 +413,14 @@ export default function CapturePage() {
       <div className="screen" style={{ background: "var(--bg)", padding: "0 24px 40px", overflowY: "auto" }}>
         <div style={{ paddingTop: 56, paddingBottom: 32, maxWidth: 420, margin: "0 auto" }}>
 
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "var(--accent)", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "var(--gold)", marginBottom: 12 }}>
             ANTES DE EMPEZAR
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 6px", letterSpacing: -0.6, lineHeight: 1.15 }}>
-            Cómo hacerte las 3 fotos
+            30 segundos que hacen la diferencia
           </h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 32px", lineHeight: 1.6 }}>
-            El análisis es tan bueno como tus fotos. Dedícale 30 segundos.
+            El análisis es tan bueno como tus fotos. Sigue estas 5 reglas y el resultado será preciso.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 36 }}>
@@ -389,7 +446,7 @@ export default function CapturePage() {
             background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.25)",
             borderRadius: 14, padding: "16px 18px", marginBottom: 32,
           }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)", letterSpacing: 1, marginBottom: 8 }}>
               📐 LOS PERFILES SON LO MÁS IMPORTANTE
             </div>
             <p style={{ fontSize: 13, lineHeight: 1.65, margin: 0, color: "var(--text-muted)" }}>
@@ -406,7 +463,7 @@ export default function CapturePage() {
               startCamera();
             }}
           >
-            Entendido, vamos →
+            Entendido, hacer las fotos →
           </button>
         </div>
       </div>
@@ -431,12 +488,12 @@ export default function CapturePage() {
           </p>
 
           <div style={{ background: "var(--surface2)", borderRadius: 14, padding: "18px", marginBottom: 28 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)", letterSpacing: 1, marginBottom: 12 }}>
               TIENE QUE VERSE:
             </div>
             {["Una sola oreja", "Un solo ojo", "La nariz de perfil completo, marcando silueta"].map((item, i) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: i < 2 ? 10 : 0 }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0 }} />
                 <span style={{ fontSize: 14 }}>{item}</span>
               </div>
             ))}
@@ -471,7 +528,7 @@ export default function CapturePage() {
   if (stage === "uploading" || stage === "processing") {
     return (
       <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 24, textAlign: "center" }}>
-        <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--accent-subtle)", border: "1px solid rgba(232,232,232,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--gold-subtle)", border: "1px solid var(--gold-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontSize: 32 }}>{stage === "uploading" ? "📤" : "🧠"}</span>
         </div>
         <div>
@@ -564,12 +621,12 @@ export default function CapturePage() {
 
           {cfg.tips.length > 0 && (
             <div style={{ background: "var(--surface2)", borderRadius: 14, padding: "16px 18px", marginBottom: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", letterSpacing: 1, marginBottom: 12 }}>
                 PARA QUE SALGA BIEN
               </div>
               {cfg.tips.map((tip, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: i < cfg.tips.length - 1 ? 10 : 0 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: 7 }} />
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, marginTop: 7 }} />
                   <span style={{ fontSize: 14, lineHeight: 1.5 }}>{tip}</span>
                 </div>
               ))}

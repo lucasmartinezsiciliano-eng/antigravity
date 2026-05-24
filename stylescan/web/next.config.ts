@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const BACKEND = process.env.BACKEND_URL ?? "http://localhost:8000";
+const isProd = process.env.NODE_ENV === "production";
+
+// In production: drop unsafe-eval (only needed by Next.js dev HMR).
+// Add api.visaiapp.com to connect-src — the API base in production is an absolute URL
+// (NEXT_PUBLIC_API_URL=https://api.visaiapp.com) and must be whitelisted explicitly.
+const scriptSrc = isProd
+  ? "script-src 'self' 'unsafe-inline'"
+  : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -11,18 +19,20 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // unsafe-eval needed by Next.js dev
+      scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self'",
-      "connect-src 'self' https://api.stripe.com",
-      "frame-src https://js.stripe.com https://hooks.stripe.com",
+      // api.visaiapp.com = production API; keep 'self' for same-origin dev proxy
+      "connect-src 'self' https://api.visaiapp.com https://api.stripe.com",
+      // Stripe 3DS / SCA can use additional frame origins
+      "frame-src https://js.stripe.com https://hooks.stripe.com https://m.stripe.network",
     ].join("; "),
   },
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.40"],
+  allowedDevOrigins: [],
   async headers() {
     return [
       {

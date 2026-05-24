@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
-/* ── Palette D: monochrome — hierarchy through contrast, weight, spacing only ── */
+/* ── Register gold as a Tailwind color (v4 @theme) ── */
+@theme {
+  --color-gold:        #C9A84C;
+  --color-gold-dim:    #A8893A;
+}
+
+/* ── Palette: dark monochrome + gold premium — v2 ── */
 :root {
   --font-logo:      'Syne', sans-serif;
 
@@ -10,11 +16,18 @@
   --border:         #1E1E1E;
   --border-subtle:  #141414;
 
-  /* No hue accent — off-white IS the brand */
+  /* Off-white — primary text */
   --accent:         #E8E8E8;
   --accent-dim:     #888888;
   --accent-subtle:  rgba(232, 232, 232, 0.05);
   --accent-glow:    rgba(232, 232, 232, 0.03);
+
+  /* Gold — premium barbershop accent */
+  --gold:           #C9A84C;
+  --gold-dim:       #A8893A;
+  --gold-subtle:    rgba(201, 168, 76, 0.08);
+  --gold-border:    rgba(201, 168, 76, 0.18);
+  --gold-glow:      rgba(201, 168, 76, 0.04);
 
   --text:           #E8E8E8;
   --text-muted:     #555555;
@@ -195,6 +208,21 @@ input, textarea, select { font: inherit; color: inherit; }
 @keyframes dot-pulse {
   0%, 100% { opacity: 0.15; transform: scale(0.75); }
   50%       { opacity: 1;    transform: scale(1); }
+}
+
+/* ── Spinner ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gold-border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .dot-pulse {

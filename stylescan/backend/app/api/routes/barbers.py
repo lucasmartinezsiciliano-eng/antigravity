@@ -11,7 +11,7 @@ import logging
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -21,6 +21,7 @@ from pydantic import BaseModel, EmailStr, Field
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.barber import BarberPartner, Commission
+from app.models.barber_reference_photos import BarberReferencePhoto, HaircutType, PhotoAngle
 from app.models.analysis import Analysis
 from app.services import stripe_service
 
@@ -244,6 +245,126 @@ async def record_barber_commission(
         "Commission recorded: barber=%s analysis=%s amount=€%.2f",
         barber_id, analysis_id, settings.BARBER_COMMISSION_CENTS / 100
     )
+
+
+# ---------------------------------------------------------------------------
+# Reference photos
+# ---------------------------------------------------------------------------
+@router.post("/{barber_id}/reference-photos", status_code=201)
+async def upload_reference_photo(
+    barber_id: str,
+    haircut_type: str,
+    photo_angle: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a haircut reference photo for a barber."""
+    partner = await _get_partner_or_404(barber_id, db)
+
+    # Validate enums
+    try:
+        ht = HaircutType(haircut_type)
+    except ValueError:
+        valid = [e.value for e in HaircutType]
+        raise HTTPException(400, f"Tipo de corte no válido. Opciones: {', '.join(valid)}")
+    try:
+        pa = PhotoAngle(photo_angle)
+    except ValueError:
+        valid = [e.value for e in PhotoAngle]
+        raise HTTPException(400, f"Ángulo no válido. Opciones: {', '.join(valid)}")
+
+    from app.services.reference_photo_upload_service import upload_reference_photo as do_upload
+
+    try:
+        result = await do_upload(
+            file=file,
+            barber_id=barber_id,
+            haircut_type=haircut_type,
+            photo_angle=photo_angle,
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+
+    photo = BarberReferencePhoto(
+        id=str(uuid.uuid4()),
+        barber_partner_id=barber_id,
+        haircut_type=ht,
+        photo_angle=pa,
+        cloudinary_url=result["cloudinary_url"],
+        cloudinary_public_id=result.get("cloudinary_public_id"),
+        extracted_parameters=result.get("extracted_parameters"),
+        face_shape_in_photo=result.get("face_shape"),
+        cephalic_type_in_photo=result.get("cephalic_type"),
+        quality_score=result.get("quality_score"),
+    )
+    db.add(photo)
+    await db.flush()
+
+    logger.info("Reference photo uploaded: barber=%s type=%s angle=%s", barber_id, haircut_type, photo_angle)
+
+    return {
+        "id": photo.id,
+        "haircut_type": haircut_type,
+        "photo_angle": photo_angle,
+        "cloudinary_url": photo.cloudinary_url,
+        "quality_score": photo.quality_score,
+        "validation_status": photo.validation_status.value if hasattr(photo.validation_status, 'value') else photo.validation_status,
+    }
+
+
+@router.get("/{barber_id}/reference-photos")
+async def get_reference_photos(
+    barber_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """List all reference photos for a barber."""
+    await _get_partner_or_404(barber_id, db)
+
+    stmt = (
+        select(BarberReferencePhoto)
+        .where(
+            BarberReferencePhoto.barber_partner_id == barber_id,
+            BarberReferencePhoto.is_active == True,
+        )
+        .order_by(BarberReferencePhoto.created_at.desc())
+    )
+    photos = (await db.execute(stmt)).scalars().all()
+
+    return [
+        {
+            "id": p.id,
+            "haircut_type": p.haircut_type.value if hasattr(p.haircut_type, 'value') else p.haircut_type,
+            "photo_angle": p.photo_angle.value if hasattr(p.photo_angle, 'value') else p.photo_angle,
+            "cloudinary_url": p.cloudinary_url,
+            "validation_status": p.validation_status.value if hasattr(p.validation_status, 'value') else p.validation_status,
+            "quality_score": p.quality_score,
+            "created_at": p.created_at.isoformat(),
+        }
+        for p in photos
+    ]
+
+
+@router.delete("/{barber_id}/reference-photos/{photo_id}")
+async def delete_reference_photo(
+    barber_id: str,
+    photo_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft-delete a reference photo."""
+    await _get_partner_or_404(barber_id, db)
+
+    stmt = select(BarberReferencePhoto).where(
+        BarberReferencePhoto.id == photo_id,
+        BarberReferencePhoto.barber_partner_id == barber_id,
+    )
+    photo = (await db.execute(stmt)).scalar_one_or_none()
+    if not photo:
+        raise HTTPException(404, "Foto no encontrada.")
+
+    photo.is_active = False
+    await db.flush()
+
+    return {"message": "Foto eliminada correctamente."}
 
 
 # ---------------------------------------------------------------------------

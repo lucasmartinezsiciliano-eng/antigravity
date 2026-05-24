@@ -6,7 +6,6 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
 
-const POLL_INTERVAL_MS = 2500 + Math.random() * 500; // jitter evita thundering herd
 const TIMEOUT_MS = 90_000; // 90 s — Stripe webhook usually arrives in <5 s
 
 type Phase = "waiting_payment" | "confirmed" | "timeout" | "error";
@@ -34,44 +33,98 @@ function PendingInner() {
       return;
     }
 
-    pollRef.current = setInterval(async () => {
-      const elapsed = Date.now() - startRef.current;
+    // Reset timer each time the effect runs (e.g., analysisId change via soft-nav)
+    startRef.current = Date.now();
 
-      try {
-        const { code } = await api.getAnalysisStatus(analysisId);
+    // Per-instance jitter — computed here so each mount gets its own random offset
+    // (module-level Math.random() gives the same value to all users on the same bundle)
+    const pollInterval = 2500 + Math.random() * 500;
 
-        if (code === 200) {
-          // Already completed (e.g., returning user)
-          clearInterval(pollRef.current!);
-          window.location.href = `/result/${analysisId}`;
-          return;
+    let consecutiveErrors = 0;
+
+    function startPoll() {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      pollRef.current = setInterval(async () => {
+        const elapsed = Date.now() - startRef.current;
+
+        try {
+          const { code, subState } = await api.getAnalysisStatus(analysisId!);
+          consecutiveErrors = 0;
+
+          if (code === 410 || code === 404) {
+            clearInterval(pollRef.current!); pollRef.current = null;
+            setPhase("error");
+            setErrorMsg(
+              code === 410
+                ? "Este análisis fue eliminado automáticamente (RGPD, 90 días). Inicia uno nuevo."
+                : "Análisis no encontrado. Vuelve al inicio."
+            );
+            return;
+          }
+
+          if (code === 200) {
+            clearInterval(pollRef.current!); pollRef.current = null;
+            window.location.href = `/result/${analysisId}`;
+            return;
+          }
+
+          if (code === 202) {
+            clearInterval(pollRef.current!); pollRef.current = null;
+            storage.clearCheckoutUrl();
+            setPhase("confirmed");
+
+            // Record consent — if it fails, block the user rather than silently proceeding
+            try {
+              await api.consent(analysisId!, "v1.0-web");
+            } catch {
+              setPhase("error");
+              setErrorMsg("No pudimos registrar tu consentimiento. Recarga la página e inténtalo de nuevo.");
+              return;
+            }
+
+            // subState "processing" means photos already uploaded — skip OTO, go to result
+            // subState "paid" (default) — send to OTO upsell first
+            const target = subState === "processing"
+              ? `/result/${analysisId}`
+              : `/oto/${analysisId}`;
+            redirectRef.current = setTimeout(() => { window.location.href = target; }, 800);
+            return;
+          }
+
+          // code === 402 — webhook not yet arrived, keep polling
+          if (elapsed > TIMEOUT_MS) {
+            clearInterval(pollRef.current!); pollRef.current = null;
+            setPhase("timeout");
+          }
+        } catch {
+          consecutiveErrors++;
+          // Don't kill the poll on the first network hiccup — only after 5 consecutive failures (~12.5 s)
+          if (consecutiveErrors >= 5) {
+            clearInterval(pollRef.current!); pollRef.current = null;
+            setPhase("error");
+            setErrorMsg("Conexión inestable. Tu pago está procesándose — recarga en unos segundos.");
+          }
         }
+      }, pollInterval);
+    }
 
-        if (code === 202) {
-          clearInterval(pollRef.current!);
-          setPhase("confirmed");
-          await api.consent(analysisId, "v1.0-web").catch((e) => console.warn("consent:", e));
-          redirectRef.current = setTimeout(() => { window.location.href = `/oto/${analysisId}`; }, 800);
-          return;
-        }
+    startPoll();
 
-        // code === 402 — webhook not yet arrived, keep polling
-        if (elapsed > TIMEOUT_MS) {
-          clearInterval(pollRef.current!);
-          setPhase("timeout");
-        }
-      } catch (e: any) {
-        clearInterval(pollRef.current!);
-        setPhase("error");
-        setErrorMsg(e.message || "Error al verificar el pago.");
+    // Resume polling immediately when the user returns to the tab (mobile background throttle)
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible" && phase === "waiting_payment") {
+        startRef.current = Date.now(); // reset timer so we don't instantly timeout on wake
+        startPoll();
       }
-    }, POLL_INTERVAL_MS);
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       if (redirectRef.current) clearTimeout(redirectRef.current);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [analysisId]);
+  }, [analysisId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Confirmed (brief flash before redirect) ── */
   if (phase === "confirmed") {
@@ -86,7 +139,7 @@ function PendingInner() {
         </div>
         <div>
           <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 6px" }}>¡Pago confirmado!</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: 15, margin: 0 }}>Preparando la cámara…</p>
+          <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0 }}>Ahora sube tus 3 fotos y descubre tu corte ideal.</p>
         </div>
       </div>
     );
@@ -94,6 +147,7 @@ function PendingInner() {
 
   /* ── Timeout ── */
   if (phase === "timeout") {
+    const pollInterval = 2500 + Math.random() * 500;
     return (
       <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 20, textAlign: "center" }}>
         <span style={{ fontSize: 48 }}>⏳</span>
@@ -109,26 +163,59 @@ function PendingInner() {
             onClick={() => {
               setPhase("waiting_payment");
               startRef.current = Date.now();
+              // Clear any stale interval before creating a new one (double-click guard)
+              if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
               pollRef.current = setInterval(async () => {
                 try {
-                  const { code } = await api.getAnalysisStatus(analysisId!);
+                  const { code, subState } = await api.getAnalysisStatus(analysisId!);
                   if (code === 202 || code === 200) {
-                    clearInterval(pollRef.current!);
-                    window.location.href = code === 200 ? `/result/${analysisId}` : `/capture/${analysisId}`;
+                    clearInterval(pollRef.current!); pollRef.current = null;
+                    storage.clearCheckoutUrl();
+                    window.location.href = code === 200
+                      ? `/result/${analysisId}`
+                      : (subState === "processing" ? `/result/${analysisId}` : `/oto/${analysisId}`);
                   }
-                } catch { clearInterval(pollRef.current!); }
-              }, POLL_INTERVAL_MS);
+                  if (code === 410 || code === 404) {
+                    clearInterval(pollRef.current!); pollRef.current = null;
+                    setPhase("error");
+                    setErrorMsg("Análisis no encontrado. Vuelve al inicio.");
+                  }
+                } catch { /* keep retrying silently */ }
+              }, pollInterval);
             }}
           >
             Seguir esperando
           </button>
-          <Link
-            href={analysisId ? `/capture/${analysisId}` : "/"}
+          {/* One final status check before allowing /capture — if confirmed, route to OTO (don't skip upsell) */}
+          <button
+            type="button"
             className="btn-ghost"
-            style={{ textDecoration: "none" }}
+            onClick={async () => {
+              if (!analysisId) { window.location.href = "/"; return; }
+              try {
+                const { code, subState } = await api.getAnalysisStatus(analysisId);
+                if (code === 200) { window.location.href = `/result/${analysisId}`; return; }
+                if (code === 202) {
+                  storage.clearCheckoutUrl();
+                  window.location.href = subState === "processing"
+                    ? `/result/${analysisId}`
+                    : `/oto/${analysisId}`;
+                  return;
+                }
+                if (code === 410 || code === 404) {
+                  setPhase("error");
+                  setErrorMsg("Análisis no encontrado. Vuelve al inicio.");
+                  return;
+                }
+              } catch { /* fall through */ }
+              // 402 — payment genuinely delayed. Capture will fail until webhook arrives.
+              // Show support info rather than sending to a dead-end.
+              setPhase("error");
+              setErrorMsg(`Tu pago está siendo procesado pero el webhook aún no llegó. Escríbenos a soporte@visaiapp.com con tu ID: ${analysisId}`);
+            }}
           >
             Continuar de todas formas →
-          </Link>
+          </button>
           {checkoutUrl && (
             <a href={checkoutUrl} className="btn-ghost" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: 13 }}>
               Volver a pagar →
@@ -154,11 +241,11 @@ function PendingInner() {
 
   /* ── Default: waiting for Stripe webhook ── */
   return (
-    <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 24, textAlign: "center" }}>
+    <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 20, textAlign: "center", padding: "0 24px" }}>
       <div style={{
         width: 72, height: 72, borderRadius: 20,
-        background: "var(--accent-subtle)",
-        border: "1px solid rgba(201,168,76,0.2)",
+        background: "var(--gold-subtle)",
+        border: "1px solid var(--gold-border)",
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 30,
       }}>
@@ -166,10 +253,31 @@ function PendingInner() {
       </div>
       <div>
         <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px" }}>Confirmando tu pago…</h2>
-        <p style={{ color: "var(--text-muted)", fontSize: 15, margin: 0, maxWidth: 280, lineHeight: 1.6 }}>
-          Stripe está procesando la transacción. Esto suele tardar solo unos segundos.
+        <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0, maxWidth: 280, lineHeight: 1.6 }}>
+          Stripe está procesando. Solo unos segundos y empezamos.
         </p>
       </div>
+
+      {/* Anticipation: preview what's coming */}
+      <div style={{
+        background: "var(--surface)", border: "1px solid var(--border)",
+        borderRadius: 14, padding: "16px 18px", maxWidth: 320, width: "100%", textAlign: "left",
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: "var(--gold)", marginBottom: 12 }}>
+          LO QUE VAS A DESCUBRIR
+        </div>
+        {[
+          ["📐", "Tu forma facial exacta — 468 puntos analizados"],
+          ["💈", "3 cortes que te favorecen con instrucciones para el barbero"],
+          ["🪄", "Prueba virtual IA — vélos en tu cara antes de cortarte"],
+        ].map(([icon, text], i) => (
+          <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: i < 2 ? 10 : 0 }}>
+            <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+            <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--text-muted)" }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
       <div style={{ display: "flex", gap: 6 }}>
         {[0, 1, 2].map((i) => (
           <div key={i} className="dot-pulse" style={{ animationDelay: `${i * 0.4}s` }} />
@@ -199,7 +307,11 @@ function PendingPageInner() {
 
 export default function PendingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="h-8 w-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: "100dvh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" />
+      </div>
+    }>
       <PendingPageInner />
     </Suspense>
   );

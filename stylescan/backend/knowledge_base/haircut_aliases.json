@@ -1,7 +1,7 @@
 {
-  "_doc": "Catálogo de cortes del mercado español 2025. Basado en análisis de las barberías españolas con más seguidores en Instagram. Nombres en español tal como los pide el cliente + nombre técnico + aliases LLM. Los pexels_query apuntan a vistas de frente/lateral para referencia visual.",
-  "version": "2.0",
-  "updated_at": "2026-05-09",
+  "_doc": "Catálogo de cortes del mercado español 2026. Basado en análisis de las barberías españolas con más seguidores en Instagram. Nombres en español tal como los pide el cliente + nombre técnico + aliases LLM. Los pexels_query apuntan a vistas de frente/lateral para referencia visual.",
+  "version": "2.1",
+  "updated_at": "2026-05-24",
 
   "cuts": {
 
@@ -292,6 +292,48 @@
       ],
       "pexels_query": "curly hair fade men side view natural curls barbershop",
       "local_image": "natural_curls_fade.jpg"
+    },
+
+    "edgar_cut": {
+      "canonical_es": "Corte Edgar",
+      "canonical_en": "Edgar Cut",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Un edgar, con el flequillo recto y los lados rapados",
+      "aliases": [
+        "edgar", "edgar cut", "corte edgar", "edgar fade", "edgar high fade",
+        "edgar with fade", "edgar haircut", "edgar taper", "edgar skin fade",
+        "corte recto con fade", "flequillo recto rapado", "fluffy edgar"
+      ],
+      "pexels_query": "edgar cut men front side view high fade barbershop",
+      "local_image": "edgar_cut.jpg"
+    },
+
+    "blowout_fade": {
+      "canonical_es": "Blowout Fade",
+      "canonical_en": "Blowout Fade",
+      "popularity": 4,
+      "como_lo_pide_el_cliente": "Un blowout, con volumen hacia fuera y los lados tapereados",
+      "aliases": [
+        "blowout", "blowout fade", "blowout taper", "blowout haircut",
+        "blowout con degradado", "volumen hacia afuera", "blowout men",
+        "blowout taper fade", "afro blowout", "brooklyn fade"
+      ],
+      "pexels_query": "blowout fade men side view volume hair barbershop",
+      "local_image": "blowout_fade.jpg"
+    },
+
+    "textured_crop": {
+      "canonical_es": "Corte Texturizado",
+      "canonical_en": "Textured Crop",
+      "popularity": 5,
+      "como_lo_pide_el_cliente": "Un texturizado, con el flequillo corto y textura arriba",
+      "aliases": [
+        "textured crop", "crop texturizado", "corte texturizado", "textured top crop",
+        "textured fringe crop", "choppy crop", "textured short crop", "texturizado corto",
+        "crop con textura", "modern textured crop", "disconnected textured crop"
+      ],
+      "pexels_query": "textured crop haircut men side front view barbershop 2026",
+      "local_image": "textured_crop.jpg"
     }
   },
 

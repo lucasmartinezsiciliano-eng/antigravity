@@ -17,7 +17,7 @@ import httpx
 from fastapi import UploadFile
 
 from app.core.config import settings
-from app.services.face_analysis import FaceAnalyzer
+from app.services.face_analysis import analyze_single_photo, PhotoAnalysis, _classify_face_shape
 
 logger = logging.getLogger(__name__)
 
@@ -59,43 +59,38 @@ async def upload_reference_photo(
     if not cloudinary_url:
         raise Exception("Cloudinary upload failed")
 
-    # Analyze with MediaPipe
-    face_analyzer = FaceAnalyzer()
+    # Analyze with MediaPipe (standalone function, synchronous)
+    analysis: PhotoAnalysis | None = None
     try:
-        metrics = await face_analyzer.analyze_photos(
-            photos=[file_bytes],  # Single reference photo
-            photo_angles=[photo_angle],
-        )
+        analysis = analyze_single_photo(file_bytes)
     except Exception as e:
         logger.error("MediaPipe analysis failed for barber=%s: %s", barber_id, e)
-        metrics = None
+
+    # Frontal and lateral reference photos are expected to show a face —
+    # identity isolation is handled via the hair mask + prompt at generation time,
+    # NOT by avoiding faces in the reference. No face rejection here.
 
     extracted_params = None
     face_shape = None
     cephalic_type = None
     quality_score = None
 
-    if metrics:
-        # Extract parameters from MediaPipe metrics
-        if photo_angle == "frontal":
-            face_shape = metrics.face_shape
-
-        if photo_angle == "lateral":
-            cephalic_type = metrics.cephalic_type
-
-        # Build parameter dict
+    if analysis:
+        # For faceless angles, quality is based on whether the photo is sharp
+        # (face_detected intentionally False — that's correct here)
         extracted_params = {
-            "transition_line_mm": 12,  # Placeholder — would be extracted from MediaPipe
-            "blend_angle_degrees": 45,  # Placeholder
-            "top_length_mm": 35,  # Placeholder
-            "side_length_mm": 5,  # Placeholder
-            "volume_percentage": 60,  # Placeholder
-            "line_sharpness": "sharp",  # Placeholder
-            "weight_distribution": "balanced",  # Placeholder
+            "head_pose_yaw": round(getattr(analysis, "head_pose_yaw", 0.0), 1),
         }
-
-        # Quality score (0-1) based on MediaPipe confidence
-        quality_score = 0.85  # Placeholder
+        if analysis.face_detected:
+            # Frontal/lateral photos show the face — extract full facial metrics
+            extracted_params.update({
+                "length_width_ratio": round(analysis.length_width_ratio, 3),
+                "forehead_to_face_ratio": round(analysis.forehead_to_face_ratio, 3),
+                "jaw_to_face_ratio": round(analysis.jaw_to_face_ratio, 3),
+                "asymmetry_score": round(analysis.asymmetry_score, 3),
+            })
+        # Use face detection confidence as quality signal; 0.70 minimum if no face detected
+        quality_score = round(analysis.confidence, 2) if analysis.face_detected else 0.70
 
     logger.info(
         "Reference photo analyzed: barber=%s haircut=%s angle=%s quality=%.2f",

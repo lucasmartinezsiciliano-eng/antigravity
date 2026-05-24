@@ -40,12 +40,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from sqlalchemy import select
+
 logger = logging.getLogger(__name__)
 
 _IMAGE_PROMPTS_PATH = Path(__file__).parent.parent.parent / "knowledge_base" / "image_prompts.json"
 
-# Flux Pro Fill — masked inpainting endpoint on fal.ai
-_INPAINT_MODEL = "fal-ai/flux-pro/v1/fill"
+# Primary: Flux Kontext LoRA Inpaint — mask + reference image + prompt in one call
+# When a barber reference photo is available, the reference_image_url makes the
+# generated hair match a REAL haircut photo instead of relying on text alone.
+_KONTEXT_INPAINT_MODEL = "fal-ai/flux-kontext-lora/inpaint"
+
+# Fallback: Flux Pro Fill — masked inpainting (text-only, no reference image)
+# Used when NO barber reference photo matches the recommended cut.
+_FILL_MODEL = "fal-ai/flux-pro/v1/fill"
 
 # Angles: frontal uses the face-cap mask; lateral uses a profile-side mask.
 # photo_index: which client photo to use as base
@@ -181,6 +189,97 @@ def _build_profile_mask(photo_bytes: bytes) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Barber reference photo lookup
+# ---------------------------------------------------------------------------
+
+async def resolve_barber_references(
+    cuts: list[dict],
+) -> dict[int, dict[str, Optional[str]]]:
+    """
+    Pre-resolve barber reference photos for each recommended cut.
+
+    Called once during analysis (after LLM returns cuts), NOT during
+    image generation. Results are stored in the analysis report so they're
+    available instantly when visuals are generated later.
+
+    Returns:
+        {
+            0: {"frontal": "https://cloudinary/...", "lateral": "https://cloudinary/..."},
+            1: {"frontal": None, "lateral": "https://cloudinary/..."},
+            2: {"frontal": "https://cloudinary/...", "lateral": None},
+        }
+    """
+    from app.core.database import AsyncSessionLocal
+    from app.models.barber_reference_photos import BarberReferencePhoto, PhotoValidationStatus
+
+    result: dict[int, dict[str, Optional[str]]] = {}
+
+    try:
+        async with AsyncSessionLocal() as db:
+            # Load all active barber reference photos in one query
+            stmt = (
+                select(BarberReferencePhoto)
+                .where(
+                    BarberReferencePhoto.is_active == True,
+                    BarberReferencePhoto.validation_status.in_([
+                        PhotoValidationStatus.APPROVED,
+                        PhotoValidationStatus.PENDING,
+                    ]),
+                )
+                .order_by(BarberReferencePhoto.quality_score.desc().nullslast())
+            )
+            all_photos = (await db.execute(stmt)).scalars().all()
+
+            if not all_photos:
+                return {i: {"frontal": None, "lateral": None} for i in range(len(cuts))}
+
+            for i, cut in enumerate(cuts[:3]):
+                nombre_en = cut.get("nombre_tecnico") or cut.get("nombre_en", "")
+                name_lower = nombre_en.lower().replace("-", " ").replace("_", " ")
+                name_tokens = set(name_lower.split())
+
+                refs: dict[str, Optional[str]] = {"frontal": None, "lateral": None}
+
+                for angle_key in ("frontal", "lateral"):
+                    best_url = None
+                    best_score = 0.0
+
+                    for photo in all_photos:
+                        pa = photo.photo_angle
+                        pa_value = pa.value if hasattr(pa, 'value') else str(pa)
+                        if pa_value != angle_key:
+                            continue
+
+                        ht = photo.haircut_type
+                        ht_value = ht.value if hasattr(ht, 'value') else str(ht)
+                        ht_tokens = set(ht_value.lower().replace("_", " ").split())
+                        overlap = len(ht_tokens & name_tokens)
+                        score = overlap / max(len(ht_tokens), 1)
+                        score += (photo.quality_score or 0.5) * 0.1
+
+                        if score > best_score:
+                            best_score = score
+                            best_url = photo.cloudinary_url
+
+                    if best_score >= 0.3:
+                        refs[angle_key] = best_url
+
+                result[i] = refs
+                if refs["frontal"] or refs["lateral"]:
+                    logger.info(
+                        "  → cut %d '%s' refs: frontal=%s lateral=%s",
+                        i, nombre_en[:40],
+                        bool(refs["frontal"]), bool(refs["lateral"]),
+                    )
+
+    except Exception as e:
+        logger.warning("Barber reference resolution failed: %s", e)
+        return {i: {"frontal": None, "lateral": None} for i in range(len(cuts))}
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Prompt construction
 # ---------------------------------------------------------------------------
 
@@ -227,29 +326,22 @@ def _build_inpaint_prompt(
     hair_attrs: Optional[dict] = None,
     haircut_geometry: Optional[dict] = None,
     visual_desc: Optional[str] = None,
+    barber_ref_url: Optional[str] = None,
 ) -> str:
     """
-    Build the Flux Fill inpainting prompt.
+    Build the inpainting prompt.
 
-    With masked inpainting the face is locked at the pixel level, so the
-    prompt can focus entirely on WHAT HAIR to generate — no identity
-    preservation instructions needed (the mask handles that).
+    TWO MODES:
+      WITH reference image (Kontext):
+        Keep it SHORT (~120-180 chars). Kontext already conditions heavily on the
+        reference image — a long competing prompt fights the visual conditioning
+        and produces blurry or incoherent results.
 
-    Priority chain for geometry description:
-      1. haircut_geometry dict → serialized (most precise, structured)
-      2. visual_desc string   → from DeepSeek free-text field (legacy)
-      3. KB lookup by name    → from image_prompts.json
-      4. technique[:250]      → barbershop text (last resort)
+      WITHOUT reference image (Flux Fill, text-only):
+        Use the full geometry description so the model has maximum detail
+        to work from. This is the fallback when no barber photo matches.
     """
-    # Geometry source
-    if haircut_geometry and isinstance(haircut_geometry, dict):
-        geom_text = _serialize_geometry(haircut_geometry)
-    elif visual_desc:
-        geom_text = visual_desc
-    else:
-        geom_text = _lookup_image_desc(nombre_en) or technique[:250]
-
-    # Hair properties clause (from analysis — keeps color/texture coherent)
+    # Hair properties clause (shared by both modes)
     if hair_attrs:
         h_type    = hair_attrs.get("type",    "natural")
         h_color   = hair_attrs.get("color",   "natural").replace("_", " ")
@@ -258,7 +350,30 @@ def _build_inpaint_prompt(
     else:
         prop_clause = "Natural hair color and texture. "
 
-    prompt = (
+    # SHORT prompt when reference image is provided — let the visual do the work.
+    # CRITICAL: explicitly instruct the model to preserve the subject's identity
+    # and apply ONLY the hair style from the reference. This prevents Kontext from
+    # blending the reference person's facial features into the output.
+    if barber_ref_url:
+        return (
+            f"{prop_clause}"
+            f"Apply only the {nombre_en} hair style from the reference photo to the masked region. "
+            "Preserve the subject's face, skin tone, and all facial features identically — "
+            "do NOT alter the face. Only the hair inside the mask changes. "
+            f"{angle_note} "
+            "Sharp focus, professional barbershop photography."
+        )
+
+    # FULL prompt for text-only fallback (no reference image)
+    # Priority: structured geometry > free-text > KB > barbershop instructions
+    if haircut_geometry and isinstance(haircut_geometry, dict):
+        geom_text = _serialize_geometry(haircut_geometry)
+    elif visual_desc:
+        geom_text = visual_desc
+    else:
+        geom_text = _lookup_image_desc(nombre_en) or technique[:250]
+
+    return (
         f"{prop_clause}"
         f"Haircut: {nombre_en}. "
         f"{geom_text}. "
@@ -266,7 +381,6 @@ def _build_inpaint_prompt(
         "Barbershop professional photography, 50mm portrait lens, "
         "sharp focus on the haircut detail, clean neutral background."
     )
-    return prompt
 
 
 # ---------------------------------------------------------------------------
@@ -283,13 +397,22 @@ async def _generate_one_angle(
     hair_attrs: Optional[dict] = None,
     haircut_geometry: Optional[dict] = None,
     visual_desc: Optional[str] = None,
+    barber_ref_url: Optional[str] = None,
+    kontext_strength: float = 0.88,
 ) -> AngleImage:
     """
-    Call fal-ai/flux-pro/v1/fill for one angle.
+    Generate one angle of a haircut try-on image.
 
-    image_url = client photo (data URI)
-    mask_url  = hair-region mask (white = inpaint, black = preserve face)
-    prompt    = haircut description focused entirely on target style
+    Two modes:
+      WITH barber reference → Flux Kontext LoRA Inpaint (mask + reference image)
+        The AI sees the REAL haircut from the barber's photo and replicates it
+        on the client's head. Face is still locked by the mask.
+      WITHOUT barber reference → Flux Pro Fill (mask + text-only)
+        Fallback to text-only prompt when no barber reference photo matches.
+
+    Legal note: barber reference photos are never exposed to the client.
+    They are processed in-memory by Fal.ai and only the generated output
+    (client's face + new hair) is returned.
     """
     from app.core.config import settings
     import fal_client  # type: ignore
@@ -305,38 +428,103 @@ async def _generate_one_angle(
         hair_attrs=hair_attrs,
         haircut_geometry=haircut_geometry,
         visual_desc=visual_desc,
+        barber_ref_url=barber_ref_url,
     )
 
+    use_kontext = barber_ref_url is not None
+    model = _KONTEXT_INPAINT_MODEL if use_kontext else _FILL_MODEL
+    model_tag = "kontext-inpaint" if use_kontext else "flux-fill"
+
     try:
-        # Fal can hang indefinitely; cap wall-time at 90s so a stuck worker
-        # doesn't pin the thread pool forever.
+        if use_kontext:
+            # Kontext LoRA Inpaint: mask + reference image + prompt
+            # guidance_scale 3.2 balances reference adherence vs. identity preservation.
+            # strength is per-cut (0.93 for high-transform fades, 0.85 for natural cuts).
+            arguments = {
+                "image_url": image_data_uri,
+                "mask_url": mask_data_uri,
+                "reference_image_url": barber_ref_url,
+                "prompt": prompt,
+                "num_inference_steps": 30,
+                "guidance_scale": 3.2,
+                "strength": kontext_strength,
+                "num_images": 1,
+                "output_format": "jpeg",
+            }
+        else:
+            # Flux Pro Fill: mask + text-only (no reference image)
+            arguments = {
+                "image_url": image_data_uri,
+                "mask_url": mask_data_uri,
+                "prompt": prompt,
+                "num_inference_steps": 32,
+                "guidance_scale": 4,
+                "num_images": 1,
+                "output_format": "jpeg",
+                "safety_tolerance": "4",
+            }
+
         result = await asyncio.wait_for(
-            asyncio.to_thread(
-                fal_client.run,
-                _INPAINT_MODEL,
-                arguments={
-                    "image_url": image_data_uri,
-                    "mask_url": mask_data_uri,
-                    "prompt": prompt,
-                    "num_inference_steps": 28,
-                    "guidance_scale": 10,
-                    "num_images": 1,
-                    "output_format": "jpeg",
-                    "safety_tolerance": "4",
-                },
-            ),
+            asyncio.to_thread(fal_client.run, model, arguments=arguments),
             timeout=90.0,
         )
         url = result["images"][0]["url"]
-        logger.info("  → angle %s: OK [flux-fill]", angle["id"])
+        logger.info("  → angle %s: OK [%s] ref=%s", angle["id"], model_tag, bool(barber_ref_url))
         return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
 
     except asyncio.TimeoutError:
-        logger.error("  → angle %s TIMEOUT [flux-fill]: exceeded 90s", angle["id"])
+        logger.error("  → angle %s TIMEOUT [%s]: exceeded 90s", angle["id"], model_tag)
         raise
     except Exception as e:
-        logger.error("  → angle %s FAILED [flux-fill]: %s", angle["id"], e)
+        logger.error("  → angle %s FAILED [%s]: %s", angle["id"], model_tag, e)
+        # If Kontext fails, retry with Fill as fallback
+        if use_kontext:
+            logger.info("  → retrying angle %s with flux-fill fallback", angle["id"])
+            try:
+                result = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        fal_client.run,
+                        _FILL_MODEL,
+                        arguments={
+                            "image_url": image_data_uri,
+                            "mask_url": mask_data_uri,
+                            "prompt": prompt,
+                            "num_inference_steps": 32,
+                            "guidance_scale": 4,
+                            "num_images": 1,
+                            "output_format": "jpeg",
+                            "safety_tolerance": "4",
+                        },
+                    ),
+                    timeout=90.0,
+                )
+                url = result["images"][0]["url"]
+                logger.info("  → angle %s: OK [flux-fill fallback]", angle["id"])
+                return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+            except Exception as e2:
+                logger.error("  → angle %s FAILED [flux-fill fallback]: %s", angle["id"], e2)
+                return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e2))
         return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Per-cut strength helper
+# ---------------------------------------------------------------------------
+
+# Cuts with high structural transformation need a higher denoising strength
+# so Kontext commits to the new shape rather than blending with the original.
+_HIGH_TRANSFORM_CUTS = {
+    "skin fade", "low fade", "mid fade", "high fade", "drop fade", "burst fade",
+    "undercut", "mohawk", "buzz cut",
+}
+
+
+def _kontext_strength_for(nombre_en: str) -> float:
+    name_lower = nombre_en.lower().replace("-", " ").replace("_", " ")
+    for cut in _HIGH_TRANSFORM_CUTS:
+        if cut in name_lower:
+            return 0.93
+    return 0.85
 
 
 # ---------------------------------------------------------------------------
@@ -353,14 +541,21 @@ async def _generate_cut(
     hair_attrs: Optional[dict] = None,
     haircut_geometry: Optional[dict] = None,
     visual_desc: Optional[str] = None,
+    barber_refs: Optional[dict[str, Optional[str]]] = None,
 ) -> HaircutVisual:
     """
     Generate 2 angle images for one recommended cut.
 
-    Frontal: frontal client photo + frontal hair-cap mask → Flux Fill
-    Lateral: profile client photo (if provided) + profile-side mask → Flux Fill
+    barber_refs: Pre-resolved barber reference URLs per angle, e.g.
+                 {"frontal": "https://cloudinary/...", "lateral": None}
+                 Resolved during analysis, NOT looked up here.
     """
-    logger.info("Generating cut %d: %s", cut_index, nombre_en)
+    refs = barber_refs or {}
+    strength = _kontext_strength_for(nombre_en)
+    logger.info(
+        "Generating cut %d: %s (refs: frontal=%s lateral=%s strength=%.2f)",
+        cut_index, nombre_en, bool(refs.get("frontal")), bool(refs.get("lateral")), strength,
+    )
 
     # Pre-build masks (CPU work, done before launching async tasks)
     frontal_bytes = photos_bytes[0]
@@ -372,8 +567,6 @@ async def _generate_cut(
         profile_b64   = photos_b64[1]
         profile_mask  = _build_profile_mask(profile_bytes)
     else:
-        # No profile photo: reuse frontal photo for the lateral angle
-        # Flux will still generate a reasonable lateral from the prompt + mask
         profile_bytes = frontal_bytes
         profile_b64   = frontal_b64
         profile_mask  = frontal_mask
@@ -384,6 +577,15 @@ async def _generate_cut(
             p64, mask = frontal_b64, frontal_mask
         else:
             p64, mask = profile_b64, profile_mask
+
+        # Map generation angle to barber reference angle (same angle, no cross-fallback):
+        #   frontal generation ← frontal reference
+        #   lateral generation ← lateral reference
+        # NO cross-type fallback: never use a different haircut's reference.
+        if angle["id"] == "frontal":
+            ref_url = refs.get("frontal")
+        else:
+            ref_url = refs.get("lateral")
 
         angle_tasks.append(
             _generate_one_angle(
@@ -396,6 +598,8 @@ async def _generate_cut(
                 hair_attrs=hair_attrs,
                 haircut_geometry=haircut_geometry,
                 visual_desc=visual_desc,
+                barber_ref_url=ref_url,
+                kontext_strength=strength,
             )
         )
 
@@ -417,31 +621,34 @@ async def generate_visuals(
     face_shape: str,
     fal_key: str,
     hair_attrs: Optional[dict] = None,
+    barber_refs: Optional[dict[int, dict[str, Optional[str]]]] = None,
 ) -> list[HaircutVisual]:
     """
     Generate 2 angle images (frontal + lateral) for each of the 3 recommended cuts.
     All 6 images are generated in parallel via asyncio.gather.
 
-    hair_attrs: {type, color, density, hairline} from DeepSeek analysis.
-                Used to anchor hair properties in the inpainting prompt so
-                the generated hair matches the client's natural color/texture.
-
-    The hair GEOMETRY per cut comes from:
-      cut["haircut_geometry"]          → structured dict (preferred)
-      cut["descripcion_visual_imagen"] → free-text English (legacy fallback)
-      KB lookup by nombre_en           → image_prompts.json
-      cut["como_pedirlo_al_barbero"]   → barbershop text (last resort)
+    barber_refs: Pre-resolved barber reference photos per cut index.
+                 Resolved during analysis time via resolve_barber_references().
+                 When a reference exists, Kontext LoRA Inpaint is used (mask + reference);
+                 otherwise Flux Pro Fill is used (mask + text-only).
     """
     from app.services.trend_service import get_reference_images_for_cut
 
     photos_b64 = [base64.b64encode(b).decode() for b in photos_bytes]
 
+    # If no pre-resolved refs, try resolving now (backward compat for manual trigger)
+    if barber_refs is None:
+        try:
+            barber_refs = await resolve_barber_references(cuts)
+        except Exception:
+            barber_refs = {}
+
     cut_tasks = []
     for i, cut in enumerate(cuts[:3]):
         nombre_en       = cut.get("nombre_tecnico") or cut.get("nombre_en", f"Cut {i+1}")
         technique       = cut.get("como_pedirlo_al_barbero", "")
-        haircut_geometry = cut.get("haircut_geometry")           # structured dict (new)
-        visual_desc     = cut.get("descripcion_visual_imagen")   # free text (legacy)
+        haircut_geometry = cut.get("haircut_geometry")
+        visual_desc     = cut.get("descripcion_visual_imagen")
 
         cut_tasks.append(
             _generate_cut(
@@ -454,6 +661,7 @@ async def generate_visuals(
                 hair_attrs=hair_attrs,
                 haircut_geometry=haircut_geometry,
                 visual_desc=visual_desc,
+                barber_refs=barber_refs.get(i, {}),
             )
         )
 

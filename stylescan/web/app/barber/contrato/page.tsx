@@ -109,7 +109,7 @@ function ContratoInner() {
     try {
       await api.signBarberContract(barberId);
       setDone(true);
-      setTimeout(() => router.push(`/barber/dashboard?id=${barberId}`), 2000);
+      setTimeout(() => router.push(`/barber/fotos-referencia?id=${barberId}`), 2000);
     } catch (e: any) {
       setError(e.message || "Error al registrar la firma. Inténtalo de nuevo.");
       setLoading(false);
@@ -122,7 +122,7 @@ function ContratoInner() {
         <div className="text-center px-6">
           <CheckCircle2 className="h-16 w-16 text-green-400 mx-auto mb-4" />
           <h2 className="text-white text-2xl font-bold mb-2">Contrato firmado</h2>
-          <p className="text-gray-400">Redirigiendo a tu panel…</p>
+          <p className="text-gray-400">Siguiente paso: sube tus fotos de referencia…</p>
         </div>
       </div>
     );
