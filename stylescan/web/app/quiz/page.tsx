@@ -44,6 +44,8 @@ const STEPS = [
       { value: "short_beard",  label: "Barba corta",          sub: "Recortada, entre 0,5 y 2 cm" },
       { value: "medium_beard", label: "Barba mediana",        sub: "Perfilada, entre 2 y 5 cm" },
       { value: "full_beard",   label: "Barba larga",          sub: "Más de 5 cm, parte de mi identidad" },
+      { value: "goatee",       label: "Perilla",              sub: "Solo en el mentón, sin patillas" },
+      { value: "mustache",     label: "Bigote",               sub: "Solo encima del labio" },
       { value: "considering",  label: "Pensando en cambiarla", sub: "Quiero probar algo diferente" },
     ],
   },
