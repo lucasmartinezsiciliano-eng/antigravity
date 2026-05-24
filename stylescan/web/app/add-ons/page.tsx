@@ -47,7 +47,9 @@ export default function AddOnsPage() {
     storage.saveAnalysisId(res.analysis_id);
     storage.saveCheckoutUrl(res.checkout_url);
     const isBypass = (code ?? "").toUpperCase() === "LUKILUU";
-    if (!isBypass && res.checkout_url.startsWith("https://checkout.stripe.com")) {
+    if (isBypass) {
+      window.location.href = `/capture/${res.analysis_id}`;
+    } else if (res.checkout_url.startsWith("https://checkout.stripe.com")) {
       window.location.href = res.checkout_url;
     } else {
       window.location.href = `/pending?id=${res.analysis_id}`;

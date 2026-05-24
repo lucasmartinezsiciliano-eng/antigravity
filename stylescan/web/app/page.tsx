@@ -151,7 +151,7 @@ export default function Home() {
             {" "}<span style={{ textDecoration: "line-through", color: "var(--text-dim)" }}>€50–80</span>
           </p>
           <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>
-            VISAI: <span style={{ fontSize: 17 }}>14,99 €</span> · Resultado en menos de 2 min
+            VISAI: <span style={{ fontSize: 17 }}>12,99 €</span> · Resultado en menos de 2 min
           </p>
         </div>
         <ChevronRight size={16} color="var(--gold)" opacity={0.6} />
@@ -227,14 +227,6 @@ export default function Home() {
               <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, lineHeight: 1.3 }}>{label}</div>
             </div>
           ))}
-        </div>
-        {/* Barbería badge */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 16 }}>💈</span>
-          <div>
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "var(--text)" }}>Solo en barberías colaboradoras</p>
-            <p style={{ margin: "1px 0 0", fontSize: 11, color: "var(--text-muted)" }}>Pídelo en tu barbería o accede con tu código</p>
-          </div>
         </div>
       </div>
 
