@@ -435,76 +435,88 @@ async def _generate_one_angle(
     model = _KONTEXT_INPAINT_MODEL if use_kontext else _FILL_MODEL
     model_tag = "kontext-inpaint" if use_kontext else "flux-fill"
 
-    try:
-        if use_kontext:
-            # Kontext LoRA Inpaint: mask + reference image + prompt
-            # guidance_scale 3.2 balances reference adherence vs. identity preservation.
-            # strength is per-cut (0.93 for high-transform fades, 0.85 for natural cuts).
-            arguments = {
-                "image_url": image_data_uri,
-                "mask_url": mask_data_uri,
-                "reference_image_url": barber_ref_url,
-                "prompt": prompt,
-                "num_inference_steps": 30,
-                "guidance_scale": 3.2,
-                "strength": kontext_strength,
-                "num_images": 1,
-                "output_format": "jpeg",
-            }
-        else:
-            # Flux Pro Fill: mask + text-only (no reference image)
-            arguments = {
-                "image_url": image_data_uri,
-                "mask_url": mask_data_uri,
-                "prompt": prompt,
-                "num_inference_steps": 32,
-                "guidance_scale": 4,
-                "num_images": 1,
-                "output_format": "jpeg",
-                "safety_tolerance": "4",
-            }
+    if use_kontext:
+        # Kontext LoRA Inpaint: mask + reference image + prompt
+        # guidance_scale 3.2 balances reference adherence vs. identity preservation.
+        # strength is per-cut (0.93 for high-transform fades, 0.85 for natural cuts).
+        arguments = {
+            "image_url": image_data_uri,
+            "mask_url": mask_data_uri,
+            "reference_image_url": barber_ref_url,
+            "prompt": prompt,
+            "num_inference_steps": 30,
+            "guidance_scale": 3.2,
+            "strength": kontext_strength,
+            "num_images": 1,
+            "output_format": "jpeg",
+        }
+    else:
+        # Flux Pro Fill: mask + text-only (no reference image)
+        arguments = {
+            "image_url": image_data_uri,
+            "mask_url": mask_data_uri,
+            "prompt": prompt,
+            "num_inference_steps": 32,
+            "guidance_scale": 4,
+            "num_images": 1,
+            "output_format": "jpeg",
+            "safety_tolerance": "4",
+        }
 
-        result = await asyncio.wait_for(
-            asyncio.to_thread(fal_client.run, model, arguments=arguments),
-            timeout=90.0,
-        )
-        url = result["images"][0]["url"]
-        logger.info("  → angle %s: OK [%s] ref=%s", angle["id"], model_tag, bool(barber_ref_url))
-        return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+    # Retry loop: up to 3 total attempts with backoff before falling back
+    max_retries = 2
+    last_error: Optional[Exception] = None
 
-    except asyncio.TimeoutError:
-        logger.error("  → angle %s TIMEOUT [%s]: exceeded 90s", angle["id"], model_tag)
-        raise
-    except Exception as e:
-        logger.error("  → angle %s FAILED [%s]: %s", angle["id"], model_tag, e)
-        # If Kontext fails, retry with Fill as fallback
-        if use_kontext:
-            logger.info("  → retrying angle %s with flux-fill fallback", angle["id"])
-            try:
-                result = await asyncio.wait_for(
-                    asyncio.to_thread(
-                        fal_client.run,
-                        _FILL_MODEL,
-                        arguments={
-                            "image_url": image_data_uri,
-                            "mask_url": mask_data_uri,
-                            "prompt": prompt,
-                            "num_inference_steps": 32,
-                            "guidance_scale": 4,
-                            "num_images": 1,
-                            "output_format": "jpeg",
-                            "safety_tolerance": "4",
-                        },
-                    ),
-                    timeout=90.0,
+    for attempt in range(max_retries + 1):
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(fal_client.run, model, arguments=arguments),
+                timeout=90.0,
+            )
+            url = result["images"][0]["url"]
+            logger.info("  → angle %s: OK [%s] ref=%s", angle["id"], model_tag, bool(barber_ref_url))
+            return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+
+        except (asyncio.TimeoutError, Exception) as e:
+            last_error = e
+            if attempt < max_retries:
+                delay = 2 if attempt == 0 else 4
+                logger.warning(
+                    "fal.ai retry %d/%d for %s: %s",
+                    attempt + 1, max_retries, angle["id"], e,
                 )
-                url = result["images"][0]["url"]
-                logger.info("  → angle %s: OK [flux-fill fallback]", angle["id"])
-                return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
-            except Exception as e2:
-                logger.error("  → angle %s FAILED [flux-fill fallback]: %s", angle["id"], e2)
-                return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e2))
-        return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e))
+                await asyncio.sleep(delay)
+            else:
+                logger.error("  → angle %s FAILED [%s] after %d attempts: %s", angle["id"], model_tag, attempt + 1, e)
+
+    # All retries exhausted — try Kontext→Fill fallback as last resort
+    if use_kontext:
+        logger.info("  → retrying angle %s with flux-fill fallback", angle["id"])
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    fal_client.run,
+                    _FILL_MODEL,
+                    arguments={
+                        "image_url": image_data_uri,
+                        "mask_url": mask_data_uri,
+                        "prompt": prompt,
+                        "num_inference_steps": 32,
+                        "guidance_scale": 4,
+                        "num_images": 1,
+                        "output_format": "jpeg",
+                        "safety_tolerance": "4",
+                    },
+                ),
+                timeout=90.0,
+            )
+            url = result["images"][0]["url"]
+            logger.info("  → angle %s: OK [flux-fill fallback]", angle["id"])
+            return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+        except Exception as e2:
+            logger.error("  → angle %s FAILED [flux-fill fallback]: %s", angle["id"], e2)
+            return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(e2))
+    return AngleImage(angle_id=angle["id"], label=angle["label"], url="", error=str(last_error))
 
 
 # ---------------------------------------------------------------------------

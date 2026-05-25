@@ -71,6 +71,7 @@ function PendingInner() {
           if (code === 202) {
             clearInterval(pollRef.current!); pollRef.current = null;
             storage.clearCheckoutUrl();
+            if (subState === "paid") storage.saveLastPaidAt();
             setPhase("confirmed");
 
             // Record consent — if it fails, block the user rather than silently proceeding

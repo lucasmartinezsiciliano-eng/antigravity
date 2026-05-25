@@ -367,9 +367,22 @@ export default function ResultPage() {
             {error || "Resultado no disponible"}
           </p>
         </div>
+        <p
+          style={{ fontSize: 11, color: "var(--text-muted)", margin: 0, cursor: "pointer", wordBreak: "break-all" }}
+          onClick={() => { navigator.clipboard?.writeText(id); }}
+          title="Copiar ID"
+        >
+          ID: <code style={{ background: "var(--surface2)", padding: "2px 6px", borderRadius: 4 }}>{id}</code>
+        </p>
         <button type="button" className="btn-primary" onClick={() => window.location.reload()} style={{ maxWidth: 280, width: "100%" }}>
           Reintentar
         </button>
+        <a
+          href={`mailto:soporte@visai.es?subject=Error%20en%20análisis%20${id}`}
+          style={{ fontSize: 13, color: "var(--gold)", textDecoration: "none", fontWeight: 600 }}
+        >
+          Contactar soporte
+        </a>
         <Link href="/" className="btn-secondary" style={{ maxWidth: 280, width: "100%", textDecoration: "none" }}>
           Volver al inicio
         </Link>

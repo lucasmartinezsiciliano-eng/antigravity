@@ -35,6 +35,36 @@ const INTRO_TIPS = [
 type Stage = "intro" | "camera" | "preview" | "uploading" | "processing" | "error";
 type ErrorType = "no_face" | "photo_quality" | "llm_timeout" | "network" | "generic";
 
+async function compressImage(file: File, maxDim = 1600, quality = 0.82): Promise<File> {
+  if (file.size < 1024 * 1024) return file; // skip if <1MB
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(img.src);
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name || "photo.jpg", { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        quality,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(img.src); resolve(file); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export default function CapturePage() {
   const params = useParams();
   const router = useRouter();
@@ -63,6 +93,8 @@ export default function CapturePage() {
   const [errorType,        setErrorType]        = useState<ErrorType>("generic");
   const [showProfileAlert, setShowProfileAlert] = useState(false);
   const [facingMode,       setFacingMode]       = useState<"user" | "environment">("user");
+  const [processingStep,   setProcessingStep]   = useState(1);
+  const [processingElapsed, setProcessingElapsed] = useState(0);
   /* Gate: don't render until we know the analysis isn't already done/in-flight.
      Prevents back-button re-uploads that would re-trigger Fal.ai + OpenRouter. */
   const [statusChecked,    setStatusChecked]    = useState(false);
@@ -130,6 +162,16 @@ export default function CapturePage() {
       videoRef.current.play().catch(() => {});
       setCameraReady(true);
     }
+  }, [stage]);
+
+  /* ── Processing step progression + elapsed timer ── */
+  useEffect(() => {
+    if (stage !== "processing") { setProcessingStep(1); setProcessingElapsed(0); return; }
+    const t2 = setTimeout(() => setProcessingStep(2), 5000);
+    const t3 = setTimeout(() => setProcessingStep(3), 15000);
+    const t4 = setTimeout(() => setProcessingStep(4), 25000);
+    const tick = setInterval(() => setProcessingElapsed((s) => s + 1), 1000);
+    return () => { clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearInterval(tick); };
   }, [stage]);
 
   async function startCamera(facing: "user" | "environment" = facingMode) {
@@ -265,7 +307,7 @@ export default function CapturePage() {
   }
 
   /* ── fallback: file from gallery ── */
-  function onFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
@@ -277,9 +319,10 @@ export default function CapturePage() {
       setStage("error");
       return;
     }
+    const compressed = await compressImage(file);
     /* Bug 2: use file directly, not file.slice() which creates a nameless Blob */
-    setPreviewUrlSafe(URL.createObjectURL(file));
-    setPreviewBlob(file);
+    setPreviewUrlSafe(URL.createObjectURL(compressed));
+    setPreviewBlob(compressed);
     setStage("preview");
   }
 
@@ -310,7 +353,8 @@ export default function CapturePage() {
     storage.saveAnalysisId(id);
     setError("");
     try {
-      await api.uploadPhotos(id, files);
+      const compressed = await Promise.all(files.map((f) => compressImage(f)));
+      await api.uploadPhotos(id, compressed);
       setStage("processing");
       if (pollRef.current) clearInterval(pollRef.current);
       let consecutiveErrors = 0;
@@ -526,27 +570,48 @@ export default function CapturePage() {
 
   /* ── uploading / processing ── */
   if (stage === "uploading" || stage === "processing") {
+    const STEPS = [
+      { icon: "📸", text: "Fotos recibidas" },
+      { icon: "🧠", text: "Analizando morfología facial..." },
+      { icon: "✂️", text: "Seleccionando cortes ideales..." },
+      { icon: "🎨", text: "Generando virtual try-on..." },
+    ];
     return (
-      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 24, textAlign: "center" }}>
-        <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--gold-subtle)", border: "1px solid var(--gold-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 32 }}>{stage === "uploading" ? "📤" : "🧠"}</span>
-        </div>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px" }}>
-            {stage === "uploading" ? "Subiendo fotos…" : "Analizando tu rostro"}
-          </h2>
-          {stage === "processing" && (
-            <p style={{ color: "var(--text-muted)", fontSize: 15, maxWidth: 260, lineHeight: 1.6, margin: "0 auto" }}>
-              Detectando 468 puntos y generando tus recomendaciones…
-            </p>
-          )}
-        </div>
-        {stage === "processing" && (
+      <div className="screen" style={{ alignItems: "center", justifyContent: "center", gap: 24, textAlign: "center", padding: "0 24px" }}>
+        {stage === "uploading" ? (
           <>
-            <div style={{ display: "flex", gap: 6 }}>
-              {[0, 1, 2].map((i) => <div key={i} className="dot-pulse" style={{ animationDelay: `${i * 0.4}s` }} />)}
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: "var(--gold-subtle)", border: "1px solid var(--gold-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 32 }}>📤</span>
             </div>
-            <p className="caption">Suele tardar 40–60 segundos</p>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Subiendo fotos…</h2>
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 4px" }}>Analizando tu rostro</h2>
+            <div style={{ width: "100%", maxWidth: 320, textAlign: "left", display: "flex", flexDirection: "column", gap: 14 }}>
+              {STEPS.map((step, i) => {
+                const stepNum = i + 1;
+                const done = processingStep > stepNum;
+                const active = processingStep === stepNum;
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, opacity: done || active ? 1 : 0.4 }}>
+                    <span style={{ fontSize: 18, width: 24, textAlign: "center" }}>{step.icon}</span>
+                    <span style={{ fontSize: 14, flex: 1, color: done ? "var(--text)" : active ? "var(--text)" : "var(--text-muted)" }}>
+                      {step.text}
+                    </span>
+                    {done && <span style={{ color: "#3db882", fontWeight: 700, fontSize: 16 }}>✓</span>}
+                    {active && (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {[0, 1, 2].map((d) => <div key={d} className="dot-pulse" style={{ animationDelay: `${d * 0.4}s` }} />)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+              Tiempo: {processingElapsed}s
+            </p>
           </>
         )}
       </div>
@@ -630,6 +695,39 @@ export default function CapturePage() {
                   <span style={{ fontSize: 14, lineHeight: 1.5 }}>{tip}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {errorType === "llm_timeout" && (
+            <div style={{ background: "var(--bg-secondary, #f5f5f5)", borderRadius: 12, padding: 16, marginTop: 12, width: "100%" }}>
+              <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>💡 Tu análisis puede estar listo</p>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 8px" }}>
+                A veces el servidor tarda más de lo normal pero completa el análisis. Compruébalo:
+              </p>
+              <button type="button" className="btn-primary" onClick={async () => {
+                try {
+                  const s = await api.getAnalysisStatus(id);
+                  if (s.code === 200) window.location.href = `/result/${id}`;
+                  else setError("Aún procesando... Inténtalo en 1 minuto.");
+                } catch { setError("Sin conexión. Inténtalo más tarde."); }
+              }} style={{ width: "100%", fontSize: 14 }}>
+                Comprobar si ya está listo
+              </button>
+            </div>
+          )}
+
+          {errorType === "network" && (
+            <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 8 }}>
+              📶 Si tienes mala cobertura, conéctate a WiFi e inténtalo de nuevo.
+            </p>
+          )}
+
+          {errorType === "photo_quality" && (
+            <div style={{ textAlign: "left", fontSize: 13, lineHeight: 2, marginTop: 8 }}>
+              ✅ Buena iluminación (luz natural)<br/>
+              ✅ Sin gafas ni gorro<br/>
+              ✅ Mirando directamente a cámara<br/>
+              ✅ Foto nítida (sin movimiento)
             </div>
           )}
 

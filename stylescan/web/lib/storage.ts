@@ -6,6 +6,7 @@ const KEYS = {
   consentState: "ss_consent",
   email: "ss_email",
   phone: "ss_phone",
+  lastPaidAt: "ss_last_paid_at",
 };
 
 export const storage = {
@@ -76,5 +77,14 @@ export const storage = {
   },
   getPhone: (): string | null => {
     try { return localStorage.getItem(KEYS.phone); } catch { return null; }
+  },
+  saveLastPaidAt: () => {
+    try { localStorage.setItem(KEYS.lastPaidAt, String(Date.now())); } catch {}
+  },
+  getLastPaidAt: (): number | null => {
+    try {
+      const v = localStorage.getItem(KEYS.lastPaidAt);
+      return v ? Number(v) : null;
+    } catch { return null; }
   },
 };
