@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #050a14;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 64px 52px 56px;
+  }
+
+  .tag {
+    font-size: 20px; font-weight: 700; letter-spacing: 4px;
+    color: #ffd93d; text-transform: uppercase; margin-bottom: 14px;
+    align-self: flex-start;
+  }
+  h1 {
+    font-size: 54px; font-weight: 900; color: #fff;
+    line-height: 1.1; margin-bottom: 6px;
+    align-self: flex-start;
+  }
+  .subtitle {
+    font-size: 24px; color: rgba(255,255,255,0.4);
+    margin-bottom: 36px; align-self: flex-start;
+  }
+  .subtitle span { color: #ffd93d; font-weight: 700; }
+
+  /* Two column layout */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    flex: 1;
+  }
+
+  .col-header {
+    font-size: 18px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 12px 18px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .col-header.video { background: rgba(74,240,196,0.12); color: #4af0c4; }
+  .col-header.ads   { background: rgba(253,121,168,0.12); color: #fd79a8; }
+
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .agent {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px 18px;
+    position: relative;
+  }
+  .agent.v { border-left: 3px solid #4af0c4; }
+  .agent.a { border-left: 3px solid #fd79a8; }
+
+  .agent-name {
+    font-size: 19px; font-weight: 800;
+    color: #fff; margin-bottom: 4px;
+  }
+  .agent-role {
+    font-size: 15px; color: rgba(255,255,255,0.45);
+    line-height: 1.35;
+  }
+
+  .tier {
+    position: absolute;
+    top: 10px; right: 12px;
+    font-size: 12px; font-weight: 800;
+    padding: 3px 9px; border-radius: 100px;
+  }
+  .nano { background: rgba(74,240,196,0.15); color: #4af0c4; }
+  .pro  { background: rgba(124,111,255,0.15); color: #a29bfe; }
+  .max  { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+
+  .arrow-v {
+    text-align: center;
+    font-size: 18px;
+    color: rgba(74,240,196,0.4);
+    padding: 3px 0;
+  }
+  .arrow-a {
+    text-align: center;
+    font-size: 18px;
+    color: rgba(253,121,168,0.4);
+    padding: 3px 0;
+  }
+
+  /* bottom connector */
+  .bottom-merge {
+    width: 100%;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .merge-line {
+    width: 2px; height: 28px;
+    background: linear-gradient(to bottom, #ffd93d, rgba(255,217,61,0));
+  }
+  .merge-badge {
+    background: rgba(255,217,61,0.1);
+    border: 1.5px solid rgba(255,217,61,0.4);
+    border-radius: 14px;
+    padding: 18px 32px;
+    text-align: center;
+    width: 100%;
+  }
+  .merge-badge .mb-title { font-size: 26px; font-weight: 900; color: #ffd93d; }
+  .merge-badge .mb-sub   { font-size: 19px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+
+  .tier-legend {
+    display: flex; gap: 20px; margin-top: 16px; justify-content: center;
+  }
+  .legend-item {
+    font-size: 16px; font-weight: 700;
+    padding: 6px 16px; border-radius: 100px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="tag">Centrum · Bloque 1</div>
+  <h1>Agentes de<br>Captación</h1>
+  <div class="subtitle"><span>22 agentes</span> · dos pipelines en paralelo</div>
+
+  <div class="cols">
+
+    <!-- Pipeline Vídeo orgánico -->
+    <div>
+      <div class="col-header video">Pipeline Vídeo</div>
+      <div class="pipeline">
+
+        <div class="agent v">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">content-director</div>
+          <div class="agent-role">Modelo Briones — 100 vídeos, escala los 13 ganadores</div>
+        </div>
+        <div class="arrow-v">↓</div>
+
+        <div class="agent v">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">tiktok-hook-specialist</div>
+          <div class="agent-role">3 variantes de gancho por vídeo (los primeros 3 segundos)</div>
+        </div>
+        <div class="arrow-v">↓</div>
+
+        <div class="agent v">
+          <span class="tier max">Max</span>
+          <div class="agent-name">tiktok-scriptwriter</div>
+          <div class="agent-role">Guiones 60-90s con la voz exacta de Mariano</div>
+        </div>
+        <div class="arrow-v">↓</div>
+
+        <div class="agent v">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">frame-generator</div>
+          <div class="agent-role">Frames con Flux + LoRA avatar, fondos, capas separadas</div>
+        </div>
+        <div class="arrow-v">↓</div>
+
+        <div class="agent v">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">talking-head</div>
+          <div class="agent-role">Anima avatar con LivePortrait sobre el audio</div>
+        </div>
+        <div class="arrow-v">↓</div>
+
+        <div class="agent v">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">video-assembler</div>
+          <div class="agent-role">Monta el vídeo final con subtítulos vía Creatomate</div>
+        </div>
+        <div class="arrow-v">↓</div>
+
+        <div class="agent v">
+          <span class="tier nano">Nano</span>
+          <div class="agent-name">social-poster</div>
+          <div class="agent-role">Publica en TikTok + Instagram a la hora programada</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pipeline Ads + captación directa -->
+    <div>
+      <div class="col-header ads">Pipeline Ads</div>
+      <div class="pipeline">
+
+        <div class="agent a">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">meta-copywriter</div>
+          <div class="agent-role">Copy neutral para Meta Ads (evita penalizaciones)</div>
+        </div>
+        <div class="arrow-a">↓</div>
+
+        <div class="agent a">
+          <span class="tier nano">Nano</span>
+          <div class="agent-name">freepik-specialist</div>
+          <div class="agent-role">Creatividades visuales para anuncios pagados</div>
+        </div>
+        <div class="arrow-a">↓</div>
+
+        <div class="agent a">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">meta-headline-tester</div>
+          <div class="agent-role">5 titulares A/B por anuncio, selecciona el ganador</div>
+        </div>
+        <div class="arrow-a">↓</div>
+
+        <div class="agent a">
+          <span class="tier pro">Pro</span>
+          <div class="agent-name">google-ad-writer</div>
+          <div class="agent-role">15 titulares + 4 descripciones RSA para Google</div>
+        </div>
+        <div class="arrow-a">↓</div>
+
+        <div class="agent a">
+          <span class="tier nano">Nano</span>
+          <div class="agent-name">google-negative-manager</div>
+          <div class="agent-role">Excluye keywords de tráfico basura</div>
+        </div>
+        <div class="arrow-a">↓</div>
+
+        <div class="agent a">
+          <span class="tier nano">Nano</span>
+          <div class="agent-name">comment-scraper</div>
+          <div class="agent-role">Detecta "HIPOTECA" en comentarios → abre DM</div>
+        </div>
+        <div class="arrow-a">↓</div>
+
+        <div class="agent a">
+          <span class="tier nano">Nano</span>
+          <div class="agent-name">ads-manager</div>
+          <div class="agent-role">Revisa copy semanal, ajusta audiencias Meta</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-merge">
+    <div class="merge-line"></div>
+    <div class="merge-badge">
+      <div class="mb-title">Todo desemboca en leads cualificados</div>
+      <div class="mb-sub">Bloque 2 recoge y enruta al siguiente agente</div>
+    </div>
+  </div>
+
+  <div class="tier-legend">
+    <div class="legend-item nano">Nano — tareas rápidas</div>
+    <div class="legend-item pro">Pro — coordinación</div>
+    <div class="legend-item max">Max — escritura crítica</div>
+  </div>
+
+</body>
+</html>

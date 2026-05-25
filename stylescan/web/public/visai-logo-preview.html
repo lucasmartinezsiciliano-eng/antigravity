@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VISAI — Logo System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #080808;
+      --surface: #111111;
+      --border:  #1e1e1e;
+      --gold:    #C9A84C;
+      --gold-dim: rgba(201,168,76,0.25);
+      --gold-glow: rgba(201,168,76,0.08);
+      --white:   #E8E8E8;
+      --muted:   #555;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Syne', sans-serif;
+      padding: 48px 32px 80px;
+      min-height: 100vh;
+    }
+    h2 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+    .section { margin-bottom: 64px; }
+    .row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .tile--light {
+      background: #f5f5f0;
+      border-color: #ddd;
+    }
+    .tile--dark { background: #080808; border-color: #1e1e1e; }
+    .tile--gold { background: #0d0a04; border: 1px solid rgba(201,168,76,0.2); }
+    .tile label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .tile--light label { color: #aaa; }
+  </style>
+</head>
+<body>
+
+  <!-- ─── SECTION 1: Primary Logo (Icon + Wordmark vertical) ─── -->
+  <div class="section">
+    <h2>01 — Primary Logo · Icon + Wordmark</h2>
+    <div class="row">
+
+      <!-- Dark bg version -->
+      <div class="tile tile--dark">
+        <svg width="160" height="180" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+          <!-- Face oval outline -->
+          <ellipse cx="80" cy="62" rx="34" ry="43" fill="none" stroke="#E8E8E8" stroke-width="1.2" opacity="0.18"/>
+
+          <!-- Scan line (horizontal through mid-face) -->
+          <line x1="24" y1="62" x2="136" y2="62" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/>
+          <!-- Scan terminals -->
+          <circle cx="24" cy="62" r="1.8" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="136" cy="62" r="1.8" fill="#C9A84C" opacity="0.6"/>
+
+          <!-- Landmark dots — eyes -->
+          <circle cx="65" cy="52" r="2.2" fill="#C9A84C"/>
+          <circle cx="95" cy="52" r="2.2" fill="#C9A84C"/>
+
+          <!-- Landmark dots — temples -->
+          <circle cx="48" cy="60" r="1.4" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="112" cy="60" r="1.4" fill="#C9A84C" opacity="0.55"/>
+
+          <!-- Landmark dot — nose tip -->
+          <circle cx="80" cy="68" r="1.8" fill="#C9A84C" opacity="0.75"/>
+
+          <!-- Landmark dots — jaw -->
+          <circle cx="62" cy="82" r="1.4" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="98" cy="82" r="1.4" fill="#C9A84C" opacity="0.45"/>
+
+          <!-- Landmark dot — chin -->
+          <circle cx="80" cy="100" r="1.6" fill="#C9A84C" opacity="0.5"/>
+
+          <!-- Connectors (subtle mesh) -->
+          <line x1="65" y1="52" x2="80" y2="68" stroke="#C9A84C" stroke-width="0.4" opacity="0.18"/>
+          <line x1="95" y1="52" x2="80" y2="68" stroke="#C9A84C" stroke-width="0.4" opacity="0.18"/>
+          <line x1="80" y1="68" x2="62" y2="82" stroke="#C9A84C" stroke-width="0.4" opacity="0.14"/>
+          <line x1="80" y1="68" x2="98" y2="82" stroke="#C9A84C" stroke-width="0.4" opacity="0.14"/>
+          <line x1="62" y1="82" x2="80" y2="100" stroke="#C9A84C" stroke-width="0.4" opacity="0.12"/>
+          <line x1="98" y1="82" x2="80" y2="100" stroke="#C9A84C" stroke-width="0.4" opacity="0.12"/>
+
+          <!-- Corner brackets (scan frame) -->
+          <!-- TL -->
+          <path d="M38 20 L38 30 M38 20 L48 20" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <!-- TR -->
+          <path d="M122 20 L122 30 M122 20 L112 20" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <!-- BL -->
+          <path d="M38 108 L38 98 M38 108 L48 108" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <!-- BR -->
+          <path d="M122 108 L122 98 M122 108 L112 108" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+
+          <!-- Wordmark -->
+          <text x="80" y="145"
+            text-anchor="middle"
+            font-family="'Syne', sans-serif"
+            font-weight="800"
+            font-size="32"
+            letter-spacing="7"
+            fill="#E8E8E8">VISAI</text>
+
+          <!-- Tagline -->
+          <text x="80" y="165"
+            text-anchor="middle"
+            font-family="'Syne', sans-serif"
+            font-weight="500"
+            font-size="8"
+            letter-spacing="3"
+            fill="#C9A84C"
+            opacity="0.8">VISAGISMO · IA</text>
+        </svg>
+        <label>Dark background</label>
+      </div>
+
+      <!-- Gold bg version -->
+      <div class="tile tile--gold">
+        <svg width="160" height="180" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="80" cy="62" rx="34" ry="43" fill="none" stroke="#C9A84C" stroke-width="1.2" opacity="0.35"/>
+          <line x1="24" y1="62" x2="136" y2="62" stroke="#C9A84C" stroke-width="0.7" opacity="0.45"/>
+          <circle cx="24" cy="62" r="1.8" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="136" cy="62" r="1.8" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="65" cy="52" r="2.2" fill="#C9A84C"/>
+          <circle cx="95" cy="52" r="2.2" fill="#C9A84C"/>
+          <circle cx="48" cy="60" r="1.4" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="112" cy="60" r="1.4" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="80" cy="68" r="1.8" fill="#C9A84C" opacity="0.75"/>
+          <circle cx="62" cy="82" r="1.4" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="98" cy="82" r="1.4" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="80" cy="100" r="1.6" fill="#C9A84C" opacity="0.5"/>
+          <line x1="65" y1="52" x2="80" y2="68" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
+          <line x1="95" y1="52" x2="80" y2="68" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
+          <line x1="80" y1="68" x2="62" y2="82" stroke="#C9A84C" stroke-width="0.4" opacity="0.15"/>
+          <line x1="80" y1="68" x2="98" y2="82" stroke="#C9A84C" stroke-width="0.4" opacity="0.15"/>
+          <path d="M38 20 L38 30 M38 20 L48 20" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <path d="M122 20 L122 30 M122 20 L112 20" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <path d="M38 108 L38 98 M38 108 L48 108" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <path d="M122 108 L122 98 M122 108 L112 108" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.5"/>
+          <text x="80" y="145" text-anchor="middle" font-family="'Syne', sans-serif" font-weight="800" font-size="32" letter-spacing="7" fill="#C9A84C">VISAI</text>
+          <text x="80" y="165" text-anchor="middle" font-family="'Syne', sans-serif" font-weight="500" font-size="8" letter-spacing="3" fill="#C9A84C" opacity="0.55">VISAGISMO · IA</text>
+        </svg>
+        <label>Gold monochrome</label>
+      </div>
+
+      <!-- Light bg version -->
+      <div class="tile tile--light">
+        <svg width="160" height="180" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="80" cy="62" rx="34" ry="43" fill="none" stroke="#080808" stroke-width="1.2" opacity="0.2"/>
+          <line x1="24" y1="62" x2="136" y2="62" stroke="#C9A84C" stroke-width="0.7" opacity="0.55"/>
+          <circle cx="24" cy="62" r="1.8" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="136" cy="62" r="1.8" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="65" cy="52" r="2.2" fill="#C9A84C"/>
+          <circle cx="95" cy="52" r="2.2" fill="#C9A84C"/>
+          <circle cx="48" cy="60" r="1.4" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="112" cy="60" r="1.4" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="80" cy="68" r="1.8" fill="#C9A84C"/>
+          <circle cx="62" cy="82" r="1.4" fill="#C9A84C" opacity="0.5"/>
+          <circle cx="98" cy="82" r="1.4" fill="#C9A84C" opacity="0.5"/>
+          <circle cx="80" cy="100" r="1.6" fill="#C9A84C" opacity="0.55"/>
+          <line x1="65" y1="52" x2="80" y2="68" stroke="#C9A84C" stroke-width="0.4" opacity="0.25"/>
+          <line x1="95" y1="52" x2="80" y2="68" stroke="#C9A84C" stroke-width="0.4" opacity="0.25"/>
+          <line x1="80" y1="68" x2="62" y2="82" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
+          <line x1="80" y1="68" x2="98" y2="82" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
+          <path d="M38 20 L38 30 M38 20 L48 20" stroke="#080808" stroke-width="1" fill="none" opacity="0.25"/>
+          <path d="M122 20 L122 30 M122 20 L112 20" stroke="#080808" stroke-width="1" fill="none" opacity="0.25"/>
+          <path d="M38 108 L38 98 M38 108 L48 108" stroke="#080808" stroke-width="1" fill="none" opacity="0.25"/>
+          <path d="M122 108 L122 98 M122 108 L112 108" stroke="#080808" stroke-width="1" fill="none" opacity="0.25"/>
+          <text x="80" y="145" text-anchor="middle" font-family="'Syne', sans-serif" font-weight="800" font-size="32" letter-spacing="7" fill="#080808">VISAI</text>
+          <text x="80" y="165" text-anchor="middle" font-family="'Syne', sans-serif" font-weight="500" font-size="8" letter-spacing="3" fill="#C9A84C" opacity="0.8">VISAGISMO · IA</text>
+        </svg>
+        <label>Light background</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 2: Horizontal Logo ─── -->
+  <div class="section">
+    <h2>02 — Horizontal Logo</h2>
+    <div class="row">
+      <div class="tile tile--dark" style="padding: 32px 40px;">
+        <svg width="280" height="70" viewBox="0 0 280 70" xmlns="http://www.w3.org/2000/svg">
+          <!-- Icon mark (compressed) -->
+          <ellipse cx="35" cy="32" rx="18" ry="23" fill="none" stroke="#E8E8E8" stroke-width="1" opacity="0.15"/>
+          <line x1="10" y1="32" x2="62" y2="32" stroke="#C9A84C" stroke-width="0.6" opacity="0.5"/>
+          <circle cx="10" cy="32" r="1.4" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="62" cy="32" r="1.4" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="28" cy="25" r="1.8" fill="#C9A84C"/>
+          <circle cx="42" cy="25" r="1.8" fill="#C9A84C"/>
+          <circle cx="35" cy="35" r="1.4" fill="#C9A84C" opacity="0.8"/>
+          <circle cx="28" cy="44" r="1.2" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="42" cy="44" r="1.2" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="20" cy="31" r="1" fill="#C9A84C" opacity="0.4"/>
+          <circle cx="50" cy="31" r="1" fill="#C9A84C" opacity="0.4"/>
+          <line x1="28" y1="25" x2="35" y2="35" stroke="#C9A84C" stroke-width="0.35" opacity="0.2"/>
+          <line x1="42" y1="25" x2="35" y2="35" stroke="#C9A84C" stroke-width="0.35" opacity="0.2"/>
+          <!-- Corner brackets -->
+          <path d="M14 12 L14 19 M14 12 L21 12" stroke="#C9A84C" stroke-width="0.9" fill="none" opacity="0.45"/>
+          <path d="M56 12 L56 19 M56 12 L49 12" stroke="#C9A84C" stroke-width="0.9" fill="none" opacity="0.45"/>
+          <path d="M14 54 L14 47 M14 54 L21 54" stroke="#C9A84C" stroke-width="0.9" fill="none" opacity="0.45"/>
+          <path d="M56 54 L56 47 M56 54 L49 54" stroke="#C9A84C" stroke-width="0.9" fill="none" opacity="0.45"/>
+
+          <!-- Vertical divider -->
+          <line x1="80" y1="14" x2="80" y2="54" stroke="#1e1e1e" stroke-width="1"/>
+
+          <!-- Wordmark -->
+          <text x="100" y="42"
+            font-family="'Syne', sans-serif"
+            font-weight="800"
+            font-size="28"
+            letter-spacing="6"
+            fill="#E8E8E8">VISAI</text>
+        </svg>
+        <label>Horizontal — dark</label>
+      </div>
+
+      <div class="tile tile--light" style="padding: 32px 40px;">
+        <svg width="280" height="70" viewBox="0 0 280 70" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="35" cy="32" rx="18" ry="23" fill="none" stroke="#080808" stroke-width="1" opacity="0.12"/>
+          <line x1="10" y1="32" x2="62" y2="32" stroke="#C9A84C" stroke-width="0.6" opacity="0.55"/>
+          <circle cx="10" cy="32" r="1.4" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="62" cy="32" r="1.4" fill="#C9A84C" opacity="0.6"/>
+          <circle cx="28" cy="25" r="1.8" fill="#C9A84C"/>
+          <circle cx="42" cy="25" r="1.8" fill="#C9A84C"/>
+          <circle cx="35" cy="35" r="1.4" fill="#C9A84C" opacity="0.8"/>
+          <circle cx="28" cy="44" r="1.2" fill="#C9A84C" opacity="0.5"/>
+          <circle cx="42" cy="44" r="1.2" fill="#C9A84C" opacity="0.5"/>
+          <circle cx="20" cy="31" r="1" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="50" cy="31" r="1" fill="#C9A84C" opacity="0.45"/>
+          <path d="M14 12 L14 19 M14 12 L21 12" stroke="#080808" stroke-width="0.9" fill="none" opacity="0.2"/>
+          <path d="M56 12 L56 19 M56 12 L49 12" stroke="#080808" stroke-width="0.9" fill="none" opacity="0.2"/>
+          <path d="M14 54 L14 47 M14 54 L21 54" stroke="#080808" stroke-width="0.9" fill="none" opacity="0.2"/>
+          <path d="M56 54 L56 47 M56 54 L49 54" stroke="#080808" stroke-width="0.9" fill="none" opacity="0.2"/>
+          <line x1="80" y1="14" x2="80" y2="54" stroke="#ddd" stroke-width="1"/>
+          <text x="100" y="42" font-family="'Syne', sans-serif" font-weight="800" font-size="28" letter-spacing="6" fill="#080808">VISAI</text>
+        </svg>
+        <label>Horizontal — light</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 3: Icon Mark solo ─── -->
+  <div class="section">
+    <h2>03 — Icon Mark · App Icon / Favicon</h2>
+    <div class="row">
+
+      <!-- 80px -->
+      <div class="tile tile--dark" style="padding: 28px;">
+        <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="18" fill="#101010"/>
+          <ellipse cx="40" cy="36" rx="18" ry="23" fill="none" stroke="#E8E8E8" stroke-width="1" opacity="0.15"/>
+          <line x1="12" y1="36" x2="68" y2="36" stroke="#C9A84C" stroke-width="0.8" opacity="0.5"/>
+          <circle cx="12" cy="36" r="1.8" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="68" cy="36" r="1.8" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="31" cy="27" r="2.5" fill="#C9A84C"/>
+          <circle cx="49" cy="27" r="2.5" fill="#C9A84C"/>
+          <circle cx="40" cy="39" r="1.8" fill="#C9A84C" opacity="0.8"/>
+          <circle cx="31" cy="50" r="1.6" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="49" cy="50" r="1.6" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="20" cy="35" r="1.2" fill="#C9A84C" opacity="0.4"/>
+          <circle cx="60" cy="35" r="1.2" fill="#C9A84C" opacity="0.4"/>
+          <line x1="31" y1="27" x2="40" y2="39" stroke="#C9A84C" stroke-width="0.5" opacity="0.22"/>
+          <line x1="49" y1="27" x2="40" y2="39" stroke="#C9A84C" stroke-width="0.5" opacity="0.22"/>
+          <path d="M17 14 L17 22 M17 14 L25 14" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.45"/>
+          <path d="M63 14 L63 22 M63 14 L55 14" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.45"/>
+          <path d="M17 62 L17 54 M17 62 L25 62" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.45"/>
+          <path d="M63 62 L63 54 M63 62 L55 62" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.45"/>
+        </svg>
+        <label>80px</label>
+      </div>
+
+      <!-- 48px -->
+      <div class="tile tile--dark" style="padding: 28px;">
+        <svg width="48" height="48" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="18" fill="#101010"/>
+          <ellipse cx="40" cy="36" rx="18" ry="23" fill="none" stroke="#E8E8E8" stroke-width="1.5" opacity="0.15"/>
+          <line x1="12" y1="36" x2="68" y2="36" stroke="#C9A84C" stroke-width="1" opacity="0.5"/>
+          <circle cx="12" cy="36" r="2" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="68" cy="36" r="2" fill="#C9A84C" opacity="0.55"/>
+          <circle cx="31" cy="27" r="3" fill="#C9A84C"/>
+          <circle cx="49" cy="27" r="3" fill="#C9A84C"/>
+          <circle cx="40" cy="39" r="2.2" fill="#C9A84C" opacity="0.8"/>
+          <circle cx="31" cy="50" r="2" fill="#C9A84C" opacity="0.45"/>
+          <circle cx="49" cy="50" r="2" fill="#C9A84C" opacity="0.45"/>
+          <path d="M17 14 L17 22 M17 14 L25 14" stroke="#C9A84C" stroke-width="1.2" fill="none" opacity="0.45"/>
+          <path d="M63 14 L63 22 M63 14 L55 14" stroke="#C9A84C" stroke-width="1.2" fill="none" opacity="0.45"/>
+          <path d="M17 62 L17 54 M17 62 L25 62" stroke="#C9A84C" stroke-width="1.2" fill="none" opacity="0.45"/>
+          <path d="M63 62 L63 54 M63 62 L55 62" stroke="#C9A84C" stroke-width="1.2" fill="none" opacity="0.45"/>
+        </svg>
+        <label>48px</label>
+      </div>
+
+      <!-- 32px -->
+      <div class="tile tile--dark" style="padding: 28px;">
+        <svg width="32" height="32" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="18" fill="#101010"/>
+          <ellipse cx="40" cy="36" rx="18" ry="23" fill="none" stroke="#E8E8E8" stroke-width="2" opacity="0.15"/>
+          <line x1="12" y1="36" x2="68" y2="36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5"/>
+          <circle cx="31" cy="27" r="4" fill="#C9A84C"/>
+          <circle cx="49" cy="27" r="4" fill="#C9A84C"/>
+          <circle cx="40" cy="39" r="3" fill="#C9A84C" opacity="0.8"/>
+          <path d="M17 14 L17 22 M17 14 L25 14" stroke="#C9A84C" stroke-width="1.5" fill="none" opacity="0.55"/>
+          <path d="M63 14 L63 22 M63 14 L55 14" stroke="#C9A84C" stroke-width="1.5" fill="none" opacity="0.55"/>
+          <path d="M17 62 L17 54 M17 62 L25 62" stroke="#C9A84C" stroke-width="1.5" fill="none" opacity="0.55"/>
+          <path d="M63 62 L63 54 M63 62 L55 62" stroke="#C9A84C" stroke-width="1.5" fill="none" opacity="0.55"/>
+        </svg>
+        <label>32px</label>
+      </div>
+
+      <!-- 16px -->
+      <div class="tile tile--dark" style="padding: 28px;">
+        <svg width="16" height="16" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="18" fill="#101010"/>
+          <line x1="12" y1="38" x2="68" y2="38" stroke="#C9A84C" stroke-width="2" opacity="0.6"/>
+          <circle cx="30" cy="27" r="6" fill="#C9A84C"/>
+          <circle cx="50" cy="27" r="6" fill="#C9A84C"/>
+          <circle cx="40" cy="44" r="4" fill="#C9A84C" opacity="0.7"/>
+        </svg>
+        <label>16px (favicon)</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 4: Wordmark only ─── -->
+  <div class="section">
+    <h2>04 — Wordmark Only</h2>
+    <div class="row">
+      <div class="tile tile--dark" style="padding: 32px 48px;">
+        <svg width="200" height="56" viewBox="0 0 200 56" xmlns="http://www.w3.org/2000/svg">
+          <text x="100" y="40" text-anchor="middle"
+            font-family="'Syne', sans-serif"
+            font-weight="800" font-size="36" letter-spacing="8"
+            fill="#E8E8E8">VISAI</text>
+          <line x1="4" y1="22" x2="196" y2="22" stroke="#C9A84C" stroke-width="0.6" opacity="0.35"/>
+          <circle cx="4" cy="22" r="1.4" fill="#C9A84C" opacity="0.5"/>
+          <circle cx="196" cy="22" r="1.4" fill="#C9A84C" opacity="0.5"/>
+        </svg>
+        <label>Wordmark + scan line</label>
+      </div>
+
+      <div class="tile tile--dark" style="padding: 32px 48px;">
+        <svg width="200" height="56" viewBox="0 0 200 56" xmlns="http://www.w3.org/2000/svg">
+          <text x="100" y="40" text-anchor="middle"
+            font-family="'Syne', sans-serif"
+            font-weight="800" font-size="36" letter-spacing="8"
+            fill="#C9A84C">VISAI</text>
+          <line x1="4" y1="22" x2="196" y2="22" stroke="#C9A84C" stroke-width="0.5" opacity="0.3"/>
+          <circle cx="4" cy="22" r="1.4" fill="#C9A84C" opacity="0.4"/>
+          <circle cx="196" cy="22" r="1.4" fill="#C9A84C" opacity="0.4"/>
+        </svg>
+        <label>Gold wordmark</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 5: Color System ─── -->
+  <div class="section">
+    <h2>05 — Brand Colors</h2>
+    <div class="row" style="gap: 12px;">
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:64px;height:64px;border-radius:12px;background:#080808;border:1px solid #333;"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">#080808<br>BG</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:64px;height:64px;border-radius:12px;background:#111111;border:1px solid #333;"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">#111111<br>Surface</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:64px;height:64px;border-radius:12px;background:#E8E8E8;"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">#E8E8E8<br>Text</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:64px;height:64px;border-radius:12px;background:#C9A84C;"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">#C9A84C<br>Gold</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:64px;height:64px;border-radius:12px;background:#A8893A;"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">#A8893A<br>Gold Dim</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:64px;height:64px;border-radius:12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);"></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;">Gold 10%<br>Subtle</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 6: Typography ─── -->
+  <div class="section">
+    <h2>06 — Typography</h2>
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:48px;letter-spacing:10px;color:#E8E8E8;">VISAI</div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.08em;">Syne 800 · 48px · ls 10px — Brand wordmark</span>
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:#E8E8E8;">Visagismo profesional con IA</div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.08em;">Syne 700 · 20px — Tagline / Headlines</span>
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:500;font-size:14px;color:var(--muted);letter-spacing:0.04em;">Análisis facial · 468 puntos · Resultado en 2s</div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.08em;">Syne 500 · 14px — Body / Subtitles</span>
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#C9A84C;">VISAGISMO · IA · BARBERÍA</div>
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.08em;">Syne 700 · 10px uppercase · Gold — Labels / Taglines</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

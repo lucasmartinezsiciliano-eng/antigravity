@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #050a14;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 56px;
+  }
+
+  .tag {
+    font-size: 22px; font-weight: 700; letter-spacing: 4px;
+    color: #fd79a8; text-transform: uppercase; margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 60px; font-weight: 900; color: #fff;
+    text-align: center; line-height: 1.1; margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 26px; color: rgba(255,255,255,0.4);
+    margin-bottom: 44px; text-align: center;
+  }
+  .subtitle span { color: #fd79a8; font-weight: 700; }
+
+  /* Sunday schedule */
+  .day-header {
+    width: 100%;
+    background: linear-gradient(90deg, rgba(253,121,168,0.15), rgba(124,111,255,0.15));
+    border: 1.5px solid rgba(253,121,168,0.3);
+    border-radius: 20px;
+    padding: 22px 36px;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .day-header .day { font-size: 44px; font-weight: 900; color: #fd79a8; }
+  .day-header .sub { font-size: 22px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+  .schedule { width: 100%; display: flex; flex-direction: column; gap: 16px; }
+
+  .s-row {
+    display: flex; align-items: center; gap: 24px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px 28px;
+  }
+
+  .s-time {
+    font-size: 26px; font-weight: 900;
+    color: var(--c);
+    width: 90px; flex-shrink: 0;
+    text-align: center;
+  }
+  .s-divider {
+    width: 2px; height: 48px;
+    background: var(--c);
+    opacity: 0.3;
+    flex-shrink: 0;
+    border-radius: 100px;
+  }
+  .s-info { flex: 1; }
+  .s-agent { font-size: 19px; font-weight: 700; color: var(--c); margin-bottom: 4px; }
+  .s-task { font-size: 24px; font-weight: 700; color: #fff; }
+  .s-output { font-size: 19px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+  /* Result */
+  .result-box {
+    width: 100%;
+    background: rgba(74,240,196,0.07);
+    border: 2px solid rgba(74,240,196,0.3);
+    border-radius: 20px;
+    padding: 30px 36px;
+    margin-top: 8px;
+    display: flex; gap: 24px; align-items: center;
+  }
+  .result-icon { font-size: 52px; }
+  .result-info .result-title { font-size: 30px; font-weight: 900; color: #4af0c4; }
+  .result-info .result-desc { font-size: 22px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+  .platforms {
+    display: flex; gap: 16px; margin-top: 20px; width: 100%;
+  }
+  .platform {
+    flex: 1; text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 18px 8px;
+    font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.6);
+  }
+  .platform span { display: block; font-size: 34px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+  <div class="tag">Centrum · Contenido</div>
+  <h1>25 vídeos<br>en <span style="color:#fd79a8">1 día</span></h1>
+  <div class="subtitle">Producción <span>100% automática</span> cada domingo</div>
+
+  <div class="day-header">
+    <div class="day">DOMINGO</div>
+    <div class="sub">Producción semanal completa</div>
+  </div>
+
+  <div class="schedule">
+
+    <div class="s-row" style="--c:#fd79a8">
+      <div class="s-time">SAB<br>22h</div>
+      <div class="s-divider"></div>
+      <div class="s-info">
+        <div class="s-agent">content-optimizer</div>
+        <div class="s-task">Analiza métricas semana</div>
+        <div class="s-output">Los mejores vídeos dictan el nuevo estilo</div>
+      </div>
+    </div>
+
+    <div class="s-row" style="--c:#ffd93d">
+      <div class="s-time">08:00</div>
+      <div class="s-divider"></div>
+      <div class="s-info">
+        <div class="s-agent">tiktok-scriptwriter</div>
+        <div class="s-task">Genera ~25 scripts</div>
+        <div class="s-output">Orgánico + ads por separado</div>
+      </div>
+    </div>
+
+    <div class="s-row" style="--c:#a29bfe">
+      <div class="s-time">10:00</div>
+      <div class="s-divider"></div>
+      <div class="s-info">
+        <div class="s-agent">frame-generator</div>
+        <div class="s-task">DGX Spark · ~6 horas</div>
+        <div class="s-output">Frames + avatar LoRA + Flux</div>
+      </div>
+    </div>
+
+    <div class="s-row" style="--c:#4af0c4">
+      <div class="s-time">16:00</div>
+      <div class="s-divider"></div>
+      <div class="s-info">
+        <div class="s-agent">talking-head + video-assembler</div>
+        <div class="s-task">Edición en paralelo</div>
+        <div class="s-output">LivePortrait + Creatomate</div>
+      </div>
+    </div>
+
+    <div class="s-row" style="--c:#ff9f43">
+      <div class="s-time">20:00</div>
+      <div class="s-divider"></div>
+      <div class="s-info">
+        <div class="s-agent">social-poster</div>
+        <div class="s-task">Carga la cola semanal</div>
+        <div class="s-output">25 vídeos · horario L–V automático</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="result-box">
+    <div class="result-icon">🚀</div>
+    <div class="result-info">
+      <div class="result-title">Lunes 08:00 — todo publicándose</div>
+      <div class="result-desc">Sin intervención manual toda la semana</div>
+    </div>
+  </div>
+
+  <div class="platforms">
+    <div class="platform"><span>🎵</span>TikTok</div>
+    <div class="platform"><span>📸</span>Instagram</div>
+    <div class="platform"><span>👥</span>Facebook</div>
+  </div>
+
+</body>
+</html>

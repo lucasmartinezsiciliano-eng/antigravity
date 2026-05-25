@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #050a14;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 60px;
+  }
+
+  .tag {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #4af0c4;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-size: 68px;
+    font-weight: 900;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 70px;
+  }
+  h1 span { color: #4af0c4; }
+
+  .funnel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(74,240,196,0.2);
+    border-radius: 20px;
+    padding: 30px 40px;
+    width: 100%;
+    position: relative;
+  }
+  .step.highlight {
+    background: rgba(74,240,196,0.08);
+    border-color: #4af0c4;
+  }
+
+  .icon {
+    font-size: 52px;
+    flex-shrink: 0;
+  }
+
+  .step-content { flex: 1; }
+  .step-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .step-desc {
+    font-size: 24px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.4;
+  }
+  .step-badge {
+    font-size: 20px;
+    font-weight: 700;
+    color: #050a14;
+    background: #4af0c4;
+    padding: 6px 16px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .arrow {
+    font-size: 36px;
+    color: #4af0c4;
+    margin: 4px 0;
+    text-align: center;
+  }
+
+  .sources {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+  .source {
+    flex: 1;
+    text-align: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 22px 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+  }
+  .source span { display: block; font-size: 36px; margin-bottom: 6px; }
+
+  .footer {
+    margin-top: 48px;
+    font-size: 26px;
+    color: rgba(255,255,255,0.3);
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="tag">Centrum · Embudo</div>
+  <h1>De deudor<br>a <span>cita confirmada</span><br>en 5 minutos</h1>
+
+  <div class="sources">
+    <div class="source"><span>🔍</span>Google Ads</div>
+    <div class="source"><span>📱</span>Meta Ads</div>
+    <div class="source"><span>🎵</span>TikTok</div>
+  </div>
+
+  <div class="funnel">
+    <div class="arrow">↓</div>
+
+    <div class="step">
+      <div class="icon">🌐</div>
+      <div class="step-content">
+        <div class="step-title">Web Centrum</div>
+        <div class="step-desc">Landing + quiz 4 preguntas</div>
+      </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step highlight">
+      <div class="icon">📞</div>
+      <div class="step-content">
+        <div class="step-title">Call IA automática</div>
+        <div class="step-desc">Voz ultrarrealista · Extrae 13 datos</div>
+      </div>
+      <div class="step-badge">&lt; 2 min</div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step">
+      <div class="icon">📅</div>
+      <div class="step-content">
+        <div class="step-title">Cita reservada</div>
+        <div class="step-desc">Google Calendar automático</div>
+      </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step">
+      <div class="icon">📨</div>
+      <div class="step-content">
+        <div class="step-title">Notificaciones</div>
+        <div class="step-desc">WhatsApp al lead · Telegram al asesor</div>
+      </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="step highlight">
+      <div class="icon">🤝</div>
+      <div class="step-content">
+        <div class="step-title">Consulta gratuita</div>
+        <div class="step-desc">Asesor con ficha de 13 puntos lista</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">centrum-vivienda.com</div>
+
+</body>
+</html>

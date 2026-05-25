@@ -163,7 +163,7 @@ def create_upsell_checkout_session(
 # ---------------------------------------------------------------------------
 def get_or_create_base_coupon() -> str:
     """
-    Get or create the base €1 off coupon that all barber promo codes reference.
+    Get or create the base €2 off coupon that all barber promo codes reference.
     Returns the coupon ID. Should be called once at setup.
     """
     if settings.STRIPE_BASE_COUPON_ID:

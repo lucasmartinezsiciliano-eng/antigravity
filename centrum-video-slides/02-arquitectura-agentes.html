@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #050a14;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 70px 50px 60px;
+  }
+
+  .tag {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #7c6fff;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: 60px;
+    font-weight: 900;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    font-size: 28px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 50px;
+    text-align: center;
+  }
+  .subtitle span { color: #7c6fff; font-weight: 700; }
+
+  /* Central orchestrator */
+  .orchestrator {
+    background: linear-gradient(135deg, #7c6fff, #4af0c4);
+    border-radius: 20px;
+    padding: 28px 50px;
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  .orchestrator .label { font-size: 20px; color: rgba(0,0,0,0.6); font-weight: 700; letter-spacing: 2px; }
+  .orchestrator .name { font-size: 34px; font-weight: 900; color: #050a14; margin-top: 4px; }
+
+  .arrow-center {
+    font-size: 32px;
+    color: rgba(255,255,255,0.3);
+    margin: 6px 0;
+    text-align: center;
+  }
+
+  /* Grid of blocks */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .block {
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--color);
+  }
+
+  .block-icon { font-size: 34px; margin-bottom: 8px; }
+  .block-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .block-agents {
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+  }
+  .block-agents span {
+    color: var(--color);
+    font-weight: 700;
+  }
+
+  .total-badge {
+    margin-top: 24px;
+    background: rgba(124,111,255,0.15);
+    border: 1.5px solid rgba(124,111,255,0.4);
+    border-radius: 100px;
+    padding: 16px 48px;
+    font-size: 30px;
+    font-weight: 900;
+    color: #7c6fff;
+    text-align: center;
+  }
+  .total-badge span { color: #fff; }
+</style>
+</head>
+<body>
+
+  <div class="tag">Centrum · Sistema</div>
+  <h1>98 agentes<br>de IA</h1>
+  <div class="subtitle">coordinados en <span>10 bloques</span></div>
+
+  <div class="orchestrator">
+    <div class="label">ORQUESTADOR CENTRAL</div>
+    <div class="name">centrum-orchestrator</div>
+  </div>
+
+  <div class="arrow-center">↓ distribuye tareas ↓</div>
+
+  <div class="grid">
+
+    <div class="block" style="--color:#4af0c4">
+      <div class="block-icon">🎯</div>
+      <div class="block-name">Captación</div>
+      <div class="block-agents"><span>26</span> agentes · scripts + vídeo</div>
+    </div>
+
+    <div class="block" style="--color:#ff6b6b">
+      <div class="block-icon">📊</div>
+      <div class="block-name">Inteligencia</div>
+      <div class="block-agents"><span>8</span> agentes · mercado + ley</div>
+    </div>
+
+    <div class="block" style="--color:#ffd93d">
+      <div class="block-icon">🔍</div>
+      <div class="block-name">Lead/Conversión</div>
+      <div class="block-agents"><span>8</span> agentes · DM + call</div>
+    </div>
+
+    <div class="block" style="--color:#4ecdc4">
+      <div class="block-icon">📋</div>
+      <div class="block-name">Intake</div>
+      <div class="block-agents"><span>9</span> agentes · ficha + contexto</div>
+    </div>
+
+    <div class="block" style="--color:#7c6fff">
+      <div class="block-icon">📄</div>
+      <div class="block-name">Documentación</div>
+      <div class="block-agents"><span>7</span> agentes · contratos</div>
+    </div>
+
+    <div class="block" style="--color:#ff9f43">
+      <div class="block-icon">🧠</div>
+      <div class="block-name">Análisis caso</div>
+      <div class="block-agents"><span>8</span> agentes · jurídico</div>
+    </div>
+
+    <div class="block" style="--color:#a29bfe">
+      <div class="block-icon">💡</div>
+      <div class="block-name">Estrategia</div>
+      <div class="block-agents"><span>10</span> agentes · soluciones</div>
+    </div>
+
+    <div class="block" style="--color:#55efc4">
+      <div class="block-icon">💬</div>
+      <div class="block-name">Comunicaciones</div>
+      <div class="block-agents"><span>8</span> agentes · email + WA</div>
+    </div>
+
+    <div class="block" style="--color:#fd79a8">
+      <div class="block-icon">🔄</div>
+      <div class="block-name">Seguimiento</div>
+      <div class="block-agents"><span>7</span> agentes · CRM</div>
+    </div>
+
+    <div class="block" style="--color:#b2bec3">
+      <div class="block-icon">📈</div>
+      <div class="block-name">Analytics + Ops</div>
+      <div class="block-agents"><span>11</span> agentes · métricas + salud</div>
+    </div>
+
+  </div>
+
+  <div class="total-badge"><span>98</span> agentes · coste IA: <span>€0</span>/mes</div>
+
+</body>
+</html>

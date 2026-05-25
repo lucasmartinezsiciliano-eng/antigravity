@@ -1,0 +1,26 @@
+$^NDX: possibly delisted; no price data found  (period=60d)
+$^NDX: possibly delisted; no price data found  (period=60d)
+ERROR:    [Errno 10048] error while attempting to bind on address ('0.0.0.0', 8000): [winerror 10048] solo se permite un uso de cada dirección de socket (protocolo/dirección de red/puerto)
+
+=======================================================
+  IFVG Trading Cockpit — v2
+  Dashboard: http://localhost:8000/dashboard
+  Ctrl+C para parar
+=======================================================
+
+[RESTORE] Estado FAILED sincronizado desde último snapshot
+[SCHEDULER] Morning bias scheduler started (8:25 ET daily — auto-apply)
+[TELEGRAM] Daily report scheduler started (8:31 + 16:15 ET)
+[PAPER-REVIEW] Informe de 4 semanas programado para 2026-05-30
+ERROR:    [Errno 10048] error while attempting to bind on address ('0.0.0.0', 8000): [winerror 10048] solo se permite un uso de cada dirección de socket (protocolo/dirección de red/puerto)
+
+=======================================================
+  IFVG Trading Cockpit — v2
+  Dashboard: http://localhost:8000/dashboard
+  Ctrl+C para parar
+=======================================================
+
+[RESTORE] Estado FAILED sincronizado desde último snapshot
+[SCHEDULER] Morning bias scheduler started (8:25 ET daily — auto-apply)
+[TELEGRAM] Daily report scheduler started (8:31 + 16:15 ET)
+[PAPER-REVIEW] Informe de 4 semanas programado para 2026-05-30

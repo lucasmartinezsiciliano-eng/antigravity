@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #050a14;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 60px;
+  }
+
+  .tag {
+    font-size: 22px; font-weight: 700; letter-spacing: 4px;
+    color: #ffd93d; text-transform: uppercase; margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 64px; font-weight: 900; color: #fff;
+    text-align: center; line-height: 1.1; margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 26px; color: rgba(255,255,255,0.4);
+    margin-bottom: 52px; text-align: center;
+  }
+  .subtitle span { color: #ffd93d; font-weight: 700; }
+
+  .timeline { width: 100%; position: relative; }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 52px; top: 30px; bottom: 30px;
+    width: 3px;
+    background: linear-gradient(to bottom, #ffd93d, #4af0c4);
+    border-radius: 100px;
+  }
+
+  .t-step {
+    display: flex; gap: 36px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .t-step:last-child { margin-bottom: 0; }
+
+  .t-dot {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--c);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 6px rgba(5,10,20,1), 0 0 0 8px var(--c);
+  }
+
+  .t-card {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 22px 28px;
+  }
+  .t-card.active {
+    background: rgba(255,217,61,0.07);
+    border-color: rgba(255,217,61,0.3);
+  }
+
+  .t-num {
+    font-size: 18px; font-weight: 700;
+    color: var(--c); letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .t-title {
+    font-size: 28px; font-weight: 800; color: #fff;
+    margin-bottom: 6px;
+  }
+  .t-desc { font-size: 21px; color: rgba(255,255,255,0.5); line-height: 1.4; }
+  .t-desc strong { color: rgba(255,255,255,0.8); }
+
+  .badge {
+    display: inline-block;
+    background: var(--c);
+    color: #050a14;
+    font-size: 18px; font-weight: 800;
+    padding: 5px 16px; border-radius: 100px;
+    margin-top: 8px;
+  }
+
+  .bottom-note {
+    margin-top: 36px;
+    background: rgba(74,240,196,0.07);
+    border: 1.5px solid rgba(74,240,196,0.25);
+    border-radius: 18px;
+    padding: 28px 36px;
+    width: 100%;
+    text-align: center;
+  }
+  .bottom-note .big { font-size: 32px; font-weight: 900; color: #4af0c4; margin-bottom: 6px; }
+  .bottom-note .small { font-size: 22px; color: rgba(255,255,255,0.5); }
+</style>
+</head>
+<body>
+
+  <div class="tag">Centrum · Call IA</div>
+  <h1>La llamada<br>que <span style="color:#ffd93d">cierra sola</span></h1>
+  <div class="subtitle">De lead a cita en <span>&lt; 5 minutos</span></div>
+
+  <div class="timeline">
+
+    <div class="t-step">
+      <div class="t-dot" style="--c:#ffd93d">📝</div>
+      <div class="t-card">
+        <div class="t-num" style="--c:#ffd93d">Paso 1</div>
+        <div class="t-title">Lead rellena el quiz</div>
+        <div class="t-desc">4 preguntas · 60 segundos</div>
+      </div>
+    </div>
+
+    <div class="t-step">
+      <div class="t-dot" style="--c:#ff9f43">⚡</div>
+      <div class="t-card">
+        <div class="t-num" style="--c:#ff9f43">Paso 2</div>
+        <div class="t-title">call-prep prepara contexto</div>
+        <div class="t-desc">Datos quiz → system prompt para la IA</div>
+      </div>
+    </div>
+
+    <div class="t-step">
+      <div class="t-dot" style="--c:#ff6b6b">📞</div>
+      <div class="t-card active">
+        <div class="t-num" style="--c:#ff6b6b">Paso 3 · CLAVE</div>
+        <div class="t-title">IA llama al lead</div>
+        <div class="t-desc"><strong>Voz femenina ultrarrealista</strong><br>Ruido de oficina · No suena a robot</div>
+        <div class="badge" style="--c:#ff6b6b">&lt; 2 min desde el form</div>
+      </div>
+    </div>
+
+    <div class="t-step">
+      <div class="t-dot" style="--c:#a29bfe">🧠</div>
+      <div class="t-card">
+        <div class="t-num" style="--c:#a29bfe">Paso 4</div>
+        <div class="t-title">Extrae 13 datos clave</div>
+        <div class="t-desc">Banco · Cuotas · Valor piso · Situación laboral · Urgencia · Ventana horaria...</div>
+      </div>
+    </div>
+
+    <div class="t-step">
+      <div class="t-dot" style="--c:#4af0c4">📅</div>
+      <div class="t-card">
+        <div class="t-num" style="--c:#4af0c4">Paso 5</div>
+        <div class="t-title">Google Calendar MCP</div>
+        <div class="t-desc">Consulta agenda · Reserva el hueco automáticamente</div>
+      </div>
+    </div>
+
+    <div class="t-step">
+      <div class="t-dot" style="--c:#55efc4">📬</div>
+      <div class="t-card">
+        <div class="t-num" style="--c:#55efc4">Paso 6</div>
+        <div class="t-title">Notificaciones automáticas</div>
+        <div class="t-desc"><strong>Lead:</strong> WhatsApp con fecha y hora<br><strong>Asesor:</strong> Telegram con ficha completa</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-note">
+    <div class="big">Asesor llega con todo preparado</div>
+    <div class="small">Solo tiene que escuchar y cerrar</div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #050a14;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 60px;
+  }
+
+  .tag {
+    font-size: 22px; font-weight: 700; letter-spacing: 4px;
+    color: #ff6b6b; text-transform: uppercase; margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 62px; font-weight: 900; color: #fff;
+    text-align: center; line-height: 1.1; margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 26px; color: rgba(255,255,255,0.4);
+    margin-bottom: 52px; text-align: center;
+  }
+  .subtitle span { color: #ff6b6b; font-weight: 700; }
+
+  /* Hardware box */
+  .hw-box {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(124,111,255,0.15), rgba(74,240,196,0.08));
+    border: 2px solid rgba(124,111,255,0.5);
+    border-radius: 24px;
+    padding: 32px 40px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .hw-icon { font-size: 60px; }
+  .hw-info .hw-name { font-size: 34px; font-weight: 900; color: #fff; }
+  .hw-info .hw-spec { font-size: 22px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+  .hw-info .hw-spec span { color: #7c6fff; font-weight: 700; }
+
+  /* Stack rows */
+  .stack-list { width: 100%; display: flex; flex-direction: column; gap: 18px; }
+
+  .row {
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 22px 32px;
+    gap: 24px;
+  }
+  .row-icon { font-size: 40px; width: 52px; text-align: center; flex-shrink: 0; }
+  .row-left { flex: 1; }
+  .row-role { font-size: 20px; color: rgba(255,255,255,0.4); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .row-tool { font-size: 28px; font-weight: 800; color: #fff; margin-top: 2px; }
+  .row-right { text-align: right; flex-shrink: 0; }
+  .price-zero { font-size: 28px; font-weight: 900; color: #4af0c4; }
+  .price-low { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.5); }
+
+  .divider {
+    width: 100%; height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 4px 0;
+  }
+
+  .total-row {
+    width: 100%;
+    background: rgba(74,240,196,0.07);
+    border: 2px solid rgba(74,240,196,0.3);
+    border-radius: 18px;
+    padding: 26px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 8px;
+  }
+  .total-label { font-size: 28px; font-weight: 800; color: rgba(255,255,255,0.7); }
+  .total-price { font-size: 42px; font-weight: 900; color: #4af0c4; }
+  .total-price sup { font-size: 26px; }
+</style>
+</head>
+<body>
+
+  <div class="tag">Centrum · Stack</div>
+  <h1>Todo el poder.<br><span style="color:#ff6b6b">Coste cero.</span></h1>
+  <div class="subtitle">Stack <span>100% open source</span> en local</div>
+
+  <div class="hw-box">
+    <div class="hw-icon">🖥️</div>
+    <div class="hw-info">
+      <div class="hw-name">NVIDIA DGX Spark</div>
+      <div class="hw-spec">GB10 · <span>128 GB</span> memoria unificada</div>
+      <div class="hw-spec">Todo corre aquí — en casa</div>
+    </div>
+  </div>
+
+  <div class="stack-list">
+
+    <div class="row">
+      <div class="row-icon">🧠</div>
+      <div class="row-left">
+        <div class="row-role">LLM · Cerebro</div>
+        <div class="row-tool">Gemma 4 (Google)</div>
+      </div>
+      <div class="row-right">
+        <div class="price-zero">€0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-icon">🤖</div>
+      <div class="row-left">
+        <div class="row-role">Motor call IA</div>
+        <div class="row-tool">Pipecat OSS</div>
+      </div>
+      <div class="row-right">
+        <div class="price-zero">€0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-icon">🎙️</div>
+      <div class="row-left">
+        <div class="row-role">Voz TTS</div>
+        <div class="row-tool">Chatterbox TTS</div>
+      </div>
+      <div class="row-right">
+        <div class="price-zero">€0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-icon">👂</div>
+      <div class="row-left">
+        <div class="row-role">Transcripción STT</div>
+        <div class="row-tool">Whisper Turbo</div>
+      </div>
+      <div class="row-right">
+        <div class="price-zero">€0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-icon">📞</div>
+      <div class="row-left">
+        <div class="row-role">Telefonía PBX</div>
+        <div class="row-tool">Asterisk OSS</div>
+      </div>
+      <div class="row-right">
+        <div class="price-zero">€0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-icon">🌐</div>
+      <div class="row-left">
+        <div class="row-role">Agentes IA</div>
+        <div class="row-tool">OpenClaw SDK</div>
+      </div>
+      <div class="row-right">
+        <div class="price-zero">€0</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-icon">📡</div>
+      <div class="row-left">
+        <div class="row-role">Carrier SIP (llamadas)</div>
+        <div class="row-tool">Vozelia</div>
+      </div>
+      <div class="row-right">
+        <div class="price-low">~€0.008/min</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="total-row">
+    <div class="total-label">Coste fijo IA/mes</div>
+    <div class="total-price"><sup>€</sup>0</div>
+  </div>
+
+</body>
+</html>
