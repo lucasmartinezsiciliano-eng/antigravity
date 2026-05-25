@@ -1,0 +1,97 @@
+# ───────────────────────────────────────────────────────────────────
+# Perfil Hermes: centrum
+# Orquestador principal del sistema Centrum de la Vivienda.
+# Mariano lo usa vía Telegram. Delega en sub-agentes especialistas.
+# ───────────────────────────────────────────────────────────────────
+
+model:
+  default: "gemma-4-31B-it"
+  provider: "openai"              # vLLM expone endpoint OpenAI-compatible
+  base_url: "http://localhost:8003/v1"
+  context_length: 131072          # debe coincidir con --max-model-len en vllm-load-max.sh
+
+terminal:
+  backend: "local"
+  timeout: 180
+
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 2200
+
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+
+agent:
+  max_turns: 90
+  api_max_retries: 3
+  reasoning_effort: "medium"
+  tool_use_enforcement: "auto"
+
+delegation:
+  model: ""                       # sub-agentes heredan gemma-4-31B por defecto
+  provider: "openai"
+  base_url: "http://localhost:8003/v1"
+  max_concurrent_children: 3
+  max_spawn_depth: 2              # orquestador → director → especialista
+  orchestrator_enabled: true
+
+display:
+  language: "es"
+  tool_progress: "all"
+  show_cost: true
+  platforms:
+    telegram:
+      tool_progress: "verbose"
+
+security:
+  tirith_enabled: true
+  redact_secrets: true
+
+approvals:
+  mode: "smart"                   # pide confirmación en acciones de alto impacto
+                                  # (envío email/WhatsApp, modificación caso, cierre, etc.)
+
+# Skills cargadas siempre en este perfil
+skills:
+  active:
+    - governance/guardrails
+    - centrum/3-reglas
+    - centrum/8-estrategias
+    - centrum/perfil-deudor
+    - centrum/clasificacion-ae
+
+# Tools habilitadas
+tools:
+  filesystem:
+    enabled: true
+    allowed_paths:
+      - "~/.hermes/profiles/centrum/cases"
+      - "~/.hermes/profiles/centrum/memories"
+      - "~/.hermes/profiles/centrum/workspace"
+      - "/tmp/centrum-*"
+  telegram:
+    enabled: true
+  delegation:
+    enabled: true
+  web_search:
+    enabled: false                # no necesario en el orchestrator
+  web_fetch:
+    enabled: true
+    # Sub-agentes llaman APIs externas directamente — sin n8n intermediario
+    allowed_domains:
+      - "graph.facebook.com"          # IG DM + Graph API (dm-qualifier, auto-responder)
+      - "open.tiktokapis.com"          # TikTok DM API (dm-qualifier)
+      - "api.twilio.com"               # WhatsApp (whatsapp-sender, previa aprobación)
+      - "smtp.gmail.com"               # Email Centrum (email-sender)
+      - "www.googleapis.com"           # Google Calendar (call-prep)
+
+# Gateway Telegram para Mariano
+gateway:
+  telegram:
+    enabled: true
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+    chat_id_env: "TELEGRAM_CHAT_ID"
+    admin_chat_id_env: "TELEGRAM_CHAT_ID_LUCAS"

@@ -37,8 +37,10 @@ nohup python3 -m vllm.entrypoints.openai.api_server \
     --port 8001 \
     --host 0.0.0.0 \
     --dtype bfloat16 \
-    --max-model-len 16384 \
+    --max-model-len 32768 \
     --gpu-memory-utilization 0.25 \
+    --enable-auto-tool-choice \
+    --tool-call-parser gemma4 \
     --served-model-name "gemma-4-E4B-it" \
     > "$LOG_DIR/nano-e4b.log" 2>&1 &
 echo "  PID: $!" && echo $! > /tmp/vllm-nano.pid
@@ -54,8 +56,10 @@ nohup python3 -m vllm.entrypoints.openai.api_server \
     --port 8002 \
     --host 0.0.0.0 \
     --dtype bfloat16 \
-    --max-model-len 32768 \
+    --max-model-len 65536 \
     --gpu-memory-utilization 0.42 \
+    --enable-auto-tool-choice \
+    --tool-call-parser gemma4 \
     --served-model-name "gemma-4-26B-A4B-it" \
     > "$LOG_DIR/pro-26b.log" 2>&1 &
 echo "  PID: $!" && echo $! > /tmp/vllm-pro.pid

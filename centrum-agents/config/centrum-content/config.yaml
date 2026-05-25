@@ -1,0 +1,97 @@
+# ───────────────────────────────────────────────────────────────────
+# Perfil Hermes: centrum-content
+# Producción de contenido para los 3 canales (TikTok, Meta, Google).
+# Batch dominical 25 vídeos/semana + copy ads + variaciones de ganadores.
+# ───────────────────────────────────────────────────────────────────
+
+model:
+  default: "gemma-4-26B-A4B-it"
+  provider: "openai"              # vLLM expone endpoint OpenAI-compatible
+  base_url: "http://localhost:8002/v1"
+  context_length: 65536           # debe coincidir con --max-model-len en vllm-start.sh (Pro)
+
+terminal:
+  backend: "local"
+  timeout: 180
+
+memory:
+  memory_enabled: true
+  user_profile_enabled: false
+  memory_char_limit: 2200
+
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+
+agent:
+  max_turns: 90
+  api_max_retries: 3
+  reasoning_effort: "medium"      # los guiones necesitan algo más de cuidado que scraping
+  tool_use_enforcement: "auto"
+
+delegation:
+  model: ""                       # sub-roles heredan Gemma 4 26B por defecto
+  provider: "openai"
+  base_url: "http://localhost:8002/v1"
+  max_concurrent_children: 3      # batch alto pero controlado
+  max_spawn_depth: 2
+  orchestrator_enabled: true
+  # tiktok-hook-specialist y tiktok-scriptwriter pueden subir a Max (puerto 8003)
+  # cuando se necesite más calidad → ajustar en SOUL.md del perfil si hace falta
+
+display:
+  language: "es"
+  tool_progress: "concise"
+  show_cost: true
+
+security:
+  tirith_enabled: true
+  redact_secrets: true
+
+approvals:
+  mode: "smart"                   # los temas nuevos requieren OK de Mariano antes de publicar
+
+# Skills cargadas
+skills:
+  active:
+    - governance/guardrails
+    - centrum/3-reglas
+    - centrum/8-estrategias
+    - centrum/perfil-deudor
+
+# Tools habilitadas
+tools:
+  filesystem:
+    enabled: true
+    allowed_paths:
+      - "~/.hermes/profiles/centrum-content/batch"
+      - "~/.hermes/profiles/centrum-content/scripts"
+      - "~/.hermes/profiles/centrum-content/memories"
+      - "/tmp/centrum-content-*"
+  web_search:
+    enabled: true                  # para keyword research, trend research
+  web_fetch:
+    enabled: true
+    allowed_domains:
+      - "graph.facebook.com"
+      - "business.facebook.com"
+      - "open.tiktokapis.com"
+      - "googleads.googleapis.com"
+      - "ads.google.com"
+      - "openrouter.ai"
+  delegation:
+    enabled: true
+
+# Sin gateway interactivo — funciona en modo batch
+gateway:
+  telegram:
+    enabled: false
+
+# Modo batch
+batch:
+  enabled: true
+  weekly_target:
+    tiktok_scripts: 25
+    meta_copies: 10
+    google_rsa: 5

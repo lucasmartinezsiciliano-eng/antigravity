@@ -28,8 +28,10 @@ case "$ACTION" in
         --port 8003 \
         --host 0.0.0.0 \
         --dtype bfloat16 \
-        --max-model-len 32768 \
+        --max-model-len 131072 \
         --gpu-memory-utilization 0.50 \
+        --enable-auto-tool-choice \
+        --tool-call-parser gemma4 \
         --served-model-name "gemma-4-31B-it" \
         > "$LOG_DIR/max-31b.log" 2>&1 &
     echo $! > "$PID_FILE"

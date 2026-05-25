@@ -1,0 +1,100 @@
+# ───────────────────────────────────────────────────────────────────
+# Perfil Hermes: centrum-intel
+# Inteligencia externa de Centrum. Corre autónomo vía cron diario.
+# Monitoriza mercado, leyes, competencia, avatar, trends, tech.
+# ───────────────────────────────────────────────────────────────────
+
+model:
+  default: "gemma-4-26B-A4B-it"
+  provider: "openai"              # vLLM expone endpoint OpenAI-compatible
+  base_url: "http://localhost:8002/v1"
+  context_length: 65536           # debe coincidir con --max-model-len en vllm-start.sh (Pro)
+
+terminal:
+  backend: "local"
+  timeout: 180
+
+memory:
+  memory_enabled: true
+  user_profile_enabled: false     # no hay usuario operativo — corre solo
+  memory_char_limit: 2200
+
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+
+agent:
+  max_turns: 90
+  api_max_retries: 3
+  reasoning_effort: "low"         # scraping/resúmenes, no requiere razonamiento profundo
+  tool_use_enforcement: "auto"
+
+delegation:
+  model: ""                       # sub-roles heredan Gemma 4 26B por defecto
+  provider: "openai"
+  base_url: "http://localhost:8002/v1"
+  max_concurrent_children: 3
+  max_spawn_depth: 2
+  orchestrator_enabled: true
+  # law-tracker usa Max (31B, puerto 8003) para sentencias complejas
+  # → configurar explícitamente en el SOUL.md del rol cuando sea necesario
+
+display:
+  language: "es"
+  tool_progress: "concise"
+  show_cost: true
+
+security:
+  tirith_enabled: true
+  redact_secrets: true
+
+approvals:
+  mode: "auto"                    # autónomo — solo escala vía Telegram a Lucas si hay anomalía
+
+# Skills cargadas
+skills:
+  active:
+    - governance/guardrails
+    - centrum/3-reglas
+    - centrum/8-estrategias
+    - centrum/perfil-deudor
+    - media/youtube-content          # built-in Hermes — transcripción + análisis YouTube
+
+# Tools habilitadas
+tools:
+  filesystem:
+    enabled: true
+    allowed_paths:
+      - "~/.hermes/profiles/centrum-intel/observations"
+      - "~/.hermes/profiles/centrum-intel/memories"
+      - "/tmp/centrum-intel-*"
+  web_search:
+    enabled: true
+  web_fetch:
+    enabled: true
+    allowed_domains:
+      - "boe.es"
+      - "ine.es"
+      - "bde.es"
+      - "poderjudicial.es"
+      - "cendoj.poderjudicial.es"
+      - "subastas.boe.es"
+      - "idealista.com"
+      - "fotocasa.es"
+      - "facebook.com"
+      - "reddit.com"
+      - "tiktok.com"
+      - "youtube.com"
+      - "rankia.com"
+      - "forocoches.com"
+      - "openrouter.ai"
+  telegram:
+    enabled: true                  # solo a Lucas, nunca a Mariano directamente
+  delegation:
+    enabled: true
+
+# Sin gateway — corre vía cron, no escucha mensajes entrantes
+gateway:
+  telegram:
+    enabled: false
