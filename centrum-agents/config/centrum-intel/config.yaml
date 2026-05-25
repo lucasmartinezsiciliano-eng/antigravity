@@ -18,6 +18,9 @@ memory:
   memory_enabled: true
   user_profile_enabled: false     # no hay usuario operativo — corre solo
   memory_char_limit: 2200
+  provider: holographic           # SQLite local, HRR algebra, gratis, ilimitado
+  # Holographic reemplaza el límite de 2200 chars con recuperación semántica real
+  # Ideal para centrum-intel: acumula meses de observaciones sin límite de chars
 
 compression:
   enabled: true

@@ -52,6 +52,9 @@ mkdir -p "$HERMES_HOME/skills/centrum/perfil-deudor"
 mkdir -p "$HERMES_HOME/skills/centrum/3-reglas"
 mkdir -p "$HERMES_HOME/skills/centrum/clasificacion-ae"
 mkdir -p "$HERMES_HOME/skills/centrum/youtube-intel"
+mkdir -p "$HERMES_HOME/skills/centrum/case-kanban"
+mkdir -p "$HERMES_HOME/skills/centrum/thinking-mode"
+mkdir -p "$HERMES_HOME/skills/centrum/case-agents-writer"
 
 # ── 3. Copiar skills compartidas ─────────────────────────────────────────────
 info "Copiando skills compartidas..."
@@ -61,18 +64,90 @@ cp "$SCRIPT_DIR/skills/centrum/8-estrategias/SKILL.md"     "$HERMES_HOME/skills/
 cp "$SCRIPT_DIR/skills/centrum/perfil-deudor/SKILL.md"     "$HERMES_HOME/skills/centrum/perfil-deudor/SKILL.md"
 cp "$SCRIPT_DIR/skills/centrum/3-reglas/SKILL.md"          "$HERMES_HOME/skills/centrum/3-reglas/SKILL.md"
 cp "$SCRIPT_DIR/skills/centrum/clasificacion-ae/SKILL.md"  "$HERMES_HOME/skills/centrum/clasificacion-ae/SKILL.md"
-cp "$SCRIPT_DIR/skills/centrum/youtube-intel/SKILL.md"     "$HERMES_HOME/skills/centrum/youtube-intel/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/youtube-intel/SKILL.md"        "$HERMES_HOME/skills/centrum/youtube-intel/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/case-kanban/SKILL.md"          "$HERMES_HOME/skills/centrum/case-kanban/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/thinking-mode/SKILL.md"        "$HERMES_HOME/skills/centrum/thinking-mode/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/case-agents-writer/SKILL.md"   "$HERMES_HOME/skills/centrum/case-agents-writer/SKILL.md"
 
 # La constitución también vive como skill (cargada por todos los perfiles)
 cp "$SCRIPT_DIR/CENTRUM-GUARDRAILS.md" "$HERMES_HOME/skills/governance/guardrails/CENTRUM-GUARDRAILS.md"
 
-ok "6 skills compartidas instaladas en $HERMES_HOME/skills/"
+ok "9 skills instaladas en $HERMES_HOME/skills/"
+
+# Inicializar Kanban board para pipeline de casos
+if command -v hermes &> /dev/null; then
+    info "Inicializando Kanban board centrum-cases..."
+    hermes kanban init 2>/dev/null || true
+    hermes kanban boards create centrum-cases \
+        --name "Pipeline de Casos Centrum" \
+        --icon "🏠" \
+        --switch 2>/dev/null \
+        && ok "Kanban board centrum-cases creado" \
+        || info "Kanban board ya existe o requiere gateway activo"
+fi
 
 # Instalar youtube-transcript-api (dependencia del built-in media/youtube-content)
 info "Instalando dependencia youtube-transcript-api..."
 python3 -m pip install --user youtube-transcript-api yt-dlp 2>/dev/null \
     && ok "youtube-transcript-api + yt-dlp instalados" \
     || warn "No se pudo instalar youtube-transcript-api — instalar manualmente antes del deploy"
+
+# ── PLUR — memoria compartida entre perfiles (cross-agent engrams) ───────────
+# Benchmark: Haiku+PLUR supera a Opus sin PLUR (2.6x mejor, 10x más barato)
+# Los engrams aprendidos en centrum-intel (patrones de mercado, clientes) se
+# propagan automáticamente a centrum y centrum-content.
+info "Instalando PLUR (cross-agent memory)..."
+if command -v node &> /dev/null && command -v npm &> /dev/null; then
+    python3 -m pip install --user plur-hermes==0.9.4 2>/dev/null \
+        && ok "plur-hermes instalado" \
+        || warn "pip install plur-hermes falló — instalar manualmente"
+
+    npm install -g @plur-ai/cli@0.9.4 2>/dev/null \
+        && ok "@plur-ai/cli instalado" \
+        || warn "npm install @plur-ai/cli falló — instalar manualmente"
+
+    # Inicializar PLUR para el proyecto Centrum
+    mkdir -p "$HOME/.plur"
+    if [[ ! -f "$HOME/.plur/config.yaml" ]]; then
+        cat > "$HOME/.plur/config.yaml" <<'PLUREOF'
+domain: centrum
+scope_hierarchy:
+  - global
+  - project:centrum
+  - project:centrum-intel
+  - project:centrum-content
+
+index: true   # SQLite index para stores > 1k engrams
+
+# Decay model ACT-R: los engrams se debilitan sin uso
+decay:
+  half_life_days: 90
+  min_strength: 0.1
+
+sync:
+  enabled: false   # no sync en cloud — todo local en DGX Spark
+PLUREOF
+        ok "PLUR config creado en ~/.plur/config.yaml"
+    else
+        info "PLUR config ya existe — no se toca"
+    fi
+
+    # Registrar PLUR en cada perfil Hermes
+    for profile in "${PROFILES[@]}"; do
+        profile_dir="$HERMES_HOME/profiles/$profile"
+        mkdir -p "$profile_dir"
+        if [[ ! -f "$profile_dir/.plur.yaml" ]]; then
+            cat > "$profile_dir/.plur.yaml" <<PEOF
+domain: centrum
+scope: project:$profile
+PEOF
+            ok "PLUR scope configurado para $profile"
+        fi
+    done
+else
+    warn "Node.js no encontrado — instalar con: curl -fsSL https://deb.nodesource.com/setup_20.x | bash && apt-get install -y nodejs"
+    warn "Luego: pip install plur-hermes==0.9.4 && npm install -g @plur-ai/cli@0.9.4"
+fi
 
 # ── 4. Crear perfiles ────────────────────────────────────────────────────────
 for profile in "${PROFILES[@]}"; do
@@ -239,7 +314,10 @@ if command -v hermes &> /dev/null; then
         "centrum/8-estrategias" \
         "centrum/perfil-deudor" \
         "centrum/clasificacion-ae" \
-        "centrum/youtube-intel"
+        "centrum/youtube-intel" \
+        "centrum/case-kanban" \
+        "centrum/thinking-mode" \
+        "centrum/case-agents-writer"
     do
         hermes curator pin "$skill" 2>/dev/null \
             && ok "Pinned: $skill" \

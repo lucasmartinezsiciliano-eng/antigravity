@@ -9,6 +9,8 @@ model:
   provider: "openai"              # vLLM expone endpoint OpenAI-compatible
   base_url: "http://localhost:8003/v1"
   context_length: 131072          # debe coincidir con --max-model-len en vllm-load-max.sh
+  # NOTA: thinking mode desactivado por defecto en vLLM (--default-chat-template-kwargs)
+  # Para tareas de análisis puro (sin tools), activar per-request via extra_body
 
 terminal:
   backend: "local"
@@ -54,6 +56,19 @@ approvals:
   mode: "smart"                   # pide confirmación en acciones de alto impacto
                                   # (envío email/WhatsApp, modificación caso, cierre, etc.)
 
+# Kanban — pipeline durable de casos (SQLite, sobrevive reinicios DGX)
+# delegate_task = subtareas cortas en sesión | Kanban = casos multi-día, con humano en loop
+kanban:
+  orchestrator_profile: "centrum"
+  auto_decompose: false            # el orquestador descompone manualmente para control total
+  dispatch_interval_seconds: 60
+  failure_limit: 2                 # 2 fallos → auto-block → Mariano interviene
+  auxiliary:
+    kanban_decomposer:
+      provider: "openai"
+      base_url: "http://localhost:8003/v1"
+      model: "gemma-4-31B-it"
+
 # Skills cargadas siempre en este perfil
 skills:
   active:
@@ -62,6 +77,8 @@ skills:
     - centrum/8-estrategias
     - centrum/perfil-deudor
     - centrum/clasificacion-ae
+    - centrum/case-kanban           # cómo gestionar casos como cards Kanban
+    - centrum/thinking-mode         # cuándo activar razonamiento profundo sin tools
 
 # Tools habilitadas
 tools:

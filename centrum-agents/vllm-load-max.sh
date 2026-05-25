@@ -32,6 +32,7 @@ case "$ACTION" in
         --gpu-memory-utilization 0.50 \
         --enable-auto-tool-choice \
         --tool-call-parser gemma4 \
+        --default-chat-template-kwargs '{"enable_thinking": false}' \
         --served-model-name "gemma-4-31B-it" \
         > "$LOG_DIR/max-31b.log" 2>&1 &
     echo $! > "$PID_FILE"
