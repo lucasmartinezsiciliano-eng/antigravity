@@ -7,10 +7,10 @@ import { api } from "@/lib/api";
 type Selection = "esencial" | "completo";
 
 // ⚠️ Sync these with backend pricing when backend is updated
-const BASE_PRICE = 12.99;
-const BASE_PRICE_WITH_CODE = 10.99; // €2 off with barber code
-const COMPLETO_PRICE = 17.99;
-const COMPLETO_PRICE_WITH_CODE = 15.99;
+const BASE_PRICE = 16.99;
+const BASE_PRICE_WITH_CODE = 12.99; // €4 off with barber code
+const COMPLETO_PRICE = 21.99;
+const COMPLETO_PRICE_WITH_CODE = 17.99;
 
 function fmtEur(n: number) {
   return n.toFixed(2).replace(".", ",") + " €";

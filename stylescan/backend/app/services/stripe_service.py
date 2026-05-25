@@ -163,17 +163,17 @@ def create_upsell_checkout_session(
 # ---------------------------------------------------------------------------
 def get_or_create_base_coupon() -> str:
     """
-    Get or create the base €2 off coupon that all barber promo codes reference.
+    Get or create the base €4 off coupon that all barber promo codes reference.
     Returns the coupon ID. Should be called once at setup.
     """
     if settings.STRIPE_BASE_COUPON_ID:
         return settings.STRIPE_BASE_COUPON_ID
 
     coupon = stripe.Coupon.create(
-        amount_off=settings.BARBER_COMMISSION_CENTS,
+        amount_off=settings.BARBER_DISCOUNT_CENTS,
         currency="eur",
         duration="once",
-        name="Descuento colaborador barbería VISAI (-€2)",
+        name="Descuento colaborador barbería VISAI (-€4)",
         metadata={"program": "barbershop_affiliate"},
     )
     logger.info("Created base coupon: %s", coupon.id)

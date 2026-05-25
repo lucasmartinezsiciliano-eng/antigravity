@@ -48,12 +48,13 @@ class Settings(BaseSettings):
     STRIPE_BASE_COUPON_ID: str = ""  # Created once, all barber codes reference it
 
     # Pricing (in cents) — synced with web/app/add-ons/page.tsx
-    PRICE_BASE_ANALYSIS: int = 1299      # €12.99 (Esencial)
+    PRICE_BASE_ANALYSIS: int = 1699      # €16.99 (Esencial)
     PRICE_COLORIMETRY: int = 499         # €4.99
     PRICE_PRODUCTS_GUIDE: int = 299      # €2.99
-    PRICE_PACK_COMPLETE: int = 500       # €5.00 (colorimetría + guía juntos → base+pack = €17.99 Completo)
+    PRICE_PACK_COMPLETE: int = 500       # €5.00 (colorimetría + guía juntos → base+pack = €21.99 Completo)
     PRICE_SEASONAL: int = 499            # €4.99
-    BARBER_COMMISSION_CENTS: int = 200   # €2.00 descuento cliente + comisión barbero
+    BARBER_COMMISSION_CENTS: int = 300   # €3.00 comisión al barbero
+    BARBER_DISCOUNT_CENTS: int = 400     # €4.00 descuento al cliente con código barbero
 
     # Photo processing
     MAX_PHOTO_SIZE_MB: int = 10
