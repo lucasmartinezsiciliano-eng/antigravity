@@ -74,16 +74,22 @@ export default function AddOnsPage() {
       }
 
       const isLukiluu = (barberCode ?? "").toUpperCase() === "LUKILUU";
-      await doInitiate(isLukiluu ? undefined : (barberCode ?? undefined), isLukiluu);
+      // LUKILUU va al backend (crea análisis como "paid"), bypass=true solo cambia el redirect
+      await doInitiate(barberCode ?? undefined, isLukiluu);
       // Successfully redirecting — do NOT reset mutex (blocks double-click during navigation)
       return;
     } catch (e: any) {
       const msg: string = e.message || "Error al iniciar. Inténtalo de nuevo.";
       if (msg.toLowerCase().includes("barber") || msg.toLowerCase().includes("barbería") || msg.toLowerCase().includes("código")) {
-        // Stale/invalid barber code — clear it and inform user
-        storage.clearBarberCode();
-        setBarberCode(null);
-        setError("Tu código de barbería ya no es válido (se ha eliminado). Pulsa 'Continuar' de nuevo para pagar sin descuento.");
+        // LUKILUU is internal — never clear it as a stale barber code
+        if ((barberCode ?? "").toUpperCase() === "LUKILUU") {
+          setError(msg);
+        } else {
+          // Stale/invalid barber code — clear it and inform user
+          storage.clearBarberCode();
+          setBarberCode(null);
+          setError("Tu código de barbería ya no es válido (se ha eliminado). Pulsa 'Continuar' de nuevo para pagar sin descuento.");
+        }
       } else {
         const isNetworkErr = msg === "Load failed" || msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("network") || msg.toLowerCase().includes("aborted");
         setError(isNetworkErr
