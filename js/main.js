@@ -361,14 +361,22 @@ function initQuiz() {
     // Datos clave
     const kvsEl = document.getElementById(`r${px}-kvs`);
     if (kvsEl) {
-      kvsEl.innerHTML = [
+      kvsEl.innerHTML = '';
+      [
         { l: 'Hipoteca solicitada', v: fmt(s.hipoteca), s: 'LTV: ' + (px === 'A' ? '80' : '90') + '%' },
         { l: 'Cuota mensual est.', v: fmt(s.cuotaHip), s: s.plazo + ' años al 2,70%' },
         { l: 'DTI endeudamiento', v: sc.ingresosTotalesComp > 0 ? s.dti.toFixed(1) + '%' : '—', s: s.dtiResult.label },
         { l: 'Total necesario', v: fmt(s.totalNecesario), s: 'Entrada + ITP + notaría' },
         { l: 'Ahorros disponibles', v: fmt(sc.ahorros), s: s.suficiente ? '✓ Suficientes' : '⚠ Déficit ' + fmt(s.totalNecesario - sc.ahorros) },
         { l: 'ITP estimado', v: fmt(s.gastosITP), s: itpEf.itp + '% — ' + itpEf.ccaa },
-      ].map(c => `<div class="result-kv-item"><div class="result-kv-label">${c.l}</div><div class="result-kv-val">${c.v}</div><div class="result-kv-sub">${c.s}</div></div>`).join('');
+      ].forEach(c => {
+        const item = document.createElement('div'); item.className = 'result-kv-item';
+        const lbl  = document.createElement('div'); lbl.className  = 'result-kv-label'; lbl.textContent = c.l;
+        const val  = document.createElement('div'); val.className  = 'result-kv-val';   val.textContent = c.v;
+        const sub  = document.createElement('div'); sub.className  = 'result-kv-sub';   sub.textContent = c.s;
+        item.appendChild(lbl); item.appendChild(val); item.appendChild(sub);
+        kvsEl.appendChild(item);
+      });
     }
 
     // Alertas
@@ -387,7 +395,13 @@ function initQuiz() {
       if (s.global >= 75) recs.push({ cls: 'rec-ok', txt: 'Perfil sólido. Viable en la mayoría de entidades.' });
       else if (s.global >= 50) recs.push({ cls: 'rec-info', txt: 'Viable con matices. Mejorar puntos débiles.' });
       else recs.push({ cls: 'rec-alert', txt: 'Perfil de riesgo. Conviene mejorar antes de solicitar.' });
-      alertsEl.innerHTML = recs.map(r => `<p class="result-alert-item ${r.cls}">${r.txt}</p>`).join('');
+      alertsEl.innerHTML = '';
+      recs.forEach(r => {
+        const p = document.createElement('p');
+        p.className = 'result-alert-item ' + r.cls;
+        p.textContent = r.txt;
+        alertsEl.appendChild(p);
+      });
     }
   }
 
@@ -422,6 +436,7 @@ function initQuiz() {
       showToast('Teléfono no válido (9 dígitos, empieza por 6-9).', 'error');
       return;
     }
+    if (hp) return; // honeypot: bot rellenó el campo oculto → abortar silenciosamente
     const consent = quiz.querySelector('[name="q_consent"]');
     if (consent && !consent.checked) {
       showToast('Debes autorizar el tratamiento de datos para continuar.', 'error');
