@@ -172,7 +172,7 @@ export function CutCard({ cutName, cutIndex, frontal, lateral, onPhotoTap }: Cut
           <span style={{
             fontSize: 11,
             fontWeight: 600,
-            color: "#C9A84C",
+            color: "#FFFFFF",
             letterSpacing: "0.06em",
             textTransform: "uppercase",
           }}>

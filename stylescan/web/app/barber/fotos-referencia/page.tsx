@@ -153,11 +153,11 @@ function FotosReferenciaPage() {
       <div className="sticky top-0 bg-black/95 backdrop-blur border-b border-gray-800 z-10 px-4 py-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-3 mb-3">
-            <Camera className="h-6 w-6 text-[#C9A84C]" />
+            <Camera className="h-6 w-6 text-[#4A90D9]" />
             <h1 className="text-white text-xl font-bold">Fotos de referencia</h1>
           </div>
           <p className="text-gray-400 text-sm leading-relaxed">
-            Sube fotos reales de tus cortes: <span className="text-[#C9A84C] font-semibold">frontal</span> (de frente, corte completo) y <span className="text-[#C9A84C] font-semibold">lateral</span> (perfil 90°, graduación).
+            Sube fotos reales de tus cortes: <span className="text-[#4A90D9] font-semibold">frontal</span> (de frente, corte completo) y <span className="text-[#4A90D9] font-semibold">lateral</span> (perfil 90°, graduación).
             La IA usa estas fotos como referencia — nunca las verá el cliente.
           </p>
 
@@ -167,7 +167,7 @@ function FotosReferenciaPage() {
               {completeTypes.length} tipo{completeTypes.length !== 1 ? "s" : ""} completo{completeTypes.length !== 1 ? "s" : ""}
               {" "}(frontal + lateral, min. {MIN_COMPLETE_TYPES})
             </span>
-            <span className={`text-xs font-bold ${canContinue ? "text-green-400" : "text-[#C9A84C]"}`}>
+            <span className={`text-xs font-bold ${canContinue ? "text-green-400" : "text-[#4A90D9]"}`}>
               {canContinue ? "Puedes continuar" : "Sube frontal + lateral de 1 corte"}
             </span>
           </div>
@@ -176,7 +176,7 @@ function FotosReferenciaPage() {
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${Math.min(100, (completeTypes.length / Math.max(MIN_COMPLETE_TYPES, 3)) * 100)}%`,
-                background: canContinue ? "#22c55e" : "#C9A84C",
+                background: canContinue ? "#22c55e" : "#4A90D9",
               }}
             />
           </div>
@@ -185,8 +185,8 @@ function FotosReferenciaPage() {
 
       {/* Important notice */}
       <div className="max-w-lg mx-auto px-4 pt-4">
-        <div className="bg-[#C9A84C]/10 border border-[#C9A84C]/30 rounded-lg p-3 mb-4">
-          <p className="text-[#C9A84C] text-xs font-semibold mb-1">
+        <div className="bg-[#4A90D9]/10 border border-[#4A90D9]/30 rounded-lg p-3 mb-4">
+          <p className="text-[#4A90D9] text-xs font-semibold mb-1">
             📸 Fotos reales de tus cortes
           </p>
           <p className="text-gray-400 text-xs leading-relaxed">
@@ -201,7 +201,7 @@ function FotosReferenciaPage() {
       <div className="max-w-lg mx-auto px-4 pb-32">
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin h-6 w-6 border-2 border-[#C9A84C] border-t-transparent rounded-full mx-auto" />
+            <div className="animate-spin h-6 w-6 border-2 border-[#4A90D9] border-t-transparent rounded-full mx-auto" />
             <p className="text-gray-500 text-sm mt-3">Cargando fotos...</p>
           </div>
         ) : (
@@ -218,7 +218,7 @@ function FotosReferenciaPage() {
                     isComplete
                       ? "border-green-700/50 bg-green-900/10"
                       : hasFrontal || hasLateral
-                        ? "border-[#C9A84C]/40 bg-[#C9A84C]/5"
+                        ? "border-[#4A90D9]/40 bg-[#4A90D9]/5"
                         : "border-gray-800 bg-gray-900/50"
                   }`}
                 >
@@ -253,8 +253,8 @@ function FotosReferenciaPage() {
                             has
                               ? "border-solid border-green-700/50 bg-green-900/20 cursor-default"
                               : isUploading
-                                ? "border-[#C9A84C]/50 bg-[#C9A84C]/5 cursor-wait"
-                                : "border-gray-700 hover:border-[#C9A84C] hover:bg-[#C9A84C]/5 cursor-pointer"
+                                ? "border-[#4A90D9]/50 bg-[#4A90D9]/5 cursor-wait"
+                                : "border-gray-700 hover:border-[#4A90D9] hover:bg-[#4A90D9]/5 cursor-pointer"
                           }`}
                         >
                           {has && photo?.cloudinary_url ? (
@@ -271,8 +271,8 @@ function FotosReferenciaPage() {
                             </>
                           ) : isUploading ? (
                             <>
-                              <div className="animate-spin h-5 w-5 border-2 border-[#C9A84C] border-t-transparent rounded-full" />
-                              <span className="text-[#C9A84C] text-xs">Subiendo...</span>
+                              <div className="animate-spin h-5 w-5 border-2 border-[#4A90D9] border-t-transparent rounded-full" />
+                              <span className="text-[#4A90D9] text-xs">Subiendo...</span>
                             </>
                           ) : (
                             <>
@@ -280,7 +280,7 @@ function FotosReferenciaPage() {
                               <span className="text-gray-400 text-xs">{cfg.label}</span>
                               <span className="text-gray-600 text-[10px]">{cfg.hint}</span>
                               {isMandatory && (
-                                <span className="text-[#C9A84C] text-[9px] font-bold uppercase tracking-wide">obligatoria</span>
+                                <span className="text-[#4A90D9] text-[9px] font-bold uppercase tracking-wide">obligatoria</span>
                               )}
                             </>
                           )}
@@ -319,7 +319,7 @@ function FotosReferenciaPage() {
             <button
               type="button"
               onClick={() => router.push(`/barber/dashboard?id=${barberId}`)}
-              className="flex-1 bg-[#C9A84C] text-black px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+              className="flex-1 bg-white text-black px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
             >
               Continuar al panel
               <ChevronRight className="h-4 w-4" />
@@ -340,7 +340,7 @@ export default function FotosReferenciaPageWrapper() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin h-6 w-6 border-2 border-[#C9A84C] border-t-transparent rounded-full" />
+        <div className="animate-spin h-6 w-6 border-2 border-[#4A90D9] border-t-transparent rounded-full" />
       </div>
     }>
       <FotosReferenciaPage />

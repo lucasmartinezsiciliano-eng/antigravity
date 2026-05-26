@@ -123,19 +123,19 @@ export default function CheckoutPage() {
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: 2, lineHeight: 1 }}>
             <span style={{ fontSize: 22, fontWeight: 700, color: "var(--gold)", marginTop: 10 }}>€</span>
             <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: -3 }}>
-              {hasCode ? "10" : "12"}
+              {hasCode ? "12" : "16"}
             </span>
             <span style={{ fontSize: 32, fontWeight: 700, marginTop: 14 }}>,99</span>
           </div>
 
           {hasCode ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 6 }}>
-              <span style={{ color: "var(--text-dim)", fontSize: 14, textDecoration: "line-through" }}>12,99 €</span>
+              <span style={{ color: "var(--text-dim)", fontSize: 14, textDecoration: "line-through" }}>16,99 €</span>
               <span style={{
                 color: "var(--success)", fontSize: 12, fontWeight: 700,
                 background: "rgba(61,184,130,0.1)", padding: "3px 8px", borderRadius: 99,
               }}>
-                −2 € código barbería
+                −4 € código barbería
               </span>
             </div>
           ) : (
@@ -148,7 +148,7 @@ export default function CheckoutPage() {
           <p style={{ fontSize: 12, color: "var(--text-dim)", margin: 0, lineHeight: 1.7 }}>
             Un corte a ciegas en España cuesta <strong style={{ color: "var(--text)" }}>€16–20</strong> y 4 semanas esperando que crezca.<br />
             <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>
-              VISAI: €12,99 · una vez · siempre aciertas.
+              VISAI: €16,99 · una vez · siempre aciertas.
             </span>
           </p>
         </div>
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
           />
           {hasCode && (
             <p style={{ color: "var(--success)", fontSize: 13, marginTop: 6, fontWeight: 600 }}>
-              ✓ Código aplicado — precio 10,99 €
+              ✓ Código aplicado — precio 12,99 €
             </p>
           )}
         </div>

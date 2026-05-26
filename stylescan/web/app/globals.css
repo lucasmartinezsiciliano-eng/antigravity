@@ -1,46 +1,38 @@
 @import "tailwindcss";
 
-/* ── Register gold as a Tailwind color (v4 @theme) ── */
 @theme {
-  --color-gold:        #C9A84C;
-  --color-gold-dim:    #A8893A;
+  --color-gold:        #FFFFFF;
+  --color-gold-dim:    #999999;
 }
 
-/* ── Palette: warm dark + gold premium — v3 anti-slop ── */
+/* ── v4 — pure black, squared, minimal ── */
 :root {
-  --font-logo:      'Syne', sans-serif;
-  --font-display:   'Syne', sans-serif;
+  --bg:             #000000;
+  --surface:        #0A0A0A;
+  --surface2:       #111111;
+  --border:         #1C1C1C;
+  --border-subtle:  #111111;
 
-  /* Warm blacks — subtle brown tint vs clinical pure gray */
-  --bg:             #0B0A08;
-  --surface:        #13110F;
-  --surface2:       #1B1917;
-  --border:         #242119;
-  --border-subtle:  #17150F;
+  --accent:         #F0F0F0;
+  --accent-dim:     #888888;
+  --accent-subtle:  rgba(240, 240, 240, 0.04);
+  --accent-glow:    rgba(240, 240, 240, 0.02);
 
-  /* Off-white — primary text */
-  --accent:         #E8E8E8;
-  --accent-dim:     #8A8580;
-  --accent-subtle:  rgba(232, 226, 218, 0.05);
-  --accent-glow:    rgba(232, 226, 218, 0.03);
+  --gold:           #FFFFFF;
+  --gold-dim:       #999999;
+  --gold-subtle:    rgba(255, 255, 255, 0.04);
+  --gold-border:    rgba(255, 255, 255, 0.08);
+  --gold-glow:      rgba(255, 255, 255, 0.02);
 
-  /* Gold — premium barbershop accent */
-  --gold:           #C9A84C;
-  --gold-dim:       #A8893A;
-  --gold-subtle:    rgba(201, 168, 76, 0.07);
-  --gold-border:    rgba(201, 168, 76, 0.15);
-  --gold-glow:      rgba(201, 168, 76, 0.04);
+  --text:           #F0F0F0;
+  --text-muted:     #666666;
+  --text-dim:       #333333;
 
-  --text:           #EAE6E1;
-  --text-muted:     #6B6560;
-  --text-dim:       #332F2A;
-
-  /* Functional — kept minimal */
   --success: #3DB882;
   --danger:  #D94F4F;
 
-  --r-sm:   8px;
-  --r-md:   12px;
+  --r-sm:   10px;
+  --r-md:   14px;
   --r-lg:   18px;
   --r-full: 9999px;
   --screen-pad: 20px;
@@ -77,13 +69,12 @@ body {
   position: relative;
 }
 
-/* When cookie banner is open, push screen content above it */
 body.cookie-open .screen {
   padding-bottom: 180px !important;
 }
 
 button, a {
-  touch-action: manipulation; /* removes 300ms tap delay + prevents double-tap zoom */
+  touch-action: manipulation;
 }
 
 button {
@@ -92,12 +83,11 @@ button {
   background: none;
   font: inherit;
   color: inherit;
-  transition: opacity 0.15s, transform 0.12s;
+  transition: opacity 0.12s;
 }
 
 button:active:not(:disabled) {
-  opacity: 0.8;
-  transform: scale(0.97);
+  opacity: 0.7;
 }
 
 input, textarea, select { font: inherit; color: inherit; }
@@ -110,19 +100,18 @@ input, textarea, select { font: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 18px 24px;
-  background: var(--accent);
-  color: var(--bg);
-  font-size: 15px;
+  padding: 16px 24px;
+  background: var(--gold);
+  color: #000;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  border-radius: var(--r-full);
-  transition: opacity 0.15s, transform 0.12s;
+  letter-spacing: 0.02em;
+  border-radius: var(--r-sm);
+  transition: opacity 0.12s;
 }
 
 .btn-primary:disabled {
   opacity: 0.2;
-  transform: none !important;
 }
 
 .btn-secondary {
@@ -130,14 +119,14 @@ input, textarea, select { font: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 16px 24px;
+  padding: 14px 24px;
   background: transparent;
   color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  border-radius: var(--r-full);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
-  transition: opacity 0.15s, transform 0.12s;
+  transition: opacity 0.12s;
 }
 
 .btn-ghost {
@@ -147,7 +136,7 @@ input, textarea, select { font: inherit; color: inherit; }
   width: 100%;
   padding: 14px;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* ── Cards ── */
@@ -160,23 +149,22 @@ input, textarea, select { font: inherit; color: inherit; }
 
 .card-accent {
   background: var(--accent-glow);
-  border: 1px solid rgba(232, 232, 232, 0.08);
+  border: 1px solid rgba(240, 240, 240, 0.06);
   border-radius: var(--r-md);
   padding: 20px;
 }
 
-/* ── Display font for headings ── */
+/* ── Typography ── */
 .display {
-  font-family: var(--font-display);
-  letter-spacing: -0.03em;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  letter-spacing: -0.02em;
   line-height: 1.05;
 }
 
-/* ── Typography utilities ── */
 .label {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -184,7 +172,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .label-accent {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -193,12 +181,11 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 12px;
   color: var(--text-muted);
   line-height: 1.5;
-  font-weight: 300;
 }
 
 /* ── Screen ── */
 .screen {
-  flex: 1;           /* fills remaining body height after BarberTicker + footer */
+  flex: 1;
   display: flex;
   flex-direction: column;
   padding: 24px var(--screen-pad);
@@ -207,20 +194,18 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: 0 auto;
 }
 
-/* ── Divider ── */
 .divider {
   height: 1px;
   background: var(--border);
   margin: 16px 0;
 }
 
-/* ── Loading dots ── */
+/* ── Loading ── */
 @keyframes dot-pulse {
   0%, 100% { opacity: 0.15; transform: scale(0.75); }
   50%       { opacity: 1;    transform: scale(1); }
 }
 
-/* ── Spinner ── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -229,42 +214,42 @@ input, textarea, select { font: inherit; color: inherit; }
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--gold-border);
+  border: 2px solid var(--border);
   border-top-color: var(--gold);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 .dot-pulse {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--text-muted);
   animation: dot-pulse 1.2s ease-in-out infinite;
 }
 
-/* ── Back button icon ── */
+/* ── Back button ── */
 .back-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
   color: var(--text-muted);
   background: var(--surface);
   border: 1px solid var(--border);
   flex-shrink: 0;
 }
 
-/* ── Payment method badges ── */
+/* ── Payment badges ── */
 .pay-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 26px;
   padding: 0 10px;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -280,17 +265,17 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 .pay-badge--mc {
-  background: #1A1A1A;
-  border: 1px solid #2A2A2A;
+  background: #111;
+  border: 1px solid #222;
   padding: 0 8px;
 }
 
 .pay-badge--apple {
-  background: #1A1A1A;
+  background: #111;
   color: #fff;
   font-size: 10.5px;
   font-weight: 500;
-  border: 1px solid #2A2A2A;
+  border: 1px solid #222;
 }
 
 .pay-badge--google {
@@ -305,7 +290,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .g-yellow { color: #FBBC05; }
 .g-green  { color: #34A853; }
 
-/* ── Barber partner ticker ── */
+/* ── Marquee ── */
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -316,20 +301,8 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: 0 calc(-1 * var(--screen-pad));
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 12%,
-    black 88%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 12%,
-    black 88%,
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
 }
 
 .marquee-track {
@@ -346,23 +319,22 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 .marquee-handle {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
   white-space: nowrap;
   padding: 0 14px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
 .marquee-sep {
-  color: rgba(232, 232, 232, 0.15);
+  color: rgba(240, 240, 240, 0.1);
   font-size: 7px;
   flex-shrink: 0;
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Variant: marquee clipped inside a card — no bleed, no fade */
 .marquee-root--card {
   margin: 0;
   border: none;
@@ -370,7 +342,7 @@ input, textarea, select { font: inherit; color: inherit; }
   mask-image: none;
 }
 
-/* ── Legal footer ── */
+/* ── Footer ── */
 .legal-footer {
   text-align: center;
   padding: 28px var(--screen-pad) calc(28px + env(safe-area-inset-bottom));

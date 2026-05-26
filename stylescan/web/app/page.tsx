@@ -2,48 +2,79 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
 import { storage } from "@/lib/storage";
-import { GlowButton } from "@/components/ui/glow-button";
 
-/* ─── Neomarketing principles applied ────────────────────────────────────────
-  1. ANCHORING       — Precio referencia visagista (€50–80) vs €12,99
-  2. LOSS AVERSION   — Hook con el dolor real antes del beneficio
-  3. SOCIAL PROOF    — Specificity: "468 puntos · 6 formas · 3 tipos"
-  4. COGNITIVE EASE  — Flujo visual antes de CTA (reduce ansiedad)
-  5. MICRO-COMMIT    — Quiz como primer paso
-  6. AUTHORITY       — Terminología técnica: visagismo, análisis cefálico
-  7. CTA 1ª persona  — "Ver mis cortes" > "Empezar análisis"
-  8. RECIPROCITY     — Mostrar el valor antes de pedir dinero
-─────────────────────────────────────────────────────────────────────────────*/
-
-function LogoMark({ size = 72 }: { size?: number }) {
+function ResultPreview() {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 80 80"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <ellipse cx="40" cy="36" rx="18" ry="23" fill="none" stroke="var(--text)" strokeWidth="1" opacity="0.15" />
-      <line x1="12" y1="36" x2="68" y2="36" stroke="var(--gold)" strokeWidth="0.8" opacity="0.5" />
-      <circle cx="12" cy="36" r="1.8" fill="var(--gold)" opacity="0.55" />
-      <circle cx="68" cy="36" r="1.8" fill="var(--gold)" opacity="0.55" />
-      <circle cx="31" cy="27" r="2.5" fill="var(--gold)" />
-      <circle cx="49" cy="27" r="2.5" fill="var(--gold)" />
-      <circle cx="40" cy="39" r="1.8" fill="var(--gold)" opacity="0.8" />
-      <circle cx="31" cy="50" r="1.6" fill="var(--gold)" opacity="0.45" />
-      <circle cx="49" cy="50" r="1.6" fill="var(--gold)" opacity="0.45" />
-      <circle cx="20" cy="35" r="1.2" fill="var(--gold)" opacity="0.4" />
-      <circle cx="60" cy="35" r="1.2" fill="var(--gold)" opacity="0.4" />
-      <line x1="31" y1="27" x2="40" y2="39" stroke="var(--gold)" strokeWidth="0.5" opacity="0.22" />
-      <line x1="49" y1="27" x2="40" y2="39" stroke="var(--gold)" strokeWidth="0.5" opacity="0.22" />
-      <path d="M17 14 L17 22 M17 14 L25 14" stroke="var(--gold)" strokeWidth="1" fill="none" opacity="0.45" />
-      <path d="M63 14 L63 22 M63 14 L55 14" stroke="var(--gold)" strokeWidth="1" fill="none" opacity="0.45" />
-      <path d="M17 62 L17 54 M17 62 L25 62" stroke="var(--gold)" strokeWidth="1" fill="none" opacity="0.45" />
-      <path d="M63 62 L63 54 M63 62 L55 62" stroke="var(--gold)" strokeWidth="1" fill="none" opacity="0.45" />
-    </svg>
+    <div style={{
+      marginTop: 32,
+      border: "1px solid #1C1C1C",
+      borderRadius: 14,
+      overflow: "hidden",
+      background: "#050505",
+    }}>
+      {/* Bar superior */}
+      <div style={{
+        padding: "9px 14px",
+        background: "#0A0A0A",
+        borderBottom: "1px solid #141414",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}>
+        <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#444", fontWeight: 700 }}>
+          ANÁLISIS COMPLETADO
+        </span>
+        <span style={{ fontSize: 9, color: "#2A2A2A", letterSpacing: "0.06em" }}>VISAI</span>
+      </div>
+
+      {/* Forma craneal */}
+      <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid #111" }}>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#444", marginBottom: 6 }}>
+          FORMA CRANEAL
+        </div>
+        <div className="display" style={{ fontSize: 28, fontWeight: 700, color: "#F0F0F0", marginBottom: 3 }}>
+          Ovalado
+        </div>
+        <div style={{ fontSize: 11, color: "#3A3A3A" }}>
+          468 puntos · proporción áurea 0.92 · asimetría baja
+        </div>
+      </div>
+
+      {/* 3 Cortes */}
+      <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7 }}>
+        {[
+          { n: "01", name: "Textured Crop", sub: "Cuerpo y textura" },
+          { n: "02", name: "Taper Fade",    sub: "Degradado lateral" },
+          { n: "03", name: "French Crop",   sub: "Flequillo recto" },
+        ].map(({ n, name, sub }, i) => (
+          <div key={n} style={{
+            background: i === 0 ? "#0F0F0F" : "transparent",
+            border: `1px solid ${i === 0 ? "#242424" : "#141414"}`,
+            borderRadius: 10,
+            padding: "10px 9px",
+          }}>
+            <div style={{ fontSize: 9, color: "#333", fontWeight: 700, letterSpacing: "0.08em", marginBottom: 5 }}>{n}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#D0D0D0" }}>{name}</div>
+            <div style={{ fontSize: 10, color: "#3A3A3A", marginTop: 3, lineHeight: 1.3 }}>{sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Barber instructions hint */}
+      <div style={{
+        padding: "9px 14px",
+        borderTop: "1px solid #0E0E0E",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        background: "#040404",
+      }}>
+        <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#2A2A2A", flexShrink: 0 }} />
+        <span style={{ fontSize: 10, color: "#363636" }}>Instrucciones exactas para tu barbero</span>
+        <span style={{ marginLeft: "auto", fontSize: 10, color: "#242424" }}>→</span>
+      </div>
+    </div>
   );
 }
 
@@ -67,165 +98,145 @@ export default function Home() {
   return (
     <div className="screen" style={{ paddingTop: 0, paddingBottom: 44, gap: 0 }}>
 
-      {/* ── Hero — editorial, not SaaS ── */}
-      <div style={{ textAlign: "center", paddingTop: 28, paddingBottom: 28, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-        <LogoMark size={58} />
-
-        <h1 className="display" style={{ margin: 0, fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>
+      {/* ── Logo ── */}
+      <div style={{ paddingTop: 28, paddingBottom: 20 }}>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 400, letterSpacing: "0.04em", lineHeight: 1, fontFamily: "var(--font-logo), serif" }}>
           VISAI
         </h1>
-
-        <p style={{ color: "var(--gold)", fontWeight: 500, fontSize: 10, margin: 0, letterSpacing: "0.22em", textTransform: "uppercase", opacity: 0.75 }}>
-          Visagismo · IA · Barbería
+        <p style={{ color: "var(--text-muted)", fontSize: 10, margin: "5px 0 0", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          Visagismo profesional con IA
         </p>
       </div>
 
-      {/* ── HOOK — Loss aversion ── */}
-      <div style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--r-md)",
-        padding: "20px 18px",
-        marginBottom: 18,
-      }}>
-        <p className="display" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-          ¿Cuántos cortes malos llevas pagando?
-        </p>
-        <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6, fontWeight: 300 }}>
-          VISAI analiza la <strong style={{ color: "var(--text)", fontWeight: 600 }}>forma exacta de tu cabeza</strong> y te dice qué cortes te favorecen de verdad — antes de sentarte en el sillón.
+      {/* ── Headline principal ── */}
+      <div style={{ marginBottom: 18 }}>
+        <h2 className="display" style={{
+          margin: "0 0 12px",
+          fontSize: 38,
+          fontWeight: 700,
+          color: "#F0F0F0",
+        }}>
+          Descubre tu<br />corte ideal.
+        </h2>
+        <p style={{
+          margin: 0,
+          fontSize: 15,
+          color: "#666",
+          lineHeight: 1.55,
+          maxWidth: 300,
+        }}>
+          Visagismo con IA: analiza tu morfología craneal y genera 3 cortes exactos para tu cara.
         </p>
       </div>
 
-      {/* ── ANCHOR — Price reference ── */}
+      {/* ── CTA principal ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+        {existingId && (
+          <Link href={`/result/${existingId}`} className="btn-secondary" style={{ textDecoration: "none" }}>
+            Continuar análisis anterior
+          </Link>
+        )}
+        <button
+          className="btn-primary"
+          onClick={() => router.push("/quiz")}
+        >
+          Empezar análisis
+        </button>
+      </div>
+
+      {/* ── Trust chips ── */}
       <div style={{
         display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "14px 16px",
-        background: "var(--gold-subtle)",
-        border: "1px solid var(--gold-border)",
-        borderRadius: "var(--r-md)",
-        marginBottom: 18,
+        gap: 16,
+        flexWrap: "wrap",
+        marginBottom: 8,
       }}>
-        <div style={{ flex: 1 }}>
-          <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.4, fontWeight: 300 }}>
-            Consulta con visagista profesional:
-            {" "}<span style={{ textDecoration: "line-through", color: "var(--text-dim)" }}>€50–80</span>
-          </p>
-          <p style={{ margin: "3px 0 0", fontSize: 13, fontWeight: 600, color: "var(--gold)" }}>
-            VISAI: <span style={{ fontSize: 18, fontWeight: 700 }}>12,99 €</span> <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted)" }}>· en 2 min</span>
-          </p>
-        </div>
-        <ChevronRight size={14} color="var(--gold)" opacity={0.4} />
+        {["2 min", "Sin cuenta", "Foto eliminada"].map(chip => (
+          <span key={chip} style={{
+            fontSize: 11,
+            color: "#3A3A3A",
+            letterSpacing: "0.02em",
+          }}>
+            · {chip}
+          </span>
+        ))}
       </div>
 
-      {/* ── WHAT YOU GET — asymmetric, not 3-card grid ── */}
-      <div style={{ marginBottom: 18 }}>
-        <p className="label" style={{ marginBottom: 12 }}>Qué incluye</p>
+      {/* ── Product preview ── */}
+      <ResultPreview />
 
-        {/* Main feature — large */}
-        <div className="card" style={{ padding: "18px", marginBottom: 8 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-            <span className="display" style={{ fontSize: 15, fontWeight: 700 }}>Análisis craneal completo</span>
-            <span style={{ fontSize: 11, color: "var(--gold)", fontWeight: 600 }}>IA</span>
+      {/* ── Stats ── */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        borderTop: "1px solid var(--border)",
+        borderBottom: "1px solid var(--border)",
+        margin: "32px 0 28px",
+        padding: "16px 0",
+      }}>
+        {[
+          ["468", "PUNTOS"],
+          ["6", "FORMAS"],
+          ["3", "CRANEALES"],
+        ].map(([n, label]) => (
+          <div key={label} style={{ textAlign: "center" }}>
+            <div className="display" style={{ fontSize: 26, fontWeight: 700, color: "#F0F0F0", lineHeight: 1 }}>{n}</div>
+            <div style={{ fontSize: 9, color: "#333", marginTop: 5, letterSpacing: "0.1em" }}>{label}</div>
           </div>
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 12, lineHeight: 1.6, fontWeight: 300 }}>
-            468 puntos de medición. Forma facial, volumen craneal, proporciones y asimetrías.
-          </p>
-        </div>
-
-        {/* Two smaller features — side by side */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <div className="card" style={{ padding: "14px" }}>
-            <span className="display" style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 4 }}>3 cortes exactos</span>
-            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 11, lineHeight: 1.5, fontWeight: 300 }}>
-              Con instrucciones para el barbero.
-            </p>
-          </div>
-          <div className="card" style={{ padding: "14px" }}>
-            <span className="display" style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 4 }}>Prueba virtual</span>
-            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 11, lineHeight: 1.5, fontWeight: 300 }}>
-              Vélo en tu cabeza antes de cortarte.
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* ── HOW IT WORKS — clean, no numbered circles ── */}
-      <div style={{ marginBottom: 18 }}>
-        <p className="label" style={{ marginBottom: 12 }}>Cómo funciona</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {/* ── Qué obtienes ── */}
+      <div style={{ marginBottom: 28 }}>
+        <p className="label" style={{ marginBottom: 14 }}>Qué obtienes</p>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {[
-            { step: "Fotos", desc: "Frontal y dos perfiles. Desde el móvil, en tu barbería." },
-            { step: "Análisis", desc: "La IA mide tu cabeza: 6 formas faciales, 3 tipos craneales." },
-            { step: "Resultado", desc: "Cortes, instrucciones para el barbero y prueba virtual." },
-          ].map((s, i, arr) => (
-            <div key={s.step} style={{
+            ["Visagismo profesional", "Análisis craneal: 468 puntos · 6 formas · 3 tipos craneales"],
+            ["3 cortes personalizados", "Con instrucciones exactas para el barbero"],
+            ["Visagista profesional: 50-80 €", "VISAI lo hace por 16,99 € en 2 minutos"],
+          ].map(([title, desc]) => (
+            <div key={title} style={{
               display: "flex",
-              gap: 14,
-              alignItems: "flex-start",
-              padding: "12px 0",
-              borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none",
+              flexDirection: "column",
+              padding: "13px 0",
+              borderBottom: "1px solid var(--border)",
             }}>
-              <span className="display" style={{
-                fontSize: 11, fontWeight: 800, color: "var(--gold)", opacity: 0.6,
-                minWidth: 18, paddingTop: 2,
-              }}>
-                {String.fromCharCode(65 + i)}
-              </span>
-              <div>
-                <span style={{ fontWeight: 600, fontSize: 13, display: "block", marginBottom: 2 }}>{s.step}</span>
-                <span style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5, fontWeight: 300 }}>{s.desc}</span>
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3, color: "#E0E0E0" }}>{title}</div>
+              <div style={{ fontSize: 12, color: "#3A3A3A" }}>{desc}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── SPECIFICITY — static type, no animated counters ── */}
-      <div style={{
-        display: "flex",
-        gap: 0,
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--r-md)",
-        padding: "16px 0",
-        marginBottom: 24,
-      }}>
-        {[
-          { n: "468", label: "puntos" },
-          { n: "6", label: "formas" },
-          { n: "3", label: "craneales" },
-        ].map(({ n, label }, i, arr) => (
-          <div key={label} style={{
-            flex: 1,
-            textAlign: "center",
-            borderRight: i < arr.length - 1 ? "1px solid var(--border)" : "none",
-          }}>
-            <div className="display" style={{ fontSize: 24, fontWeight: 800, color: "var(--gold)", lineHeight: 1 }}>
-              {n}
+      {/* ── Proceso ── */}
+      <div style={{ marginBottom: 28 }}>
+        <p className="label" style={{ marginBottom: 14 }}>Cómo funciona</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {[
+            ["01", "Fotos", "3 fotos desde el móvil"],
+            ["02", "Análisis", "Morfología y proporciones"],
+            ["03", "Cortes", "3 recomendaciones exactas"],
+          ].map(([n, title, desc]) => (
+            <div key={n} style={{
+              padding: "14px 10px",
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)",
+            }}>
+              <div className="display" style={{ fontSize: 18, fontWeight: 700, color: "#2A2A2A", marginBottom: 6 }}>{n}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2, color: "#C0C0C0" }}>{title}</div>
+              <div style={{ fontSize: 10, color: "#3A3A3A", lineHeight: 1.4 }}>{desc}</div>
             </div>
-            <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4, fontWeight: 400, letterSpacing: "0.04em" }}>{label}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* ── CTA ── */}
+      {/* ── CTA final ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
-        {existingId && (
-          <Link href={`/result/${existingId}`} className="btn-secondary" style={{ textDecoration: "none" }}>
-            Continuar mi análisis anterior →
-          </Link>
-        )}
-        <GlowButton
-          variant="gold"
-          size="lg"
-          fullWidth
-          onClick={() => router.push("/quiz")}
-        >
+        <button className="btn-primary" onClick={() => router.push("/quiz")}>
           Descubrir mis cortes ideales
-        </GlowButton>
-        <p className="caption" style={{ textAlign: "center", marginTop: 4 }}>
+        </button>
+        <p className="caption" style={{ textAlign: "center", marginTop: 2 }}>
           Sin cuenta · Foto eliminada al instante · RGPD
         </p>
       </div>

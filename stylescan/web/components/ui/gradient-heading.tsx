@@ -1,9 +1,3 @@
-/**
- * GradientHeading → DisplayHeading
- * v3 anti-slop: no more gradient text trick.
- * Uses Syne display font with solid color. The font IS the design.
- */
-
 import React from "react"
 
 type Variant = "gold" | "white" | "muted" | "gold-light"
@@ -22,51 +16,31 @@ interface GradientHeadingProps {
 }
 
 const COLORS: Record<Variant, string> = {
-  gold:        "#C9A84C",
-  "gold-light":"#D4B55A",
-  white:       "#EAE6E1",
-  muted:       "#6B6560",
+  gold:        "#FFFFFF",
+  "gold-light":"#FFFFFF",
+  white:       "#F0F0F0",
+  muted:       "#666666",
 }
 
 const SIZES: Record<Size, string> = {
-  sm:  "1.125rem",   // 18px
-  md:  "1.5rem",     // 24px
-  lg:  "2rem",       // 32px
-  xl:  "2.75rem",    // 44px
-  xxl: "3.5rem",     // 56px
+  sm: "1.125rem", md: "1.5rem", lg: "2rem", xl: "2.75rem", xxl: "3.5rem",
 }
 
 const WEIGHTS: Record<Weight, string> = {
-  normal:   "400",
-  semibold: "600",
-  bold:     "700",
-  black:    "800",
+  normal: "400", semibold: "600", bold: "700", black: "700",
 }
 
 export function GradientHeading({
-  children,
-  variant = "white",
-  size = "lg",
-  weight = "bold",
-  as: Tag = "h2",
-  className,
-  style,
+  children, variant = "white", size = "lg", weight = "bold",
+  as: Tag = "h2", className, style,
 }: GradientHeadingProps) {
   return (
-    <Tag className={className} style={{ margin: 0, ...style }}>
-      <span
-        style={{
-          color: COLORS[variant],
-          fontFamily: "var(--font-display)",
-          fontSize: SIZES[size],
-          fontWeight: WEIGHTS[weight],
-          lineHeight: 1.1,
-          letterSpacing: "-0.03em",
-          display: "inline-block",
-        }}
-      >
-        {children}
-      </span>
+    <Tag className={className} style={{
+      margin: 0, color: COLORS[variant], fontSize: SIZES[size],
+      fontWeight: WEIGHTS[weight], lineHeight: 1.15, letterSpacing: "-0.01em",
+      ...style,
+    }}>
+      {children}
     </Tag>
   )
 }
