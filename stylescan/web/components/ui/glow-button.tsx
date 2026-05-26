@@ -1,7 +1,7 @@
 /**
- * GlowButton — inspired by cult/ui glow-button
- * Gold-glow animated CTA button. Matches VISAI's dark/gold aesthetic.
- * Zero external deps beyond framer-motion (already installed).
+ * GlowButton — premium solid CTA button.
+ * No excessive glow — clean, confident, decisive.
+ * v3 anti-slop: removed cult/ui glow pattern.
  */
 
 "use client"
@@ -19,29 +19,26 @@ interface GlowButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
 const VARIANTS = {
   gold: {
     background: "#C9A84C",
-    color: "#080808",
-    glowColor: "rgba(201, 168, 76, 0.45)",
-    hoverBackground: "#E8C96B",
+    color: "#0B0A08",
+    hoverBackground: "#D4B55A",
   },
   white: {
-    background: "#E8E8E8",
-    color: "#080808",
-    glowColor: "rgba(232, 232, 232, 0.25)",
-    hoverBackground: "#FFFFFF",
+    background: "#EAE6E1",
+    color: "#0B0A08",
+    hoverBackground: "#F5F2EE",
   },
   ghost: {
     background: "transparent",
-    color: "#E8E8E8",
-    glowColor: "rgba(232, 232, 232, 0.08)",
-    hoverBackground: "rgba(232, 232, 232, 0.05)",
-    border: "1px solid #1E1E1E",
+    color: "#EAE6E1",
+    hoverBackground: "rgba(232, 226, 218, 0.05)",
+    border: "1px solid #242119",
   },
 }
 
 const SIZES = {
-  sm: { padding: "12px 20px", fontSize: "14px", borderRadius: "12px" },
-  md: { padding: "16px 28px", fontSize: "16px", borderRadius: "16px" },
-  lg: { padding: "20px 36px", fontSize: "17px", borderRadius: "9999px" },
+  sm: { padding: "12px 20px", fontSize: "13px", borderRadius: "10px" },
+  md: { padding: "16px 28px", fontSize: "15px", borderRadius: "12px" },
+  lg: { padding: "18px 36px", fontSize: "15px", borderRadius: "9999px" },
 }
 
 export function GlowButton({
@@ -57,9 +54,8 @@ export function GlowButton({
 
   return (
     <motion.button
-      whileTap={{ scale: 0.96 }}
-      whileHover={{ scale: 1.01 }}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
       style={{
         position: "relative",
         display: "inline-flex",
@@ -70,15 +66,15 @@ export function GlowButton({
         ...s,
         background: v.background,
         color: v.color,
-        fontWeight: 700,
-        letterSpacing: "0.02em",
+        fontWeight: 600,
+        letterSpacing: "0.01em",
         border: "border" in v ? (v as any).border : "none",
         cursor: "pointer",
         userSelect: "none",
         WebkitUserSelect: "none",
         fontFamily: "inherit",
-        boxShadow: `0 0 20px ${v.glowColor}, 0 0 60px ${v.glowColor.replace("0.45", "0.15").replace("0.25", "0.1").replace("0.08", "0.03")}`,
-        transition: "background 0.2s, box-shadow 0.2s",
+        boxShadow: "none",
+        transition: "background 0.2s",
         ...style,
       }}
       {...(props as any)}

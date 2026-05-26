@@ -6,40 +6,42 @@
   --color-gold-dim:    #A8893A;
 }
 
-/* ── Palette: dark monochrome + gold premium — v2 ── */
+/* ── Palette: warm dark + gold premium — v3 anti-slop ── */
 :root {
   --font-logo:      'Syne', sans-serif;
+  --font-display:   'Syne', sans-serif;
 
-  --bg:             #080808;
-  --surface:        #101010;
-  --surface2:       #181818;
-  --border:         #1E1E1E;
-  --border-subtle:  #141414;
+  /* Warm blacks — subtle brown tint vs clinical pure gray */
+  --bg:             #0B0A08;
+  --surface:        #13110F;
+  --surface2:       #1B1917;
+  --border:         #242119;
+  --border-subtle:  #17150F;
 
   /* Off-white — primary text */
   --accent:         #E8E8E8;
-  --accent-dim:     #888888;
-  --accent-subtle:  rgba(232, 232, 232, 0.05);
-  --accent-glow:    rgba(232, 232, 232, 0.03);
+  --accent-dim:     #8A8580;
+  --accent-subtle:  rgba(232, 226, 218, 0.05);
+  --accent-glow:    rgba(232, 226, 218, 0.03);
 
   /* Gold — premium barbershop accent */
   --gold:           #C9A84C;
   --gold-dim:       #A8893A;
-  --gold-subtle:    rgba(201, 168, 76, 0.08);
-  --gold-border:    rgba(201, 168, 76, 0.18);
+  --gold-subtle:    rgba(201, 168, 76, 0.07);
+  --gold-border:    rgba(201, 168, 76, 0.15);
   --gold-glow:      rgba(201, 168, 76, 0.04);
 
-  --text:           #E8E8E8;
-  --text-muted:     #555555;
-  --text-dim:       #2E2E2E;
+  --text:           #EAE6E1;
+  --text-muted:     #6B6560;
+  --text-dim:       #332F2A;
 
   /* Functional — kept minimal */
   --success: #3DB882;
   --danger:  #D94F4F;
 
-  --r-sm:   10px;
-  --r-md:   14px;
-  --r-lg:   20px;
+  --r-sm:   8px;
+  --r-md:   12px;
+  --r-lg:   18px;
   --r-full: 9999px;
   --screen-pad: 20px;
 }
@@ -109,11 +111,11 @@ input, textarea, select { font: inherit; color: inherit; }
   justify-content: center;
   width: 100%;
   padding: 18px 24px;
-  background: var(--accent);   /* off-white */
-  color: #080808;              /* near-black — high contrast on white */
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   border-radius: var(--r-full);
   transition: opacity 0.15s, transform 0.12s;
 }
@@ -163,19 +165,26 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 20px;
 }
 
+/* ── Display font for headings ── */
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
 /* ── Typography utilities ── */
 .label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .label-accent {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -184,6 +193,7 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 12px;
   color: var(--text-muted);
   line-height: 1.5;
+  font-weight: 300;
 }
 
 /* ── Screen ── */

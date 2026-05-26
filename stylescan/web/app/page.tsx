@@ -2,48 +2,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ScanFace, Scissors, Sparkles, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { storage } from "@/lib/storage";
-import { GradientHeading } from "@/components/ui/gradient-heading";
-import { AnimatedNumber } from "@/components/ui/animated-number";
 import { GlowButton } from "@/components/ui/glow-button";
 
 /* ─── Neomarketing principles applied ────────────────────────────────────────
-  1. ANCHORING       — Precio referencia visagista (€50–80) vs €9,99
+  1. ANCHORING       — Precio referencia visagista (€50–80) vs €12,99
   2. LOSS AVERSION   — Hook con el dolor real antes del beneficio
-  3. SOCIAL PROOF    — Contador específico + ticker de barberías
-  4. SPECIFICITY     — "468 puntos · 6 formas · 3 tipos craneales"
-  5. COGNITIVE EASE  — Flujo 3 pasos antes de la CTA (reduce ansiedad)
-  6. MICRO-COMMIT    — Quiz como primer paso (pequeño sí antes del pago)
-  7. AUTHORITY       — Terminología técnica: visagismo, análisis cefálico
-  8. CTA 1ª persona  — "Ver mis cortes" > "Empezar análisis"
-  9. RECIPROCITY     — Mostrar el valor antes de pedir dinero
-  10. SCARCITY       — "Solo en barberías colaboradoras"
+  3. SOCIAL PROOF    — Specificity: "468 puntos · 6 formas · 3 tipos"
+  4. COGNITIVE EASE  — Flujo visual antes de CTA (reduce ansiedad)
+  5. MICRO-COMMIT    — Quiz como primer paso
+  6. AUTHORITY       — Terminología técnica: visagismo, análisis cefálico
+  7. CTA 1ª persona  — "Ver mis cortes" > "Empezar análisis"
+  8. RECIPROCITY     — Mostrar el valor antes de pedir dinero
 ─────────────────────────────────────────────────────────────────────────────*/
-
-const STEPS = [
-  { n: "01", label: "3 fotos rápidas", sub: "Frontal y dos perfiles. En la barbería, desde el móvil." },
-  { n: "02", label: "IA analiza tu cabeza", sub: "468 puntos · 6 formas faciales · 3 tipos craneales." },
-  { n: "03", label: "Tu informe exacto", sub: "Cortes, instrucciones para el barbero y prueba virtual." },
-];
-
-const FEATURES = [
-  {
-    Icon: ScanFace,
-    title: "Análisis de forma craneal",
-    desc: "Analiza la FORMA de tu cabeza, no solo la cara. 6 tipos faciales · 3 tipos craneales.",
-  },
-  {
-    Icon: Scissors,
-    title: "Cortes que sí te van",
-    desc: "Con instrucciones exactas para decirle al barbero. Sin dudas en el sillón.",
-  },
-  {
-    Icon: Sparkles,
-    title: "Vélo antes de pagarlo",
-    desc: "Prueba virtual IA. Mira cómo queda el corte en tu cabeza antes de cortarte.",
-  },
-];
 
 function LogoMark({ size = 72 }: { size?: number }) {
   return (
@@ -78,59 +50,49 @@ function LogoMark({ size = 72 }: { size?: number }) {
 export default function Home() {
   const router = useRouter();
   const [existingId, setExistingId] = useState<string | null>(null);
-  const [statsVisible, setStatsVisible] = useState(false);
 
   useEffect(() => {
     const id = storage.getAnalysisId();
     if (id) setExistingId(id);
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
-    // Validate format before saving — rejects garbage/spam values (e.g. tracking IDs, injected values)
     if (ref && /^VISAI-[A-Z0-9]{4,12}$/i.test(ref.trim())) {
       storage.saveBarberCode(ref.trim().toUpperCase());
     }
     if (params.get("reset_cookies") === "1") {
       localStorage.removeItem("visai_cookie_consent");
     }
-    // Trigger stats animation shortly after mount
-    const t = setTimeout(() => setStatsVisible(true), 600);
-    return () => clearTimeout(t);
   }, []);
 
   return (
     <div className="screen" style={{ paddingTop: 0, paddingBottom: 44, gap: 0 }}>
 
-      {/* ── Hero ── */}
-      <div style={{ textAlign: "center", paddingTop: 24, paddingBottom: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-        <LogoMark size={64} />
+      {/* ── Hero — editorial, not SaaS ── */}
+      <div style={{ textAlign: "center", paddingTop: 28, paddingBottom: 28, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+        <LogoMark size={58} />
 
-        <h1 style={{ margin: 0, lineHeight: 1 }}>
-          <svg viewBox="0 0 300 52" width="190" height="33" xmlns="http://www.w3.org/2000/svg" aria-label="VISAI" style={{ display: "block", margin: "0 auto" }}>
-            <text x="150" y="42" textAnchor="middle"
-              style={{ fontFamily: "var(--font-logo), 'Syne', sans-serif" }}
-              fontWeight="800" fontSize="46" letterSpacing="8"
-              fill="var(--text)">VISAI</text>
-          </svg>
+        <h1 className="display" style={{ margin: 0, fontSize: 42, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>
+          VISAI
         </h1>
 
-        <p style={{ color: "var(--gold)", fontWeight: 600, fontSize: 10, margin: 0, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.85 }}>
+        <p style={{ color: "var(--gold)", fontWeight: 500, fontSize: 10, margin: 0, letterSpacing: "0.22em", textTransform: "uppercase", opacity: 0.75 }}>
           Visagismo · IA · Barbería
         </p>
       </div>
 
-      {/* ── HOOK — Loss aversion: el dolor primero ── */}
+      {/* ── HOOK — Loss aversion ── */}
       <div style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r-md)",
-        padding: "18px 18px",
-        marginBottom: 16,
+        padding: "20px 18px",
+        marginBottom: 18,
       }}>
-        <GradientHeading variant="white" size="sm" weight="bold" as="p" style={{ marginBottom: 6 }}>
+        <p className="display" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
           ¿Cuántos cortes malos llevas pagando?
-        </GradientHeading>
-        <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)", lineHeight: 1.55 }}>
-          VISAI analiza la <strong style={{ color: "var(--text)" }}>forma exacta de tu cabeza</strong> y te dice qué cortes te favorecen de verdad — antes de sentarte en el sillón.
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6, fontWeight: 300 }}>
+          VISAI analiza la <strong style={{ color: "var(--text)", fontWeight: 600 }}>forma exacta de tu cabeza</strong> y te dice qué cortes te favorecen de verdad — antes de sentarte en el sillón.
         </p>
       </div>
 
@@ -139,98 +101,116 @@ export default function Home() {
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "12px 16px",
+        padding: "14px 16px",
         background: "var(--gold-subtle)",
         border: "1px solid var(--gold-border)",
         borderRadius: "var(--r-md)",
-        marginBottom: 16,
+        marginBottom: 18,
       }}>
         <div style={{ flex: 1 }}>
-          <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.4 }}>
-            Una consulta con visagista profesional:
+          <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)", lineHeight: 1.4, fontWeight: 300 }}>
+            Consulta con visagista profesional:
             {" "}<span style={{ textDecoration: "line-through", color: "var(--text-dim)" }}>€50–80</span>
           </p>
-          <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>
-            VISAI: <span style={{ fontSize: 17 }}>12,99 €</span> · Resultado en menos de 2 min
+          <p style={{ margin: "3px 0 0", fontSize: 13, fontWeight: 600, color: "var(--gold)" }}>
+            VISAI: <span style={{ fontSize: 18, fontWeight: 700 }}>12,99 €</span> <span style={{ fontSize: 11, fontWeight: 400, color: "var(--text-muted)" }}>· en 2 min</span>
           </p>
         </div>
-        <ChevronRight size={16} color="var(--gold)" opacity={0.6} />
+        <ChevronRight size={14} color="var(--gold)" opacity={0.4} />
       </div>
 
-      {/* ── FEATURES — Benefit framing ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-        {FEATURES.map(({ Icon, title, desc }) => (
-          <div key={title} className="card" style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 16px" }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10, flexShrink: 0, marginTop: 1,
-              background: "var(--gold-subtle)", border: "1px solid var(--gold-border)",
-              display: "flex", alignItems: "center", justifyContent: "center",
+      {/* ── WHAT YOU GET — asymmetric, not 3-card grid ── */}
+      <div style={{ marginBottom: 18 }}>
+        <p className="label" style={{ marginBottom: 12 }}>Qué incluye</p>
+
+        {/* Main feature — large */}
+        <div className="card" style={{ padding: "18px", marginBottom: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+            <span className="display" style={{ fontSize: 15, fontWeight: 700 }}>Análisis craneal completo</span>
+            <span style={{ fontSize: 11, color: "var(--gold)", fontWeight: 600 }}>IA</span>
+          </div>
+          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 12, lineHeight: 1.6, fontWeight: 300 }}>
+            468 puntos de medición. Forma facial, volumen craneal, proporciones y asimetrías.
+          </p>
+        </div>
+
+        {/* Two smaller features — side by side */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div className="card" style={{ padding: "14px" }}>
+            <span className="display" style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 4 }}>3 cortes exactos</span>
+            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 11, lineHeight: 1.5, fontWeight: 300 }}>
+              Con instrucciones para el barbero.
+            </p>
+          </div>
+          <div className="card" style={{ padding: "14px" }}>
+            <span className="display" style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 4 }}>Prueba virtual</span>
+            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 11, lineHeight: 1.5, fontWeight: 300 }}>
+              Vélo en tu cabeza antes de cortarte.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── HOW IT WORKS — clean, no numbered circles ── */}
+      <div style={{ marginBottom: 18 }}>
+        <p className="label" style={{ marginBottom: 12 }}>Cómo funciona</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {[
+            { step: "Fotos", desc: "Frontal y dos perfiles. Desde el móvil, en tu barbería." },
+            { step: "Análisis", desc: "La IA mide tu cabeza: 6 formas faciales, 3 tipos craneales." },
+            { step: "Resultado", desc: "Cortes, instrucciones para el barbero y prueba virtual." },
+          ].map((s, i, arr) => (
+            <div key={s.step} style={{
+              display: "flex",
+              gap: 14,
+              alignItems: "flex-start",
+              padding: "12px 0",
+              borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none",
             }}>
-              <Icon size={17} color="var(--gold)" strokeWidth={1.75} />
+              <span className="display" style={{
+                fontSize: 11, fontWeight: 800, color: "var(--gold)", opacity: 0.6,
+                minWidth: 18, paddingTop: 2,
+              }}>
+                {String.fromCharCode(65 + i)}
+              </span>
+              <div>
+                <span style={{ fontWeight: 600, fontSize: 13, display: "block", marginBottom: 2 }}>{s.step}</span>
+                <span style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5, fontWeight: 300 }}>{s.desc}</span>
+              </div>
             </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{title}</div>
-              <div style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5 }}>{desc}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── SPECIFICITY — static type, no animated counters ── */}
+      <div style={{
+        display: "flex",
+        gap: 0,
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--r-md)",
+        padding: "16px 0",
+        marginBottom: 24,
+      }}>
+        {[
+          { n: "468", label: "puntos" },
+          { n: "6", label: "formas" },
+          { n: "3", label: "craneales" },
+        ].map(({ n, label }, i, arr) => (
+          <div key={label} style={{
+            flex: 1,
+            textAlign: "center",
+            borderRight: i < arr.length - 1 ? "1px solid var(--border)" : "none",
+          }}>
+            <div className="display" style={{ fontSize: 24, fontWeight: 800, color: "var(--gold)", lineHeight: 1 }}>
+              {n}
             </div>
+            <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4, fontWeight: 400, letterSpacing: "0.04em" }}>{label}</div>
           </div>
         ))}
       </div>
 
-      {/* ── PROCESS — Cognitive ease: 3 pasos ── */}
-      <div style={{ marginBottom: 16 }}>
-        <p className="label" style={{ marginBottom: 12 }}>Cómo funciona</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {STEPS.map((step, i) => (
-            <div key={step.n} style={{ display: "flex", gap: 14, alignItems: "flex-start", paddingBottom: i < STEPS.length - 1 ? 14 : 0 }}>
-              <div style={{
-                display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0,
-              }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: "var(--gold-subtle)", border: "1px solid var(--gold-border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 10, fontWeight: 800, color: "var(--gold)", letterSpacing: "0.05em",
-                }}>
-                  {step.n}
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div style={{ width: 1, flex: 1, minHeight: 16, background: "var(--border)", marginTop: 4 }} />
-                )}
-              </div>
-              <div style={{ paddingBottom: i < STEPS.length - 1 ? 6 : 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{step.label}</div>
-                <div style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.45 }}>{step.sub}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── SOCIAL PROOF — Specificity + AnimatedNumber ── */}
-      <div style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)", borderRadius: "var(--r-md)",
-        padding: "14px 16px",
-        marginBottom: 20,
-      }}>
-        {/* Stats row */}
-        <div style={{ display: "flex", gap: 0, marginBottom: 12, borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
-          {[
-            { value: 468, label: "puntos de análisis", suffix: "" },
-            { value: 6,   label: "formas faciales",    suffix: "" },
-            { value: 3,   label: "tipos craneales",    suffix: "" },
-          ].map(({ value, label, suffix }) => (
-            <div key={label} style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>
-                {statsVisible ? <AnimatedNumber value={value} stiffness={60} damping={18} /> : "0"}{suffix}
-              </div>
-              <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, lineHeight: 1.3 }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── CTA — 1ª persona + micro-commit ── */}
+      {/* ── CTA ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
         {existingId && (
           <Link href={`/result/${existingId}`} className="btn-secondary" style={{ textDecoration: "none" }}>

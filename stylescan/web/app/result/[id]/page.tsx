@@ -419,7 +419,7 @@ export default function ResultPage() {
                 {Math.round((result.confidence || 0) * 100)}% confianza
               </span>
             </div>
-            <h1 style={{ fontSize: 34, fontWeight: 800, margin: "0 0 4px", letterSpacing: -0.8, lineHeight: 1.1 }}>
+            <h1 className="display" style={{ fontSize: 32, fontWeight: 800, margin: "0 0 4px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
               Cara {shapeLabel}
             </h1>
             {report.resumen_facial && (
@@ -449,7 +449,7 @@ export default function ResultPage() {
         )}
 
         {/* Cortes */}
-        <h2 style={{ fontSize: 17, fontWeight: 700, margin: "24px 0 12px", letterSpacing: -0.3 }}>
+        <h2 className="display" style={{ fontSize: 17, fontWeight: 700, margin: "24px 0 12px", letterSpacing: "-0.02em" }}>
           Cortes recomendados
         </h2>
 
@@ -512,21 +512,21 @@ export default function ResultPage() {
 
         {/* Cut tab selector */}
         {cuts.length > 0 && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            {cuts.map((_: any, i: number) => (
+          <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+            {cuts.map((c: any, i: number) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setSelectedCut(i)}
                 style={{
-                  fontSize: 13, fontWeight: 700, padding: "6px 16px", borderRadius: 99,
-                  background: selectedCut === i ? "var(--gold)" : "var(--surface2)",
-                  color: selectedCut === i ? "#080808" : "var(--text-muted)",
+                  fontSize: 12, fontWeight: selectedCut === i ? 600 : 400, padding: "7px 14px", borderRadius: 99,
+                  background: selectedCut === i ? "var(--gold)" : "transparent",
+                  color: selectedCut === i ? "var(--bg)" : "var(--text-muted)",
                   border: `1px solid ${selectedCut === i ? "var(--gold)" : "var(--border)"}`,
                   transition: "all 0.15s",
                 }}
               >
-                {String(i + 1).padStart(2, "0")}
+                {c.nombre ? (c.nombre.length > 14 ? c.nombre.slice(0, 14) + "…" : c.nombre) : `Corte ${i + 1}`}
               </button>
             ))}
           </div>
@@ -609,7 +609,7 @@ export default function ResultPage() {
                 }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <h2 style={{ fontSize: 22, fontWeight: 700, margin: "8px 0 2px", letterSpacing: -0.4, lineHeight: 1.2 }}>
+                <h2 className="display" style={{ fontSize: 22, fontWeight: 700, margin: "8px 0 2px", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
                   {cut.nombre}
                 </h2>
                 {cut.nombre_tecnico && (
@@ -754,7 +754,7 @@ export default function ResultPage() {
 
         {/* Upsells */}
         <div style={{ margin: "32px 0 24px" }}>
-          <h2 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 4px", letterSpacing: -0.3 }}>Completa tu análisis</h2>
+          <h2 className="display" style={{ fontSize: 17, fontWeight: 700, margin: "0 0 4px", letterSpacing: "-0.02em" }}>Completa tu análisis</h2>
           <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "0 0 16px" }}>Pago único · Sin suscripción · Se añade aquí mismo</p>
 
           {upsellError && (
@@ -918,7 +918,7 @@ export default function ResultPage() {
 
         {/* Share section */}
         <div style={{ margin: "28px 0 8px" }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", letterSpacing: -0.2 }}>
+          <h2 className="display" style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", letterSpacing: "-0.01em" }}>
             Comparte tu resultado
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -951,13 +951,12 @@ export default function ResultPage() {
         <div style={{
           margin: "28px 0 0",
           padding: "20px 18px",
-          background: "var(--surface2)",
-          border: "1px solid var(--border)",
-          borderRadius: 16,
+          background: "var(--surface)",
+          border: "1px solid var(--gold-border)",
+          borderRadius: "var(--r-md)",
         }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", letterSpacing: -0.2 }}>
-            ¿Te ha molado? Comparte y recupera 2€
+          <h3 className="display" style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+            ¿Te ha molado? Recupera 2€
           </h3>
           <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--text-muted)", margin: "0 0 14px" }}>
             Sube una story o TikTok con tu resultado y te devolvemos 2€ por Bizum. Solo mándanos el enlace.

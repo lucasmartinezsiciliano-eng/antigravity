@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit, Syne } from "next/font/google";
 import "./globals.css";
 import BarberTicker from "@/components/BarberTicker";
 import CookieBanner from "@/components/CookieBanner";
 
-const jakartaSans = Plus_Jakarta_Sans({
-  weight: ["400", "500", "600", "700", "800"],
+const outfit = Outfit({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const syne = Syne({
+  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -22,19 +29,15 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#080808",
+  themeColor: "#0B0A08",
   viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={jakartaSans.variable}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className={jakartaSans.className}>
+    <html lang="es" className={`${outfit.variable} ${syne.variable}`}>
+      <head />
+      <body className={outfit.className}>
         <BarberTicker />
         {children}
         <CookieBanner />

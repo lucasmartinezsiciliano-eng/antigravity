@@ -1,6 +1,7 @@
 /**
- * GradientHeading — inspired by cult/ui
- * Gradient text heading. Adapted for VISAI's dark theme (no cva/radix deps).
+ * GradientHeading → DisplayHeading
+ * v3 anti-slop: no more gradient text trick.
+ * Uses Syne display font with solid color. The font IS the design.
  */
 
 import React from "react"
@@ -20,11 +21,11 @@ interface GradientHeadingProps {
   style?: React.CSSProperties
 }
 
-const GRADIENTS: Record<Variant, string> = {
-  gold:        "linear-gradient(160deg, #E8D48A 0%, #C9A84C 45%, #8B6914 100%)",
-  "gold-light":"linear-gradient(160deg, #F5E8B4 0%, #E8C96B 50%, #C9A84C 100%)",
-  white:       "linear-gradient(160deg, #FFFFFF 0%, #E8E8E8 60%, #AAAAAA 100%)",
-  muted:       "linear-gradient(160deg, #888888 0%, #555555 100%)",
+const COLORS: Record<Variant, string> = {
+  gold:        "#C9A84C",
+  "gold-light":"#D4B55A",
+  white:       "#EAE6E1",
+  muted:       "#6B6560",
 }
 
 const SIZES: Record<Size, string> = {
@@ -39,7 +40,7 @@ const WEIGHTS: Record<Weight, string> = {
   normal:   "400",
   semibold: "600",
   bold:     "700",
-  black:    "900",
+  black:    "800",
 }
 
 export function GradientHeading({
@@ -55,16 +56,13 @@ export function GradientHeading({
     <Tag className={className} style={{ margin: 0, ...style }}>
       <span
         style={{
-          background: GRADIENTS[variant],
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
+          color: COLORS[variant],
+          fontFamily: "var(--font-display)",
           fontSize: SIZES[size],
           fontWeight: WEIGHTS[weight],
-          lineHeight: 1.15,
-          letterSpacing: "-0.02em",
+          lineHeight: 1.1,
+          letterSpacing: "-0.03em",
           display: "inline-block",
-          paddingBottom: "0.1em", // prevents descenders being clipped
         }}
       >
         {children}
