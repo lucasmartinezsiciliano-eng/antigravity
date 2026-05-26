@@ -304,7 +304,11 @@ footer { background: var(--black); color: rgba(255,255,255,0.45); padding: 64px 
   .hero-actions .btn { width: 100%; justify-content: center; }
   .section-header h2 { font-size: 1.6rem; }
 }
+.grecaptcha-badge { visibility: hidden !important; }
+.recaptcha-note { font-size: 0.67rem; color: var(--gray-400); text-align: center; margin-top: 10px; }
+.recaptcha-note a { color: var(--gray-400); text-decoration: underline; }
   </style>
+  <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" async defer></script>
 </head>
 <body>
 
@@ -836,6 +840,7 @@ window.brokerAnalytics = { sendEvent };
 const N8N_WEBHOOK_URL       = 'https://n8n.lukimporta.es/webhook/broker-lead';
 const N8N_WEBHOOK_PADRE_URL = 'https://n8n.lukimporta.es/webhook/broker-lead-padre';
 const GHL_WEBHOOK_URL       = 'https://services.leadconnectorhq.com/hooks/8KjcyGRXhMDKoNIhborg/webhook-trigger/c2bb9588-dc90-4ef9-9ef9-1eb9ab84555e';
+const RECAPTCHA_SITE_KEY    = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
 
 function showToast(msg, type = 'success') {
   let t = document.querySelector('.toast');
@@ -866,6 +871,15 @@ const CS_LABORAL = { funcionario:100, indefinido:90, fijo_disc:70, func_interino
 
 const _submit = { last: 0 };
 const SUBMIT_COOLDOWN = 20000;
+
+async function getRecaptchaToken(action) {
+  if (!window.grecaptcha) return '';
+  return new Promise(resolve => {
+    grecaptcha.ready(() => {
+      grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }).then(resolve).catch(() => resolve(''));
+    });
+  });
+}
 
 function sanitize(s) { return String(s ?? '').replace(/[<>"'`\\]/g, '').trim().slice(0, 200); }
 function validatePhone(s) { return /^[6-9]\d{8}$/.test(s.replace(/[\s\-.]/g, '')); }
@@ -1080,6 +1094,7 @@ function initQuiz() {
     const consent = quiz.querySelector('[name="q_consent"]');
     if (consent && !consent.checked) { showToast('Debes autorizar el tratamiento de datos para continuar.', 'error'); return; }
     if (!canSubmitNow()) { showToast('Espera unos segundos antes de volver a enviar.', 'error'); return; }
+    const recaptchaToken = await getRecaptchaToken('quiz_submit');
 
     const btn = quiz.querySelector('.quiz-submit');
     btn.textContent = 'Analizando...';
@@ -1126,6 +1141,7 @@ function initQuiz() {
 
     const ok = await submitLead({
       nombre, telefono, email, _hp: hp, source: 'quiz',
+      recaptcha_token: recaptchaToken,
       consent: true, consent_marketing: consentMarketing,
       urgencia, clasificacion,
       n_titulares: nSol,

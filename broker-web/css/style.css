@@ -331,6 +331,11 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 /* Honeypot anti-spam */
 .hp-field { display: none !important; position: absolute; left: -9999px; }
 
+/* reCAPTCHA v3 — ocultar badge flotante, mostrar atribución textual */
+.grecaptcha-badge { visibility: hidden !important; }
+.recaptcha-note { font-size: 0.67rem; color: var(--gray-400); text-align: center; margin-top: 10px; }
+.recaptcha-note a { color: var(--gray-400); text-decoration: underline; }
+
 /* Quiz consent RGPD */
 .quiz-consent { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .consent-label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
