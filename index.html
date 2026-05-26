@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self' https://n8n.lukimporta.es https://crm.lukimporta.es https://services.leadconnectorhq.com; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://www.gstatic.com; connect-src 'self' https://n8n.lukimporta.es https://crm.lukimporta.es https://services.leadconnectorhq.com https://www.google.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <link rel="icon" type="image/png" href="img/bh-logo.png" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -67,6 +67,7 @@
   </script>
 
   <link rel="stylesheet" href="css/style.css?v=4" />
+  <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" async defer></script>
 </head>
 <body>
 
@@ -442,6 +443,7 @@
             <button class="quiz-back">← Atrás</button>
             <button class="btn btn-primary quiz-next quiz-submit">Ver mi análisis →</button>
           </div>
+          <p class="recaptcha-note">Protegido por reCAPTCHA — <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacidad</a> · <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Términos</a></p>
         </div>
 
         <!-- RESULTADO -->

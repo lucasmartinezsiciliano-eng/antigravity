@@ -5,6 +5,20 @@
 const N8N_WEBHOOK_URL       = 'https://n8n.lukimporta.es/webhook/broker-lead';
 const N8N_WEBHOOK_PADRE_URL = 'https://n8n.lukimporta.es/webhook/broker-lead-padre';
 const GHL_WEBHOOK_URL       = 'https://services.leadconnectorhq.com/hooks/8KjcyGRXhMDKoNIhborg/webhook-trigger/c2bb9588-dc90-4ef9-9ef9-1eb9ab84555e';
+// RECAPTCHA: reemplaza por tu clave en console.cloud.google.com/security/recaptcha
+const RECAPTCHA_SITE_KEY    = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
+// ============================================
+// RECAPTCHA v3
+// ============================================
+async function getRecaptchaToken(action) {
+  if (!window.grecaptcha) return '';
+  return new Promise(resolve => {
+    grecaptcha.ready(() => {
+      grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }).then(resolve).catch(() => resolve(''));
+    });
+  });
+}
 
 // ============================================
 // TOAST
@@ -244,11 +258,13 @@ function initSimpleForms() {
         showToast('Espera unos segundos antes de volver a enviar.', 'error');
         btn.textContent = orig; btn.disabled = false; return;
       }
+      const rcToken = await getRecaptchaToken('simple_form');
       const ok = await submitLead({
         nombre, telefono,
         servicio: sanitize(fd.get('servicio') || 'General'),
         email: sanitize(fd.get('email') || ''),
         _hp: '',
+        recaptcha_token: rcToken,
         source: form.dataset.leadForm,
       });
       showToast(ok ? '✅ Recibido. Te contactamos pronto.' : '❌ Error. Llámanos directamente.', ok ? 'success' : 'error');
@@ -446,6 +462,7 @@ function initQuiz() {
       showToast('Espera unos segundos antes de volver a enviar.', 'error');
       return;
     }
+    const recaptchaToken = await getRecaptchaToken('quiz_submit');
 
     const btn = quiz.querySelector('.quiz-submit');
     btn.textContent = 'Analizando...';
@@ -493,6 +510,7 @@ function initQuiz() {
     const consentMarketing = quiz.querySelector('[name="q_consent_marketing"]')?.checked ?? false;
     const ok = await submitLead({
       nombre, telefono, email, _hp: hp, source: 'quiz',
+      recaptcha_token: recaptchaToken,
       consent: true, consent_marketing: consentMarketing,
       urgencia, clasificacion,
       n_titulares: nSol,
