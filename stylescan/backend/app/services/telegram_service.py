@@ -5,19 +5,30 @@ Handles:
 1. Webhook message parsing and routing
 2. Sending notifications to barbers (commission alerts, ranking updates)
 3. Handling /start, /help, /status commands
+4. Barber commission instant notifications (fire-and-forget from webhook)
+5. Weekly and monthly barber summaries
 
 - send_notification(telegram_chat_id, message_type, data)
   → Sends formatted message via Telegram Bot API
+
+- send_barber_notification(barber_id, amount_cents, promo_code, accumulated_cents)
+  → Instant €3 commission alert to barber's Telegram
+
+- send_weekly_summary / send_monthly_summary
+  → Periodic barber earnings reports
 
 - parse_webhook(body)
   → Parses Telegram webhook and routes to appropriate handler
 """
 
 import logging
-import httpx
 import json
+import os
+from pathlib import Path
 from typing import Optional, Dict, Any
 from enum import Enum
+
+import httpx
 
 from app.core.config import settings
 
@@ -232,3 +243,189 @@ def _build_notification_message(
         )
 
     return None
+
+
+# ---------------------------------------------------------------------------
+# Barber chat ID lookup (MVP: JSON file mapping)
+# ---------------------------------------------------------------------------
+def get_barber_chat_id(barber_id: str) -> str | None:
+    """
+    Look up a barber's Telegram chat_id from the JSON mapping file.
+    Returns None (and logs debug) if file missing or barber not found.
+    """
+    data_path = Path(settings.TELEGRAM_BARBER_DATA_PATH)
+    if not data_path.is_file():
+        logger.debug("Barber Telegram data file not found: %s", data_path)
+        return None
+
+    try:
+        with open(data_path, encoding="utf-8") as f:
+            mapping: dict = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning("Failed to read barber Telegram mapping: %s", e)
+        return None
+
+    chat_id = mapping.get(barber_id)
+    if chat_id is None:
+        logger.debug("No Telegram chat_id for barber %s", barber_id)
+        return None
+
+    return str(chat_id)
+
+
+# ---------------------------------------------------------------------------
+# Instant commission notification
+# ---------------------------------------------------------------------------
+async def send_barber_notification(
+    barber_id: str,
+    amount_cents: int,
+    promo_code: str,
+    accumulated_cents: int,
+) -> bool:
+    """
+    Send an instant Telegram notification when a barber earns a commission.
+
+    Fire-and-forget safe: catches all exceptions, never raises.
+    Returns True if sent, False otherwise.
+    """
+    try:
+        token = settings.BARBER_TELEGRAM_BOT_TOKEN or settings.TELEGRAM_BOT_TOKEN
+        if not token:
+            logger.debug("No Telegram bot token configured — skipping barber notification")
+            return False
+
+        chat_id = get_barber_chat_id(barber_id)
+        if not chat_id:
+            return False
+
+        amount_eur = amount_cents / 100
+        accumulated_eur = accumulated_cents / 100
+
+        message = (
+            f"\U0001f4b6 <b>¡Nuevo ingreso!</b>\n"
+            f"+{amount_eur:.2f}€ por uso de tu código <b>{promo_code}</b>\n\n"
+            f"Total acumulado este mes: <b>{accumulated_eur:.2f}€</b>"
+        )
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{TELEGRAM_API_BASE}/bot{token}/sendMessage",
+                json={
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "HTML",
+                },
+            )
+
+        if resp.status_code == 200:
+            logger.info(
+                "Barber commission notification sent: barber=%s code=%s amount=%.2f€",
+                barber_id, promo_code, amount_eur,
+            )
+            return True
+        else:
+            logger.warning(
+                "Barber notification failed: %d %s",
+                resp.status_code, resp.text[:200],
+            )
+            return False
+
+    except Exception as e:
+        logger.warning("Barber notification error (non-fatal): %s", e)
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Periodic summaries
+# ---------------------------------------------------------------------------
+async def send_weekly_summary(
+    barber_id: str,
+    chat_id: str,
+    week_uses: int,
+    month_accumulated_cents: int,
+) -> bool:
+    """
+    Send weekly earnings summary to a barber.
+    Called by scheduled task / cron — not from webhook.
+    """
+    try:
+        token = settings.BARBER_TELEGRAM_BOT_TOKEN or settings.TELEGRAM_BOT_TOKEN
+        if not token:
+            return False
+
+        week_earned_eur = (week_uses * settings.BARBER_COMMISSION_CENTS) / 100
+        month_eur = month_accumulated_cents / 100
+
+        message = (
+            f"\U0001f4ca <b>Resumen semanal</b>\n\n"
+            f"Usos esta semana: <b>{week_uses}</b>\n"
+            f"Ganado esta semana: <b>{week_earned_eur:.2f}€</b>\n\n"
+            f"Acumulado este mes: <b>{month_eur:.2f}€</b>"
+        )
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{TELEGRAM_API_BASE}/bot{token}/sendMessage",
+                json={
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "HTML",
+                },
+            )
+
+        if resp.status_code == 200:
+            logger.info("Weekly summary sent to barber %s", barber_id)
+            return True
+        else:
+            logger.warning("Weekly summary failed for barber %s: %d", barber_id, resp.status_code)
+            return False
+
+    except Exception as e:
+        logger.warning("Weekly summary error for barber %s: %s", barber_id, e)
+        return False
+
+
+async def send_monthly_summary(
+    barber_id: str,
+    chat_id: str,
+    month_uses: int,
+    total_cents: int,
+) -> bool:
+    """
+    Send monthly earnings summary to a barber.
+    Called by scheduled task / cron — not from webhook.
+    """
+    try:
+        token = settings.BARBER_TELEGRAM_BOT_TOKEN or settings.TELEGRAM_BOT_TOKEN
+        if not token:
+            return False
+
+        total_eur = total_cents / 100
+
+        message = (
+            f"\U0001f4c5 <b>Resumen mensual</b>\n\n"
+            f"Usos este mes: <b>{month_uses}</b>\n"
+            f"Total ganado este mes: <b>{total_eur:.2f}€</b>\n\n"
+            f"¡Gracias por ser parte de VISAI! \U0001f4aa"
+        )
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{TELEGRAM_API_BASE}/bot{token}/sendMessage",
+                json={
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "HTML",
+                },
+            )
+
+        if resp.status_code == 200:
+            logger.info("Monthly summary sent to barber %s", barber_id)
+            return True
+        else:
+            logger.warning("Monthly summary failed for barber %s: %d", barber_id, resp.status_code)
+            return False
+
+    except Exception as e:
+        logger.warning("Monthly summary error for barber %s: %s", barber_id, e)
+        return False

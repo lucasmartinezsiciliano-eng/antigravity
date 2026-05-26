@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISAI — Tarjeta de Codigo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  @page {
+    size: 200mm 75mm;
+    margin: 0;
+  }
+
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print-instructions {
+      display: none !important;
+    }
+  }
+
+  :root {
+    --bg-deep: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --gold: #d4a853;
+    --gold-light: #e8c97a;
+    --gold-dark: #b8923e;
+    --white: #ffffff;
+    --gray: #888888;
+    --gray-light: #aaaaaa;
+  }
+
+  body {
+    background: #2a2a3a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Inter', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 20px;
+  }
+
+  .print-instructions {
+    color: var(--gray-light);
+    font-size: 13px;
+    margin-bottom: 24px;
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.5;
+  }
+
+  .card-container {
+    display: flex;
+    gap: 16mm;
+    align-items: center;
+  }
+
+  /* ── Card base ── */
+  .card {
+    width: 91mm;   /* 85mm + 6mm bleed */
+    height: 61mm;  /* 55mm + 6mm bleed */
+    border-radius: 2.5mm;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .card-inner {
+    position: absolute;
+    top: 3mm;
+    left: 3mm;
+    right: 3mm;
+    bottom: 3mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* ── Bleed marks ── */
+  .card::before,
+  .card::after {
+    content: '';
+    position: absolute;
+    border: 0.3mm solid rgba(255,255,255,0.15);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .card::before {
+    top: 3mm;
+    left: 3mm;
+    right: 3mm;
+    bottom: 3mm;
+  }
+
+  /* Corner crop marks */
+  .crop-mark {
+    position: absolute;
+    z-index: 20;
+  }
+  .crop-mark::before,
+  .crop-mark::after {
+    content: '';
+    position: absolute;
+    background: rgba(255,255,255,0.25);
+  }
+  /* Top-left */
+  .crop-tl::before { top: 0; left: 3mm; width: 4mm; height: 0.2mm; }
+  .crop-tl::after  { top: 3mm; left: 0; width: 0.2mm; height: 4mm; }
+  /* Top-right */
+  .crop-tr::before { top: 0; right: 3mm; width: 4mm; height: 0.2mm; left: auto; }
+  .crop-tr::after  { top: 3mm; right: 0; width: 0.2mm; height: 4mm; left: auto; }
+  /* Bottom-left */
+  .crop-bl::before { bottom: 0; left: 3mm; width: 4mm; height: 0.2mm; top: auto; }
+  .crop-bl::after  { bottom: 3mm; left: 0; width: 0.2mm; height: 4mm; top: auto; }
+  /* Bottom-right */
+  .crop-br::before { bottom: 0; right: 3mm; width: 4mm; height: 0.2mm; top: auto; left: auto; }
+  .crop-br::after  { bottom: 3mm; right: 0; width: 0.2mm; height: 4mm; top: auto; left: auto; }
+
+  /* ── FRONT SIDE ── */
+  .card-front {
+    background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 50%, #16162b 100%);
+  }
+
+  .card-front .card-inner {
+    padding: 4mm 5mm;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .front-top {
+    width: 100%;
+  }
+
+  .logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 5.5mm;
+    letter-spacing: 3.5px;
+    color: var(--white);
+    margin-bottom: 1.2mm;
+  }
+
+  .logo span {
+    color: var(--gold);
+  }
+
+  .tagline {
+    font-size: 2.2mm;
+    font-weight: 400;
+    color: var(--gray-light);
+    letter-spacing: 0.5px;
+  }
+
+  .front-center {
+    width: 100%;
+    text-align: center;
+    padding: 2mm 0;
+  }
+
+  .code-label {
+    font-size: 1.8mm;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+    margin-bottom: 1.5mm;
+  }
+
+  .code-box {
+    background: rgba(212, 168, 83, 0.08);
+    border: 0.4mm solid var(--gold);
+    border-radius: 1.5mm;
+    padding: 2mm 3mm;
+    display: inline-block;
+  }
+
+  .code-text {
+    font-family: 'Montserrat', monospace;
+    font-weight: 800;
+    font-size: 3.8mm;
+    color: var(--white);
+    letter-spacing: 1.5px;
+  }
+
+  .front-bottom {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .discount-badge {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--bg-deep);
+    font-weight: 800;
+    font-size: 2.8mm;
+    padding: 1mm 2.5mm;
+    border-radius: 1mm;
+    letter-spacing: 0.3px;
+  }
+
+  .front-url {
+    font-size: 2mm;
+    color: var(--gray);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Decorative line ── */
+  .gold-line {
+    position: absolute;
+    bottom: 3mm;
+    left: 3mm;
+    right: 3mm;
+    height: 0.4mm;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.3;
+  }
+
+  .corner-accent {
+    position: absolute;
+    width: 8mm;
+    height: 8mm;
+    border: 0.3mm solid rgba(212, 168, 83, 0.15);
+    pointer-events: none;
+  }
+  .corner-accent.top-right {
+    top: 5mm;
+    right: 5mm;
+    border-left: none;
+    border-bottom: none;
+  }
+  .corner-accent.bottom-left {
+    bottom: 5mm;
+    left: 5mm;
+    border-right: none;
+    border-top: none;
+  }
+
+  /* ── BACK SIDE ── */
+  .card-back {
+    background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 50%, #16162b 100%);
+  }
+
+  .card-back .card-inner {
+    padding: 4mm 5mm;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .qr-placeholder {
+    width: 22mm;
+    height: 22mm;
+    border: 0.5mm solid var(--gold);
+    border-radius: 1.5mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2.5mm;
+    position: relative;
+    background: rgba(212, 168, 83, 0.04);
+  }
+
+  .qr-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 2mm;
+    left: 2mm;
+    right: 2mm;
+    bottom: 2mm;
+    border: 0.3mm dashed rgba(212, 168, 83, 0.25);
+    border-radius: 0.8mm;
+  }
+
+  .qr-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 4mm;
+    color: var(--gold);
+    letter-spacing: 2px;
+    z-index: 1;
+  }
+
+  .qr-grid {
+    position: absolute;
+    top: 3.5mm;
+    left: 3.5mm;
+    right: 3.5mm;
+    bottom: 3.5mm;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 0.5mm;
+    opacity: 0.12;
+    z-index: 0;
+  }
+
+  .qr-cell {
+    background: var(--gold);
+    border-radius: 0.3mm;
+  }
+
+  .back-scan {
+    font-size: 2.3mm;
+    color: var(--white);
+    font-weight: 600;
+    margin-bottom: 1mm;
+    letter-spacing: 0.3px;
+  }
+
+  .back-instruction {
+    font-size: 1.8mm;
+    color: var(--gray);
+    line-height: 1.5;
+    max-width: 55mm;
+  }
+
+  .back-instruction strong {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .back-divider {
+    width: 12mm;
+    height: 0.3mm;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 1.5mm 0;
+    opacity: 0.4;
+  }
+
+  /* Label */
+  .side-label {
+    position: absolute;
+    bottom: -8mm;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  @media print {
+    .side-label { display: none; }
+    body {
+      background: white;
+      padding: 0;
+    }
+    .card-container {
+      gap: 10mm;
+    }
+  }
+</style>
+</head>
+<body>
+
+<p class="print-instructions">
+  Tarjeta de visita VISAI (85 x 55 mm con 3 mm de sangrado).<br>
+  Imprimir a doble cara o recortar por las marcas de corte.
+</p>
+
+<div class="card-container">
+
+  <!-- ══════ FRONT ══════ -->
+  <div class="card card-front" style="position:relative;">
+    <div class="crop-mark crop-tl"></div>
+    <div class="crop-mark crop-tr"></div>
+    <div class="crop-mark crop-bl"></div>
+    <div class="crop-mark crop-br"></div>
+    <div class="corner-accent top-right"></div>
+    <div class="corner-accent bottom-left"></div>
+    <div class="gold-line"></div>
+
+    <div class="card-inner">
+      <div class="front-top">
+        <div class="logo">VIS<span>AI</span></div>
+        <div class="tagline">Analiza tu corte ideal con IA</div>
+      </div>
+
+      <div class="front-center">
+        <div class="code-label">Tu codigo de descuento</div>
+        <div class="code-box">
+          <span class="code-text">[CODIGO DEL BARBERO]</span>
+        </div>
+      </div>
+
+      <div class="front-bottom">
+        <div class="discount-badge">4&#8364; de descuento</div>
+        <div class="front-url">visai.es</div>
+      </div>
+    </div>
+
+    <span class="side-label">Anverso</span>
+  </div>
+
+  <!-- ══════ BACK ══════ -->
+  <div class="card card-back" style="position:relative;">
+    <div class="crop-mark crop-tl"></div>
+    <div class="crop-mark crop-tr"></div>
+    <div class="crop-mark crop-bl"></div>
+    <div class="crop-mark crop-br"></div>
+    <div class="corner-accent top-right"></div>
+    <div class="corner-accent bottom-left"></div>
+    <div class="gold-line"></div>
+
+    <div class="card-inner">
+      <div class="qr-placeholder">
+        <div class="qr-grid">
+          <div class="qr-cell" style="grid-column:1;grid-row:1;"></div>
+          <div class="qr-cell" style="grid-column:2;grid-row:1;"></div>
+          <div class="qr-cell" style="grid-column:3;grid-row:1;"></div>
+          <div class="qr-cell" style="grid-column:1;grid-row:2;"></div>
+          <div class="qr-cell" style="grid-column:3;grid-row:2;"></div>
+          <div class="qr-cell" style="grid-column:1;grid-row:3;"></div>
+          <div class="qr-cell" style="grid-column:2;grid-row:3;"></div>
+          <div class="qr-cell" style="grid-column:3;grid-row:3;"></div>
+          <div class="qr-cell" style="grid-column:5;grid-row:1;"></div>
+          <div class="qr-cell" style="grid-column:4;grid-row:2;"></div>
+          <div class="qr-cell" style="grid-column:5;grid-row:3;"></div>
+          <div class="qr-cell" style="grid-column:4;grid-row:4;"></div>
+          <div class="qr-cell" style="grid-column:2;grid-row:5;"></div>
+          <div class="qr-cell" style="grid-column:4;grid-row:5;"></div>
+          <div class="qr-cell" style="grid-column:5;grid-row:5;"></div>
+        </div>
+        <span class="qr-text">QR</span>
+      </div>
+
+      <div class="back-scan">Escanea o visita visai.es</div>
+      <div class="back-divider"></div>
+      <div class="back-instruction">
+        Usa el codigo de tu barbero para <strong>4&#8364; de descuento</strong> en tu analisis capilar con inteligencia artificial
+      </div>
+    </div>
+
+    <span class="side-label">Reverso</span>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISAI — Ficha de Precios para Barberos (A5)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  @page {
+    size: 148mm 210mm;
+    margin: 0;
+  }
+
+  @media print {
+    body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print-instructions {
+      display: none !important;
+    }
+  }
+
+  :root {
+    --bg-deep: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --bg-section: #16162b;
+    --gold: #d4a853;
+    --gold-light: #e8c97a;
+    --gold-dark: #b8923e;
+    --white: #ffffff;
+    --gray: #888888;
+    --gray-light: #aaaaaa;
+    --green: #4ade80;
+    --green-muted: #2d7a4d;
+  }
+
+  body {
+    background: #2a2a3a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Inter', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 20px;
+  }
+
+  .print-instructions {
+    color: var(--gray-light);
+    font-size: 13px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* ── Page ── */
+  .page {
+    width: 148mm;
+    height: 210mm;
+    background: linear-gradient(175deg, #1a1a2e 0%, #0f0f1a 40%, #12122a 70%, #0f0f1a 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 8mm 9mm 7mm;
+  }
+
+  /* ── Ambient glow ── */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: -30mm;
+    right: -20mm;
+    width: 100mm;
+    height: 100mm;
+    background: radial-gradient(ellipse, rgba(212, 168, 83, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Decorative border ── */
+  .border-frame {
+    position: absolute;
+    top: 5mm;
+    left: 5mm;
+    right: 5mm;
+    bottom: 5mm;
+    border: 0.25mm solid rgba(212, 168, 83, 0.1);
+    border-radius: 2mm;
+    pointer-events: none;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 5mm;
+    z-index: 1;
+  }
+
+  .header-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 9mm;
+    letter-spacing: 4px;
+    color: var(--white);
+  }
+
+  .header-logo span {
+    color: var(--gold);
+  }
+
+  .header-divider {
+    width: 30mm;
+    height: 0.4mm;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 2mm auto;
+  }
+
+  .header-subtitle {
+    font-size: 3.2mm;
+    color: var(--gray-light);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ── Section base ── */
+  .section {
+    background: rgba(22, 22, 43, 0.6);
+    border: 0.3mm solid rgba(212, 168, 83, 0.1);
+    border-radius: 2.5mm;
+    padding: 4mm 5mm;
+    margin-bottom: 3.5mm;
+    z-index: 1;
+    position: relative;
+  }
+
+  .section-number {
+    position: absolute;
+    top: -1.8mm;
+    left: 5mm;
+    background: var(--gold);
+    color: var(--bg-deep);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 2.2mm;
+    padding: 0.5mm 2.5mm;
+    border-radius: 1mm;
+    letter-spacing: 0.5px;
+  }
+
+  .section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 3.8mm;
+    color: var(--white);
+    margin-bottom: 3mm;
+    padding-top: 0.5mm;
+  }
+
+  /* ── Section 1: Prices ── */
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.8mm 0;
+    border-bottom: 0.2mm solid rgba(255,255,255,0.05);
+  }
+
+  .price-row:last-child {
+    border-bottom: none;
+  }
+
+  .price-label {
+    font-size: 2.8mm;
+    color: var(--gray-light);
+    font-weight: 400;
+  }
+
+  .price-value {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 3.2mm;
+    color: var(--white);
+  }
+
+  .price-original {
+    text-decoration: line-through;
+    color: var(--gray);
+    font-weight: 400;
+    font-size: 2.6mm;
+    margin-right: 1.5mm;
+  }
+
+  .price-highlight {
+    color: var(--gold);
+  }
+
+  .price-savings {
+    font-size: 2.2mm;
+    color: var(--green);
+    font-weight: 600;
+    margin-left: 1mm;
+  }
+
+  .price-right {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* ── Section 2: Earnings ── */
+  .earning-row {
+    display: flex;
+    align-items: center;
+    padding: 1.6mm 0;
+    gap: 2.5mm;
+  }
+
+  .earning-icon {
+    width: 5mm;
+    height: 5mm;
+    border-radius: 50%;
+    background: rgba(212, 168, 83, 0.12);
+    border: 0.3mm solid rgba(212, 168, 83, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .earning-icon svg {
+    width: 3mm;
+    height: 3mm;
+  }
+
+  .earning-text {
+    font-size: 2.8mm;
+    color: var(--gray-light);
+    line-height: 1.4;
+  }
+
+  .earning-text strong {
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .earning-text .big-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 3.2mm;
+    color: var(--gold-light);
+  }
+
+  .earning-highlight {
+    background: rgba(212, 168, 83, 0.08);
+    border: 0.3mm solid rgba(212, 168, 83, 0.15);
+    border-radius: 1.5mm;
+    padding: 2mm 3mm;
+    margin-top: 1.5mm;
+    text-align: center;
+  }
+
+  .earning-highlight-text {
+    font-size: 2.6mm;
+    color: var(--gray-light);
+  }
+
+  .earning-highlight-text strong {
+    color: var(--gold);
+  }
+
+  /* ── Section 3: Pitch scripts ── */
+  .pitch-block {
+    margin-bottom: 3mm;
+  }
+
+  .pitch-block:last-child {
+    margin-bottom: 0;
+  }
+
+  .pitch-persona {
+    font-size: 2.3mm;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 1.2mm;
+    display: flex;
+    align-items: center;
+    gap: 1.5mm;
+  }
+
+  .pitch-dot {
+    width: 1.5mm;
+    height: 1.5mm;
+    background: var(--gold);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pitch-quote {
+    font-size: 2.7mm;
+    color: var(--white);
+    font-style: italic;
+    line-height: 1.45;
+    padding-left: 3mm;
+    border-left: 0.4mm solid rgba(212, 168, 83, 0.25);
+    font-weight: 400;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: auto;
+    text-align: center;
+    z-index: 1;
+    padding-top: 2mm;
+  }
+
+  .footer-divider {
+    width: 40mm;
+    height: 0.3mm;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 0 auto 2mm;
+    opacity: 0.5;
+  }
+
+  .footer-text {
+    font-size: 2.2mm;
+    color: var(--gray);
+    letter-spacing: 0.5px;
+  }
+
+  .footer-text strong {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  @media print {
+    body {
+      background: white;
+      padding: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<p class="print-instructions">Ficha de precios A5 (148 x 210 mm). Imprimir en A5 o A4 y recortar.</p>
+
+<div class="page">
+  <div class="border-frame"></div>
+
+  <!-- ══ HEADER ══ -->
+  <div class="header">
+    <div class="header-logo">VIS<span>AI</span></div>
+    <div class="header-divider"></div>
+    <div class="header-subtitle">Lo que necesitas saber</div>
+  </div>
+
+  <!-- ══ SECTION 1: PRECIOS ══ -->
+  <div class="section">
+    <div class="section-number">1</div>
+    <div class="section-title">Precios para tu cliente</div>
+
+    <div class="price-row">
+      <div class="price-label">Analisis sin codigo</div>
+      <div class="price-value">16,99&#8364;</div>
+    </div>
+
+    <div class="price-row">
+      <div class="price-label">Analisis <strong style="color:var(--gold);">con tu codigo</strong></div>
+      <div class="price-right">
+        <span class="price-original">16,99&#8364;</span>
+        <span class="price-value price-highlight">12,99&#8364;</span>
+        <span class="price-savings">ahorra 4&#8364;</span>
+      </div>
+    </div>
+
+    <div class="price-row">
+      <div class="price-label">Pack Completo <strong style="color:var(--gold);">con tu codigo</strong></div>
+      <div class="price-right">
+        <span class="price-original">21,99&#8364;</span>
+        <span class="price-value price-highlight">17,99&#8364;</span>
+        <span class="price-savings">ahorra 4&#8364;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2: GANANCIAS ══ -->
+  <div class="section">
+    <div class="section-number">2</div>
+    <div class="section-title">Lo que tu ganas</div>
+
+    <div class="earning-row">
+      <div class="earning-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="#d4a853" stroke-width="1.5" fill="none"/>
+          <text x="8" y="11" text-anchor="middle" fill="#d4a853" font-size="8" font-weight="800" font-family="Montserrat, sans-serif">&#8364;</text>
+        </svg>
+      </div>
+      <div class="earning-text"><strong>3&#8364;</strong> por cada cliente que use tu codigo</div>
+    </div>
+
+    <div class="earning-row">
+      <div class="earning-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M4 8 L7 12 L13 4" stroke="#d4a853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="earning-text">15 clientes/mes = <span class="big-number">45&#8364; extra</span></div>
+    </div>
+
+    <div class="earning-row">
+      <div class="earning-icon">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="4" width="10" height="9" rx="1" stroke="#d4a853" stroke-width="1.3" fill="none"/>
+          <line x1="3" y1="7" x2="13" y2="7" stroke="#d4a853" stroke-width="1"/>
+          <line x1="6" y1="4" x2="6" y2="2" stroke="#d4a853" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="10" y1="4" x2="10" y2="2" stroke="#d4a853" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="earning-text">Cobro semanal <strong>los viernes</strong></div>
+    </div>
+
+    <div class="earning-highlight">
+      <div class="earning-highlight-text">
+        Sin limite &mdash; cuantos mas clientes, mas ganas.<br>
+        <strong>Solo tienen que usar tu codigo en visai.es</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 3: PITCH SCRIPTS ══ -->
+  <div class="section" style="flex:1;">
+    <div class="section-number">3</div>
+    <div class="section-title">Que decirle al cliente</div>
+
+    <div class="pitch-block">
+      <div class="pitch-persona">
+        <div class="pitch-dot"></div>
+        Para el joven
+      </div>
+      <div class="pitch-quote">
+        &laquo;Tio, mira esto &mdash; te analiza la cara con IA y te dice que corte te queda mejor. Tengo un codigo que te quita 4 euros.&raquo;
+      </div>
+    </div>
+
+    <div class="pitch-block">
+      <div class="pitch-persona">
+        <div class="pitch-dot"></div>
+        Para el curioso
+      </div>
+      <div class="pitch-quote">
+        &laquo;Hay una herramienta que te dice que corte te favorece segun la forma de tu cara. Es con inteligencia artificial. Te doy un codigo de descuento.&raquo;
+      </div>
+    </div>
+
+    <div class="pitch-block">
+      <div class="pitch-persona">
+        <div class="pitch-dot"></div>
+        Para el que pregunta
+      </div>
+      <div class="pitch-quote">
+        &laquo;Si, tengo un codigo que te da 4 euros de descuento. Entra en visai.es, subes una foto y te dice el corte ideal.&raquo;
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══ -->
+  <div class="footer">
+    <div class="footer-divider"></div>
+    <div class="footer-text">
+      &iquest;Dudas? Escribe a <strong>soporte@visai.es</strong> &nbsp;|&nbsp; Tu codigo: <strong>[VISAI-TUNOMBRE-XXXX]</strong>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

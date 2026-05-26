@@ -128,6 +128,22 @@ async def _handle_checkout_completed(event, db: AsyncSession) -> None:
             db=db,
         )
 
+        # E — fire-and-forget Telegram notification to barber
+        import asyncio
+        from app.services.telegram_service import send_barber_notification
+
+        # Fetch accumulated earnings (already updated by record_barber_commission above)
+        accumulated = await _get_barber_accumulated_cents(commission_data["barber_id"], db)
+
+        asyncio.create_task(
+            send_barber_notification(
+                barber_id=commission_data["barber_id"],
+                amount_cents=commission_data["amount_cents"],
+                promo_code=commission_data["promo_code"],
+                accumulated_cents=accumulated,
+            )
+        )
+
 
 async def _handle_upsell_completed(event, db: AsyncSession) -> None:
     from app.api.routes.analysis import _generate_upsell_content
@@ -159,3 +175,11 @@ async def _update_analysis_status(analysis_id: str, new_status: str, db: AsyncSe
     analysis = (await db.execute(stmt)).scalar_one_or_none()
     if analysis:
         analysis.status = new_status
+
+
+async def _get_barber_accumulated_cents(barber_id: str, db: AsyncSession) -> int:
+    """Return the barber's total_earned_cents, or 0 if not found."""
+    from app.models.barber import BarberPartner
+    stmt = select(BarberPartner.total_earned_cents).where(BarberPartner.id == barber_id)
+    result = (await db.execute(stmt)).scalar_one_or_none()
+    return result or 0

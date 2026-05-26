@@ -50,6 +50,7 @@ export default function ResultPage() {
 
   const autoGenStartedRef = useRef(false); // dedup: prevents double Fal.ai charge on re-render
   const [upsellError, setUpsellError] = useState(""); // replaces alert() in handleUpsell
+  const [shareEarnConfirm, setShareEarnConfirm] = useState(false);
 
   function startVisualsPoll() {
     // Always clear before starting — orphaned interval prevention
@@ -944,6 +945,54 @@ export default function ResultPage() {
             <canvas ref={storyCanvasRef} style={{ display: "none" }} width={1080} height={1920} />
 
           </div>
+        </div>
+
+        {/* Comparte y recupera 2€ */}
+        <div style={{
+          margin: "28px 0 0",
+          padding: "20px 18px",
+          background: "var(--surface2)",
+          border: "1px solid var(--border)",
+          borderRadius: 16,
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", letterSpacing: -0.2 }}>
+            ¿Te ha molado? Comparte y recupera 2€
+          </h3>
+          <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--text-muted)", margin: "0 0 14px" }}>
+            Sube una story o TikTok con tu resultado y te devolvemos 2€ por Bizum. Solo mándanos el enlace.
+          </p>
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ fontSize: 14, padding: "12px 16px", width: "100%" }}
+            onClick={async () => {
+              const shareData = {
+                title: "Mi análisis VISAI",
+                text: "Mira qué cortes me recomienda la IA según mi forma de cara 🔥 #VISAI",
+                url: window.location.href,
+              };
+              try {
+                if (navigator.share) {
+                  await navigator.share(shareData);
+                } else {
+                  await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+                }
+                setShareEarnConfirm(true);
+                setTimeout(() => setShareEarnConfirm(false), 5000);
+              } catch {}
+            }}
+          >
+            Compartir resultado
+          </button>
+          {shareEarnConfirm && (
+            <p style={{ fontSize: 13, color: "var(--gold)", margin: "10px 0 0", lineHeight: 1.5 }}>
+              ✅ ¡Enlace copiado! Súbelo a tus redes y mándanos el link por Instagram @visai.es
+            </p>
+          )}
+          <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "10px 0 0", lineHeight: 1.4 }}>
+            Válido en TikTok e Instagram · Recibirás el Bizum en 24h
+          </p>
         </div>
 
         <p className="caption" style={{ textAlign: "center", paddingBottom: 40 }}>

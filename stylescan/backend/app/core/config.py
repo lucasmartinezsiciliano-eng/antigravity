@@ -97,6 +97,8 @@ class Settings(BaseSettings):
 
     # Barber Telegram bot — weekly reports, trend polls, gamification notifications
     BARBER_TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_BOT_TOKEN: str = ""  # alias used by telegram_service (falls back to BARBER_TELEGRAM_BOT_TOKEN)
+    TELEGRAM_BARBER_DATA_PATH: str = "data/barber_telegram.json"
 
     # Development bypass — skip Stripe entirely (never use in production)
     DEV_SKIP_PAYMENT: bool = False
