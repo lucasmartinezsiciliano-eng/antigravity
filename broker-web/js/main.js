@@ -4,7 +4,7 @@
 
 const N8N_WEBHOOK_URL       = 'https://n8n.lukimporta.es/webhook/broker-lead';
 const N8N_WEBHOOK_PADRE_URL = 'https://n8n.lukimporta.es/webhook/broker-lead-padre';
-const GHL_WEBHOOK_URL       = 'https://services.leadconnectorhq.com/hooks/8KjcyGRXhMDKoNIhborg/webhook-trigger/2313df61-3f1e-4370-a373-f01e55eeafe1';
+const GHL_WEBHOOK_URL       = 'https://services.leadconnectorhq.com/hooks/8KjcyGRXhMDKoNIhborg/webhook-trigger/c2bb9588-dc90-4ef9-9ef9-1eb9ab84555e';
 
 // ============================================
 // TOAST
@@ -527,19 +527,47 @@ function initQuiz() {
     if (!ok) showToast('Error al enviar. Te llamaremos igualmente.', 'error');
   }
 
-  // Steppers — +/- para edad
+  // Steppers — +/- para edad (toca el número para editar manualmente)
   function initSteppers() {
     quiz.querySelectorAll('.stepper').forEach(el => {
-      const step  = +el.dataset.step || 1;
-      const min   = +el.dataset.min  || 0;
-      const max   = +el.dataset.max  || 999;
-      const inp   = el.querySelector('input[type="hidden"]');
-      const valEl = el.querySelector('.stepper-val');
+      const step = +el.dataset.step || 1;
+      const min  = +el.dataset.min  || 0;
+      const max  = +el.dataset.max  || 999;
+      const inp  = el.querySelector('input[type="hidden"]');
+      let valEl  = el.querySelector('.stepper-val');
+
       function update(v) {
         v = Math.max(min, Math.min(max, Math.round(v / step) * step));
         inp.value = v;
         valEl.textContent = v.toLocaleString('es-ES');
       }
+
+      function startEdit() {
+        const editInput = document.createElement('input');
+        editInput.type = 'text';
+        editInput.inputMode = 'numeric';
+        editInput.pattern = '[0-9]*';
+        editInput.value = inp.value;
+        editInput.style.cssText = 'width:50px;border:none;outline:none;font-size:1.3rem;font-weight:800;color:var(--gray-800);background:transparent;text-align:center;font-family:inherit;';
+        valEl.replaceWith(editInput);
+        editInput.focus();
+        editInput.select();
+
+        function commit() {
+          const raw = parseInt(editInput.value, 10);
+          const newSpan = document.createElement('span');
+          newSpan.className = 'stepper-val';
+          newSpan.addEventListener('click', startEdit);
+          editInput.replaceWith(newSpan);
+          valEl = newSpan;
+          update(!isNaN(raw) ? raw : +inp.value);
+        }
+
+        editInput.addEventListener('blur', commit);
+        editInput.addEventListener('keydown', e => { if (e.key === 'Enter') editInput.blur(); });
+      }
+
+      valEl.addEventListener('click', startEdit);
       el.querySelector('.stepper-dec').addEventListener('click', () => update(+inp.value - step));
       el.querySelector('.stepper-inc').addEventListener('click', () => update(+inp.value + step));
       update(+inp.value || min);
@@ -555,24 +583,57 @@ function initQuiz() {
       const inp    = el.querySelector('input[type="hidden"]');
       const valEl  = el.querySelector('.dw-val');
       const tickEl = el.querySelector('.dw-ticks');
-      const TICK   = 11;   // px entre ticks (debe coincidir con el repeating-gradient)
+      const TICK   = 11;
       const PX_PER_STEP = 22;
-      let startX = null, startVal = 0, offsetPx = 0;
+      let startX = null, startVal = 0;
 
       function clamp(v) { return Math.max(min, Math.min(max, Math.round(v / step) * step)); }
+
+      // Calcula el intervalo de etiquetas en un número "redondo" bonito
+      function calcLabelStep(s) {
+        const raw  = s * Math.round(80 / PX_PER_STEP);
+        const mag  = Math.pow(10, Math.floor(Math.log10(raw)));
+        const norm = raw / mag;
+        const nice = norm <= 1.5 ? 1 : norm <= 3 ? 2 : norm <= 7 ? 5 : 10;
+        return nice * mag;
+      }
+      const labelStep = calcLabelStep(step);
+
+      // Fila de etiquetas bajo los ticks
+      const labelsRow = document.createElement('div');
+      labelsRow.className = 'dw-labels-row';
+      el.insertBefore(labelsRow, el.querySelector('.dw-display'));
+
+      function fmtLabel(lv) {
+        if (lv >= 100000) return (lv / 1000).toLocaleString('es-ES', { maximumFractionDigits: 0 }) + 'k';
+        return lv.toLocaleString('es-ES');
+      }
+
+      function updateLabels(v, dx) {
+        labelsRow.innerHTML = '';
+        const trackWidth = el.querySelector('.dw-track-area').offsetWidth || 280;
+        const center  = trackWidth / 2;
+        const subOff  = -(dx % PX_PER_STEP);
+        for (let lv = min; lv <= max; lv += labelStep) {
+          const x = center + (lv - v) / step * PX_PER_STEP + subOff;
+          if (x < -20 || x > trackWidth + 20) continue;
+          const span = document.createElement('span');
+          span.className = 'dw-label';
+          span.textContent = fmtLabel(lv);
+          span.style.left = x + 'px';
+          labelsRow.appendChild(span);
+        }
+      }
 
       function render(v, dx) {
         inp.value = v;
         valEl.textContent = v.toLocaleString('es-ES');
-        // desplaza los ticks suavemente
         const shift = (((dx % TICK) + TICK) % TICK);
         if (tickEl) tickEl.style.backgroundPositionX = shift + 'px';
+        updateLabels(v, dx);
       }
 
-      function onStart(x) {
-        startX = x; startVal = +inp.value; offsetPx = 0;
-        el.classList.add('dragging');
-      }
+      function onStart(x) { startX = x; startVal = +inp.value; el.classList.add('dragging'); }
       function onMove(x) {
         if (startX === null) return;
         const dx = x - startX;
@@ -582,6 +643,7 @@ function initQuiz() {
         if (tickEl) tickEl.style.backgroundPositionX = '0px';
         startX = null;
         el.classList.remove('dragging');
+        updateLabels(+inp.value, 0);
       }
 
       el.addEventListener('mousedown',  e => { onStart(e.clientX); e.preventDefault(); });
@@ -697,6 +759,19 @@ function initCookieBanner() {
 }
 
 // ============================================
+// MOBILE CTA BAR — oculta cuando el quiz es visible
+// ============================================
+function initMobileCTA() {
+  const bar     = document.querySelector('.mobile-cta-bar');
+  const section = document.getElementById('filtro');
+  if (!bar || !section) return;
+  const obs = new IntersectionObserver(entries => {
+    bar.classList.toggle('hidden', entries[0].isIntersecting);
+  }, { threshold: 0.1 });
+  obs.observe(section);
+}
+
+// ============================================
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -706,4 +781,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initReveal();
   initCookieBanner();
+  initMobileCTA();
 });
