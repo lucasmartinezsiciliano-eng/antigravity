@@ -1074,6 +1074,7 @@ function initQuiz() {
     const telefono = sanitize(qval('q_telefono'));
     const email    = sanitize(qval('q_email'));
     const hp       = qval('q_hp');
+    if (hp) return; // honeypot: bot rellenó el campo oculto → abortar silenciosamente
     if (!nombre || !telefono) { showToast('Por favor rellena nombre y teléfono.', 'error'); return; }
     if (!validatePhone(telefono)) { showToast('Teléfono no válido (9 dígitos, empieza por 6-9).', 'error'); return; }
     const consent = quiz.querySelector('[name="q_consent"]');
