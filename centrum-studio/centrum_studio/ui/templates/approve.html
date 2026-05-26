@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — centrum-studio{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h3>{{ project.name }}</h3>
+  <p class="muted">
+    <code>{{ project.project_id }}</code> &middot;
+    <span class="pill {% if project.status == 'approved' %}ok{% elif project.status == 'review_lucas' %}warn{% else %}info{% endif %}">{{ project.status }}</span>
+  </p>
+  {% if project.final_video_path %}
+  <div class="video-frame" style="margin-top: 12px;">
+    <video controls preload="metadata" src="/files/{{ project.project_id }}/{{ project.final_video_path.split('/')[-1] }}"></video>
+  </div>
+  {% else %}
+  <p class="muted">No final video yet — assemble scenes first.</p>
+  {% endif %}
+  <div style="display: flex; gap: 8px; margin-top: 12px;">
+    <form method="post" action="/projects/{{ project.project_id }}/approve">
+      <button type="submit">Approve</button>
+    </form>
+    <form method="post" action="/projects/{{ project.project_id }}/reject" style="display: flex; gap: 6px;">
+      <input type="text" name="reason" placeholder="reason for rejection (saved as engram)" style="flex: 1; min-width: 280px;">
+      <button type="submit" class="danger">Reject</button>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h3>Scenes ({{ scenes|length }})</h3>
+  <div class="grid-3">
+    {% for s in scenes %}
+    <div class="card" style="background: var(--panel-2);">
+      <p style="margin: 0 0 8px 0;"><code>{{ s.scene_id }}</code></p>
+      <p style="font-size: 13px; margin: 0 0 8px 0;">{{ s.scene_description }}</p>
+      <p>
+        <span class="pill {% if s.status in ['rendered', 'lipsynced'] %}ok{% elif s.status == 'failed' %}err{% else %}info{% endif %}">{{ s.status }}</span>
+        {% if s.passed_thresholds %}<span class="pill ok">passed</span>{% endif %}
+      </p>
+      {% if s.output_path %}
+      <div class="video-frame">
+        <video controls preload="metadata" src="/files/{{ s.project_id }}/{{ s.output_path.split('/')[-1] }}"></video>
+      </div>
+      {% endif %}
+      <div style="font-size: 11px; color: var(--muted); margin-top: 8px;">
+        ArcFace: <strong>{{ "%.3f"|format(s.arcface_similarity or 0) }}</strong>
+        &middot; DOVER: <strong>{{ "%.3f"|format(s.dover_score or 0) }}</strong>
+        &middot; MUSIQ: <strong>{{ "%.1f"|format(s.musiq_score or 0) }}</strong>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

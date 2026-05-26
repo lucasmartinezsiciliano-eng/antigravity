@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  centrum-studio-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: centrum-studio:latest
+    container_name: centrum-studio-mcp
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+      - CENTRUM_STUDIO_DATA_DIR=/srv/centrum-studio
+      - COMFYUI_URL=http://host.docker.internal:8188
+      - PLUR_URL=http://host.docker.internal:8420
+      - PLUR_SCOPE=project:centrum-studio
+      - MCP_TRANSPORT=stdio
+      - LOG_LEVEL=INFO
+      - GPU_MODE_FILE=/srv/centrum-studio/gpu_mode
+    volumes:
+      - centrum_studio_data:/srv/centrum-studio
+    stdin_open: true
+    tty: false
+    command: ["python", "-m", "centrum_studio.server"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  centrum-studio-ui:
+    image: centrum-studio:latest
+    container_name: centrum-studio-ui
+    depends_on:
+      - centrum-studio-mcp
+    environment:
+      - CENTRUM_STUDIO_DATA_DIR=/srv/centrum-studio
+      - UI_HOST=0.0.0.0
+      - UI_PORT=8788
+      - LOG_LEVEL=INFO
+    volumes:
+      - centrum_studio_data:/srv/centrum-studio
+    ports:
+      - "8788:8788"
+    command: ["python", "-m", "centrum_studio.ui.app"]
+    restart: unless-stopped
+
+volumes:
+  centrum_studio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/centrum-studio

@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "centrum-studio"
+version = "0.1.0"
+description = "Agent-first video production for Centrum — MCP server + mini UI on NVIDIA DGX Spark"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Centrum", email = "studio@centrum.local" }]
+license = { text = "Proprietary" }
+dependencies = [
+    "fastmcp>=0.9",
+    "httpx>=0.27",
+    "aiosqlite>=0.20",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "click>=8.1",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "websockets>=12.0",
+    "structlog>=24.1",
+    "numpy>=1.26",
+    "Pillow>=10.3",
+    "moviepy>=1.0.3",
+    "librosa>=0.10",
+    "soundfile>=0.12",
+    "openai-whisper>=20231117",
+    "imageio>=2.34",
+    "imageio-ffmpeg>=0.5",
+]
+
+[project.optional-dependencies]
+eval = [
+    "insightface>=0.7",
+    "onnxruntime-gpu>=1.19",
+    "pyiqa>=0.1.12",
+    "lpips>=0.1.4",
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "opencv-python-headless>=4.10",
+]
+lipsync = [
+    "chatterbox-tts>=0.1",
+]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+centrum-studio = "centrum_studio.soul.cli:main"
+centrum-studio-mcp = "centrum_studio.server:main"
+centrum-studio-ui = "centrum_studio.ui.app:main"
+
+[tool.setuptools.packages.find]
+include = ["centrum_studio*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+centrum_studio = ["comfy/workflows/*.json", "ui/templates/*.html"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true

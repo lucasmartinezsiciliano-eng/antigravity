@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — centrum-studio{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="card">
+    <h3>GPU Mode</h3>
+    <p style="font-size: 20px; font-weight: 600; margin: 0 0 12px 0;">
+      <span class="pill {% if gpu_mode == 'agents' %}info{% elif gpu_mode == 'saturday_images' %}warn{% else %}ok{% endif %}">
+        {{ gpu_mode }}
+      </span>
+    </p>
+    <form method="post" action="/gpu_mode">
+      <select name="mode">
+        <option value="agents" {% if gpu_mode == 'agents' %}selected{% endif %}>agents (Mon-Fri, queue paused)</option>
+        <option value="saturday_images" {% if gpu_mode == 'saturday_images' %}selected{% endif %}>saturday_images</option>
+        <option value="saturday_video" {% if gpu_mode == 'saturday_video' %}selected{% endif %}>saturday_video</option>
+      </select>
+      <button type="submit">Update</button>
+    </form>
+    <p class="muted" style="font-size: 12px; margin: 12px 0 0;">Mon-Fri: agents queue jobs. Saturday: GPU executes the queue.</p>
+  </div>
+
+  <div class="card">
+    <h3>Projects ({{ projects|length }})</h3>
+    {% if projects %}
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for p in projects %}
+        <tr>
+          <td><code>{{ p.project_id }}</code></td>
+          <td>{{ p.name }}</td>
+          <td><span class="pill info">{{ p.status }}</span></td>
+          <td><a href="/projects/{{ p.project_id }}">view</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No projects yet. Agents will create projects when calling <code>produce_scene</code>.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h3>Recent Scenes ({{ total_scenes }})</h3>
+  {% if scenes %}
+  <table>
+    <thead>
+      <tr>
+        <th>Scene</th><th>Project</th><th>Status</th>
+        <th>ArcFace</th><th>DOVER</th><th>MUSIQ</th><th>LPIPS</th>
+        <th>Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in scenes %}
+      <tr>
+        <td><code>{{ s.scene_id }}</code></td>
+        <td><a href="/projects/{{ s.project_id }}">{{ s.project_id }}</a></td>
+        <td>
+          <span class="pill {% if s.status == 'rendered' or s.status == 'lipsynced' %}ok{% elif s.status == 'failed' %}err{% else %}info{% endif %}">{{ s.status }}</span>
+        </td>
+        <td>{{ "%.3f"|format(s.arcface_similarity or 0) }}</td>
+        <td>{{ "%.3f"|format(s.dover_score or 0) }}</td>
+        <td>{{ "%.1f"|format(s.musiq_score or 0) }}</td>
+        <td>{{ "%.3f"|format(s.temporal_lpips or 0) }}</td>
+        <td>{% if s.output_path %}<a href="/files/{{ s.project_id }}/{{ s.output_path.split('/')[-1] }}">view</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No scenes yet. Use <code>produce_scene</code> from a Hermes agent or via MCP client.</p>
+  {% endif %}
+</div>
+{% endblock %}

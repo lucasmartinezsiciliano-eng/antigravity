@@ -1,0 +1,49 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Centrum-studio runtime data
+renders/*
+!renders/.gitkeep
+music/*
+!music/.gitkeep
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Soul assets — never commit binaries
+souls/*/v*/lora/*.safetensors
+souls/*/v*/embeddings/*.npy
+souls/*/v*/ip_adapter/*.png
+souls/*/v*/canonical/
+
+# Model weights and caches
+.cache/
+*.safetensors
+*.bin
+*.ckpt
+
+# Logs
+*.log
+logs/

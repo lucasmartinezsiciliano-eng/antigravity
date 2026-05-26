@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Souls — centrum-studio{% endblock %}
+{% block content %}
+
+{% if active %}
+<div class="card">
+  <h3>Active Soul</h3>
+  <p style="font-size: 18px; font-weight: 600; margin: 0 0 4px 0;">{{ active.character_name }} <span class="pill ok">{{ active.version }}</span></p>
+  <p class="muted">soul_id: <code>{{ active.soul_id }}</code> &middot; trigger: <code>{{ active.trigger_token }}</code></p>
+  <p class="muted" style="font-size: 12px;">{{ active_path }}</p>
+  {% if active.notes %}<p style="font-style: italic; color: var(--warn);">{{ active.notes }}</p>{% endif %}
+</div>
+{% else %}
+<div class="card">
+  <h3>No Active Soul</h3>
+  <p class="muted">Create one below to start producing.</p>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top: 16px;">
+  <h3>All Souls</h3>
+  {% if souls %}
+  <table>
+    <thead><tr><th>Name</th><th>Versions</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+      {% for s in souls %}
+      <tr>
+        <td><strong>{{ s.name }}</strong></td>
+        <td>{{ s.versions|join(", ") if s.versions else "—" }}</td>
+        <td>{% if s.active %}<span class="pill ok">{{ s.active }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>
+          <form method="post" action="/souls/{{ s.name }}/activate" style="display:inline-flex;">
+            <select name="version">
+              {% for v in s.versions %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="secondary">Activate</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No souls yet. Create one below.</p>
+  {% endif %}
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h3>Create Soul</h3>
+  <form method="post" action="/souls/create">
+    <label>Name <input type="text" name="name" placeholder="placeholder" required></label>
+    <label>Version <input type="text" name="version" value="v1"></label>
+    <label>Character <input type="text" name="character_name" placeholder="Placeholder Character"></label>
+    <label>Trigger <input type="text" name="trigger_token" placeholder="cs_placeholder_v1"></label>
+    <label>Notes <input type="text" name="notes" placeholder="Avatar TBD with Mariano"></label>
+    <button type="submit">Create</button>
+  </form>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h3>Upload Asset</h3>
+  <form method="post" action="/souls/placeholder/upload" enctype="multipart/form-data">
+    <label>Soul name <input type="text" name="soul_name" value="placeholder"></label>
+    <label>Version <input type="text" name="version" value="v1"></label>
+    <label>Asset
+      <select name="asset_type">
+        <option value="lora_high">LoRA (Wan 2.2 high)</option>
+        <option value="lora_low">LoRA (Wan 2.2 low)</option>
+        <option value="lora_flux">LoRA (Flux)</option>
+        <option value="ip_adapter">IP-Adapter reference (PNG)</option>
+        <option value="arcface">ArcFace canonical embedding (.npy)</option>
+        <option value="soul_manifest">soul.json manifest</option>
+      </select>
+    </label>
+    <input type="file" name="file" required>
+    <button type="submit">Upload</button>
+  </form>
+  <p class="muted" style="font-size: 12px; margin-top: 8px;">
+    Note: the form posts to <code>/souls/placeholder/upload</code>. Adjust the URL to upload to a different soul (e.g. <code>/souls/&lt;name&gt;/upload</code>).
+  </p>
+</div>
+
+{% endblock %}

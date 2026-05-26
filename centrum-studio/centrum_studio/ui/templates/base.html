@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}centrum-studio{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --panel: #14181d;
+      --panel-2: #1b2027;
+      --text: #e7ecf3;
+      --muted: #8a94a1;
+      --accent: #6c8cff;
+      --accent-2: #00d6b3;
+      --warn: #ffb86b;
+      --err: #ff6b6b;
+      --ok: #67e480;
+      --border: #232a33;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, Roboto, "Segoe UI", sans-serif;
+      font-size: 14px; line-height: 1.5;
+    }
+    header {
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: 0.2px; }
+    nav a {
+      color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 13px;
+      padding: 6px 10px; border-radius: 6px;
+    }
+    nav a:hover { color: var(--text); background: var(--panel-2); }
+    main { max-width: 1280px; margin: 0 auto; padding: 28px 24px; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 18px 20px; flex: 1 1 320px; min-width: 0;
+    }
+    .card h3 { margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+      background: var(--panel-2); color: var(--muted);
+    }
+    .pill.ok    { background: rgba(103,228,128,0.15); color: var(--ok); }
+    .pill.warn  { background: rgba(255,184,107,0.15); color: var(--warn); }
+    .pill.err   { background: rgba(255,107,107,0.15); color: var(--err); }
+    .pill.info  { background: rgba(108,140,255,0.15); color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+    tr:hover { background: var(--panel-2); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button, input[type=submit] {
+      background: var(--accent); color: white; border: none; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;
+    }
+    button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+    button.danger { background: var(--err); }
+    button:hover { opacity: 0.92; }
+    form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    label { font-size: 12px; color: var(--muted); }
+    input[type=text], input[type=file], select, textarea {
+      background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+      padding: 7px 10px; border-radius: 6px; font-size: 13px;
+    }
+    .video-frame video { width: 100%; max-width: 340px; border-radius: 8px; border: 1px solid var(--border); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    code { background: var(--panel-2); padding: 2px 6px; border-radius: 4px; font-family: "JetBrains Mono", Menlo, monospace; font-size: 12px; }
+    .muted { color: var(--muted); }
+    .footer { padding: 30px 24px; color: var(--muted); font-size: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>centrum-studio</h1>
+    <nav>
+      <a href="/">Dashboard</a>
+      <a href="/souls">Souls</a>
+      <a href="/api/health">Health</a>
+    </nav>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <div class="footer">centrum-studio &middot; agent-first &middot; DGX Spark</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+fastmcp>=0.9
+httpx>=0.27
+aiosqlite>=0.20
+pydantic>=2.7
+pydantic-settings>=2.3
+click>=8.1
+fastapi>=0.111
+uvicorn[standard]>=0.30
+jinja2>=3.1
+python-multipart>=0.0.9
+websockets>=12.0
+structlog>=24.1
+numpy>=1.26
+Pillow>=10.3
+moviepy>=1.0.3
+librosa>=0.10
+soundfile>=0.12
+openai-whisper>=20231117
+imageio>=2.34
+imageio-ffmpeg>=0.5
+
+# Evaluation stack (CUDA 12.8 / ARM64 / SM_100)
+# Base image nvcr.io/nvidia/pytorch:25.01-py3 already ships torch>=2.4 + torchvision built for ARM64 Blackwell.
+insightface>=0.7
+onnxruntime-gpu>=1.19
+pyiqa>=0.1.12
+lpips>=0.1.4
+opencv-python-headless>=4.10
+
+# Lipsync — Chatterbox TTS (install manually if not on PyPI for ARM64)
+# chatterbox-tts>=0.1

@@ -1,0 +1,143 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "wan22_t2v_14b.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "model": ["1", 0],
+      "clip": ["1", 1],
+      "lora_name": "__LORA_HIGH__",
+      "strength_model": "__LORA_STRENGTH__",
+      "strength_clip": "__LORA_STRENGTH__"
+    }
+  },
+  "3": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "model": ["2", 0],
+      "clip": ["2", 1],
+      "lora_name": "__LORA_LOW__",
+      "strength_model": "__LORA_STRENGTH__",
+      "strength_clip": "__LORA_STRENGTH__"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["3", 1],
+      "text": "__PROMPT__"
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["3", 1],
+      "text": "blurry, distorted face, low quality, watermark, deformed, extra limbs, mutated, low detail"
+    }
+  },
+  "6": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "__IP_ADAPTER_REF__"
+    }
+  },
+  "7": {
+    "class_type": "IPAdapterUnifiedLoader",
+    "inputs": {
+      "model": ["3", 0],
+      "preset": "PLUS FACE (portraits)"
+    }
+  },
+  "8": {
+    "class_type": "IPAdapterAdvanced",
+    "inputs": {
+      "model": ["7", 0],
+      "ipadapter": ["7", 1],
+      "image": ["6", 0],
+      "weight": "__IP_ADAPTER_WEIGHT__",
+      "weight_type": "linear",
+      "start_at": 0.0,
+      "end_at": 1.0,
+      "embeds_scaling": "V only"
+    }
+  },
+  "9": {
+    "class_type": "PulidFluxModelLoader",
+    "inputs": {
+      "pulid_file": "pulid_flux_v0.9.1.safetensors"
+    }
+  },
+  "10": {
+    "class_type": "PulidFluxEvaClipLoader",
+    "inputs": {}
+  },
+  "11": {
+    "class_type": "PulidFluxInsightFaceLoader",
+    "inputs": {
+      "provider": "CUDA"
+    }
+  },
+  "12": {
+    "class_type": "ApplyPulidFlux",
+    "inputs": {
+      "model": ["8", 0],
+      "pulid_flux": ["9", 0],
+      "eva_clip": ["10", 0],
+      "face_analysis": ["11", 0],
+      "image": ["6", 0],
+      "weight": "__PULID_WEIGHT__",
+      "start_at": 0.0,
+      "end_at": 1.0
+    }
+  },
+  "13": {
+    "class_type": "EmptyLatentVideo",
+    "inputs": {
+      "width": "__WIDTH__",
+      "height": "__HEIGHT__",
+      "length": "__FRAMES__",
+      "batch_size": 1
+    }
+  },
+  "14": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["12", 0],
+      "positive": ["4", 0],
+      "negative": ["5", 0],
+      "latent_image": ["13", 0],
+      "seed": "__SEED__",
+      "steps": "__STEPS__",
+      "cfg": "__CFG__",
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1.0
+    }
+  },
+  "15": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["14", 0],
+      "vae": ["1", 2]
+    }
+  },
+  "16": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": ["15", 0],
+      "frame_rate": 16,
+      "loop_count": 0,
+      "filename_prefix": "centrum_studio/scene",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "pingpong": false,
+      "save_output": true
+    }
+  }
+}
