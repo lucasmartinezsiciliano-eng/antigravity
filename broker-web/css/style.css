@@ -34,8 +34,8 @@
 
 /* ---- Reset ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; overflow-x: hidden; touch-action: manipulation; }
-body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; max-width: 100%; }
+html { scroll-behavior: smooth; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; }
+body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; max-width: 100%; overscroll-behavior: none; }
 img { max-width: 100%; display: block; }
 a { text-decoration: none; color: inherit; }
 
