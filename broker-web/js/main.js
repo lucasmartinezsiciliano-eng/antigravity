@@ -377,7 +377,7 @@ function initQuiz() {
     // Datos clave
     const kvsEl = document.getElementById(`r${px}-kvs`);
     if (kvsEl) {
-      kvsEl.innerHTML = '';
+      kvsEl.textContent = '';
       [
         { l: 'Hipoteca solicitada', v: fmt(s.hipoteca), s: 'LTV: ' + (px === 'A' ? '80' : '90') + '%' },
         { l: 'Cuota mensual est.', v: fmt(s.cuotaHip), s: s.plazo + ' años al 2,70%' },
@@ -411,7 +411,7 @@ function initQuiz() {
       if (s.global >= 75) recs.push({ cls: 'rec-ok', txt: 'Perfil sólido. Viable en la mayoría de entidades.' });
       else if (s.global >= 50) recs.push({ cls: 'rec-info', txt: 'Viable con matices. Mejorar puntos débiles.' });
       else recs.push({ cls: 'rec-alert', txt: 'Perfil de riesgo. Conviene mejorar antes de solicitar.' });
-      alertsEl.innerHTML = '';
+      alertsEl.textContent = '';
       recs.forEach(r => {
         const p = document.createElement('p');
         p.className = 'result-alert-item ' + r.cls;
@@ -463,6 +463,10 @@ function initQuiz() {
       return;
     }
     const recaptchaToken = await getRecaptchaToken('quiz_submit');
+    if (!recaptchaToken) {
+      showToast('Error de seguridad. Recarga la página e inténtalo de nuevo.', 'error');
+      return;
+    }
 
     const btn = quiz.querySelector('.quiz-submit');
     btn.textContent = 'Analizando...';
@@ -769,22 +773,30 @@ function initCookieBanner() {
 
   const banner = document.createElement('div');
   banner.className = 'cookie-banner';
-  banner.innerHTML = `
-    <p>Usamos cookies propias para el funcionamiento del sitio y, si acepta, cookies analíticas para mejorar nuestro servicio. Sus datos se tratan conforme al <a href="${base}privacidad.html">RGPD</a>. Más info en nuestra <a href="${base}cookies.html">política de cookies</a>.</p>
-    <div class="cookie-banner-actions">
-      <button class="cookie-btn-reject">Solo esenciales</button>
-      <button class="cookie-btn-accept">Aceptar todas</button>
-    </div>
-  `;
+
+  const txt = document.createElement('p');
+  txt.textContent = 'Usamos cookies propias para el funcionamiento del sitio y, si acepta, cookies analíticas para mejorar nuestro servicio. Sus datos se tratan conforme al ';
+  const aRgpd = document.createElement('a'); aRgpd.href = base + 'privacidad.html'; aRgpd.textContent = 'RGPD';
+  const mid = document.createTextNode('. Más info en nuestra ');
+  const aCookies = document.createElement('a'); aCookies.href = base + 'cookies.html'; aCookies.textContent = 'política de cookies';
+  const end = document.createTextNode('.');
+  txt.appendChild(aRgpd); txt.appendChild(mid); txt.appendChild(aCookies); txt.appendChild(end);
+
+  const actions = document.createElement('div'); actions.className = 'cookie-banner-actions';
+  const btnReject = document.createElement('button'); btnReject.className = 'cookie-btn-reject'; btnReject.textContent = 'Solo esenciales';
+  const btnAccept = document.createElement('button'); btnAccept.className = 'cookie-btn-accept'; btnAccept.textContent = 'Aceptar todas';
+  actions.appendChild(btnReject); actions.appendChild(btnAccept);
+
+  banner.appendChild(txt); banner.appendChild(actions);
   document.body.appendChild(banner);
   requestAnimationFrame(() => banner.classList.add('visible'));
 
-  banner.querySelector('.cookie-btn-accept').addEventListener('click', () => {
+  btnAccept.addEventListener('click', () => {
     localStorage.setItem('cookie_consent', 'all');
     banner.classList.remove('visible');
     setTimeout(() => banner.remove(), 400);
   });
-  banner.querySelector('.cookie-btn-reject').addEventListener('click', () => {
+  btnReject.addEventListener('click', () => {
     localStorage.setItem('cookie_consent', 'essential');
     banner.classList.remove('visible');
     setTimeout(() => banner.remove(), 400);
