@@ -34,8 +34,8 @@
 
 /* ---- Reset ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; font-size: 16px; }
+html { scroll-behavior: smooth; overflow-x: hidden; touch-action: manipulation; }
+body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; max-width: 100%; }
 img { max-width: 100%; display: block; }
 a { text-decoration: none; color: inherit; }
 
@@ -372,7 +372,7 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 .stepper-btn:hover { background: var(--teal-bg); }
 .stepper-btn:active { background: #c5e87a; }
 .stepper-display { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none; }
-.stepper-val { font-size: 1.3rem; font-weight: 800; color: var(--gray-800); }
+.stepper-val { font-size: 1.3rem; font-weight: 800; color: var(--gray-800); pointer-events: auto; cursor: text; border-bottom: 1.5px dashed var(--gray-300); }
 .stepper-unit { font-size: 0.78rem; color: var(--gray-400); }
 
 /* Drag wheel — ruedita horizontal */
@@ -385,6 +385,10 @@ nav a:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 .dw-ticks::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--gray-100); transform: translateY(-50%); }
 /* Barra central fija — indicador */
 .dw-thumb { position: absolute; left: 50%; top: 1px; bottom: 1px; width: 3px; transform: translateX(-50%); background: var(--teal); border-radius: 3px; z-index: 2; }
+/* Labels de ticks */
+.dw-labels-row { position: relative; height: 14px; overflow: hidden; }
+.dw-label { position: absolute; transform: translateX(-50%); font-size: 0.6rem; color: var(--gray-400); white-space: nowrap; top: 1px; pointer-events: none; }
+
 /* Valor */
 .dw-display { text-align: center; line-height: 1; }
 .dw-val { font-size: 1.45rem; font-weight: 800; color: var(--gray-800); }
@@ -614,7 +618,10 @@ footer { background: var(--black); color: rgba(255,255,255,0.45); padding: 64px 
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
   background: var(--black); border-top: 1px solid rgba(255,255,255,0.08);
   padding: 12px 20px; gap: 10px;
+  transform: translateY(0);
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.mobile-cta-bar.hidden { transform: translateY(110%); }
 .mobile-cta-bar a { width: 100%; justify-content: center; font-size: 1rem; padding: 15px; }
 
 /* ============================================
