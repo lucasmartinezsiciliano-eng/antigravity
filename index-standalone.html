@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+x<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -1095,6 +1095,10 @@ function initQuiz() {
     if (consent && !consent.checked) { showToast('Debes autorizar el tratamiento de datos para continuar.', 'error'); return; }
     if (!canSubmitNow()) { showToast('Espera unos segundos antes de volver a enviar.', 'error'); return; }
     const recaptchaToken = await getRecaptchaToken('quiz_submit');
+    if (!recaptchaToken) {
+      showToast('Error de seguridad. Recarga la página e inténtalo de nuevo.', 'error');
+      return;
+    }
 
     const btn = quiz.querySelector('.quiz-submit');
     btn.textContent = 'Analizando...';
