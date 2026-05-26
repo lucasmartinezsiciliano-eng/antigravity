@@ -772,6 +772,25 @@ function initMobileCTA() {
 }
 
 // ============================================
+// LOCK ZOOM & HORIZONTAL DRAG (iOS Safari ignora user-scalable=no)
+// ============================================
+(function lockTouch() {
+  let _tx = 0, _ty = 0;
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length > 1) { e.preventDefault(); return; }
+    _tx = e.touches[0].clientX;
+    _ty = e.touches[0].clientY;
+  }, { passive: false });
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length > 1) { e.preventDefault(); return; }
+    if (e.target.closest('.drag-wheel')) return;
+    const dx = Math.abs(e.touches[0].clientX - _tx);
+    const dy = Math.abs(e.touches[0].clientY - _ty);
+    if (dx > dy && dx > 8) e.preventDefault();
+  }, { passive: false });
+})();
+
+// ============================================
 // INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {

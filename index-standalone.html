@@ -43,8 +43,8 @@
   --transition:  0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; overflow-x: hidden; touch-action: manipulation; }
-body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; max-width: 100%; }
+html { scroll-behavior: smooth; overflow-x: hidden; touch-action: manipulation; overscroll-behavior: none; }
+body { font-family: var(--font); color: var(--gray-700); background: var(--white); line-height: 1.65; -webkit-font-smoothing: antialiased; font-size: 16px; overflow-x: hidden; max-width: 100%; overscroll-behavior: none; }
 img { max-width: 100%; display: block; }
 a { text-decoration: none; color: inherit; }
 h1 { font-family: var(--font-heading); font-size: clamp(2.4rem, 5.5vw, 3.8rem); font-weight: 600; line-height: 1.1; letter-spacing: 0.01em; }
@@ -1338,6 +1338,22 @@ function initMobileCTA() {
   }, { threshold: 0.1 });
   obs.observe(section);
 }
+
+(function lockTouch() {
+  let _tx = 0, _ty = 0;
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length > 1) { e.preventDefault(); return; }
+    _tx = e.touches[0].clientX;
+    _ty = e.touches[0].clientY;
+  }, { passive: false });
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length > 1) { e.preventDefault(); return; }
+    if (e.target.closest('.drag-wheel')) return;
+    const dx = Math.abs(e.touches[0].clientX - _tx);
+    const dy = Math.abs(e.touches[0].clientY - _ty);
+    if (dx > dy && dx > 8) e.preventDefault();
+  }, { passive: false });
+})();
 
 document.addEventListener('DOMContentLoaded', () => {
   initQuiz();
