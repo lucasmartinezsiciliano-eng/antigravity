@@ -1094,11 +1094,7 @@ function initQuiz() {
     const consent = quiz.querySelector('[name="q_consent"]');
     if (consent && !consent.checked) { showToast('Debes autorizar el tratamiento de datos para continuar.', 'error'); return; }
     if (!canSubmitNow()) { showToast('Espera unos segundos antes de volver a enviar.', 'error'); return; }
-    const recaptchaToken = await getRecaptchaToken('quiz_submit');
-    if (!recaptchaToken) {
-      showToast('Error de seguridad. Recarga la página e inténtalo de nuevo.', 'error');
-      return;
-    }
+    const recaptchaToken = await getRecaptchaToken('quiz_submit'); // opcional en standalone — no bloquea si GHL no carga reCAPTCHA
 
     const btn = quiz.querySelector('.quiz-submit');
     btn.textContent = 'Analizando...';
