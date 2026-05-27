@@ -1,0 +1,104 @@
+# ───────────────────────────────────────────────────────────────────
+# Perfil Hermes: centrum-coach
+# Meta-agente de RRHH. Corre vía cron, nunca en tiempo real.
+# Lee PLUR + Kanban + memorias, propone mejoras a Lucas.
+# NO escribe directamente en perfiles ajenos — solo ~/.hermes/proposals/
+#
+# Modelo: Qwen 3 8B vía Ollama (no vLLM).
+# Por qué Qwen 3 y no Gemma 4:
+#   Gemma 4 genera tool calls malformados en cadenas >5 pasos (validado por
+#   la comunidad). El coach hace flujos largos: PLUR reads → Kanban ops →
+#   file writes → Telegram notify. Qwen 3 8B es significativamente más fiable
+#   en estos flujos. No habla con Mariano → tamaño 8B suficiente.
+# ───────────────────────────────────────────────────────────────────
+
+model:
+  default: "qwen3:8b"
+  provider: "openai"              # Ollama expone endpoint OpenAI-compatible
+  base_url: "http://localhost:11434/v1"
+  context_length: 32768
+  extra_body:
+    temperature: 0.1              # máxima estabilidad en tool calls y JSON
+    num_predict: 512              # limita generación runaway en tool calls
+
+terminal:
+  backend: "local"
+  timeout: 120                    # Qwen 3 8B es rápido; 120s más que suficiente
+
+memory:
+  memory_enabled: true
+  user_profile_enabled: false     # no hay usuario interactivo — corre solo
+  memory_char_limit: 2200
+
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+
+agent:
+  max_turns: 60                   # sesión acotada — informe semanal no requiere 90 turnos
+  api_max_retries: 5              # más reintentos porque corre desatendido
+  reasoning_effort: "high"        # el coach necesita razonar bien sobre patrones
+  tool_use_enforcement: "auto"
+
+delegation:
+  orchestrator_enabled: false     # el coach NO delega — actúa él mismo
+  max_spawn_depth: 0
+
+display:
+  language: "es"
+  tool_progress: "concise"
+  show_cost: true
+
+security:
+  tirith_enabled: true
+  redact_secrets: true
+
+approvals:
+  mode: "auto"                    # actúa solo; propuestas críticas van a Lucas vía Telegram
+
+skills:
+  active:
+    - governance/guardrails
+    - centrum/3-reglas
+    - centrum/reputation-self     # inyecta top engrams de reputación al arrancar
+    - centrum/coach-protocol      # cómo redactar informe, umbrales verde/rojo, evidencia mínima
+
+tools:
+  filesystem:
+    enabled: true
+    allowed_paths:
+      - "~/.hermes/proposals"             # ÚNICA ruta de escritura del coach
+      - "~/.hermes/profiles/centrum/memories"          # solo lectura
+      - "~/.hermes/profiles/centrum-intel/memories"    # solo lectura
+      - "~/.hermes/profiles/centrum-content/memories"  # solo lectura
+      - "~/.hermes/kanban.db"             # Kanban compartido — lectura + crear cards triage
+      - "/tmp/centrum-coach-*"
+  telegram:
+    enabled: true                 # notificaciones a Lucas — NUNCA a Mariano
+  web_search:
+    enabled: false                # el coach no necesita buscar fuera
+  web_fetch:
+    enabled: false
+  delegation:
+    enabled: false                # no delega — ve la regla del §2.5 del RRHH doc
+
+# Sin gateway — corre vía cron, no escucha mensajes entrantes
+gateway:
+  telegram:
+    enabled: false
+
+# Cron schedules (registrar con: hermes cron add)
+# lunes 09:00 — informe semanal + check menciones de honor
+# Nota: el script centrum-council.py invoca al coach como moderador vía agentToAgent
+#       en viernes 18:00 — eso NO es un cron de este perfil, es externo
+cron:
+  schedules:
+    - id: "weekly-coach-review"
+      cron: "0 9 * * 1"          # lunes 09:00
+      prompt: |
+        Ejecuta el informe semanal completo según la skill centrum/coach-protocol.
+        Lee PLUR (últimos 7 días), Kanban (cards done/blocked/reopened), memorias de los 3 perfiles.
+        Produce ~/.hermes/proposals/coach-{YYYY-WW}.md y notifica a Lucas vía Telegram a las 11:00.
+        Incluye check de menciones de honor si algún agente superó umbral esta semana.
+      skip_memory: false
