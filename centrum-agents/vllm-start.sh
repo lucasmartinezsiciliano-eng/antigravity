@@ -40,16 +40,21 @@ nohup python3 -m vllm.entrypoints.openai.api_server \
     --max-model-len 65536 \
     --gpu-memory-utilization 0.28 \
     --enable-auto-tool-choice \
-    --tool-call-parser gemma4 \
+    --tool-call-parser pythonic \
     --default-chat-template-kwargs '{"enable_thinking": false}' \
     --served-model-name "gemma-4-E4B-it" \
     > "$LOG_DIR/nano-e4b.log" 2>&1 &
+# NOTA: pythonic en lugar de gemma4 — más estable en concurrencia (bug vLLM #39392)
+# Revisar cuando vLLM cierre #39392; también #38946 (streaming JSON) y #39089 (booleans)
 echo "  PID: $!" && echo $! > /tmp/vllm-nano.pid
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PRO — gemma-4-26B-A4B-it → puerto 8002  (~52 GB)
+# PRO — gemma-4-26B-A4B-it → puerto 8002  (~52 GB BF16)
 # Contenido, coordinación, seguimiento, resúmenes
 # MoE: 26B params totales, 4B activos en inferencia → rápido a pesar del tamaño
+#
+# NOTA FUTURA: si se migra a NVFP4 (--quantization modelopt → ~16.5 GB, 114 tok/s@c=3),
+# AÑADIR OBLIGATORIAMENTE --moe-backend marlin — sin él produce NaN scale factors (basura)
 # ─────────────────────────────────────────────────────────────────────────────
 echo "[Pro] Launching gemma-4-26B-A4B-it on port 8002..."
 nohup python3 -m vllm.entrypoints.openai.api_server \
@@ -60,10 +65,12 @@ nohup python3 -m vllm.entrypoints.openai.api_server \
     --max-model-len 65536 \
     --gpu-memory-utilization 0.42 \
     --enable-auto-tool-choice \
-    --tool-call-parser gemma4 \
+    --tool-call-parser pythonic \
     --default-chat-template-kwargs '{"enable_thinking": false}' \
     --served-model-name "gemma-4-26B-A4B-it" \
     > "$LOG_DIR/pro-26b.log" 2>&1 &
+# NOTA: pythonic en lugar de gemma4 — bug concurrencia #39392 produce <pad> tokens
+# Si se migra a NVFP4 en el futuro: añadir --moe-backend marlin (requerido)
 echo "  PID: $!" && echo $! > /tmp/vllm-pro.pid
 
 # ─────────────────────────────────────────────────────────────────────────────

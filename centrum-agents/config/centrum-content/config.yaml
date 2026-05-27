@@ -9,6 +9,12 @@ model:
   provider: "openai"              # vLLM expone endpoint OpenAI-compatible
   base_url: "http://localhost:8002/v1"
   context_length: 65536           # debe coincidir con --max-model-len en vllm-start.sh (Pro)
+  extra_body:
+    temperature: 1.0              # Google recomienda 1.0 para Gemma 4 (no 0.7 ni 0.1)
+    top_p: 0.95
+    top_k: 64
+    # ORDEN DE SAMPLERS OBLIGATORIO — sin esto los defaults de vLLM dan resultados inconsistentes
+    # Gemma 4 requiere: temperature → top_p → top_k (no al revés)
 
 terminal:
   backend: "local"

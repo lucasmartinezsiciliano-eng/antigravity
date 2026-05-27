@@ -23,6 +23,9 @@ case "$ACTION" in
     fi
 
     echo "[Max] Cargando gemma-4-31B-it en puerto 8003..."
+    # CONSIDERACIÓN PENDIENTE: la comunidad reporta Qwen 3.6 35B-A3B FP8 como
+    # superior para orquestación agentica en DGX Spark (28-30 vs 7 tok/s, TAU2 81.2 vs 76.9,
+    # agentic-coding 70.6 vs 41.6). Ver nota en vllm-load-max.sh para migración futura.
     nohup python3 -m vllm.entrypoints.openai.api_server \
         --model "google/gemma-4-31B-it" \
         --port 8003 \
@@ -31,10 +34,12 @@ case "$ACTION" in
         --max-model-len 131072 \
         --gpu-memory-utilization 0.50 \
         --enable-auto-tool-choice \
-        --tool-call-parser gemma4 \
+        --tool-call-parser pythonic \
         --default-chat-template-kwargs '{"enable_thinking": false}' \
         --served-model-name "gemma-4-31B-it" \
         > "$LOG_DIR/max-31b.log" 2>&1 &
+    # NOTA: pythonic en lugar de gemma4 (bugs #39392 #38946 #39089 abiertos en vLLM)
+    # Hermes Agent tampoco tiene parser nativo de Gemma 4 (issue #7457, P3 abierto)
     echo $! > "$PID_FILE"
     echo "[Max] PID: $(cat $PID_FILE) — esperando..."
 
