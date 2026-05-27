@@ -2,22 +2,24 @@
 # Perfil Hermes: centrum
 # Orquestador principal del sistema Centrum de la Vivienda.
 # Mariano lo usa vía Telegram. Delega en sub-agentes especialistas.
+#
+# Modelo: Qwen 3.6 35B-A3B FP8 (migrado desde Gemma 4 31B, 2026-05-27)
+# Por qué Qwen 3.6 y no Gemma 4 31B:
+#   - 28-30 tok/s vs 7 tok/s en DGX Spark (Gemma 31B dense es memory-bandwidth bound)
+#   - TAU2 tool use: 81.2 vs 76.9 | Agentic-coding: 70.6 vs 41.6
+#   - Parser hermes nativo en vLLM (maduro, sin los 5 bugs activos del parser gemma4)
+#   - ~20-35 GB FP8 vs ~62 GB BF16 → más espacio para KV cache
 # ───────────────────────────────────────────────────────────────────
 
 model:
-  default: "gemma-4-31B-it"
+  default: "qwen3.6-35b-a3b"
   provider: "openai"              # vLLM expone endpoint OpenAI-compatible
   base_url: "http://localhost:8003/v1"
-  context_length: 131072          # debe coincidir con --max-model-len en vllm-load-max.sh
-  # NOTA: thinking mode desactivado por defecto en vLLM (--default-chat-template-kwargs)
-  # Para tareas de análisis puro (sin tools), activar per-request via extra_body
+  context_length: 65536           # debe coincidir con --max-model-len en vllm-load-max.sh
   extra_body:
-    temperature: 1.0              # Google recomienda 1.0 para Gemma 4 (no 0.7)
-    top_p: 0.95
-    top_k: 64
-    # ORDEN DE SAMPLERS OBLIGATORIO — sin esto los defaults de vLLM dan resultados inconsistentes
-    # PENDIENTE DE DECISIÓN: migrar este perfil a Qwen 3.6 35B-A3B FP8 (puerto 8003)
-    # Benchmarks: 28-30 tok/s vs 7 tok/s Gemma 31B dense, TAU2 81.2 vs 76.9, agentic-coding 70.6 vs 41.6
+    temperature: 0.7              # Qwen 3: 0.7 es el valor estándar (≠ Gemma 4 que usa 1.0)
+    top_p: 0.8
+    # Qwen 3 no requiere top_k obligatorio ni orden de samplers específico como Gemma 4
 
 terminal:
   backend: "local"
@@ -40,7 +42,7 @@ agent:
   tool_use_enforcement: "auto"
 
 delegation:
-  model: ""                       # sub-agentes heredan gemma-4-31B por defecto
+  model: ""                       # sub-agentes heredan Qwen 3.6 35B por defecto
   provider: "openai"
   base_url: "http://localhost:8003/v1"
   max_concurrent_children: 3
@@ -74,7 +76,7 @@ kanban:
     kanban_decomposer:
       provider: "openai"
       base_url: "http://localhost:8003/v1"
-      model: "gemma-4-31B-it"
+      model: "qwen3.6-35b-a3b"
 
 # Skills cargadas siempre en este perfil
 skills:
@@ -104,7 +106,6 @@ tools:
     enabled: false                # no necesario en el orchestrator
   web_fetch:
     enabled: true
-    # Sub-agentes llaman APIs externas directamente — sin n8n intermediario
     allowed_domains:
       - "graph.facebook.com"          # IG DM + Graph API (dm-qualifier, auto-responder)
       - "open.tiktokapis.com"          # TikTok DM API (dm-qualifier)
