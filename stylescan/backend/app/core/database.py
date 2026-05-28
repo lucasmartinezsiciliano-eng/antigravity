@@ -42,6 +42,14 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_migrate_analyses_columns)
+        await conn.run_sync(_migrate_barber_columns)
+
+
+def _migrate_barber_columns(connection):
+    """Add auth column to barber_partners without Alembic."""
+    existing = {row[1] for row in connection.execute(text("PRAGMA table_info(barber_partners)"))}
+    if "password_hash" not in existing:
+        connection.execute(text("ALTER TABLE barber_partners ADD COLUMN password_hash VARCHAR(255)"))
 
 
 def _migrate_analyses_columns(connection):
@@ -51,6 +59,18 @@ def _migrate_analyses_columns(connection):
         ("user_email",           "VARCHAR(255)"),
         ("marketing_consent",    "BOOLEAN NOT NULL DEFAULT 0"),
         ("marketing_consent_at", "DATETIME"),
+        # Advanced visagism — Hallawell method
+        ("upper_third",          "FLOAT"),
+        ("middle_third",         "FLOAT"),
+        ("lower_third",          "FLOAT"),
+        ("thirds_balance",       "VARCHAR(30)"),
+        ("eye_spacing_ratio",    "FLOAT"),
+        ("eye_spacing",          "VARCHAR(20)"),
+        ("nose_width_ratio",     "FLOAT"),
+        ("nose_length_ratio",    "FLOAT"),
+        ("cheekbone_prominence", "VARCHAR(20)"),
+        ("golden_ratio_score",   "FLOAT"),
+        ("profile_type",         "VARCHAR(20)"),
     ]
     for col, col_type in additions:
         if col not in existing:

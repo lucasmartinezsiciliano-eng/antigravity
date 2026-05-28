@@ -68,6 +68,14 @@ async def send_analysis_ready(to_email: str, analysis_id: str) -> None:
     )
 
 
+async def send_followup_survey(to_email: str, analysis_id: str) -> None:
+    await _send(
+        to=to_email,
+        subject="¿Te hiciste el corte? Cuéntanos — VISAI",
+        html=_followup_survey_html(analysis_id),
+    )
+
+
 # ---------------------------------------------------------------------------
 # n8n marketing webhook — fires only when marketing_consent=True
 # ---------------------------------------------------------------------------
@@ -209,4 +217,35 @@ def _analysis_ready_html(analysis_id: str) -> str:
         cta_url=f"{settings.FRONTEND_URL}/result/{analysis_id}",
         cta_label="Ver mi análisis",
         note_html="Tu informe estar&aacute; disponible durante <strong style='color:#666;'>90 d&iacute;as</strong>. Gu&aacute;rda el link.",
+    )
+
+
+def _followup_survey_html(analysis_id: str) -> str:
+    survey_url = f"{settings.FRONTEND_URL}/result/{analysis_id}?survey=1"
+    return _base(
+        badge="72H DESPUÉS",
+        headline="¿Ya te hiciste el corte?",
+        body_html=f"""
+<p style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#888;line-height:1.65;margin:0 0 14px;">
+  Han pasado unos d&iacute;as desde tu an&aacute;lisis. Nos encantar&iacute;a saber si fuiste a la barber&iacute;a
+  y c&oacute;mo te fue.
+</p>
+<p style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#888;line-height:1.65;margin:0 0 14px;">
+  Responde estas 3 preguntas r&aacute;pidas (30 seg) y nos ayudar&aacute;s a mejorar las recomendaciones
+  para todos:
+</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:4px;">
+  <tr><td style="padding:6px 0;font-family:-apple-system,Arial,sans-serif;font-size:14px;color:#888;">
+    <strong style="color:#c9a84c;">1.</strong> &iquest;Te hiciste el corte?
+  </td></tr>
+  <tr><td style="padding:6px 0;font-family:-apple-system,Arial,sans-serif;font-size:14px;color:#888;">
+    <strong style="color:#c9a84c;">2.</strong> &iquest;Cu&aacute;l de los 3 elegiste?
+  </td></tr>
+  <tr><td style="padding:6px 0;font-family:-apple-system,Arial,sans-serif;font-size:14px;color:#888;">
+    <strong style="color:#c9a84c;">3.</strong> Del 1 al 5, &iquest;qu&eacute; nota le das?
+  </td></tr>
+</table>""",
+        cta_url=survey_url,
+        cta_label="Responder encuesta",
+        note_html="Solo 3 preguntas &middot; 30 segundos &middot; An&oacute;nimo",
     )

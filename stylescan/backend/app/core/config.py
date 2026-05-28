@@ -64,6 +64,7 @@ class Settings(BaseSettings):
 
     # RGPD - data retention
     METRICS_RETENTION_DAYS: int = 90
+    ANON_METRICS_RETENTION_DAYS: int = 730  # 2 years — anonymized aggregate data (no PII)
     CONSENT_LOG_RETENTION_DAYS: int = 1825  # 5 years (legal requirement)
 
     # Anti-fraud

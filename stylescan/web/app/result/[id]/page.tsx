@@ -79,6 +79,47 @@ export default function ResultPage() {
     }, 3000);
   }
 
+  // Anti-screenshot: block copy, print, save, devtools shortcuts + print CSS
+  useEffect(() => {
+    function blockKeys(e: KeyboardEvent) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ["p", "s", "u", "c"].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+      }
+      if (e.key === "PrintScreen") e.preventDefault();
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        ["i", "j", "c"].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+      }
+      if (e.key === "F12") e.preventDefault();
+    }
+    function blockContext(e: MouseEvent) {
+      e.preventDefault();
+    }
+    function blockDrag(e: DragEvent) {
+      e.preventDefault();
+    }
+    document.addEventListener("keydown", blockKeys);
+    document.addEventListener("contextmenu", blockContext);
+    document.addEventListener("dragstart", blockDrag);
+
+    const style = document.createElement("style");
+    style.textContent = `@media print { body * { visibility: hidden !important; } body::after { visibility: visible; content: "Contenido protegido — visai.es"; position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #999; background: #000; } }`;
+    document.head.appendChild(style);
+
+    return () => {
+      document.removeEventListener("keydown", blockKeys);
+      document.removeEventListener("contextmenu", blockContext);
+      document.removeEventListener("dragstart", blockDrag);
+      style.remove();
+    };
+  }, []);
+
   useEffect(() => {
     mountedRef.current = true;
     let pollAttempts = 0;
@@ -397,8 +438,58 @@ export default function ResultPage() {
     ? (FACE_SHAPE_LABEL[result.face_shape] || result.face_shape)
     : "Desconocida";
 
+  const watermarkText = `visai.es · ${id.slice(0, 16).toUpperCase()} · CONTENIDO PERSONAL`;
+
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100dvh", paddingBottom: 60 }}>
+    <div style={{ background: "var(--bg)", minHeight: "100dvh", paddingBottom: 60, userSelect: "none", WebkitUserSelect: "none", position: "relative" }}>
+
+      {/* Anti-screenshot notice */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(10,10,10,0.92)", backdropFilter: "blur(8px)",
+        borderBottom: "1px solid rgba(201,168,76,0.2)",
+        padding: "7px 16px",
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <span style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: 0.2, lineHeight: 1.4 }}>
+          Contenido personal protegido · Prohibida la captura y difusión · ID: {id.slice(0, 8).toUpperCase()}
+        </span>
+      </div>
+
+      {/* Watermark overlay — pointer-events:none so it doesn't block taps */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed", inset: 0, zIndex: 40,
+          pointerEvents: "none",
+          overflow: "hidden",
+        }}
+      >
+        {Array.from({ length: 16 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              top: `${(i % 4) * 26 + 6}%`,
+              left: `${Math.floor(i / 4) * 28 - 10}%`,
+              width: "200%",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              color: "rgba(201,168,76,0.06)",
+              transform: "rotate(-35deg)",
+              whiteSpace: "nowrap",
+              fontFamily: "monospace",
+              userSelect: "none",
+            }}
+          >
+            {watermarkText}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{watermarkText}
+          </div>
+        ))}
+      </div>
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 20px" }}>
 
         {/* Header */}

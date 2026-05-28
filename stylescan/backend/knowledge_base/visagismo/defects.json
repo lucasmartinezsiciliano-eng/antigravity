@@ -295,6 +295,202 @@
       "interactions": {
         "oblong": "Low fWHR + cara alargada = el caso más extremo. Taper + anchura lateral son absolutamente prioritarios"
       }
+    },
+
+    {
+      "id": "upper_third_large",
+      "label": "Tercio superior dominante (frente larga)",
+      "detection": "thirds_balance == 'upper_dominant' (upper_third > middle_third + 0.06)",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Acortar visualmente la frente con flequillo o textura frontal que cubra parte del tercio superior.",
+        "techniques": [
+          "Flequillo texturizado a la altura de las cejas",
+          "French crop con fringe grueso",
+          "Tope hacia adelante que caiga sobre la frente",
+          "Textura frontal irregular — rompe la línea de la frente"
+        ],
+        "weight_line": "Media-baja",
+        "volume": "Evitar volumen en la coronilla que alargue más el tercio superior"
+      },
+      "avoid": [
+        "Tope peinado completamente hacia atrás",
+        "Pompadour alto — expone toda la frente",
+        "Cortes sin flequillo con frente despejada"
+      ],
+      "interactions": {
+        "oblong": "Tercio superior largo + cara alargada = prioridad máxima de flequillo",
+        "heart": "Frente ancha + tercio superior largo = flequillo diagonal es la mejor opción"
+      }
+    },
+
+    {
+      "id": "lower_third_large",
+      "label": "Tercio inferior dominante (mentón/mandíbula larga)",
+      "detection": "thirds_balance == 'lower_dominant' (lower_third > middle_third + 0.06)",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Añadir altura y volumen en el tope para equilibrar la longitud del tercio inferior.",
+        "techniques": [
+          "Quiff o pompadour con altura — eleva la proporción superior",
+          "Volumen en coronilla que compense el peso visual del mentón",
+          "Degradado alto que concentre la atención arriba"
+        ],
+        "weight_line": "Alta — por encima de los pómulos",
+        "volume": "Concentrar volumen en el tope"
+      },
+      "avoid": [
+        "Barba larga que alargue aún más el tercio inferior",
+        "Cortes muy cortos en el tope sin volumen",
+        "Buzz cut que elimina todo volumen compensatorio"
+      ],
+      "interactions": {
+        "square": "Tercio inferior largo + mandíbula ancha = barba corta máximo, evitar extensión vertical",
+        "triangle": "Tercio inferior largo + mandíbula ancha = prioridad máxima de volumen en tope"
+      }
+    },
+
+    {
+      "id": "eyes_close_set",
+      "label": "Ojos juntos (hipotelorismo)",
+      "detection": "eye_spacing_ratio < 0.25",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Abrir visualmente la distancia entre los ojos con peinados que dirijan hacia afuera.",
+        "techniques": [
+          "Raya central — divide simétricamente y abre el centro",
+          "Flequillo lateral que despeje la zona entre los ojos",
+          "Volumen lateral que expanda la zona temporal"
+        ]
+      },
+      "avoid": [
+        "Side parts muy marcados — concentran la atención hacia un lado",
+        "Flequillo recto bajo que comprime la zona intercantal"
+      ],
+      "interactions": {}
+    },
+
+    {
+      "id": "eyes_wide_set",
+      "label": "Ojos separados (hipertelorismo)",
+      "detection": "eye_spacing_ratio > 0.38",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Concentrar visualmente la atención hacia el centro del rostro.",
+        "techniques": [
+          "Side part definido — crea línea de tensión visual central",
+          "Flequillo con textura central — dirige la mirada al centro",
+          "Volumen concentrado en la zona frontal-central"
+        ]
+      },
+      "avoid": [
+        "Raya central que separe más el campo visual",
+        "Cortes muy simétricos sin punto focal"
+      ],
+      "interactions": {}
+    },
+
+    {
+      "id": "nose_wide",
+      "label": "Nariz ancha",
+      "detection": "nose_width_ratio > 0.65",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Desviar atención de la anchura nasal con volumen y textura estratégicos.",
+        "techniques": [
+          "Volumen lateral en el tope que compita visualmente con la anchura nasal",
+          "Textura pronunciada que atraiga la mirada hacia el cabello",
+          "Side part definido — crea línea diagonal que desvía"
+        ]
+      },
+      "avoid": [
+        "Raya central que señale directamente a la nariz",
+        "Cortes minimalistas sin textura que dejen la nariz como punto focal"
+      ],
+      "interactions": {}
+    },
+
+    {
+      "id": "nose_long",
+      "label": "Nariz larga (tercio medio elongado)",
+      "detection": "nose_length_ratio > 0.85",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Compensar con volumen en el tope y flequillo ligero que acorte visualmente la zona media.",
+        "techniques": [
+          "Flequillo ligero que cubra parcialmente la línea de las cejas",
+          "Volumen en la coronilla — eleva la proporción frente/nariz",
+          "Textura suelta en el tope — crea zona visual competitiva"
+        ]
+      },
+      "avoid": [
+        "Topes muy pegados al cráneo sin volumen — exponen la nariz como rasgo dominante",
+        "Slick back sin volumen — perfil limpio acentúa la longitud nasal"
+      ],
+      "interactions": {}
+    },
+
+    {
+      "id": "cheekbones_prominent",
+      "label": "Pómulos prominentes",
+      "detection": "cheekbone_prominence == 'prominent' (avg forehead+jaw ratio < 0.90)",
+      "severity": "positive_feature",
+      "correction": {
+        "principle": "Los pómulos prominentes son un rasgo favorecedor. Potenciar con lados cortos que los expongan.",
+        "techniques": [
+          "Fade medio-alto que despeje la zona de los pómulos",
+          "Lados cortos que dejen visible la estructura ósea",
+          "Contraste tope largo / lados cortos para enmarcar los pómulos"
+        ]
+      },
+      "avoid": [],
+      "interactions": {
+        "diamond": "Pómulos prominentes son la definición del diamante — no intentar reducirlos, sí equilibrar sienes y mentón"
+      }
+    },
+
+    {
+      "id": "profile_convex",
+      "label": "Perfil convexo (nariz proyectada, mentón retraído)",
+      "detection": "profile_type == 'convex' (silhouette analysis)",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Reducir la percepción de proyección nasal y compensar el mentón retraído.",
+        "techniques": [
+          "Textura y volumen en la zona frontal — equilibra visualmente con la nariz",
+          "Barba en el mentón para proyectar la mandíbula hacia adelante",
+          "Formas suaves en torno a los pómulos y mandíbula — desvían la atención del perfil"
+        ]
+      },
+      "avoid": [
+        "Cortes muy pegados al cráneo — dejan la nariz como único volumen del perfil",
+        "Slick back completo — acentúa la proyección nasal en vista lateral"
+      ],
+      "interactions": {
+        "jaw_weak": "Perfil convexo + mandíbula débil = barba es ABSOLUTAMENTE prioritaria"
+      }
+    },
+
+    {
+      "id": "profile_concave",
+      "label": "Perfil cóncavo (mentón proyectado, frente retraída)",
+      "detection": "profile_type == 'concave' (silhouette analysis)",
+      "severity": "correctable",
+      "correction": {
+        "principle": "Añadir volumen frontal para compensar la frente retraída y no exagerar el mentón.",
+        "techniques": [
+          "Quiff o pompadour — añade volumen frontal que balancea el mentón",
+          "Volumen en la coronilla para elevar la línea del cráneo",
+          "Flequillo voluminoso que proyecte la frente visualmente"
+        ]
+      },
+      "avoid": [
+        "Barba larga que exagere la proyección del mentón",
+        "Cortes muy cortos en el tope — acentúan la recesión frontal"
+      ],
+      "interactions": {
+        "jaw_strong": "Perfil cóncavo + mandíbula fuerte = potenciar la fuerza con volumen arriba que equilibre"
+      }
     }
   ]
 }

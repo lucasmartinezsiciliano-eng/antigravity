@@ -481,6 +481,18 @@ async def _run_analysis_background(
             analysis.cranial_proportion = metrics.cranial_proportion
             analysis.analysis_confidence = metrics.confidence
             analysis.photos_analyzed = metrics.photos_used
+            # Advanced visagism — Hallawell
+            analysis.upper_third = getattr(metrics, "upper_third", None)
+            analysis.middle_third = getattr(metrics, "middle_third", None)
+            analysis.lower_third = getattr(metrics, "lower_third", None)
+            analysis.thirds_balance = getattr(metrics, "thirds_balance", None)
+            analysis.eye_spacing_ratio = getattr(metrics, "eye_spacing_ratio", None)
+            analysis.eye_spacing = getattr(metrics, "eye_spacing", None)
+            analysis.nose_width_ratio = getattr(metrics, "nose_width_ratio", None)
+            analysis.nose_length_ratio = getattr(metrics, "nose_length_ratio", None)
+            analysis.cheekbone_prominence = getattr(metrics, "cheekbone_prominence", None)
+            analysis.golden_ratio_score = getattr(metrics, "golden_ratio_score", None)
+            analysis.profile_type = getattr(metrics, "profile_type", None)
             analysis.report = report
             analysis.status = "completed"
             analysis.photos_deleted_at = datetime.now(timezone.utc)
@@ -714,6 +726,12 @@ async def get_analysis(
         products_guide=analysis.products_guide,
         includes_seasonal=analysis.includes_seasonal or False,
         seasonal_report=analysis.report.get("analisis_temporal") if analysis.includes_seasonal and analysis.report else None,
+        # Advanced visagism — Hallawell
+        thirds_balance=getattr(analysis, "thirds_balance", None),
+        eye_spacing=getattr(analysis, "eye_spacing", None),
+        cheekbone_prominence=getattr(analysis, "cheekbone_prominence", None),
+        golden_ratio_score=getattr(analysis, "golden_ratio_score", None),
+        profile_type=getattr(analysis, "profile_type", None),
         created_at=analysis.created_at,
         expires_at=analysis.expires_at,
     )

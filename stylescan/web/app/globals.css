@@ -5,28 +5,28 @@
   --color-gold-dim:    #999999;
 }
 
-/* ── v4 — pure black, squared, minimal ── */
+/* ── v4 — deep black, squared, minimal ── */
 :root {
-  --bg:             #000000;
-  --surface:        #0A0A0A;
-  --surface2:       #111111;
-  --border:         #1C1C1C;
-  --border-subtle:  #111111;
+  --bg:             #050505;
+  --surface:        #0C0C0C;
+  --surface2:       #141414;
+  --border:         #222222;
+  --border-subtle:  #181818;
 
   --accent:         #F0F0F0;
   --accent-dim:     #888888;
-  --accent-subtle:  rgba(240, 240, 240, 0.04);
-  --accent-glow:    rgba(240, 240, 240, 0.02);
+  --accent-subtle:  rgba(240, 240, 240, 0.05);
+  --accent-glow:    rgba(240, 240, 240, 0.03);
 
   --gold:           #FFFFFF;
   --gold-dim:       #999999;
-  --gold-subtle:    rgba(255, 255, 255, 0.04);
-  --gold-border:    rgba(255, 255, 255, 0.08);
-  --gold-glow:      rgba(255, 255, 255, 0.02);
+  --gold-subtle:    rgba(255, 255, 255, 0.05);
+  --gold-border:    rgba(255, 255, 255, 0.10);
+  --gold-glow:      rgba(255, 255, 255, 0.03);
 
   --text:           #F0F0F0;
-  --text-muted:     #666666;
-  --text-dim:       #333333;
+  --text-muted:     #888888;
+  --text-dim:       #606060;
 
   --success: #3DB882;
   --danger:  #D94F4F;

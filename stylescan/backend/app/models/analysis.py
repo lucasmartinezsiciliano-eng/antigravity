@@ -48,6 +48,19 @@ class Analysis(Base):
     analysis_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     photos_analyzed: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Advanced visagism — Hallawell method
+    upper_third: Mapped[float | None] = mapped_column(Float, nullable=True)
+    middle_third: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lower_third: Mapped[float | None] = mapped_column(Float, nullable=True)
+    thirds_balance: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    eye_spacing_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    eye_spacing: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    nose_width_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    nose_length_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cheekbone_prominence: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    golden_ratio_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    profile_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
     # Quiz answers (stored as JSON)
     quiz_answers: Mapped[dict] = mapped_column(JSON, default={})
 

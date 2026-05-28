@@ -102,6 +102,14 @@ LM = {
     "right_mouth": 291,
     "upper_lip":    0,
     "lower_lip":   17,
+
+    # Facial thirds (Hallawell visagism)
+    "glabella":         9,     # Between eyebrows center (upper→middle third boundary)
+    "subnasale":      164,     # Under nose center (middle→lower third boundary)
+
+    # Nose width (alar)
+    "left_alar":       48,     # Left nostril wing
+    "right_alar":     278,     # Right nostril wing
 }
 
 # Paired landmarks for asymmetry calculation (left_idx, right_idx)
@@ -143,6 +151,20 @@ class PhotoAnalysis:
     asymmetry_score: float = 0.0
     asymmetry_details: dict = field(default_factory=dict)
 
+    # Facial thirds (Hallawell)
+    upper_third: float = 0.0
+    middle_third: float = 0.0
+    lower_third: float = 0.0
+    thirds_balance: str = ""
+
+    # Eye spacing
+    eye_spacing_ratio: float = 0.0
+    eye_spacing: str = ""
+
+    # Nose proportions
+    nose_width_ratio: float = 0.0
+    nose_length_ratio: float = 0.0
+
 
 @dataclass
 class FaceMetrics:
@@ -166,6 +188,19 @@ class FaceMetrics:
     analysis_notes: list[str] = field(default_factory=list)
     # Cephalic classification from 90° profile silhouettes (None if no profiles provided)
     cephalic_type: Optional[str] = None  # "dolicocéfalo" | "mesocéfalo" | "braquicéfalo"
+
+    # Advanced visagism — Hallawell method
+    upper_third: float = 0.0          # Ratio of upper facial third (hairline→brows)
+    middle_third: float = 0.0         # Ratio of middle facial third (brows→nose base)
+    lower_third: float = 0.0          # Ratio of lower facial third (nose base→chin)
+    thirds_balance: str = "balanced"   # balanced | upper_dominant | middle_dominant | lower_dominant
+    eye_spacing_ratio: float = 0.0     # Intercanthal / bizygomatic
+    eye_spacing: str = "normal"        # close_set | normal | wide_set
+    nose_width_ratio: float = 0.0      # Alar width / IOD
+    nose_length_ratio: float = 0.0     # Glabella→tip / IOD
+    cheekbone_prominence: str = "moderate"  # prominent | moderate | subtle
+    golden_ratio_score: float = 0.0    # 0.0–1.0 proximity to φ proportions
+    profile_type: Optional[str] = None # convex | straight | concave (from 90° profile)
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +328,186 @@ def _cranial_proportion_from_lwr(lwr: float) -> str:
     if lwr < 1.30:
         return "wide"
     return "balanced"
+
+
+def _calculate_facial_thirds(landmarks, w: int, h: int) -> tuple[float, float, float, str]:
+    """
+    Rule of thirds (Hallawell): divide face into upper/middle/lower zones.
+    Upper: hairline (forehead) → brow line (glabella)
+    Middle: brow line → nose base (subnasale)
+    Lower: nose base → chin (menton)
+
+    Returns (upper_ratio, middle_ratio, lower_ratio, balance_classification).
+    Ideal face: each ≈ 0.333. The hairstyle compensates deviations.
+    """
+    forehead_y = _lm_point(landmarks, LM["forehead"], w, h)[1]
+    # Brow line: average of inner brow + glabella for robustness
+    glabella_y = _lm_point(landmarks, LM["glabella"], w, h)[1]
+    brow_left_y = _lm_point(landmarks, LM["left_brow_inner"], w, h)[1]
+    brow_right_y = _lm_point(landmarks, LM["right_brow_inner"], w, h)[1]
+    brow_y = (glabella_y + brow_left_y + brow_right_y) / 3
+    subnasale_y = _lm_point(landmarks, LM["subnasale"], w, h)[1]
+    chin_y = _lm_point(landmarks, LM["chin"], w, h)[1]
+
+    total = chin_y - forehead_y
+    if total <= 0:
+        return 0.333, 0.333, 0.334, "balanced"
+
+    upper = (brow_y - forehead_y) / total
+    middle = (subnasale_y - brow_y) / total
+    lower = (chin_y - subnasale_y) / total
+
+    thirds = [upper, middle, lower]
+    deviation = max(thirds) - min(thirds)
+
+    if deviation < 0.06:
+        balance = "balanced"
+    else:
+        max_idx = thirds.index(max(thirds))
+        balance = ["upper_dominant", "middle_dominant", "lower_dominant"][max_idx]
+
+    return round(upper, 3), round(middle, 3), round(lower, 3), balance
+
+
+def _calculate_eye_spacing(landmarks, w: int, h: int, face_width_px: float) -> tuple[float, str]:
+    """
+    Eye spacing: intercanthal distance relative to bizygomatic width.
+    Normal: ~0.28–0.35. Close-set: <0.25. Wide-set: >0.38.
+    Affects parting strategy and fringe recommendations.
+    """
+    inner_left = _lm_point(landmarks, LM["left_eye_inner"], w, h)
+    inner_right = _lm_point(landmarks, LM["right_eye_inner"], w, h)
+    intercanthal = _euclidean(inner_left, inner_right)
+    ratio = intercanthal / max(face_width_px, 1.0)
+
+    if ratio < 0.25:
+        classification = "close_set"
+    elif ratio > 0.38:
+        classification = "wide_set"
+    else:
+        classification = "normal"
+
+    return round(ratio, 3), classification
+
+
+def _calculate_nose_proportion(landmarks, w: int, h: int, iod: float) -> tuple[float, float]:
+    """
+    Nose proportions normalized by interocular distance.
+    Returns (nose_width_ratio, nose_length_ratio).
+    Width: alar width / IOD.  Length: glabella→nose_tip / IOD.
+    """
+    left_alar = _lm_point(landmarks, LM["left_alar"], w, h)
+    right_alar = _lm_point(landmarks, LM["right_alar"], w, h)
+    nose_tip = _lm_point(landmarks, LM["nose_tip"], w, h)
+    glabella = _lm_point(landmarks, LM["glabella"], w, h)
+
+    nose_width = _euclidean(left_alar, right_alar) / max(iod, 1.0)
+    nose_length = _euclidean(glabella, nose_tip) / max(iod, 1.0)
+
+    return round(nose_width, 3), round(nose_length, 3)
+
+
+def _calculate_golden_ratio_score(
+    lwr: float, upper_t: float, middle_t: float, lower_t: float, eye_ratio: float
+) -> float:
+    """
+    How close this face is to φ (1.618) proportions — benchmark only.
+    Returns 0.0 (far from golden) to 1.0 (near-perfect golden ratio).
+    Used as context, NOT as a quality judgment.
+    """
+    PHI = 1.618
+    # LWR vs golden ratio (ideal LWR ≈ 1.618)
+    lwr_score = max(0.0, 1.0 - abs(lwr - PHI) / PHI)
+    # Thirds balance (ideal = 0.333 each)
+    thirds_dev = abs(upper_t - 0.333) + abs(middle_t - 0.333) + abs(lower_t - 0.333)
+    thirds_score = max(0.0, 1.0 - thirds_dev * 3)
+    # Eye spacing (ideal ≈ 0.30)
+    eye_score = max(0.0, 1.0 - abs(eye_ratio - 0.30) / 0.30) if eye_ratio > 0 else 0.5
+
+    return round(lwr_score * 0.4 + thirds_score * 0.4 + eye_score * 0.2, 3)
+
+
+def _classify_cheekbone_prominence(fr: float, jr: float) -> str:
+    """
+    Cheekbone prominence: how much bizygomatic width exceeds forehead and jaw.
+    If both forehead and jaw are notably narrower than cheekbones → prominent.
+    """
+    avg_narrowness = (fr + jr) / 2
+    if avg_narrowness < 0.90:
+        return "prominent"
+    if avg_narrowness < 0.97:
+        return "moderate"
+    return "subtle"
+
+
+def _analyze_profile_type(image_bytes: bytes) -> Optional[str]:
+    """
+    Classify facial profile as convex, straight, or concave from 90° photo.
+    Analyzes the front-facing edge of the silhouette contour.
+
+    Convex: nose projects notably forward of forehead-chin line.
+    Concave: chin projects forward, forehead recedes.
+    Straight: forehead-nose-chin roughly aligned.
+    """
+    arr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if img is None:
+        return None
+
+    h, w = img.shape[:2]
+    ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+    skin_mask = cv2.inRange(ycrcb, np.array([0, 133, 77], np.uint8), np.array([255, 173, 127], np.uint8))
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_CLOSE, kernel)
+    skin_mask = cv2.morphologyEx(skin_mask, cv2.MORPH_OPEN, kernel)
+
+    contours, _ = cv2.findContours(skin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return None
+
+    largest = max(contours, key=cv2.contourArea)
+    if cv2.contourArea(largest) < h * w * 0.03:
+        return None
+
+    x, y, cw, ch = cv2.boundingRect(largest)
+    if ch < 40 or cw < 20:
+        return None
+
+    pts = largest.reshape(-1, 2)
+    third_h = ch / 3
+
+    # Split contour points into vertical thirds
+    upper_pts = pts[(pts[:, 1] >= y) & (pts[:, 1] < y + third_h)]
+    middle_pts = pts[(pts[:, 1] >= y + third_h) & (pts[:, 1] < y + 2 * third_h)]
+    lower_pts = pts[(pts[:, 1] >= y + 2 * third_h) & (pts[:, 1] <= y + ch)]
+
+    if len(upper_pts) < 3 or len(middle_pts) < 3 or len(lower_pts) < 3:
+        return None
+
+    # Detect face direction: middle zone (nose) projects to one side
+    avg_x = float(np.mean(pts[:, 0]))
+    mid_min, mid_max = float(np.min(middle_pts[:, 0])), float(np.max(middle_pts[:, 0]))
+
+    if abs(mid_min - avg_x) > abs(mid_max - avg_x):
+        # Face points left (nose → min X)
+        forehead_proj = float(np.min(upper_pts[:, 0]))
+        nose_proj = mid_min
+        chin_proj = float(np.min(lower_pts[:, 0]))
+    else:
+        # Face points right (nose → max X)
+        forehead_proj = float(np.max(upper_pts[:, 0]))
+        nose_proj = mid_max
+        chin_proj = float(np.max(lower_pts[:, 0]))
+
+    baseline = (forehead_proj + chin_proj) / 2
+    projection = abs(nose_proj - baseline) / max(cw, 1)
+
+    if projection > 0.15:
+        return "convex"
+    if projection < 0.05:
+        return "concave" if abs(chin_proj - forehead_proj) / max(cw, 1) > 0.10 else "straight"
+    return "straight"
 
 
 def _asymmetry_description(score: float) -> str:
@@ -444,6 +659,16 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
 
     asym_score, asym_details = _calculate_asymmetry(lms, w, h)
 
+    # --- Advanced visagism metrics ---
+    upper_t, middle_t, lower_t, thirds_bal = _calculate_facial_thirds(lms, w, h)
+
+    face_width_px = _euclidean(
+        _lm_point(lms, LM["left_cheek"], w, h),
+        _lm_point(lms, LM["right_cheek"], w, h),
+    )
+    eye_sp_ratio, eye_sp_class = _calculate_eye_spacing(lms, w, h, face_width_px)
+    nose_w_ratio, nose_l_ratio = _calculate_nose_proportion(lms, w, h, iod)
+
     # Confidence: penalize yaw > 20° (landmarks become unreliable above that)
     yaw_penalty = max(0.0, abs(yaw) - 20) / 70
     confidence = max(0.0, min(1.0, 0.90 - yaw_penalty))
@@ -462,6 +687,14 @@ def analyze_single_photo(image_bytes: bytes) -> PhotoAnalysis:
         jaw_to_face_ratio=round(jr, 4),
         asymmetry_score=asym_score,
         asymmetry_details=asym_details,
+        upper_third=upper_t,
+        middle_third=middle_t,
+        lower_third=lower_t,
+        thirds_balance=thirds_bal,
+        eye_spacing_ratio=eye_sp_ratio,
+        eye_spacing=eye_sp_class,
+        nose_width_ratio=nose_w_ratio,
+        nose_length_ratio=nose_l_ratio,
     )
 
 
@@ -486,6 +719,7 @@ def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
     """
     mediapipe_results: list[PhotoAnalysis] = []
     profile_depth_ratios: list[float] = []
+    profile_photo_indices: list[int] = []  # Track which photos are profiles
 
     for i, photo_bytes in enumerate(photos):
         pa = analyze_single_photo(photo_bytes)
@@ -497,6 +731,7 @@ def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
             ratio = _analyze_profile_silhouette(photo_bytes)
             if ratio is not None:
                 profile_depth_ratios.append(ratio)
+                profile_photo_indices.append(i)
                 logger.info("Photo %d: profile silhouette depth/height=%.3f", i + 1, ratio)
             else:
                 logger.warning(
@@ -519,7 +754,7 @@ def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
     # --- LWR: weighted average across all valid frontal photos
     weights = [r.confidence * max(0.1, 1 - abs(r.head_pose_yaw) / 90) for r in mediapipe_results]
     total_w = sum(weights)
-    avg_lwr = sum(r.length_width_ratio * w for r, w in zip(mediapipe_results, weights)) / max(total_w, 1e-9)
+    avg_lwr = sum(r.length_width_ratio * wt for r, wt in zip(mediapipe_results, weights)) / max(total_w, 1e-9)
 
     # --- Forehead: prefer overhead pitch > 5°; fallback to primary
     overhead = [r for r in mediapipe_results if r.head_pose_pitch > 5]
@@ -537,12 +772,25 @@ def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
 
     face_shape = _classify_face_shape(avg_lwr, fr, jr)
 
-    # --- Cranial classification
+    # --- Advanced visagism metrics from primary frontal photo ---
+    upper_t = primary.upper_third
+    middle_t = primary.middle_third
+    lower_t = primary.lower_third
+    thirds_bal = primary.thirds_balance
+    eye_sp_ratio = primary.eye_spacing_ratio
+    eye_sp = primary.eye_spacing
+    nose_w = primary.nose_width_ratio
+    nose_l = primary.nose_length_ratio
+    cheek_prom = _classify_cheekbone_prominence(fr, jr)
+    golden = _calculate_golden_ratio_score(avg_lwr, upper_t, middle_t, lower_t, eye_sp_ratio)
+
+    # --- Profile analysis (type + cranial) ---
     cephalic_type: Optional[str] = None
+    profile_type: Optional[str] = None
+
     if profile_depth_ratios:
         avg_depth = float(np.mean(profile_depth_ratios))
         cephalic_type = _classify_cephalic_type(avg_depth)
-        # Map to illustration archetype vocabulary
         cranial = {
             "dolicocéfalo": "elongated",
             "braquicéfalo": "wide",
@@ -557,6 +805,18 @@ def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
             "Proporciones craneales estimadas desde foto frontal (sin perfiles 90° utilizables). "
             "Incluye perfil izquierdo y derecho para clasificación precisa (dolicocéfalo/mesocéfalo/braquicéfalo)."
         )
+
+    # Profile type (convex/straight/concave) from 90° photos
+    # Reuse profile indices from the initial loop (no re-analysis needed)
+    profile_types: list[str] = []
+    for idx in profile_photo_indices:
+        pt = _analyze_profile_type(photos[idx])
+        if pt is not None:
+            profile_types.append(pt)
+    if profile_types:
+        from collections import Counter
+        profile_type = Counter(profile_types).most_common(1)[0][0]
+        logger.info("Profile type from %d photos: %s", len(profile_types), profile_type)
 
     avg_confidence = float(np.mean([r.confidence for r in mediapipe_results]))
     if avg_confidence < 0.70:
@@ -581,4 +841,15 @@ def analyze_photos(photos: list[bytes]) -> Optional["FaceMetrics"]:
         photos_used=len(mediapipe_results) + len(profile_depth_ratios),
         confidence=round(avg_confidence, 2),
         analysis_notes=notes,
+        upper_third=upper_t,
+        middle_third=middle_t,
+        lower_third=lower_t,
+        thirds_balance=thirds_bal,
+        eye_spacing_ratio=eye_sp_ratio,
+        eye_spacing=eye_sp,
+        nose_width_ratio=nose_w,
+        nose_length_ratio=nose_l,
+        cheekbone_prominence=cheek_prom,
+        golden_ratio_score=golden,
+        profile_type=profile_type,
     )

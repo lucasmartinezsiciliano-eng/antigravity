@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Copy,
@@ -15,8 +15,10 @@ import {
   CheckCircle2,
   Clock,
   Camera,
+  LogOut,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { getStoredBarberId, getStoredPromoCode, clearBarberSession } from "@/lib/barber-auth";
 import ReferencePhotoUploadModal from "@/components/ReferencePhotoUploadModal";
 
 type BarberDashboardData = {
@@ -57,7 +59,9 @@ const TIER_BADGES: Record<string, { emoji: string; color: string; label: string 
 
 function BarberDashboardInner() {
   const searchParams = useSearchParams();
-  const barberId = searchParams.get("id") || "";
+  const router = useRouter();
+  const barberId = searchParams.get("id") || getStoredBarberId() || "";
+  const promoCode = searchParams.get("promo_code") || getStoredPromoCode() || "";
 
   const [dashboard, setDashboard] = useState<BarberDashboardData | null>(null);
   const [photos, setPhotos] = useState<ReferencePhoto[]>([]);
@@ -77,7 +81,7 @@ function BarberDashboardInner() {
 
       try {
         // Load dashboard stats
-        const data = await api.getBarberDashboard(barberId);
+        const data = await api.getBarberDashboard(barberId, promoCode || undefined);
         setDashboard({
           ...data,
           reference_photos_count: 0,
@@ -148,46 +152,39 @@ function BarberDashboardInner() {
 
   const tier = TIER_BADGES[dashboard.current_tier ?? "bronze"] || TIER_BADGES.bronze;
   const contractUnsigned = !dashboard.contract_signed_at;
+  const hasFrontal = photos.some((p) => p.photo_angle === "frontal");
+  const hasLateral = photos.some((p) => p.photo_angle === "lateral");
+  const photosMissing = !hasFrontal || !hasLateral;
+  const codeInactive = contractUnsigned || photosMissing;
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Contract unsigned banner */}
-      {contractUnsigned && (
+      {/* Activation banner — shows what's still needed */}
+      {codeInactive && (
         <div className="bg-amber-900/40 border-b border-amber-700/50">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-amber-400 flex-shrink-0" />
               <p className="text-amber-200 text-sm">
-                <span className="font-semibold">Tu código está inactivo.</span>{" "}
-                Firma el contrato de colaboración para activarlo.
-              </p>
-            </div>
-            <Link
-              href={`/barber/contrato?id=${barberId}`}
-              className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm px-4 py-1.5 rounded flex-shrink-0 transition-colors"
-            >
-              Firmar →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Photos missing banner — contract signed but no back-angle reference photo */}
-      {!contractUnsigned && dashboard.reference_photos_count < 1 && (
-        <div className="bg-amber-900/40 border-b border-amber-700/50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Camera className="h-4 w-4 text-amber-400 flex-shrink-0" />
-              <p className="text-amber-200 text-sm">
                 <span className="font-semibold">Tu código sigue inactivo.</span>{" "}
-                Sube al menos 1 foto frontal de un corte para activarlo.
+                {contractUnsigned && photosMissing
+                  ? "Firma el contrato y sube fotos de referencia (frontal + lateral) para activarlo."
+                  : contractUnsigned
+                    ? "Firma el contrato de colaboración para activarlo."
+                    : !hasFrontal && !hasLateral
+                      ? "Sube al menos 1 foto frontal y 1 lateral de un corte para activarlo."
+                      : !hasFrontal
+                        ? "Sube al menos 1 foto frontal de un corte para activarlo."
+                        : "Sube al menos 1 foto lateral de un corte para activarlo."}
               </p>
             </div>
             <Link
-              href={`/barber/fotos-referencia?id=${barberId}`}
+              href={contractUnsigned
+                ? `/barber/contrato?id=${encodeURIComponent(barberId)}`
+                : `/barber/fotos-referencia?id=${barberId}`}
               className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm px-4 py-1.5 rounded flex-shrink-0 transition-colors"
             >
-              Subir fotos →
+              {contractUnsigned ? "Firmar →" : "Subir fotos →"}
             </Link>
           </div>
         </div>
@@ -195,9 +192,21 @@ function BarberDashboardInner() {
 
       {/* Header */}
       <div className="border-b border-gray-800 bg-gradient-to-b from-gray-900 to-black">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-white mb-2">{dashboard.name}</h1>
-          <p className="text-gray-400">Tu panel de control VISAI</p>
+        <div className="max-w-4xl mx-auto px-4 py-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">{dashboard.name}</h1>
+            <p className="text-gray-400">Tu panel de control VISAI</p>
+          </div>
+          <button
+            onClick={() => {
+              clearBarberSession();
+              router.push("/barber/login");
+            }}
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors mt-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Salir
+          </button>
         </div>
       </div>
 

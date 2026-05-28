@@ -28,6 +28,7 @@ from app.services import llm_service
 from app.services.face_analysis import FaceMetrics
 from app.services.kb_service import (
     get_advanced_visagismo_context,
+    get_hallawell_context,
     get_kb_context,
     get_spain_trends_context,
 )
@@ -71,6 +72,19 @@ CEPHALIC_ES = {
         "añadir altura en el tope compensa la anchura craneal; "
         "evitar cortes que añadan masa lateral a un cráneo ya ancho."
     ),
+}
+
+THIRDS_ES = {
+    "balanced":        "Tercios faciales equilibrados. Proporciones armónicas que no requieren compensación específica.",
+    "upper_dominant":  "Tercio superior dominante. Frente visualmente más larga — flequillo o textura frontal para acortar.",
+    "middle_dominant": "Tercio medio dominante. Zona nasal ocupa más espacio — textura y movimiento redistribuyen la atención.",
+    "lower_dominant":  "Tercio inferior dominante. Mentón/mandíbula largos — volumen en coronilla para equilibrar.",
+}
+
+PROFILE_ES = {
+    "convex":   "Perfil convexo — nariz proyectada hacia adelante, mentón puede estar retraído. Textura frontal + barba correctiva.",
+    "straight": "Perfil recto — alineación equilibrada frente-nariz-mentón. Sin restricciones adicionales por perfil.",
+    "concave":  "Perfil cóncavo — mentón proyectado, frente puede retraerse. Volumen frontal (quiff/pompadour) compensa.",
 }
 
 # Jawline threshold — below this, beard is primary recommendation
@@ -140,13 +154,49 @@ aplícalos de forma que el usuario perciba el resultado sin ver la fórmula.
    - Volumen: dirigirlo hacia el lado menos proyectado para compensar.
    - Entradas: si una entra más, el corte puede equilibrarlo con la dirección del peinado.
 
-8. TEXTURA Y PESO VISUAL DEL CABELLO
+8. TERCIOS FACIALES (MÉTODO HALLAWELL)
+   - La cara se divide en 3 tercios: superior (frente→cejas), medio (cejas→nariz), inferior (nariz→mentón).
+   - Ideal: ~33% cada uno. Cuando un tercio domina, el corte compensa:
+     * Tercio superior dominante: flequillo/fringe para acortar visualmente.
+     * Tercio inferior dominante: volumen en coronilla para elevar proporción.
+     * Tercio medio dominante: textura y movimiento que distribuyan la atención.
+   - Usa los valores de upper_third/middle_third/lower_third del análisis para personalizar.
+
+9. PERFIL FACIAL (LATERAL)
+   - Convexo: nariz proyecta, mentón puede retraerse → textura frontal + barba en mentón.
+   - Recto: sin restricciones adicionales por perfil.
+   - Cóncavo: mentón proyecta, frente puede retraerse → volumen frontal (quiff/pompadour).
+   - El perfil influye directamente en la vista lateral del corte.
+
+10. ESPACIADO DE OJOS
+   - Ojos juntos (close_set): raya central o peinados que abran visualmente el centro.
+   - Ojos separados (wide_set): side part que concentre la atención al centro.
+   - Normal: sin restricción adicional.
+
+11. RATIO ÁUREO (φ = 1.618)
+   - Benchmark de armonía, NO objetivo. Útil para contextualizar qué tan equilibradas son las proporciones.
+   - Un score bajo indica que el corte debe compensar más activamente; uno alto permite más libertad.
+
+12. PROPORCIONES NASALES
+   - Nariz ancha: volumen lateral en tope + textura que compita visualmente.
+   - Nariz larga: flequillo ligero + volumen en coronilla.
+   - No mencionar explícitamente la nariz — aplicar las correcciones de forma natural.
+
+13. TEMPERAMENTO Y EXPRESIÓN PERSONAL (HALLAWELL)
+   - El corte comunica una identidad. Líneas rectas = formalidad/poder. Curvas = cercanía/suavidad.
+     Diagonales = dinamismo/creatividad. Considerar qué quiere expresar el usuario.
+   - Sanguíneo (dinámico/creativo): cortes con movimiento, diagonales, textura viva.
+   - Melancólico (perfeccionista/refinado): cortes limpios, líneas precisas, elegancia sutil.
+   - Colérico (líder/determinado): cortes estructurados, líneas rectas, autoridad visual.
+   - Flemático (tranquilo/relajado): cortes simples, bajo mantenimiento, naturales.
+
+14. TEXTURA Y PESO VISUAL DEL CABELLO
    - Cabello fino + poca densidad: evitar cortes con mucho volumen en el tope (se hunde al mediodía).
      Cortes con más movimiento lateral o textura en superficie (desmechado) funcionan mejor.
    - Cabello grueso/rizado: enorme potencial de volumen. La forma del volumen importa más que la longitud.
    - Ondulado: el "peso" propio del ondulado puede usarse como herramienta de diseño.
 
-9. MEDIDAS CONCRETAS PARA EL BARBERO
+15. MEDIDAS CONCRETAS PARA EL BARBERO
    Siempre incluye:
    - Número de máquina en laterales (1/1.5/2/3/4) o "a piel" / "navaja"
    - Número o longitud en la transición
@@ -468,6 +518,7 @@ def _build_user_prompt(metrics: FaceMetrics, quiz: dict, include_seasonal: bool 
         + get_kb_context(metrics.face_shape)
         + get_spain_trends_context(metrics.face_shape)
         + get_advanced_visagismo_context(metrics.face_shape)
+        + get_hallawell_context(quiz)
     )
 
     quiz_lines = _format_quiz(quiz)
@@ -505,6 +556,76 @@ aceite nutritivo en invierno, etc.)",
     hair_texture_from_quiz = _hair_tex_map.get(quiz.get("hair_texture", "straight"), "straight")
     hair_density_from_quiz  = _hair_den_map.get(quiz.get("hair_density",  "medium"),  "medium")
 
+    # --- Advanced Hallawell metrics block ---
+    hallawell_metrics = ""
+    ut = getattr(metrics, "upper_third", 0)
+    if ut > 0:
+        tb_label = {"balanced": "Equilibrados", "upper_dominant": "Tercio superior dominante",
+                    "middle_dominant": "Tercio medio dominante", "lower_dominant": "Tercio inferior dominante"
+                    }.get(getattr(metrics, "thirds_balance", "balanced"), "Equilibrados")
+        hallawell_metrics += f"""
+Tercios faciales (Hallawell):
+  - Superior: {ut:.1%} | Medio: {getattr(metrics, 'middle_third', 0):.1%} | Inferior: {getattr(metrics, 'lower_third', 0):.1%}
+  - Balance: {tb_label}"""
+
+    eye_sp = getattr(metrics, "eye_spacing", "normal")
+    eye_r = getattr(metrics, "eye_spacing_ratio", 0)
+    if eye_r > 0:
+        eye_label = {"close_set": "Juntos", "normal": "Normal", "wide_set": "Separados"}.get(eye_sp, "Normal")
+        hallawell_metrics += f"\n  - Espaciado de ojos: {eye_label} (ratio {eye_r:.3f})"
+
+    nw = getattr(metrics, "nose_width_ratio", 0)
+    nl = getattr(metrics, "nose_length_ratio", 0)
+    if nw > 0:
+        hallawell_metrics += f"\n  - Proporciones nasales: anchura {nw:.3f} | longitud {nl:.3f}"
+
+    cheek = getattr(metrics, "cheekbone_prominence", "moderate")
+    cheek_label = {"prominent": "Prominentes (rasgo favorecedor)", "moderate": "Moderados", "subtle": "Sutiles"}.get(cheek, "Moderados")
+    hallawell_metrics += f"\n  - Pómulos: {cheek_label}"
+
+    golden = getattr(metrics, "golden_ratio_score", 0)
+    if golden > 0:
+        hallawell_metrics += f"\n  - Score ratio áureo (φ): {golden:.0%}"
+
+    profile = getattr(metrics, "profile_type", None)
+    if profile:
+        prof_label = {"convex": "Convexo (nariz proyectada)", "straight": "Recto (equilibrado)", "concave": "Cóncavo (mentón proyectado)"}.get(profile, profile)
+        hallawell_metrics += f"\n  - Perfil lateral: {prof_label}"
+
+    # --- Hallawell quiz: body, temperament, hair specifics ---
+    hallawell_quiz = ""
+    height = quiz.get("height")
+    if height:
+        h_label = {"short": "bajo (<170cm)", "medium": "medio (170-180cm)", "tall": "alto (>180cm)"}.get(height, height)
+        hallawell_quiz += f"\n  - Altura: {h_label}"
+    build = quiz.get("body_build")
+    if build:
+        b_label = {"slim": "delgado", "medium": "medio", "athletic": "atlético", "stocky": "corpulento"}.get(build, build)
+        hallawell_quiz += f"\n  - Complexión: {b_label}"
+    expression = quiz.get("personality_expression")
+    if expression:
+        e_label = {"leader": "liderazgo/autoridad", "creative": "creatividad/originalidad",
+                   "approachable": "cercanía/empatía", "serious": "seriedad/profesionalidad",
+                   "adventurous": "aventura/energía"}.get(expression, expression)
+        hallawell_quiz += f"\n  - Quiere expresar: {e_label}"
+    growth = quiz.get("growth_patterns")
+    if growth and growth != "none":
+        hallawell_quiz += f"\n  - Patrones de crecimiento: {growth}"
+    chemical = quiz.get("chemical_history")
+    if chemical and chemical != "none":
+        hallawell_quiz += f"\n  - Historial químico: {chemical}"
+    porosity = quiz.get("hair_porosity")
+    if porosity and porosity != "unknown":
+        hallawell_quiz += f"\n  - Porosidad: {porosity}"
+    visit_freq = quiz.get("visit_frequency")
+    if visit_freq:
+        vf_label = {"biweekly": "cada 2 semanas", "monthly": "mensual", "bimonthly": "cada 2 meses", "quarterly": "trimestral"}.get(visit_freq, visit_freq)
+        hallawell_quiz += f"\n  - Frecuencia barbería: {vf_label}"
+    styling_sk = quiz.get("styling_skill")
+    if styling_sk:
+        ss_label = {"none": "ninguna", "basic": "básica", "intermediate": "intermedia", "advanced": "avanzada"}.get(styling_sk, styling_sk)
+        hallawell_quiz += f"\n  - Habilidad styling: {ss_label}"
+
     return f"""{kb_context}════ MÉTRICAS FACIALES (MediaPipe 468 puntos) ════
 
 Forma facial: {metrics.face_shape.upper()}
@@ -518,7 +639,7 @@ Ratios biométricos:
   - Ratio mandíbula/pómulos (jaw_to_face_ratio): {metrics.jaw_to_face_ratio:.3f}
     (>0.96 = mandíbula fuerte; 0.88–0.96 = media; <0.88 = débil){jaw_flag}
   - Asimetría facial: {metrics.asymmetry_score:.3f} / 1.00
-    ({metrics.asymmetry_description}){asym_flag}
+    ({metrics.asymmetry_description}){asym_flag}{hallawell_metrics}
 
 Proporciones craneales: {cranial_desc}{cephalic_block}
 Fotos procesadas: {metrics.photos_used}/3 (frontal 0° + perfil 90° izquierdo + perfil 90° derecho) | Confianza: {metrics.confidence:.0%}
@@ -529,7 +650,7 @@ Recomendación técnica de base:
 ════ PREFERENCIAS DEL USUARIO (quiz) ════
 
 {quiz_lines}
-  - Barba actual: {beard_context}
+  - Barba actual: {beard_context}{hallawell_quiz}
 
 ════ INSTRUCCIÓN ════
 

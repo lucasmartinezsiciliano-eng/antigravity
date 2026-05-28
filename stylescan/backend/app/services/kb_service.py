@@ -245,3 +245,77 @@ def get_advanced_visagismo_context(face_shape: str) -> str:
         + "\n\n".join(parts)
         + "\n"
     )
+
+
+_HALLAWELL_PATH = KB_DIR / "visagismo" / "hallawell_system.json"
+
+
+def get_hallawell_context(quiz: dict) -> str:
+    """
+    Returns Hallawell temperament + body proportion context based on quiz answers.
+    Maps personality_expression to temperament, includes body-aware guidance.
+    """
+    data = _load_json(_HALLAWELL_PATH)
+    if not data:
+        return ""
+
+    parts: list[str] = []
+
+    # --- Temperament matching ---
+    expression = quiz.get("personality_expression", "")
+    temperaments = data.get("temperaments", {})
+    matched_temperament = None
+
+    if expression:
+        for temp_id, temp_data in temperaments.items():
+            mappings = temp_data.get("quiz_mapping", [])
+            if expression in mappings:
+                matched_temperament = temp_data
+                break
+
+    if matched_temperament:
+        label = matched_temperament["label"]
+        guidance = matched_temperament.get("cut_guidance", {})
+        ideal = guidance.get("ideal", [])
+        avoid = guidance.get("avoid", [])
+        maint = guidance.get("maintenance", "")
+
+        temp_lines = [f"  Temperamento: {label}"]
+        temp_lines.append(f"  Personalidad: {matched_temperament.get('personality', '')}")
+        vl = matched_temperament.get("visual_language", {})
+        if vl:
+            temp_lines.append(f"  Lenguaje visual: líneas {vl.get('lines', '')} | formas {vl.get('forms', '')}")
+        if ideal:
+            temp_lines.append("  Cortes ideales para este temperamento:")
+            for i in ideal[:4]:
+                temp_lines.append(f"    ✓ {i}")
+        if avoid:
+            temp_lines.append("  Evitar para este temperamento:")
+            for a in avoid[:2]:
+                temp_lines.append(f"    ✗ {a}")
+        if maint:
+            temp_lines.append(f"  Mantenimiento: {maint}")
+        parts.append("TEMPERAMENTO HALLAWELL:\n" + "\n".join(temp_lines))
+
+    # --- Body proportions ---
+    body_rules = data.get("body_proportion_rules", {})
+    height = quiz.get("height")
+    build = quiz.get("body_build")
+
+    body_lines: list[str] = []
+    if height and height in body_rules.get("height", {}):
+        body_lines.append(f"  Altura: {body_rules['height'][height]}")
+    if build and build in body_rules.get("body_build", {}):
+        body_lines.append(f"  Complexión: {body_rules['body_build'][build]}")
+
+    if body_lines:
+        parts.append("PROPORCIONES CORPORALES:\n" + "\n".join(body_lines))
+
+    if not parts:
+        return ""
+
+    return (
+        "\n════ SISTEMA HALLAWELL — TEMPERAMENTO Y EXPRESIÓN ════\n"
+        + "\n\n".join(parts)
+        + "\n"
+    )

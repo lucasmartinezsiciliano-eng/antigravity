@@ -146,6 +146,8 @@ _ALLOWED_ORIGINS = [
     "https://www.visaiapp.com",
     "https://visai.es",
     "https://www.visai.es",
+    "https://barberos.visai.es",
+    "https://barberos.visaiapp.com",
 ]
 
 _DEBUG_ORIGINS = [

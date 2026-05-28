@@ -41,6 +41,9 @@ class BarberPartner(Base):
     iban_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     stripe_connect_account_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    # Auth
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     contract_signed_at: Mapped[datetime | None] = mapped_column(

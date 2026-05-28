@@ -11,7 +11,7 @@ import logging
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Request, UploadFile
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -20,6 +20,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.security import hash_password, verify_password, create_barber_token, decode_barber_token
 from app.models.barber import BarberPartner, Commission
 from app.models.barber_reference_photos import BarberReferencePhoto, HaircutType, PhotoAngle
 from app.models.analysis import Analysis
@@ -42,6 +43,26 @@ class BarberRegisterRequest(BaseModel):
     province: str = "Tarragona"
     instagram_handle: str | None = None
     iban: str | None = None
+    password: str | None = Field(None, min_length=6, max_length=128)
+
+
+class BarberLoginRequest(BaseModel):
+    promo_code: str
+    password: str
+
+
+class BarberLoginResponse(BaseModel):
+    barber_id: str
+    token: str
+    name: str
+    promo_code: str
+    barbershop_name: str
+
+
+class BarberSetPasswordRequest(BaseModel):
+    email: EmailStr
+    promo_code: str
+    password: str = Field(..., min_length=6, max_length=128)
 
 
 class BarberRegisterResponse(BaseModel):
@@ -109,7 +130,7 @@ async def register_barber(
         iban=body.iban,
         promo_code=code,
         stripe_promo_code_id=stripe_promo_id,
-        # contract_signed_at left None — set explicitly via POST /barbers/{id}/sign-contract
+        password_hash=hash_password(body.password) if body.password else None,
     )
     db.add(partner)
     await db.flush()
@@ -125,6 +146,95 @@ async def register_barber(
             f"para que ahorren €2 en el análisis y tú ganes €2 por cada uso."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Auth: login, set-password, me
+# ---------------------------------------------------------------------------
+@router.post("/login", response_model=BarberLoginResponse)
+@limiter.limit("10/minute")
+async def barber_login(
+    request: Request,
+    body: BarberLoginRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(BarberPartner).where(
+        BarberPartner.promo_code == body.promo_code.strip().upper()
+    )
+    partner = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not partner or not partner.password_hash:
+        raise HTTPException(401, "Código o contraseña incorrectos.")
+    if not verify_password(body.password, partner.password_hash):
+        raise HTTPException(401, "Código o contraseña incorrectos.")
+    if not partner.is_active:
+        raise HTTPException(403, "Cuenta desactivada.")
+
+    token = create_barber_token(partner.id)
+    logger.info("Barber login: %s (%s)", partner.name, partner.id)
+
+    return BarberLoginResponse(
+        barber_id=partner.id,
+        token=token,
+        name=partner.name,
+        promo_code=partner.promo_code,
+        barbershop_name=partner.barbershop_name,
+    )
+
+
+@router.post("/set-password", status_code=200)
+@limiter.limit("5/hour")
+async def barber_set_password(
+    request: Request,
+    body: BarberSetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set initial password for barbers registered before auth was added."""
+    _generic_err = "Email o código incorrectos."
+
+    stmt = select(BarberPartner).where(BarberPartner.email == body.email)
+    partner = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not partner:
+        raise HTTPException(400, _generic_err)
+    if partner.promo_code.upper() != body.promo_code.strip().upper():
+        raise HTTPException(400, _generic_err)
+    if partner.password_hash:
+        raise HTTPException(409, "Ya tienes contraseña. Usa el login.")
+
+    partner.password_hash = hash_password(body.password)
+    await db.flush()
+    logger.info("Password set for barber: %s", partner.id)
+
+    token = create_barber_token(partner.id)
+    return {
+        "message": "Contraseña creada correctamente.",
+        "barber_id": partner.id,
+        "token": token,
+    }
+
+
+@router.get("/me")
+async def barber_me(
+    db: AsyncSession = Depends(get_db),
+    authorization: str = Header(...),
+):
+    """Get current barber from JWT token."""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Token inválido.")
+    barber_id = decode_barber_token(authorization[7:])
+    if not barber_id:
+        raise HTTPException(401, "Token expirado o inválido.")
+
+    partner = await _get_partner_or_404(barber_id, db)
+    return {
+        "barber_id": partner.id,
+        "name": partner.name,
+        "barbershop_name": partner.barbershop_name,
+        "promo_code": partner.promo_code,
+        "is_active": partner.is_active,
+        "contract_signed_at": partner.contract_signed_at.isoformat() if partner.contract_signed_at else None,
+    }
 
 
 # ---------------------------------------------------------------------------

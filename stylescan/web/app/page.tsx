@@ -6,73 +6,76 @@ import { storage } from "@/lib/storage";
 
 function ResultPreview() {
   return (
-    <div style={{
-      marginTop: 32,
-      border: "1px solid #1C1C1C",
-      borderRadius: 14,
-      overflow: "hidden",
-      background: "#050505",
-    }}>
-      {/* Bar superior */}
+    <div style={{ marginTop: 32 }}>
+      <p className="label" style={{ marginBottom: 10 }}>Ejemplo de resultado</p>
       <div style={{
-        padding: "9px 14px",
-        background: "#0A0A0A",
-        borderBottom: "1px solid #141414",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
+        border: "1px solid var(--border)",
+        borderRadius: 14,
+        overflow: "hidden",
+        background: "var(--surface)",
+        boxShadow: "0 2px 24px rgba(255,255,255,0.03), 0 0 0 1px rgba(255,255,255,0.04)",
       }}>
-        <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#444", fontWeight: 700 }}>
-          ANÁLISIS COMPLETADO
-        </span>
-        <span style={{ fontSize: 9, color: "#2A2A2A", letterSpacing: "0.06em" }}>VISAI</span>
-      </div>
+        {/* Bar superior */}
+        <div style={{
+          padding: "9px 14px",
+          background: "var(--surface2)",
+          borderBottom: "1px solid var(--border-subtle)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}>
+          <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700 }}>
+            Análisis completado
+          </span>
+          <span style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.06em", fontWeight: 600 }}>VISAI</span>
+        </div>
 
-      {/* Forma craneal */}
-      <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid #111" }}>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#444", marginBottom: 6 }}>
-          FORMA CRANEAL
-        </div>
-        <div className="display" style={{ fontSize: 28, fontWeight: 700, color: "#F0F0F0", marginBottom: 3 }}>
-          Ovalado
-        </div>
-        <div style={{ fontSize: 11, color: "#3A3A3A" }}>
-          468 puntos · proporción áurea 0.92 · asimetría baja
-        </div>
-      </div>
-
-      {/* 3 Cortes */}
-      <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7 }}>
-        {[
-          { n: "01", name: "Textured Crop", sub: "Cuerpo y textura" },
-          { n: "02", name: "Taper Fade",    sub: "Degradado lateral" },
-          { n: "03", name: "French Crop",   sub: "Flequillo recto" },
-        ].map(({ n, name, sub }, i) => (
-          <div key={n} style={{
-            background: i === 0 ? "#0F0F0F" : "transparent",
-            border: `1px solid ${i === 0 ? "#242424" : "#141414"}`,
-            borderRadius: 10,
-            padding: "10px 9px",
-          }}>
-            <div style={{ fontSize: 9, color: "#333", fontWeight: 700, letterSpacing: "0.08em", marginBottom: 5 }}>{n}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#D0D0D0" }}>{name}</div>
-            <div style={{ fontSize: 10, color: "#3A3A3A", marginTop: 3, lineHeight: 1.3 }}>{sub}</div>
+        {/* Forma craneal */}
+        <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 6 }}>
+            Forma craneal
           </div>
-        ))}
-      </div>
+          <div className="display" style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>
+            Ovalado
+          </div>
+          <div style={{ fontSize: 11, color: "#666" }}>
+            468 puntos · proporción áurea 0.92 · asimetría baja
+          </div>
+        </div>
 
-      {/* Barber instructions hint */}
-      <div style={{
-        padding: "9px 14px",
-        borderTop: "1px solid #0E0E0E",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        background: "#040404",
-      }}>
-        <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#2A2A2A", flexShrink: 0 }} />
-        <span style={{ fontSize: 10, color: "#363636" }}>Instrucciones exactas para tu barbero</span>
-        <span style={{ marginLeft: "auto", fontSize: 10, color: "#242424" }}>→</span>
+        {/* 3 Cortes */}
+        <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7 }}>
+          {[
+            { n: "01", name: "Textured Crop", sub: "Cuerpo y textura" },
+            { n: "02", name: "Taper Fade",    sub: "Degradado lateral" },
+            { n: "03", name: "French Crop",   sub: "Flequillo recto" },
+          ].map(({ n, name, sub }, i) => (
+            <div key={n} style={{
+              background: i === 0 ? "var(--surface2)" : "var(--surface)",
+              border: `1px solid ${i === 0 ? "var(--border)" : "var(--border-subtle)"}`,
+              borderRadius: 10,
+              padding: "10px 9px",
+            }}>
+              <div style={{ fontSize: 9, color: "var(--text-dim)", fontWeight: 700, letterSpacing: "0.08em", marginBottom: 5 }}>{n}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#D8D8D8" }}>{name}</div>
+              <div style={{ fontSize: 10, color: "#666", marginTop: 3, lineHeight: 1.3 }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Barber instructions hint */}
+        <div style={{
+          padding: "9px 14px",
+          borderTop: "1px solid var(--border-subtle)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: "rgba(0,0,0,0.2)",
+        }}>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--text-dim)", flexShrink: 0 }} />
+          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Instrucciones exactas para tu barbero</span>
+          <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--text-dim)" }}>→</span>
+        </div>
       </div>
     </div>
   );
@@ -121,7 +124,7 @@ export default function Home() {
         <p style={{
           margin: 0,
           fontSize: 15,
-          color: "#666",
+          color: "var(--text-muted)",
           lineHeight: 1.55,
           maxWidth: 300,
         }}>
@@ -154,7 +157,7 @@ export default function Home() {
         {["2 min", "Sin cuenta", "Foto eliminada"].map(chip => (
           <span key={chip} style={{
             fontSize: 11,
-            color: "#3A3A3A",
+            color: "var(--text-muted)",
             letterSpacing: "0.02em",
           }}>
             · {chip}
@@ -181,7 +184,7 @@ export default function Home() {
         ].map(([n, label]) => (
           <div key={label} style={{ textAlign: "center" }}>
             <div className="display" style={{ fontSize: 26, fontWeight: 700, color: "#F0F0F0", lineHeight: 1 }}>{n}</div>
-            <div style={{ fontSize: 9, color: "#333", marginTop: 5, letterSpacing: "0.1em" }}>{label}</div>
+            <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 5, letterSpacing: "0.1em" }}>{label}</div>
           </div>
         ))}
       </div>
@@ -202,7 +205,7 @@ export default function Home() {
               borderBottom: "1px solid var(--border)",
             }}>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3, color: "#E0E0E0" }}>{title}</div>
-              <div style={{ fontSize: 12, color: "#3A3A3A" }}>{desc}</div>
+              <div style={{ fontSize: 12, color: "#666" }}>{desc}</div>
             </div>
           ))}
         </div>
@@ -223,9 +226,9 @@ export default function Home() {
               border: "1px solid var(--border)",
               borderRadius: "var(--r-md)",
             }}>
-              <div className="display" style={{ fontSize: 18, fontWeight: 700, color: "#2A2A2A", marginBottom: 6 }}>{n}</div>
+              <div className="display" style={{ fontSize: 18, fontWeight: 700, color: "var(--text-dim)", marginBottom: 6 }}>{n}</div>
               <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2, color: "#C0C0C0" }}>{title}</div>
-              <div style={{ fontSize: 10, color: "#3A3A3A", lineHeight: 1.4 }}>{desc}</div>
+              <div style={{ fontSize: 10, color: "#666", lineHeight: 1.4 }}>{desc}</div>
             </div>
           ))}
         </div>

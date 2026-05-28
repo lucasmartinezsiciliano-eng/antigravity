@@ -55,6 +55,10 @@ _KONTEXT_INPAINT_MODEL = "fal-ai/flux-kontext-lora/inpaint"
 # Used when NO barber reference photo matches the recommended cut.
 _FILL_MODEL = "fal-ai/flux-pro/v1/fill"
 
+# Post-processing: background removal via BiRefNet v2 → white background.
+# ~$0.01 per image, ~2-4s. Total added cost: ~$0.06 per analysis (6 images).
+_BIREFNET_MODEL = "fal-ai/birefnet/v2"
+
 # Angles: frontal uses the face-cap mask; lateral uses a profile-side mask.
 # photo_index: which client photo to use as base
 # mask_type:   "frontal_cap" | "profile_right"
@@ -384,6 +388,62 @@ def _build_inpaint_prompt(
 
 
 # ---------------------------------------------------------------------------
+# Post-processing: white background
+# ---------------------------------------------------------------------------
+
+async def _postprocess_white_bg(image_url: str, fal_key: str) -> str:
+    """
+    Remove background via BiRefNet and composite onto pure white.
+
+    Flow:
+      1. fal-ai/birefnet/v2 → transparent PNG (foreground only)
+      2. PIL: composite onto white canvas
+      3. fal_client.upload → CDN URL (jpeg)
+
+    Cost:  ~$0.01 per image (6 images = ~$0.06 per analysis)
+    Time:  ~2-4s per image (runs in parallel with other angles)
+    """
+    import fal_client  # type: ignore
+    import httpx
+    from PIL import Image
+    import io as _io
+
+    os.environ["FAL_KEY"] = fal_key
+
+    # 1. Foreground segmentation → transparent PNG
+    result = await asyncio.to_thread(
+        fal_client.run,
+        _BIREFNET_MODEL,
+        arguments={
+            "image_url": image_url,
+            "model": "General Use (Heavy)",
+            "operating_resolution": "1024x1024",
+            "output_format": "png",
+        },
+    )
+    fg_url = result["image"]["url"]
+
+    # 2. Download transparent PNG and composite onto white
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(fg_url)
+        resp.raise_for_status()
+
+    fg = Image.open(_io.BytesIO(resp.content)).convert("RGBA")
+    white = Image.new("RGBA", fg.size, (255, 255, 255, 255))
+    composite = Image.alpha_composite(white, fg)
+    final = composite.convert("RGB")
+
+    # 3. Encode and upload to fal CDN
+    buf = _io.BytesIO()
+    final.save(buf, format="JPEG", quality=92)
+    upload_url = await asyncio.to_thread(
+        fal_client.upload, buf.getvalue(), "image/jpeg",
+    )
+    logger.debug("  → white bg: %s → %s", image_url[:60], upload_url[:60])
+    return upload_url
+
+
+# ---------------------------------------------------------------------------
 # Single-angle generation
 # ---------------------------------------------------------------------------
 
@@ -475,6 +535,14 @@ async def _generate_one_angle(
             )
             url = result["images"][0]["url"]
             logger.info("  → angle %s: OK [%s] ref=%s", angle["id"], model_tag, bool(barber_ref_url))
+
+            # Post-process: remove background → white
+            try:
+                url = await _postprocess_white_bg(url, fal_key)
+                logger.info("  → angle %s: white bg OK", angle["id"])
+            except Exception as pp_err:
+                logger.warning("  → angle %s: white bg failed, keeping original: %s", angle["id"], pp_err)
+
             return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
 
         except (asyncio.TimeoutError, Exception) as e:
@@ -512,6 +580,14 @@ async def _generate_one_angle(
             )
             url = result["images"][0]["url"]
             logger.info("  → angle %s: OK [flux-fill fallback]", angle["id"])
+
+            # Post-process: remove background → white
+            try:
+                url = await _postprocess_white_bg(url, fal_key)
+                logger.info("  → angle %s: white bg OK [fallback]", angle["id"])
+            except Exception as pp_err:
+                logger.warning("  → angle %s: white bg failed in fallback: %s", angle["id"], pp_err)
+
             return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
         except Exception as e2:
             logger.error("  → angle %s FAILED [flux-fill fallback]: %s", angle["id"], e2)

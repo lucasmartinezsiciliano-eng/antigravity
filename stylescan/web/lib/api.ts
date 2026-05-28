@@ -202,6 +202,40 @@ export const api = {
   },
 
   // ============================================================================
+  // BARBER AUTH
+  // ============================================================================
+
+  barberLogin: (promo_code: string, password: string) =>
+    req<{
+      barber_id: string;
+      token: string;
+      name: string;
+      promo_code: string;
+      barbershop_name: string;
+    }>("/barbers/login", {
+      method: "POST",
+      body: JSON.stringify({ promo_code, password }),
+    }),
+
+  barberSetPassword: (email: string, promo_code: string, password: string) =>
+    req<{ message: string; barber_id: string; token: string }>(
+      "/barbers/set-password",
+      { method: "POST", body: JSON.stringify({ email, promo_code, password }) },
+    ),
+
+  barberMe: (token: string) =>
+    req<{
+      barber_id: string;
+      name: string;
+      barbershop_name: string;
+      promo_code: string;
+      is_active: boolean;
+      contract_signed_at: string | null;
+    }>("/barbers/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  // ============================================================================
   // BARBER GAMIFICATION API
   // ============================================================================
 
@@ -213,8 +247,9 @@ export const api = {
     }),
 
   // Barber Dashboard
-  getBarberDashboard: (barber_id: string) =>
-    req<{
+  getBarberDashboard: (barber_id: string, promo_code?: string) => {
+    const params = promo_code ? `?promo_code=${encodeURIComponent(promo_code)}` : "";
+    return req<{
       barber_id: string;
       name: string;
       barbershop_name: string;
@@ -225,7 +260,8 @@ export const api = {
       pending_payout_euros: number;
       is_active: boolean;
       recent_uses: Array<{ date: string; earned_euros: number }>;
-    }>(`/barbers/${barber_id}/dashboard`),
+    }>(`/barbers/${barber_id}/dashboard${params}`);
+  },
 
   // Reference Photos
   getBarberReferencePhotos: (barber_id: string) =>

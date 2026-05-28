@@ -71,5 +71,11 @@ class AnalysisResult(BaseModel):
     products_guide: dict | None
     includes_seasonal: bool = False
     seasonal_report: dict | None = None
+    # Advanced visagism — Hallawell
+    thirds_balance: str | None = None
+    eye_spacing: str | None = None
+    cheekbone_prominence: str | None = None
+    golden_ratio_score: float | None = None
+    profile_type: str | None = None
     created_at: datetime
     expires_at: datetime

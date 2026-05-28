@@ -77,7 +77,120 @@ def _detect_defects(metrics: FaceMetrics) -> list[str]:
     elif metrics.length_width_ratio > 1.70:
         defects.append("low_fwhr")
 
+    # --- Advanced visagism (Hallawell) ---
+
+    # Facial thirds imbalance
+    if getattr(metrics, "thirds_balance", "balanced") == "upper_dominant":
+        defects.append("upper_third_large")
+    elif getattr(metrics, "thirds_balance", "balanced") == "lower_dominant":
+        defects.append("lower_third_large")
+
+    # Eye spacing
+    eye_sp = getattr(metrics, "eye_spacing", "normal")
+    if eye_sp == "close_set":
+        defects.append("eyes_close_set")
+    elif eye_sp == "wide_set":
+        defects.append("eyes_wide_set")
+
+    # Nose prominence (width OR length notably above average)
+    if getattr(metrics, "nose_width_ratio", 0) > 0.65:
+        defects.append("nose_wide")
+    if getattr(metrics, "nose_length_ratio", 0) > 0.85:
+        defects.append("nose_long")
+
+    # Cheekbone prominence
+    if getattr(metrics, "cheekbone_prominence", "moderate") == "prominent":
+        defects.append("cheekbones_prominent")
+
+    # Profile type
+    profile = getattr(metrics, "profile_type", None)
+    if profile == "convex":
+        defects.append("profile_convex")
+    elif profile == "concave":
+        defects.append("profile_concave")
+
     return defects
+
+
+def _build_hallawell_block(metrics: FaceMetrics) -> str:
+    """Build an advanced Hallawell analysis block for Claude injection."""
+    lines = ["", "════ ANÁLISIS HALLAWELL AVANZADO ════", ""]
+
+    # Facial thirds
+    tb = getattr(metrics, "thirds_balance", "balanced")
+    ut = getattr(metrics, "upper_third", 0)
+    mt = getattr(metrics, "middle_third", 0)
+    lt = getattr(metrics, "lower_third", 0)
+    if ut > 0:
+        thirds_labels = {"balanced": "equilibrados", "upper_dominant": "tercio superior dominante (frente larga)",
+                         "middle_dominant": "tercio medio dominante (nariz larga)", "lower_dominant": "tercio inferior dominante (mentón largo)"}
+        lines.append(f"TERCIOS FACIALES: superior {ut:.1%} | medio {mt:.1%} | inferior {lt:.1%}")
+        lines.append(f"  → {thirds_labels.get(tb, tb)}")
+        if tb == "upper_dominant":
+            lines.append("  → Compensar: flequillo/textura frontal para acortar visualmente el tercio superior")
+        elif tb == "lower_dominant":
+            lines.append("  → Compensar: volumen en coronilla para elevar proporción superior, barba corta para no alargar más")
+        lines.append("")
+
+    # Eye spacing
+    eye_sp = getattr(metrics, "eye_spacing", "normal")
+    eye_ratio = getattr(metrics, "eye_spacing_ratio", 0)
+    if eye_ratio > 0:
+        eye_labels = {"close_set": "ojos juntos", "normal": "espaciado normal", "wide_set": "ojos separados"}
+        lines.append(f"ESPACIADO DE OJOS: {eye_labels.get(eye_sp, eye_sp)} (ratio {eye_ratio:.3f})")
+        if eye_sp == "close_set":
+            lines.append("  → Parting central abre visualmente; evitar side parts muy marcados que concentren")
+        elif eye_sp == "wide_set":
+            lines.append("  → Side part concentra visualmente; flequillo con textura central une")
+        lines.append("")
+
+    # Nose proportions
+    nw = getattr(metrics, "nose_width_ratio", 0)
+    nl = getattr(metrics, "nose_length_ratio", 0)
+    if nw > 0:
+        lines.append(f"PROPORCIONES NASALES: anchura {nw:.3f} | longitud {nl:.3f} (normalizadas por IOD)")
+        if nw > 0.65:
+            lines.append("  → Nariz ancha: volumen lateral en el tope desvía la atención")
+        if nl > 0.85:
+            lines.append("  → Nariz larga: textura en el tope y flequillo ligero equilibran el perfil")
+        lines.append("")
+
+    # Cheekbone prominence
+    cheek = getattr(metrics, "cheekbone_prominence", "moderate")
+    if cheek != "moderate":
+        prom_labels = {"prominent": "Pómulos prominentes — rasgo favorecedor, potenciar con lados cortos",
+                       "subtle": "Pómulos sutiles — taper o low fade añade anchura en esa zona"}
+        lines.append(f"PÓMULOS: {prom_labels.get(cheek, cheek)}")
+        lines.append("")
+
+    # Golden ratio
+    golden = getattr(metrics, "golden_ratio_score", 0)
+    if golden > 0:
+        if golden > 0.80:
+            lines.append(f"RATIO ÁUREO: {golden:.0%} — proporciones cercanas a φ, cara muy armónica")
+        elif golden > 0.60:
+            lines.append(f"RATIO ÁUREO: {golden:.0%} — proporciones equilibradas con margen de mejora")
+        else:
+            lines.append(f"RATIO ÁUREO: {golden:.0%} — el corte debe compensar desequilibrios proporcionales")
+        lines.append("")
+
+    # Profile type
+    profile = getattr(metrics, "profile_type", None)
+    if profile:
+        profile_guidance = {
+            "convex": "Perfil CONVEXO — nariz proyecta hacia adelante, mentón puede retraerse. "
+                      "Recomendación: textura en frente para equilibrar; barba en mentón si mandíbula débil; "
+                      "evitar cortes muy pegados que acentúen la proyección nasal.",
+            "straight": "Perfil RECTO — alineación equilibrada frente-nariz-mentón. "
+                        "Sin restricciones adicionales por perfil.",
+            "concave": "Perfil CÓNCAVO — mentón proyecta hacia adelante, frente puede retraerse. "
+                       "Recomendación: volumen en la zona frontal (quiff, pompadour) para compensar; "
+                       "barba corta o sin barba para no exagerar la proyección del mentón.",
+        }
+        lines.append(f"PERFIL LATERAL: {profile_guidance.get(profile, profile)}")
+        lines.append("")
+
+    return "\n".join(lines) if len(lines) > 3 else ""
 
 
 def analyze(metrics: FaceMetrics) -> VisagismoAnalysis:
@@ -150,6 +263,10 @@ def analyze(metrics: FaceMetrics) -> VisagismoAnalysis:
         forbidden=forbidden,
         priority_notes=priority_notes,
     )
+    # Append advanced Hallawell analysis
+    hallawell_block = _build_hallawell_block(metrics)
+    if hallawell_block:
+        formatted_block += hallawell_block
 
     return VisagismoAnalysis(
         shape=shape,

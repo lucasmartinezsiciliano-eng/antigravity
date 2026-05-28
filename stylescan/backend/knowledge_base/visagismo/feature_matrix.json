@@ -97,6 +97,46 @@
       "conflict": "La cara triangular ya tiene mandíbula prominente. Si también es fuerte, el efecto es máximo — la base domina completamente.",
       "resolution": "Prioridad: volumen en el tope para compensar. La mandíbula fuerte aquí es un factor que hay que compensar con más volumen arriba, no potenciar.",
       "final_instruction": "Quiff o pompadour de máximo volumen. Low fade. Sin barba o mínima. El objetivo es reequilibrar hacia arriba."
+    },
+
+    {
+      "shape": "oblong",
+      "defect": "upper_third_large",
+      "conflict": "Cara alargada + tercio superior dominante = frente excesivamente larga que estira más.",
+      "resolution": "PRIORIDAD MÁXIMA flequillo. French crop o textured fringe completo. Nunca despejar la frente.",
+      "final_instruction": "French crop con flequillo a la ceja + taper lateral. Absolutamente prohibido peinar hacia atrás."
+    },
+
+    {
+      "shape": "round",
+      "defect": "lower_third_large",
+      "conflict": "Cara redonda + tercio inferior largo = mentón/mandíbula acentuados en una cara ya ancha.",
+      "resolution": "High fade para elongar + volumen en tope que equilibre el tercio inferior. Barba corta si hay.",
+      "final_instruction": "High fade + quiff o textura alta. Si barba, muy corta para no alargar más el tercio inferior."
+    },
+
+    {
+      "shape": "heart",
+      "defect": "profile_convex",
+      "conflict": "Frente ancha (corazón) + perfil convexo (nariz prominente). La frente ya domina de frente, y la nariz domina de perfil.",
+      "resolution": "Flequillo diagonal que cubra parte de la frente SIN aplastar. Textura frontal que compita con la nariz.",
+      "final_instruction": "Flequillo diagonal texturizado + low fade. Barba ligera en mentón si mandíbula lo permite."
+    },
+
+    {
+      "shape": "square",
+      "defect": "profile_concave",
+      "conflict": "Cara cuadrada + perfil cóncavo = mandíbula fuerte frontal y lateralmente + mentón proyectado en perfil.",
+      "resolution": "Suavizar los ángulos con textura + volumen frontal moderado para compensar la recesión de frente.",
+      "final_instruction": "Low fade con transición suave + textura frontal hacia adelante. Barba corta máximo — no añadir proyección al mentón."
+    },
+
+    {
+      "shape": "diamond",
+      "defect": "cheekbones_prominent",
+      "conflict": "El diamante se define por sus pómulos prominentes. Potenciarlos demasiado puede crear un efecto angular excesivo.",
+      "resolution": "Equilibrar con volumen en frente y mentón, no intentar ocultar los pómulos — son el rasgo dominante.",
+      "final_instruction": "Taper con fringe texturizado que añada anchura en frente. Lados que integren la transición a los pómulos sin marcar excesivamente."
     }
   ]
 }
