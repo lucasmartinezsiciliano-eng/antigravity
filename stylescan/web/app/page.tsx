@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { storage } from "@/lib/storage";
+import Reveal from "@/components/Reveal";
 
 function ResultPreview() {
   return (
@@ -178,75 +179,104 @@ export default function Home() {
       </div>
 
       {/* ── Product preview ── */}
-      <ResultPreview />
+      <Reveal>
+        <ResultPreview />
+      </Reveal>
 
       {/* ── What you get ── */}
-      <div style={{ marginBottom: 44 }}>
+      <div style={{ marginBottom: 56 }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {[
             ["Visagismo profesional", "468 puntos · 6 formas · 3 tipos craneales analizados"],
             ["3 cortes personalizados", "Con instrucciones exactas para el barbero"],
             ["16.99 € frente a los 50-80 € del visagista presencial", "En 2 minutos desde tu móvil"],
-          ].map(([title, desc]) => (
-            <div key={title} style={{
-              padding: "16px 0",
-              borderBottom: "1px solid var(--border)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{title}</div>
-              <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{desc}</div>
-            </div>
+          ].map(([title, desc], i) => (
+            <Reveal key={title} delay={i * 80}>
+              <div style={{
+                padding: "16px 0",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{title}</div>
+                <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{desc}</div>
+              </div>
+            </Reveal>
           ))}
         </div>
       </div>
 
-      {/* ── How it works ── */}
-      <div style={{ marginBottom: 48 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 20 }}>
-          Cómo funciona
-        </div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* ── How it works (editorial index) ── */}
+      <div style={{ marginBottom: 56 }}>
+        <Reveal>
+          <div style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "var(--text-dim)",
+            marginBottom: 28,
+          }}>
+            Cómo funciona
+          </div>
+        </Reveal>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {[
-            ["Fotos", "3 fotos desde el móvil"],
-            ["Análisis", "Morfología y proporciones craneales con 468 puntos"],
-            ["Cortes", "3 recomendaciones exactas con instrucciones para el barbero"],
+            ["Fotos", "3 fotos desde el móvil. Frontal, lateral, perfil."],
+            ["Análisis", "Morfología craneal y proporciones medidas con 468 puntos."],
+            ["Cortes", "3 recomendaciones exactas, con instrucciones para tu barbero."],
           ].map(([title, desc], i) => (
-            <div key={title} style={{
-              display: "flex",
-              gap: 18,
-              padding: "16px 0",
-              borderBottom: i < 2 ? "1px solid var(--border)" : "none",
-            }}>
-              <span style={{
-                fontSize: 11,
-                color: "var(--text-dim)",
-                fontWeight: 600,
-                minWidth: 16,
-                paddingTop: 2,
-                fontVariantNumeric: "tabular-nums",
+            <Reveal key={title} delay={i * 90}>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "auto 1fr",
+                columnGap: 20,
+                alignItems: "baseline",
+                padding: "22px 0",
+                borderTop: "1px solid var(--border)",
+                borderBottom: i === 2 ? "1px solid var(--border)" : "none",
               }}>
-                {i + 1}
-              </span>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 3 }}>{title}</div>
-                <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{desc}</div>
+                <span style={{
+                  fontFamily: "var(--font-logo), serif",
+                  fontSize: 15,
+                  color: "var(--text-dim)",
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1,
+                }}>
+                  0{i + 1}
+                </span>
+                <div>
+                  <div style={{
+                    fontFamily: "var(--font-logo), serif",
+                    fontSize: "clamp(26px, 7vw, 34px)",
+                    fontWeight: 400,
+                    letterSpacing: "-0.02em",
+                    color: "var(--text)",
+                    lineHeight: 1,
+                    marginBottom: 8,
+                  }}>
+                    {title}
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.55, maxWidth: 320 }}>{desc}</div>
+                </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
 
       {/* ── Final CTA ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
-        <button className="btn-primary" onClick={() => router.push("/quiz")}>
-          Descubrir mis cortes ideales
-        </button>
-        <p className="caption" style={{ textAlign: "center", marginTop: 4 }}>
-          Sin cuenta · Foto eliminada al instante · RGPD
-        </p>
-      </div>
+      <Reveal>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
+          <button className="btn-primary" onClick={() => router.push("/quiz")}>
+            Descubrir mis cortes ideales
+          </button>
+          <p className="caption" style={{ textAlign: "center", marginTop: 4 }}>
+            Sin cuenta · Foto eliminada al instante · RGPD
+          </p>
+        </div>
+      </Reveal>
 
     </div>
   );
