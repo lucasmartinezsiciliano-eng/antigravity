@@ -354,6 +354,14 @@ export default function CapturePage() {
     setError("");
     try {
       const compressed = await Promise.all(files.map((f) => compressImage(f)));
+      // Safety net: ensure RGPD consent is recorded before upload. Consent was
+      // already accepted at checkout; this call is idempotent on the backend and
+      // covers navigation paths (timeout "continuar", retries) that skip /pending.
+      try {
+        await api.consent(id, "v1.0-web");
+      } catch {
+        /* If consent genuinely can't be recorded, uploadPhotos surfaces the real error */
+      }
       await api.uploadPhotos(id, compressed);
       setStage("processing");
       if (pollRef.current) clearInterval(pollRef.current);
@@ -487,7 +495,7 @@ export default function CapturePage() {
 
           {/* Aviso especial perfiles */}
           <div style={{
-            background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.25)",
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.25)",
             borderRadius: 14, padding: "16px 18px", marginBottom: 32,
           }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)", letterSpacing: 1, marginBottom: 8 }}>
@@ -544,7 +552,7 @@ export default function CapturePage() {
           </div>
 
           <div style={{
-            background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)",
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.2)",
             borderRadius: 12, padding: "14px 16px", marginBottom: 28,
           }}>
             <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0, lineHeight: 1.6 }}>
@@ -771,7 +779,7 @@ export default function CapturePage() {
           padding: "calc(env(safe-area-inset-top) + 16px) 24px 40px",
           textAlign: "center",
         }}>
-          <p style={{ color: "rgba(201,168,76,0.9)", fontSize: 13, fontWeight: 700, letterSpacing: 1.5, margin: 0 }}>
+          <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 700, letterSpacing: 1.5, margin: 0 }}>
             ¿ESTÁ BIEN?
           </p>
           <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "6px 0 2px", letterSpacing: -0.3 }}>
@@ -802,9 +810,9 @@ export default function CapturePage() {
             style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, color: "white" }}>
             <div style={{
               width: 80, height: 80, borderRadius: "50%",
-              background: "rgba(201,168,76,0.9)",
-              border: "4px solid rgba(201,168,76,1)",
-              boxShadow: "0 0 0 4px rgba(201,168,76,0.25)",
+              background: "rgba(255,255,255,0.9)",
+              border: "4px solid rgba(255,255,255,1)",
+              boxShadow: "0 0 0 4px rgba(255,255,255,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <Check size={36} strokeWidth={3} color="#080808" />
@@ -867,13 +875,13 @@ export default function CapturePage() {
         </defs>
         <rect width="390" height="844" fill="rgba(0,0,0,0.6)" mask="url(#oval-mask)" />
         <ellipse cx="195" cy="370" rx="148" ry="195"
-          fill="none" stroke="rgba(201,168,76,0.9)" strokeWidth="2.5" strokeDasharray="14 7" />
+          fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2.5" strokeDasharray="14 7" />
       </svg>
 
       {!cameraReady && (
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", textAlign: "center", pointerEvents: "none" }}>
           <div style={{ fontSize: 64 }}>🧑</div>
-          <div style={{ fontSize: 11, color: "rgba(201,168,76,0.9)", fontWeight: 700, letterSpacing: 1, marginTop: 6 }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: 700, letterSpacing: 1, marginTop: 6 }}>
             CENTRA TU CARA
           </div>
         </div>
@@ -886,12 +894,12 @@ export default function CapturePage() {
             <div key={i} style={{
               width: shotIndex > i ? 8 : 10, height: shotIndex > i ? 8 : 10,
               borderRadius: "50%",
-              background: shotIndex > i ? "rgba(201,168,76,0.5)" : i === shotIndex ? "rgba(201,168,76,0.95)" : "rgba(255,255,255,0.25)",
+              background: shotIndex > i ? "rgba(255,255,255,0.5)" : i === shotIndex ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.25)",
               transition: "all 0.2s",
             }} />
           ))}
         </div>
-        <div style={{ color: "rgba(201,168,76,0.9)", fontSize: 17, fontWeight: 700, marginBottom: 6 }}>
+        <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 17, fontWeight: 700, marginBottom: 6 }}>
           {Math.min(shotIndex + 1, SHOTS.length)} / {SHOTS.length}
         </div>
         <h2 style={{ color: "#ffffff", fontSize: 28, fontWeight: 800, margin: "0 0 2px", letterSpacing: -0.3 }}>
@@ -900,7 +908,7 @@ export default function CapturePage() {
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "0 0 4px", fontWeight: 500 }}>
           {currentShot.label}
         </p>
-        <p style={{ color: "rgba(201,168,76,0.85)", fontSize: 13, margin: 0, fontWeight: 500, lineHeight: 1.5, maxWidth: 280, marginLeft: "auto", marginRight: "auto" }}>
+        <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, margin: 0, fontWeight: 500, lineHeight: 1.5, maxWidth: 280, marginLeft: "auto", marginRight: "auto" }}>
           {currentShot.hint}
         </p>
       </div>
@@ -930,15 +938,15 @@ export default function CapturePage() {
           style={{
             width: 80, height: 80, borderRadius: "50%",
             background: "rgba(0,0,0,0.5)",
-            border: "5px solid rgba(201,168,76,0.85)",
-            boxShadow: "0 0 0 3px rgba(201,168,76,0.25)",
+            border: "5px solid rgba(255,255,255,0.85)",
+            boxShadow: "0 0 0 3px rgba(255,255,255,0.25)",
             display: "flex", alignItems: "center", justifyContent: "center",
             opacity: shutterDisabled ? 0.5 : 1,
             transition: "opacity 0.15s",
           }}>
           <div style={{
             width: 56, height: 56, borderRadius: "50%",
-            background: isLastShot ? "rgba(201,168,76,0.8)" : "rgba(201,168,76,0.4)",
+            background: isLastShot ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.4)",
             transition: "background 0.2s",
           }} />
         </button>

@@ -236,7 +236,7 @@ async def record_consent(
     """
     analysis = await _get_analysis_or_404(analysis_id, db)
 
-    if analysis.status not in ("pending", "paid"):
+    if analysis.status not in ("pending", "paid", "failed"):
         raise HTTPException(400, "El análisis no está en estado correcto para registrar consentimiento.")
 
     if not all([
