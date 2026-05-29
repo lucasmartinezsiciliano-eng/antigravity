@@ -688,13 +688,16 @@ este corte favorece esta cara. Describe el efecto que el usuario va a ver en el 
 el degradado en los laterales, qué aporta la longitud en el tope, cómo cambia la percepción del \
 rostro. Sé concreto y visual: 'el degradado en los laterales afina visualmente la cara y la hace \
 parecer más definida, mientras que los 5 cm en el tope añaden altura y alargan el conjunto'.",
-      "como_pedirlo_al_barbero": "string — instrucciones exactas. OBLIGATORIO incluir: \
-número de máquina en laterales, tipo de degradado exacto (skin/zero/low/mid/high fade o taper), \
-longitud en cm en el tope, técnica en el tope (tijera, navaja, clipper over comb), \
-si quiere textura/desmechado/vaciado, cómo tratar patillas y nuca. \
-Ejemplo: 'Pide un mid fade: empieza en 1 (o 0.5) en la parte más baja del lateral, sube \
-gradualmente a 2 a mitad de la cabeza. En el tope, 5-6 cm con tijera, desmechado para \
-quitar peso y aportar movimiento. Patillas limpias con navaja. Nuca cuadrada.'",
+      "como_pedirlo_al_barbero": "string — instrucciones claras en lenguaje natural, como se lo dirías \
+a tu barbero de confianza. SIN números de máquina ni medidas exactas en cm. \
+Describe el degradado por nivel (bajo, medio, alto, a piel) y cómo quieres que quede \
+(suave y difuminado, marcado, con contraste). Explica la textura del tope (texturizado, \
+por capas, liso, con movimiento, despuntado para quitar peso). Menciona cómo quieres la \
+zona de pómulos y sienes (despejada, con algo de largo, con volumen), las patillas \
+(limpias, con punta, naturales) y la nuca (redondeada, cuadrada, degradada). \
+Ejemplo: 'Pide un degradado medio que quede bien difuminado, sin salto brusco. Arriba \
+déjalo con bastante textura y algo de largo para que tenga movimiento natural. Las patillas \
+limpias y la nuca redondeada.'",
       "mantenimiento_casa": "string — 2-3 frases. Productos por tipo (no marca: 'cera mate', \
 'aceite de argán', 'espuma de volumen'...), frecuencia de lavado y técnica de secado.",
       "frecuencia_barberia": "string — cada cuánto ir a retocar y qué deteriora primero.",

@@ -68,7 +68,7 @@ export default function AvisoLegalPage() {
           <div className="card">
             <p style={{ fontSize: 14, lineHeight: 1.75, margin: 0, color: "var(--text-muted)" }}>
               El acceso y uso de esta plataforma implica la aceptacion plena de las presentes condiciones legales, así
-              como de la Politica de Privacidad y la Politica de Cookies. El usuario declara ser mayor de 18 años.
+              como de la Politica de Privacidad y la Politica de Cookies. El usuario declara ser mayor de 14 años (LOPDGDD Art. 7). Los menores de 14 años necesitan autorización de su padre, madre o tutor legal.
               Queda prohibido el uso del servicio para fines ilicitos, fraudulentos o contrarios al ordenamiento
               juridico español.
             </p>

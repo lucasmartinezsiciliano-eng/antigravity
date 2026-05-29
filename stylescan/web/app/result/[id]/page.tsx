@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, CalendarDays, Home, Star, Share2 } from "lucide-react";
+import { ChevronLeft, CalendarDays, Home, Star } from "lucide-react";
 import { api, AnalysisResult } from "@/lib/api";
 
 type UpsellType = "colorimetry" | "products" | "pack";
@@ -1006,82 +1006,7 @@ export default function ResultPage() {
           </div>
         )}
 
-        {/* Share section */}
-        <div style={{ margin: "28px 0 8px" }}>
-          <h2 className="display" style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px", letterSpacing: "-0.01em" }}>
-            Comparte tu resultado
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
-            {/* Botón compartir estándar */}
-            <button type="button" onClick={handleShare} className="btn-secondary" style={{ gap: 8 }}>
-              <Share2 size={15} strokeWidth={2} />
-              Compartir análisis
-            </button>
-
-            {/* Botón historia Instagram — disabled until cuts are loaded */}
-            <button
-              type="button"
-              onClick={handleShareStory}
-              className="btn-secondary"
-              disabled={cuts.length === 0}
-              style={{ gap: 8, position: "relative", opacity: cuts.length === 0 ? 0.4 : 1 }}
-            >
-              Compartir como historia
-            </button>
-
-            {/* Canvas oculto para generar la imagen */}
-            <canvas ref={storyCanvasRef} style={{ display: "none" }} width={1080} height={1920} />
-
-          </div>
-        </div>
-
-        {/* Comparte y recupera 2€ */}
-        <div style={{
-          margin: "28px 0 0",
-          padding: "20px 18px",
-          background: "var(--surface)",
-          border: "1px solid var(--gold-border)",
-          borderRadius: "var(--r-md)",
-        }}>
-          <h3 className="display" style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-            ¿Te ha molado? Recupera 2€
-          </h3>
-          <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--text-muted)", margin: "0 0 14px" }}>
-            Sube una story o TikTok con tu resultado y te devolvemos 2€ por Bizum. Solo mándanos el enlace.
-          </p>
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ fontSize: 14, padding: "12px 16px", width: "100%" }}
-            onClick={async () => {
-              const shareData = {
-                title: "Mi análisis VISAI",
-                text: "Mira qué cortes me recomienda la IA según mi forma de cara 🔥 #VISAI",
-                url: window.location.href,
-              };
-              try {
-                if (navigator.share) {
-                  await navigator.share(shareData);
-                } else {
-                  await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
-                }
-                setShareEarnConfirm(true);
-                setTimeout(() => setShareEarnConfirm(false), 5000);
-              } catch {}
-            }}
-          >
-            Compartir resultado
-          </button>
-          {shareEarnConfirm && (
-            <p style={{ fontSize: 13, color: "var(--gold)", margin: "10px 0 0", lineHeight: 1.5 }}>
-              Enlace copiado. Súbelo a tus redes y mándanos el link por Instagram @visai.es
-            </p>
-          )}
-          <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "10px 0 0", lineHeight: 1.4 }}>
-            Válido en TikTok e Instagram · Recibirás el Bizum en 24h
-          </p>
-        </div>
+        {/* Share section — desactivado temporalmente */}
 
         <p className="caption" style={{ textAlign: "center", paddingBottom: 40 }}>
           Resultados válidos 90 días · La foto se eliminó al instante (RGPD)

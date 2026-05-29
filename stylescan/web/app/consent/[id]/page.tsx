@@ -20,7 +20,7 @@ const CONSENT_ITEMS = [
   },
   {
     key: "age",
-    label: "Confirmo que tengo 18 años o más.",
+    label: "Confirmo que tengo 14 años o más. Si eres menor de 14, un padre o tutor debe autorizar el análisis.",
   },
   {
     key: "deletion",

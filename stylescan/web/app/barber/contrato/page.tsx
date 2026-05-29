@@ -42,9 +42,13 @@ VISAI enviará un correo de bienvenida en el primer contacto identificando la fu
   },
   {
     title: "Art. 5 — Menores de edad",
-    body: `El servicio está dirigido exclusivamente a mayores de 18 años.
+    body: `5.1 — Análisis facial:
+• 14-17 años: pueden usar el servicio con su propio consentimiento (LOPDGDD Art. 7).
+• Menores de 14 años: solo con consentimiento parental verificable.
 
-PROHIBICIÓN EXPRESA: el Barbero Partner no puede facilitar, promover ni permitir el uso del Código por menores de 18 años, ni subir fotografías en las que aparezcan menores.
+5.2 — Fotografías de referencia:
+• 14+ años: con consentimiento propio (LOPDGDD Art. 7). Las fotos son input de IA, nunca se muestran directamente.
+• Menores de 14 años: PROHIBIDO absolutamente subir fotografías.
 
 En caso de incumplimiento, el Barbero Partner asume la responsabilidad exclusiva e íntegra frente a los menores afectados, sus representantes legales, las autoridades y frente a VISAI. VISAI queda completamente exonerada.`,
   },
