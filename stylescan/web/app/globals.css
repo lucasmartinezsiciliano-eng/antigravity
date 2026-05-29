@@ -36,6 +36,10 @@
   --r-lg:   18px;
   --r-full: 9999px;
   --screen-pad: 20px;
+
+  /* Motion — Emil's strong custom curves (built-in easings lack punch) */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 * {
@@ -83,11 +87,16 @@ button {
   background: none;
   font: inherit;
   color: inherit;
-  transition: opacity 0.12s;
+  transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out);
 }
 
 button:active:not(:disabled) {
-  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button { transition: opacity 120ms; }
+  button:active:not(:disabled) { transform: none; opacity: 0.7; }
 }
 
 input, textarea, select { font: inherit; color: inherit; }
@@ -107,7 +116,7 @@ input, textarea, select { font: inherit; color: inherit; }
   font-weight: 600;
   letter-spacing: 0.02em;
   border-radius: var(--r-sm);
-  transition: opacity 0.12s;
+  transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out);
 }
 
 .btn-primary:disabled {
@@ -126,7 +135,11 @@ input, textarea, select { font: inherit; color: inherit; }
   font-weight: 500;
   border-radius: var(--r-sm);
   border: 1px solid var(--border);
-  transition: opacity 0.12s;
+  transition: transform 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-dim);
 }
 
 .btn-ghost {
@@ -161,12 +174,19 @@ input, textarea, select { font: inherit; color: inherit; }
   line-height: 1.05;
 }
 
+.display-serif {
+  font-family: var(--font-logo), serif;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  font-weight: 400;
+}
+
 .label {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 .label-accent {
@@ -179,8 +199,27 @@ input, textarea, select { font: inherit; color: inherit; }
 
 .caption {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-dim);
   line-height: 1.5;
+}
+
+/* ── Motion ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-animate {
+    animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-animate {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ── Screen ── */

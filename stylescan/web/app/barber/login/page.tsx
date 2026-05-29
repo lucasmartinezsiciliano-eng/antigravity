@@ -75,18 +75,28 @@ function LoginForm() {
         }}
       >
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <h1
             style={{
-              fontSize: 28,
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
+              fontFamily: "var(--font-logo), serif",
+              fontSize: 40,
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
               color: "var(--text)",
+              lineHeight: 1,
+              margin: 0,
             }}
           >
             VISAI
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+          <p style={{
+            fontSize: 10,
+            color: "var(--text-dim)",
+            marginTop: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            fontWeight: 600,
+          }}>
             Portal Barberos
           </p>
         </div>
@@ -118,7 +128,7 @@ function LoginForm() {
                 color: mode === m ? "var(--text)" : "var(--text-dim)",
                 border: "none",
                 cursor: "pointer",
-                transition: "all .15s",
+                transition: "background-color 180ms var(--ease-out), color 180ms var(--ease-out)",
               }}
             >
               {m === "login" ? "Iniciar sesión" : "Crear contraseña"}

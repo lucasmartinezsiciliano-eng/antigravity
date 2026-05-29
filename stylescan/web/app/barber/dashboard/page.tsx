@@ -194,8 +194,21 @@ function BarberDashboardInner() {
       <div className="border-b border-gray-800 bg-gradient-to-b from-gray-900 to-black">
         <div className="max-w-4xl mx-auto px-4 py-6 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{dashboard.name}</h1>
-            <p className="text-gray-400">Tu panel de control VISAI</p>
+            <h1
+              className="text-white mb-1"
+              style={{
+                fontFamily: "var(--font-logo), serif",
+                fontSize: "clamp(30px, 7vw, 44px)",
+                fontWeight: 400,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.05,
+              }}
+            >
+              {dashboard.name}
+            </h1>
+            <p className="text-gray-500" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 600 }}>
+              Panel de control · VISAI
+            </p>
           </div>
           <button
             onClick={() => {
@@ -257,25 +270,25 @@ function BarberDashboardInner() {
         {/* Key Metrics */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           <MetricCard
-            icon={<Users className="h-6 w-6" />}
+            icon={<Users className="h-4 w-4" />}
             label="Esta Semana"
             value={dashboard.clients_this_week ?? dashboard.total_uses ?? 0}
             subtext="análisis completados"
           />
           <MetricCard
-            icon={<TrendingUp className="h-6 w-6" />}
+            icon={<TrendingUp className="h-4 w-4" />}
             label="Total (All-Time)"
             value={dashboard.clients_all_time ?? dashboard.total_uses ?? 0}
             subtext="desde que te registraste"
           />
           <MetricCard
-            icon={<Euro className="h-6 w-6" />}
+            icon={<Euro className="h-4 w-4" />}
             label="Ganado Total"
             value={`€${dashboard.total_earned_euros.toFixed(2)}`}
             subtext="menos fees"
           />
           <MetricCard
-            icon={<Clock className="h-6 w-6" />}
+            icon={<Clock className="h-4 w-4" />}
             label="Pendiente"
             value={`€${dashboard.pending_payout_euros.toFixed(2)}`}
             subtext="en espera de pago"
@@ -426,10 +439,24 @@ function MetricCard({
 }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-      <div className="text-gold mb-2">{icon}</div>
-      <p className="text-gray-400 text-xs font-semibold mb-1">{label}</p>
-      <p className="text-white text-2xl font-bold">{value}</p>
-      <p className="text-gray-500 text-xs mt-1">{subtext}</p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-gray-400 text-xs font-semibold" style={{ letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</p>
+        <div className="text-gray-600">{icon}</div>
+      </div>
+      <p
+        className="text-white"
+        style={{
+          fontFamily: "var(--font-logo), serif",
+          fontSize: 30,
+          fontWeight: 400,
+          letterSpacing: "-0.02em",
+          lineHeight: 1,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {value}
+      </p>
+      <p className="text-gray-500 text-xs mt-2">{subtext}</p>
     </div>
   );
 }

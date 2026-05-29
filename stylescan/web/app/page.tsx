@@ -6,75 +6,85 @@ import { storage } from "@/lib/storage";
 
 function ResultPreview() {
   return (
-    <div style={{ marginTop: 32 }}>
-      <p className="label" style={{ marginBottom: 10 }}>Ejemplo de resultado</p>
+    <div style={{ marginTop: 48, marginBottom: 48 }}>
       <div style={{
         border: "1px solid var(--border)",
-        borderRadius: 14,
+        borderRadius: "var(--r-md)",
         overflow: "hidden",
         background: "var(--surface)",
-        boxShadow: "0 2px 24px rgba(255,255,255,0.03), 0 0 0 1px rgba(255,255,255,0.04)",
       }}>
-        {/* Bar superior */}
+        {/* Header */}
         <div style={{
-          padding: "9px 14px",
+          padding: "10px 16px",
           background: "var(--surface2)",
           borderBottom: "1px solid var(--border-subtle)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}>
-          <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700 }}>
+          <span style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-dim)", fontWeight: 700 }}>
             Análisis completado
           </span>
-          <span style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.06em", fontWeight: 600 }}>VISAI</span>
+          <span style={{ fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.08em", fontWeight: 600 }}>VISAI</span>
         </div>
 
-        {/* Forma craneal */}
-        <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 6 }}>
+        {/* Face shape */}
+        <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid var(--border-subtle)" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-dim)", marginBottom: 8 }}>
             Forma craneal
           </div>
-          <div className="display" style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>
+          <div style={{
+            fontFamily: "var(--font-logo), serif",
+            fontSize: 32,
+            fontWeight: 400,
+            letterSpacing: "-0.02em",
+            color: "var(--text)",
+            lineHeight: 1,
+            marginBottom: 6,
+          }}>
             Ovalado
           </div>
-          <div style={{ fontSize: 11, color: "#666" }}>
+          <div style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.01em" }}>
             468 puntos · proporción áurea 0.92 · asimetría baja
           </div>
         </div>
 
-        {/* 3 Cortes */}
-        <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7 }}>
+        {/* Cuts */}
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" }}>
           {[
             { n: "01", name: "Textured Crop", sub: "Cuerpo y textura" },
             { n: "02", name: "Taper Fade",    sub: "Degradado lateral" },
             { n: "03", name: "French Crop",   sub: "Flequillo recto" },
           ].map(({ n, name, sub }, i) => (
             <div key={n} style={{
-              background: i === 0 ? "var(--surface2)" : "var(--surface)",
-              border: `1px solid ${i === 0 ? "var(--border)" : "var(--border-subtle)"}`,
-              borderRadius: 10,
-              padding: "10px 9px",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: "10px 0",
+              borderBottom: i < 2 ? "1px solid var(--border-subtle)" : "none",
+              opacity: i === 0 ? 1 : 0.6,
             }}>
-              <div style={{ fontSize: 9, color: "var(--text-dim)", fontWeight: 700, letterSpacing: "0.08em", marginBottom: 5 }}>{n}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.3, color: "#D8D8D8" }}>{name}</div>
-              <div style={{ fontSize: 10, color: "#666", marginTop: 3, lineHeight: 1.3 }}>{sub}</div>
+              <span style={{ fontSize: 9, color: "var(--text-dim)", fontWeight: 700, letterSpacing: "0.06em", minWidth: 18 }}>{n}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", lineHeight: 1.3 }}>{name}</div>
+                <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 1 }}>{sub}</div>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Barber instructions hint */}
+        {/* Footer hint */}
         <div style={{
-          padding: "9px 14px",
+          padding: "10px 16px",
           borderTop: "1px solid var(--border-subtle)",
           display: "flex",
           alignItems: "center",
           gap: 8,
-          background: "rgba(0,0,0,0.2)",
+          background: "var(--surface2)",
         }}>
-          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--text-dim)", flexShrink: 0 }} />
-          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Instrucciones exactas para tu barbero</span>
-          <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--text-dim)" }}>→</span>
+          <div style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--text-dim)", flexShrink: 0 }} />
+          <span style={{ fontSize: 10, color: "var(--text-dim)", letterSpacing: "0.01em" }}>Instrucciones exactas para el barbero</span>
+          <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-dim)" }}>→</span>
         </div>
       </div>
     </div>
@@ -84,8 +94,10 @@ function ResultPreview() {
 export default function Home() {
   const router = useRouter();
   const [existingId, setExistingId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const id = storage.getAnalysisId();
     if (id) setExistingId(id);
     const params = new URLSearchParams(window.location.search);
@@ -99,41 +111,52 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="screen" style={{ paddingTop: 0, paddingBottom: 44, gap: 0 }}>
+    <div className="screen" style={{ paddingTop: 0, paddingBottom: 48, gap: 0 }}>
 
       {/* ── Logo ── */}
-      <div style={{ paddingTop: 28, paddingBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 400, letterSpacing: "0.04em", lineHeight: 1, fontFamily: "var(--font-logo), serif" }}>
+      <div style={{ paddingTop: 32, paddingBottom: 44 }}>
+        <span style={{
+          fontFamily: "var(--font-logo), serif",
+          fontSize: 22,
+          fontWeight: 400,
+          letterSpacing: "0.06em",
+          color: "var(--text)",
+          lineHeight: 1,
+        }}>
           VISAI
-        </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: 10, margin: "5px 0 0", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          Visagismo profesional con IA
-        </p>
+        </span>
       </div>
 
-      {/* ── Headline principal ── */}
-      <div style={{ marginBottom: 18 }}>
-        <h2 className="display" style={{
-          margin: "0 0 12px",
-          fontSize: 38,
-          fontWeight: 700,
-          color: "#F0F0F0",
-        }}>
-          Descubre tu<br />corte ideal.
-        </h2>
+      {/* ── Hero ── */}
+      <div
+        className={mounted ? "hero-animate" : ""}
+        style={{ marginBottom: 28 }}
+      >
+        <h1 style={{
+          fontFamily: "var(--font-logo), serif",
+          fontSize: "clamp(52px, 13vw, 80px)",
+          fontWeight: 400,
+          lineHeight: 1.02,
+          letterSpacing: "-0.02em",
+          color: "var(--text)",
+          margin: "0 0 20px",
+          textWrap: "balance",
+        } as React.CSSProperties}>
+          Descubre tu corte ideal.
+        </h1>
         <p style={{
           margin: 0,
           fontSize: 15,
           color: "var(--text-muted)",
-          lineHeight: 1.55,
-          maxWidth: 300,
+          lineHeight: 1.6,
+          maxWidth: 320,
         }}>
-          Visagismo con IA: analiza tu morfología craneal y genera 3 cortes exactos para tu cara.
+          Tu morfología craneal analizada en 2 minutos. Tres cortes exactos para tu cara.
         </p>
       </div>
 
-      {/* ── CTA principal ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+      {/* ── CTA ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
         {existingId && (
           <Link href={`/result/${existingId}`} className="btn-secondary" style={{ textDecoration: "none" }}>
             Continuar análisis anterior
@@ -147,99 +170,80 @@ export default function Home() {
         </button>
       </div>
 
-      {/* ── Trust chips ── */}
-      <div style={{
-        display: "flex",
-        gap: 16,
-        flexWrap: "wrap",
-        marginBottom: 8,
-      }}>
+      {/* ── Trust ── */}
+      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
         {["2 min", "Sin cuenta", "Foto eliminada"].map(chip => (
-          <span key={chip} style={{
-            fontSize: 11,
-            color: "var(--text-muted)",
-            letterSpacing: "0.02em",
-          }}>
-            · {chip}
-          </span>
+          <span key={chip} style={{ fontSize: 11, color: "var(--text-dim)" }}>· {chip}</span>
         ))}
       </div>
 
       {/* ── Product preview ── */}
       <ResultPreview />
 
-      {/* ── Stats ── */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr 1fr",
-        borderTop: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-        margin: "32px 0 28px",
-        padding: "16px 0",
-      }}>
-        {[
-          ["468", "PUNTOS"],
-          ["6", "FORMAS"],
-          ["3", "CRANEALES"],
-        ].map(([n, label]) => (
-          <div key={label} style={{ textAlign: "center" }}>
-            <div className="display" style={{ fontSize: 26, fontWeight: 700, color: "#F0F0F0", lineHeight: 1 }}>{n}</div>
-            <div style={{ fontSize: 9, color: "var(--text-dim)", marginTop: 5, letterSpacing: "0.1em" }}>{label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Qué obtienes ── */}
-      <div style={{ marginBottom: 28 }}>
-        <p className="label" style={{ marginBottom: 14 }}>Qué obtienes</p>
+      {/* ── What you get ── */}
+      <div style={{ marginBottom: 44 }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {[
-            ["Visagismo profesional", "Análisis craneal: 468 puntos · 6 formas · 3 tipos craneales"],
+            ["Visagismo profesional", "468 puntos · 6 formas · 3 tipos craneales analizados"],
             ["3 cortes personalizados", "Con instrucciones exactas para el barbero"],
-            ["Visagista profesional: 50-80 €", "VISAI lo hace por 16,99 € en 2 minutos"],
+            ["16.99 € frente a los 50-80 € del visagista presencial", "En 2 minutos desde tu móvil"],
           ].map(([title, desc]) => (
             <div key={title} style={{
+              padding: "16px 0",
+              borderBottom: "1px solid var(--border)",
               display: "flex",
               flexDirection: "column",
-              padding: "13px 0",
-              borderBottom: "1px solid var(--border)",
+              gap: 4,
             }}>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3, color: "#E0E0E0" }}>{title}</div>
-              <div style={{ fontSize: 12, color: "#666" }}>{desc}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{title}</div>
+              <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Proceso ── */}
-      <div style={{ marginBottom: 28 }}>
-        <p className="label" style={{ marginBottom: 14 }}>Cómo funciona</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      {/* ── How it works ── */}
+      <div style={{ marginBottom: 48 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 20 }}>
+          Cómo funciona
+        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {[
-            ["01", "Fotos", "3 fotos desde el móvil"],
-            ["02", "Análisis", "Morfología y proporciones"],
-            ["03", "Cortes", "3 recomendaciones exactas"],
-          ].map(([n, title, desc]) => (
-            <div key={n} style={{
-              padding: "14px 10px",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r-md)",
+            ["Fotos", "3 fotos desde el móvil"],
+            ["Análisis", "Morfología y proporciones craneales con 468 puntos"],
+            ["Cortes", "3 recomendaciones exactas con instrucciones para el barbero"],
+          ].map(([title, desc], i) => (
+            <div key={title} style={{
+              display: "flex",
+              gap: 18,
+              padding: "16px 0",
+              borderBottom: i < 2 ? "1px solid var(--border)" : "none",
             }}>
-              <div className="display" style={{ fontSize: 18, fontWeight: 700, color: "var(--text-dim)", marginBottom: 6 }}>{n}</div>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2, color: "#C0C0C0" }}>{title}</div>
-              <div style={{ fontSize: 10, color: "#666", lineHeight: 1.4 }}>{desc}</div>
+              <span style={{
+                fontSize: 11,
+                color: "var(--text-dim)",
+                fontWeight: 600,
+                minWidth: 16,
+                paddingTop: 2,
+                fontVariantNumeric: "tabular-nums",
+              }}>
+                {i + 1}
+              </span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 3 }}>{title}</div>
+                <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{desc}</div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── CTA final ── */}
+      {/* ── Final CTA ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
         <button className="btn-primary" onClick={() => router.push("/quiz")}>
           Descubrir mis cortes ideales
         </button>
-        <p className="caption" style={{ textAlign: "center", marginTop: 2 }}>
+        <p className="caption" style={{ textAlign: "center", marginTop: 4 }}>
           Sin cuenta · Foto eliminada al instante · RGPD
         </p>
       </div>
