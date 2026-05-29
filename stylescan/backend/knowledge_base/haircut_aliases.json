@@ -322,6 +322,19 @@
       "local_image": "blowout_fade.jpg"
     },
 
+    "tomahawk": {
+      "canonical_es": "Tomahawk",
+      "canonical_en": "Tomahawk Cut",
+      "popularity": 3,
+      "como_lo_pide_el_cliente": "Un tomahawk, como un mohicano pero con el degradado redondeando la oreja",
+      "aliases": [
+        "tomahawk", "tomahawk cut", "corte tomahawk", "tomahawk fade",
+        "mohicano burst", "burst mohawk", "tomahawk haircut"
+      ],
+      "pexels_query": "tomahawk haircut men side view burst mohawk barbershop",
+      "local_image": "tomahawk.jpg"
+    },
+
     "textured_crop": {
       "canonical_es": "Corte Texturizado",
       "canonical_en": "Textured Crop",

@@ -1,32 +1,17 @@
 """
-VISAI — Virtual Try-On Image Generation  (v2 — Masked Inpainting)
+VISAI — Virtual Try-On Image Generation  (v3 — Nano Banana + Masked Fallback)
 
-Architecture pivot from Nano Banana full-image edit to Flux Pro Fill inpainting.
+PRIMARY: Nano Banana 2 Edit (fal-ai/nano-banana-2/edit)
+  Google Gemini-based image editor. No mask needed.
+  Accepts client photo + barber reference photo as two images.
+  Natural language prompt: "apply the hairstyle from image 2 to person in image 1".
+  Better hair accuracy than Flux for specific cut styles.
 
-WHY:
-  Nano Banana edits the entire image, so the model must "guess" what to preserve.
-  This produces 20-30% identity drift (mandible changes, eyes reinterpreted, etc.)
+FALLBACK: Flux Kontext LoRA Inpaint (masked) → Flux Pro Fill (text-only)
+  If Nano Banana fails or is unavailable, falls back to the masked approach
+  which mathematically locks the face via hair mask.
 
-  Flux Pro Fill + hair mask = the face is MATHEMATICALLY LOCKED.
-  Pixels outside the white mask region are copied from the original unchanged.
-  The model only generates inside the mask (the hair/scalp cap).
-  Identity preservation is exact, not neural-network-dependent.
-
-FLOW PER CUT:
-  1. photo_service.extract_hair_mask(frontal_bytes) → binary PNG mask
-     WHITE = hair cap (scalp above hairline + sides to ears)
-     BLACK = face, background, beard, clothing → never touched
-  2. Build inpainting prompt from:
-       hair_attrs   → type/color/density/hairline (preserved properties)
-       haircut_geometry → target geometry (from DeepSeek structured JSON)
-       haircut_detail → visual description from KB or fallback
-  3. POST to fal-ai/flux-pro/v1/fill:
-       image_url = client frontal photo
-       mask_url  = hair mask
-       prompt    = target haircut description
-  4. Lateral angle: uses profile photo + profile-side mask (right-cap approach)
-
-COST: ~$0.05 per image × 6 images = ~$0.30 per analysis (same ballpark as before).
+COST: ~$0.08 per image (NB) or ~$0.05 (Flux fallback).
 GDPR: no photo stored. fal.ai processes in-memory. URLs expire in 24h.
 """
 
@@ -46,17 +31,17 @@ logger = logging.getLogger(__name__)
 
 _IMAGE_PROMPTS_PATH = Path(__file__).parent.parent.parent / "knowledge_base" / "image_prompts.json"
 
-# Primary: Flux Kontext LoRA Inpaint — mask + reference image + prompt in one call
-# When a barber reference photo is available, the reference_image_url makes the
-# generated hair match a REAL haircut photo instead of relying on text alone.
+# Primary: Nano Banana 2 Edit — full image edit, no mask needed.
+# Client photo + barber reference → natural language prompt → edited output.
+_NANO_BANANA_MODEL = "fal-ai/nano-banana-2/edit"
+
+# Fallback 1: Flux Kontext LoRA Inpaint — mask + reference image + prompt
 _KONTEXT_INPAINT_MODEL = "fal-ai/flux-kontext-lora/inpaint"
 
-# Fallback: Flux Pro Fill — masked inpainting (text-only, no reference image)
-# Used when NO barber reference photo matches the recommended cut.
+# Fallback 2: Flux Pro Fill — masked inpainting (text-only, no reference image)
 _FILL_MODEL = "fal-ai/flux-pro/v1/fill"
 
 # Post-processing: background removal via BiRefNet v2 → white background.
-# ~$0.01 per image, ~2-4s. Total added cost: ~$0.06 per analysis (6 images).
 _BIREFNET_MODEL = "fal-ai/birefnet/v2"
 
 # Angles: frontal uses the face-cap mask; lateral uses a profile-side mask.
@@ -388,6 +373,53 @@ def _build_inpaint_prompt(
 
 
 # ---------------------------------------------------------------------------
+# Nano Banana prompt construction
+# ---------------------------------------------------------------------------
+
+def _build_nano_banana_prompt(
+    nombre_en: str,
+    hair_attrs: Optional[dict] = None,
+    haircut_geometry: Optional[dict] = None,
+    visual_desc: Optional[str] = None,
+    has_reference: bool = False,
+) -> str:
+    """Build natural language edit prompt for Nano Banana (no mask)."""
+    # Preserve hair color
+    if hair_attrs:
+        h_color = hair_attrs.get("color", "").replace("_", " ")
+        h_type = hair_attrs.get("type", "")
+        color_note = f"Keep the person's {h_color} {h_type} hair color. " if h_color else ""
+    else:
+        color_note = "Keep the person's natural hair color. "
+
+    if has_reference:
+        return (
+            f"Apply the exact hairstyle shown in the second image to the person "
+            f"in the first image. The hairstyle is a {nombre_en}. "
+            f"{color_note}"
+            "Keep the person's face, skin tone, eyes, facial hair, and all facial "
+            "features exactly identical. Only change the hair on top and sides of "
+            "the head. Professional barbershop photography result."
+        )
+
+    # No reference — use text description
+    if haircut_geometry and isinstance(haircut_geometry, dict):
+        desc = _serialize_geometry(haircut_geometry)
+    elif visual_desc:
+        desc = visual_desc
+    else:
+        desc = _lookup_image_desc(nombre_en)
+
+    return (
+        f"Change this person's hairstyle to a freshly cut {nombre_en}. "
+        f"{desc}. {color_note}"
+        "Keep the person's face, skin tone, eyes, facial hair, and all facial "
+        "features exactly identical. Only change the hair on top and sides of "
+        "the head. Professional barbershop photography result."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Post-processing: white background
 # ---------------------------------------------------------------------------
 
@@ -459,26 +491,70 @@ async def _generate_one_angle(
     visual_desc: Optional[str] = None,
     barber_ref_url: Optional[str] = None,
     kontext_strength: float = 0.88,
+    photo_url: Optional[str] = None,
 ) -> AngleImage:
     """
     Generate one angle of a haircut try-on image.
 
-    Two modes:
-      WITH barber reference → Flux Kontext LoRA Inpaint (mask + reference image)
-        The AI sees the REAL haircut from the barber's photo and replicates it
-        on the client's head. Face is still locked by the mask.
-      WITHOUT barber reference → Flux Pro Fill (mask + text-only)
-        Fallback to text-only prompt when no barber reference photo matches.
-
-    Legal note: barber reference photos are never exposed to the client.
-    They are processed in-memory by Fal.ai and only the generated output
-    (client's face + new hair) is returned.
+    Priority chain:
+      1. Nano Banana 2 Edit (no mask, natural language) — when photo_url available
+      2. Flux Kontext LoRA Inpaint (mask + reference) — when barber ref available
+      3. Flux Pro Fill (mask + text-only) — last resort
     """
     from app.core.config import settings
     import fal_client  # type: ignore
 
     os.environ["FAL_KEY"] = fal_key
 
+    # --- PRIMARY: Nano Banana 2 Edit (no mask) ---
+    if photo_url:
+        try:
+            image_urls = [photo_url]
+            if barber_ref_url:
+                image_urls.append(barber_ref_url)
+
+            nb_prompt = _build_nano_banana_prompt(
+                nombre_en=nombre_en,
+                hair_attrs=hair_attrs,
+                haircut_geometry=haircut_geometry,
+                visual_desc=visual_desc,
+                has_reference=barber_ref_url is not None,
+            )
+
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    fal_client.run,
+                    _NANO_BANANA_MODEL,
+                    arguments={
+                        "prompt": nb_prompt,
+                        "image_urls": image_urls,
+                        "num_images": 1,
+                        "output_format": "jpeg",
+                        "safety_tolerance": "5",
+                    },
+                ),
+                timeout=90.0,
+            )
+            url = result["images"][0]["url"]
+            logger.info(
+                "  → angle %s: OK [nano-banana] ref=%s",
+                angle["id"], bool(barber_ref_url),
+            )
+
+            try:
+                url = await _postprocess_white_bg(url, fal_key)
+                logger.info("  → angle %s: white bg OK [nano-banana]", angle["id"])
+            except Exception as pp_err:
+                logger.warning("  → angle %s: white bg failed: %s", angle["id"], pp_err)
+
+            return AngleImage(angle_id=angle["id"], label=angle["label"], url=url)
+        except Exception as nb_err:
+            logger.warning(
+                "  → angle %s: Nano Banana failed, falling back to masked: %s",
+                angle["id"], nb_err,
+            )
+
+    # --- FALLBACK: Masked approach (Kontext or Fill) ---
     image_data_uri = f"data:image/jpeg;base64,{photo_b64}"
 
     prompt = _build_inpaint_prompt(
@@ -630,13 +706,13 @@ async def _generate_cut(
     haircut_geometry: Optional[dict] = None,
     visual_desc: Optional[str] = None,
     barber_refs: Optional[dict[str, Optional[str]]] = None,
+    photo_urls: Optional[list[str]] = None,
 ) -> HaircutVisual:
     """
     Generate 2 angle images for one recommended cut.
 
-    barber_refs: Pre-resolved barber reference URLs per angle, e.g.
-                 {"frontal": "https://cloudinary/...", "lateral": None}
-                 Resolved during analysis, NOT looked up here.
+    photo_urls: fal CDN URLs for client photos (for Nano Banana, which needs URLs).
+    barber_refs: Pre-resolved barber reference URLs per angle.
     """
     refs = barber_refs or {}
     strength = _kontext_strength_for(nombre_en)
@@ -663,13 +739,15 @@ async def _generate_cut(
     for angle in _ANGLES:
         if angle["mask_type"] == "frontal_cap":
             p64, mask = frontal_b64, frontal_mask
+            p_url = photo_urls[0] if photo_urls else None
         else:
             p64, mask = profile_b64, profile_mask
+            p_url = (
+                photo_urls[1]
+                if photo_urls and len(photo_urls) > 1
+                else (photo_urls[0] if photo_urls else None)
+            )
 
-        # Map generation angle to barber reference angle (same angle, no cross-fallback):
-        #   frontal generation ← frontal reference
-        #   lateral generation ← lateral reference
-        # NO cross-type fallback: never use a different haircut's reference.
         if angle["id"] == "frontal":
             ref_url = refs.get("frontal")
         else:
@@ -688,6 +766,7 @@ async def _generate_cut(
                 visual_desc=visual_desc,
                 barber_ref_url=ref_url,
                 kontext_strength=strength,
+                photo_url=p_url,
             )
         )
 
@@ -721,8 +800,21 @@ async def generate_visuals(
                  otherwise Flux Pro Fill is used (mask + text-only).
     """
     from app.services.trend_service import get_reference_images_for_cut
+    import fal_client  # type: ignore
 
     photos_b64 = [base64.b64encode(b).decode() for b in photos_bytes]
+
+    # Upload photos to fal CDN once (Nano Banana needs URLs, not data URIs)
+    photo_urls: list[str] = []
+    try:
+        os.environ["FAL_KEY"] = fal_key
+        for b in photos_bytes:
+            u = await asyncio.to_thread(fal_client.upload, b, "image/jpeg")
+            photo_urls.append(u)
+        logger.info("Uploaded %d photos to fal CDN for Nano Banana", len(photo_urls))
+    except Exception as upload_err:
+        logger.warning("Photo upload failed, Nano Banana will be skipped: %s", upload_err)
+        photo_urls = []
 
     # If no pre-resolved refs, try resolving now (backward compat for manual trigger)
     if barber_refs is None:
@@ -750,6 +842,7 @@ async def generate_visuals(
                 haircut_geometry=haircut_geometry,
                 visual_desc=visual_desc,
                 barber_refs=barber_refs.get(i, {}),
+                photo_urls=photo_urls or None,
             )
         )
 
