@@ -55,6 +55,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/reembolso">Reembolsos</a>
           </div>
           <div>
+            <a href="/barber/login" style={{ color: "var(--gold, #d4a853)" }}>
+              ¿Eres barbero? Accede a tu panel →
+            </a>
+          </div>
+          <div>
             <a href="mailto:privacy@visaiapp.com">privacy@visaiapp.com</a>
             &nbsp;·&nbsp; Responsable: VISAI
           </div>
