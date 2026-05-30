@@ -46,13 +46,13 @@ export default function AddOnsPage() {
     });
     storage.saveAnalysisId(res.analysis_id);
     storage.saveCheckoutUrl(res.checkout_url);
-    if (bypass) {
-      window.location.href = `/capture/${res.analysis_id}`;
-    } else if (res.checkout_url.startsWith("https://checkout.stripe.com")) {
-      window.location.href = res.checkout_url;
-    } else {
-      window.location.href = `/pending?id=${res.analysis_id}`;
-    }
+    storage.saveAmount(totalAmount);
+    // Photo-first flow: always go to capture. The user shoots their 3 photos
+    // (held client-side), then unlocks the analysis by paying. The saved
+    // checkout_url is used to redirect to Stripe from the paywall. For already-paid
+    // paths (LUKILUU / dev bypass) capture detects "paid" and uploads directly.
+    void bypass;
+    window.location.href = `/capture/${res.analysis_id}`;
   }
 
   async function handleContinue() {

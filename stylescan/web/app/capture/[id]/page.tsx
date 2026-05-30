@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Check, SwitchCamera } from "lucide-react";
 import { api } from "@/lib/api";
 import { storage } from "@/lib/storage";
+import { photoStore } from "@/lib/photoStore";
 
 const SHOTS = [
   {
@@ -32,7 +33,10 @@ const INTRO_TIPS = [
   { icon: "🔄", text: "Si dudas, repítela. Mejor 10 segundos extra que un resultado que no sirve." },
 ];
 
-type Stage = "intro" | "camera" | "preview" | "uploading" | "processing" | "error";
+type Stage = "intro" | "camera" | "preview" | "paywall" | "uploading" | "processing" | "error";
+// "pay"    — analysis not yet paid: after the 3 shots, hold photos and show the paywall.
+// "upload" — analysis already paid: after the 3 shots (or on finalize), upload directly.
+type Mode = "pay" | "upload";
 type ErrorType = "no_face" | "photo_quality" | "llm_timeout" | "network" | "generic";
 
 async function compressImage(file: File, maxDim = 1600, quality = 0.82): Promise<File> {
@@ -98,6 +102,10 @@ export default function CapturePage() {
   /* Gate: don't render until we know the analysis isn't already done/in-flight.
      Prevents back-button re-uploads that would re-trigger Fal.ai + OpenRouter. */
   const [statusChecked,    setStatusChecked]    = useState(false);
+  /* "pay" until the analysis is confirmed paid. Decides what happens after the 3rd shot:
+     pay → hold photos + paywall → Stripe; upload → send photos and run the analysis. */
+  const [mode,             setMode]             = useState<Mode>("pay");
+  const [amount,           setAmount]           = useState<number | null>(null);
 
   /* ── helpers ── */
   const stopStream = useCallback(() => {
@@ -134,7 +142,25 @@ export default function CapturePage() {
           router.replace("/");
           return;
         }
-        // 402 (payment pending) or 202+paid → user is in the right place.
+        if (s.code === 202 && s.subState === "paid") {
+          // Payment confirmed. If photos were captured before paying, upload them
+          // now (finalize) — no re-shoot. Otherwise fall back to shoot-then-upload.
+          setMode("upload");
+          const held = await photoStore.load(id).catch(() => null);
+          if (cancelled) return;
+          if (held && held.length >= 3) {
+            photosRef.current = held;
+            setStage("uploading");
+            setStatusChecked(true);
+            handleUpload(held);
+            return;
+          }
+          setStatusChecked(true);
+          return;
+        }
+        // 402 — payment pending. Shoot first, then unlock with payment.
+        setMode("pay");
+        setAmount(storage.getAmount());
         setStatusChecked(true);
       } catch {
         // If we can't reach the API, let the user proceed — upload will fail loudly if needed.
@@ -142,7 +168,7 @@ export default function CapturePage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, router]);
+  }, [id, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── mount / unmount — cámara se inicia cuando el usuario sale del intro ── */
   useEffect(() => {
@@ -287,8 +313,14 @@ export default function CapturePage() {
     setPreviewUrlSafe("");
     if (next >= SHOTS.length) {
       stopStream();
-      setStage("uploading");
-      handleUpload(photosRef.current);
+      if (mode === "pay") {
+        // Hold the photos client-side; the analysis stays locked until payment.
+        photoStore.save(id, photosRef.current).catch(() => {});
+        setStage("paywall");
+      } else {
+        setStage("uploading");
+        handleUpload(photosRef.current);
+      }
     } else {
       // Muestra aviso de perfil 90° antes del primer perfil (solo una vez)
       if (next === 1) {
@@ -363,6 +395,7 @@ export default function CapturePage() {
         /* If consent genuinely can't be recorded, uploadPhotos surfaces the real error */
       }
       await api.uploadPhotos(id, compressed);
+      photoStore.clear(id); // biometric photos no longer needed client-side
       setStage("processing");
       if (pollRef.current) clearInterval(pollRef.current);
       let consecutiveErrors = 0;
@@ -571,6 +604,75 @@ export default function CapturePage() {
           >
             Listo, hacer el perfil →
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── paywall: photos captured, unlock the analysis with payment ── */
+  if (stage === "paywall") {
+    const payAmount = amount ?? storage.getAmount();
+    const checkoutUrl = storage.getCheckoutUrl();
+    return (
+      <div className="screen" style={{ background: "var(--bg)", padding: "0 24px 40px", overflowY: "auto" }}>
+        <div style={{ paddingTop: 56, paddingBottom: 24, maxWidth: 420, margin: "0 auto", width: "100%" }}>
+
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, margin: "0 auto 20px",
+            background: "rgba(61,184,130,0.12)", border: "1px solid rgba(61,184,130,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30,
+          }}>
+            ✓
+          </div>
+
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "var(--gold)", marginBottom: 10, textAlign: "center" }}>
+            FOTOS LISTAS · 3 / 3
+          </div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px", letterSpacing: -0.6, lineHeight: 1.15, textAlign: "center" }}>
+            Tu análisis está listo para procesarse
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 28px", lineHeight: 1.6, textAlign: "center" }}>
+            Tus fotos ya están preparadas. Desbloquea el análisis y en menos de 1 minuto sabrás tu forma facial exacta y los cortes que te favorecen.
+          </p>
+
+          <div style={{
+            background: "var(--surface)", border: "1px solid var(--border)",
+            borderRadius: 14, padding: "16px 18px", marginBottom: 24, textAlign: "left",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: "var(--gold)", marginBottom: 12 }}>
+              AL DESBLOQUEAR OBTIENES
+            </div>
+            {[
+              ["📐", "Tu forma facial exacta — 468 puntos analizados"],
+              ["💈", "3 cortes que te favorecen + instrucciones para el barbero"],
+              ["🪄", "Prueba virtual IA — vélos en tu cara antes de cortarte"],
+            ].map(([icon, text], i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: i < 2 ? 10 : 0 }}>
+                <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+                <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--text-muted)" }}>{text}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ fontSize: 16, padding: "16px" }}
+            onClick={() => {
+              if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+              } else {
+                // No saved checkout URL (storage cleared) — restart from add-ons.
+                window.location.href = "/add-ons";
+              }
+            }}
+          >
+            {payAmount ? `Desbloquear mi análisis · ${payAmount.toFixed(2).replace(".", ",")} €` : "Desbloquear mi análisis →"}
+          </button>
+
+          <p className="caption" style={{ textAlign: "center", marginTop: 12 }}>
+            Pago único · Sin suscripción · Garantía 7 días o te devolvemos el 100%
+          </p>
         </div>
       </div>
     );
