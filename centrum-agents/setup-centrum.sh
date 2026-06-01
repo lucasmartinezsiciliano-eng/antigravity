@@ -55,6 +55,14 @@ mkdir -p "$HERMES_HOME/skills/centrum/youtube-intel"
 mkdir -p "$HERMES_HOME/skills/centrum/case-kanban"
 mkdir -p "$HERMES_HOME/skills/centrum/thinking-mode"
 mkdir -p "$HERMES_HOME/skills/centrum/case-agents-writer"
+mkdir -p "$HERMES_HOME/skills/centrum/manejo-objeciones"
+mkdir -p "$HERMES_HOME/skills/centrum/psicologia-venta-consultiva"
+mkdir -p "$HERMES_HOME/skills/centrum/empatia-crisis"
+mkdir -p "$HERMES_HOME/skills/centrum/escalacion-mariano"
+mkdir -p "$HERMES_HOME/skills/centrum/legal-rgpd"
+mkdir -p "$HERMES_HOME/skills/centrum/datos-para-analisis"
+mkdir -p "$HERMES_HOME/skills/centrum/contexto-hipotecario-espana"
+mkdir -p "$HERMES_HOME/skills/centrum/objetivo-cliente"
 
 # ── 3. Copiar skills compartidas ─────────────────────────────────────────────
 info "Copiando skills compartidas..."
@@ -68,11 +76,21 @@ cp "$SCRIPT_DIR/skills/centrum/youtube-intel/SKILL.md"        "$HERMES_HOME/skil
 cp "$SCRIPT_DIR/skills/centrum/case-kanban/SKILL.md"          "$HERMES_HOME/skills/centrum/case-kanban/SKILL.md"
 cp "$SCRIPT_DIR/skills/centrum/thinking-mode/SKILL.md"        "$HERMES_HOME/skills/centrum/thinking-mode/SKILL.md"
 cp "$SCRIPT_DIR/skills/centrum/case-agents-writer/SKILL.md"   "$HERMES_HOME/skills/centrum/case-agents-writer/SKILL.md"
+# Skills de Ana (call-vendedor) — voz IA del bloque 3
+cp "$SCRIPT_DIR/skills/centrum/manejo-objeciones/SKILL.md"            "$HERMES_HOME/skills/centrum/manejo-objeciones/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/psicologia-venta-consultiva/SKILL.md"  "$HERMES_HOME/skills/centrum/psicologia-venta-consultiva/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/empatia-crisis/SKILL.md"               "$HERMES_HOME/skills/centrum/empatia-crisis/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/escalacion-mariano/SKILL.md"           "$HERMES_HOME/skills/centrum/escalacion-mariano/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/legal-rgpd/SKILL.md"                   "$HERMES_HOME/skills/centrum/legal-rgpd/SKILL.md"
+# Skills de recogida → análisis (Ana + dm-qualifier): qué preguntar y para qué
+cp "$SCRIPT_DIR/skills/centrum/datos-para-analisis/SKILL.md"          "$HERMES_HOME/skills/centrum/datos-para-analisis/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/contexto-hipotecario-espana/SKILL.md"  "$HERMES_HOME/skills/centrum/contexto-hipotecario-espana/SKILL.md"
+cp "$SCRIPT_DIR/skills/centrum/objetivo-cliente/SKILL.md"             "$HERMES_HOME/skills/centrum/objetivo-cliente/SKILL.md"
 
 # La constitución también vive como skill (cargada por todos los perfiles)
 cp "$SCRIPT_DIR/CENTRUM-GUARDRAILS.md" "$HERMES_HOME/skills/governance/guardrails/CENTRUM-GUARDRAILS.md"
 
-ok "9 skills instaladas en $HERMES_HOME/skills/"
+ok "17 skills instaladas en $HERMES_HOME/skills/"
 
 # Inicializar Kanban board para pipeline de casos
 if command -v hermes &> /dev/null; then
@@ -302,7 +320,7 @@ for profile in "${PROFILES[@]}"; do
 done
 
 skill_count=$(find "$HERMES_HOME/skills" -name "SKILL.md" | wc -l)
-ok "Skills instaladas: $skill_count (esperado: 6)"
+ok "Skills instaladas: $skill_count (esperado: 17)"
 
 # ── 7. Pinning de skills críticas (Curator no puede archivarlas) ──────────────
 # El Curator borra skills sin uso en 90 días. Las skills de Centrum son permanentes.
@@ -317,7 +335,15 @@ if command -v hermes &> /dev/null; then
         "centrum/youtube-intel" \
         "centrum/case-kanban" \
         "centrum/thinking-mode" \
-        "centrum/case-agents-writer"
+        "centrum/case-agents-writer" \
+        "centrum/manejo-objeciones" \
+        "centrum/psicologia-venta-consultiva" \
+        "centrum/empatia-crisis" \
+        "centrum/escalacion-mariano" \
+        "centrum/legal-rgpd" \
+        "centrum/datos-para-analisis" \
+        "centrum/contexto-hipotecario-espana" \
+        "centrum/objetivo-cliente"
     do
         hermes curator pin "$skill" 2>/dev/null \
             && ok "Pinned: $skill" \

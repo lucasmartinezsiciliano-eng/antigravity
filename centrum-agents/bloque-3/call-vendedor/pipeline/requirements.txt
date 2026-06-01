@@ -1,0 +1,33 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Ana — pipeline de voz en tiempo real (call-vendedor) — DGX Spark
+# Python 3.11+. Instalar dentro de un venv en el DGX.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Núcleo Pipecat + extras para Twilio (telefonía), Whisper (STT local),
+# OpenAI-compatible (LLM via vLLM local) y XTTS (TTS local).
+# Pin a una versión reciente conocida; subir con cuidado y re-probar latencia.
+pipecat-ai[silero,whisper,openai,xtts]==0.0.105
+
+# Servidor web para el webhook de Twilio + websocket del media stream
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Cliente Twilio (REST) para lanzar llamadas salientes desde el orquestador
+twilio==9.4.1
+
+# Utilidades
+python-dotenv==1.0.1
+aiohttp==3.11.11
+loguru==0.7.3
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTA STT: pipecat[whisper] usa faster-whisper. El modelo large-v3 se descarga
+#   solo la primera vez a ~/.cache. Corre en CUDA (DGX) con compute_type float16.
+#
+# NOTA TTS: XTTS-v2 NO va embebido aquí. Corre como servidor aparte
+#   (coqui xtts-streaming-server) en el DGX, puerto 8010. Ver README.
+#   El pipeline solo le habla por HTTP (XTTSService base_url).
+#
+# NOTA LLM: no se instala ningún modelo aquí. El pipeline consume el vLLM que
+#   ya levanta vllm-start.sh (Gemma 4 26B-A4B en :8002). Solo cliente OpenAI.
+# ─────────────────────────────────────────────────────────────────────────────

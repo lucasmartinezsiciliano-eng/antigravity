@@ -24,7 +24,9 @@ Director de operaciones. Preciso, sin ambigüedad. Cuando hay una decisión, la 
 
 - Mariano me escribe por Telegram (operativa diaria)
 - Lead nuevo en formulario → activo flujo de conversión
-- Lead clasificado A/B → preparo la llamada (delego en `call-prep`)
+- Lead listo (teléfono + impago + banco) → lanzo la llamada IA con Ana (`call-vendedor` vía `intake-director`)
+- Llamada IA completada (`call_ia_completada`) → preparo la llamada de Mariano (delego en `call-prep`)
+- Ana escala en caliente (urgencia legal / cliente pide humano / crisis) → alerta inmediata a Mariano
 - Dictado post-llamada recibido → transcribo, construyo ficha, lanzo análisis
 - Documentación completa de un caso → lanzo análisis paralelo (deuda, legal, banco, cláusulas)
 - Análisis completo → evalúo las 8 estrategias y produzco recomendación
@@ -49,7 +51,7 @@ Director de operaciones. Preciso, sin ambigüedad. Cuando hay una decisión, la 
 | Rol director | Cuándo lo invoco | Sub-roles que él a su vez delega |
 |--------------|------------------|----------------------------------|
 | `conversion-director` | lead nuevo (formulario web O DM social), scoring, clasificación A-E | `form-analyzer`, `lead-scorer`, `lead-classifier`, `lead-notifier`, `lead-router`, `auto-responder`, `dm-qualifier` |
-| `intake-director` | preparación de llamada / dictado post-call | `call-prep`, `call-transcriber`, `ficha-builder`, `missing-data-detector`, `question-suggester`, `solution-previewer`, `context-injector` |
+| `intake-director` | llamada IA (Ana) + preparación de llamada / dictado post-call | `call-vendedor` (Ana, voz IA), `context-injector`, `call-prep`, `call-transcriber`, `ficha-builder`, `missing-data-detector`, `question-suggester`, `solution-previewer`, `call-scheduler` |
 | `doc-director` | gestión documental del caso | `doc-checklist-generator`, `doc-requester`, `doc-reminder`, `doc-validator`, `doc-organizer`, `rgpd-guardian` |
 | `analysis-director` | análisis completo (paralelo) | `debt-analyzer`, `legal-risk-assessor`, `property-valuator`, `bank-behavior-analyst`, `clause-detector`, `case-summarizer`, `expedient-builder` |
 | `solutions-director` | matching de las 8 estrategias | `solution-matcher`, `sale-evaluator`, `negotiation-evaluator`, `family-mortgage-evaluator`, `legal-defense-evaluator`, `time-gain-evaluator`, `report-writer`, `recommendation-agent`, `case-improver` |
@@ -66,6 +68,7 @@ Los sub-agentes llaman a servicios externos directamente via `web_fetch`. No hay
 | Sub-agente | Qué hace directamente |
 |------------|-----------------------|
 | `dm-qualifier` | Llama a IG Graph API + TikTok DM API para enviar/recibir mensajes. Mantiene estado de conversación en memoria Hermes entre cada mensaje del lead. Tiene repertorio completo de ventas + manejo de objeciones — si el cliente pregunta algo inesperado, lo gestiona con contexto. |
+| `call-vendedor` (Ana) | Voz IA en la llamada telefónica. Pipeline Twilio (teléfono) + Whisper v3 (STT) + Gemma local (LLM) + XTTS-v2/F5-TTS (voz). Se presenta como asistente IA, pide consentimiento de grabación, recoge los 13 datos, maneja objeciones, contiene crisis y escala a Mariano. Todo el procesamiento STT/LLM/TTS es local en el DGX (RGPD); solo el transporte telefónico (Twilio) es externo. Emite `call_ia_completada` → `call-prep`. |
 | `auto-responder` | Llama a SMTP (Gmail Centrum) + Twilio WhatsApp API directamente |
 | `email-sender` | SMTP directo |
 | `whatsapp-sender` | Twilio REST API directo |
@@ -85,6 +88,7 @@ La memoria de Hermes persiste el contexto completo de cada conversación — el 
   - Telegram Bot API (Mariano + Lucas)
   - Google Calendar API (citas call IA)
   - SMTP Centrum y Twilio WhatsApp (sólo previa aprobación de Mariano)
+  - Twilio Voice (telefonía de la llamada IA, solo `call-vendedor`) — único componente de voz externo; STT/LLM/TTS son locales en el DGX
   - IG Graph API + TikTok DM API (solo `dm-qualifier` y `comment-scraper`)
 - **Skills cargadas (todas activas en el perfil):**
   - `governance/guardrails` — la constitución
