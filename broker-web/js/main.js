@@ -793,6 +793,7 @@ function initCookieBanner() {
 
   btnAccept.addEventListener('click', () => {
     localStorage.setItem('cookie_consent', 'all');
+    window.dispatchEvent(new Event('cookie_consent_all'));
     banner.classList.remove('visible');
     setTimeout(() => banner.remove(), 400);
   });

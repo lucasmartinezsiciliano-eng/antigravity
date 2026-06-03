@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self' https://n8n.lukimporta.es https://crm.lukimporta.es; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://n8n.lukimporta.es https://crm.lukimporta.es https://www.facebook.com https://connect.facebook.net; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <link rel="icon" type="image/png" href="img/bh-logo.png" />
   <meta name="referrer" content="strict-origin-when-cross-origin" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Política de Cookies — BrokerHipotecario</title>
@@ -24,6 +24,32 @@
     th { background: var(--gray-50); color: var(--black); font-weight: 600; padding: 10px 14px; text-align: left; border: 1px solid var(--gray-100); }
     td { padding: 10px 14px; border: 1px solid var(--gray-100); color: var(--gray-600); vertical-align: top; }
   </style>
+  <!-- Meta Pixel Code (carga solo tras consentimiento de cookies — RGPD) -->
+  <script>
+  window._fbPixelInit = function() {
+    if (window._fbPixelLoaded) return;
+    window._fbPixelLoaded = true;
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1132936389051338');
+    fbq('track', 'PageView');
+  };
+  if (localStorage.getItem('cookie_consent') === 'all') {
+    window._fbPixelInit();
+  } else {
+    window.addEventListener('cookie_consent_all', window._fbPixelInit);
+  }
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1132936389051338&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
 </head>
 <body>
 <header>
