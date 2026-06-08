@@ -52,12 +52,7 @@
   <style>
     /* Landing minimal — sin distracciones, optimizada para conversión desde social ads */
     body { background: var(--off-white); }
-    .landing-top { padding: 22px 20px 6px; text-align: center; }
-    .landing-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-    .landing-logo img { height: 34px; width: auto; }
-    .landing-logo-text { font-family: var(--font-heading); font-weight: 800; color: var(--gray-800); font-size: 0.95rem; letter-spacing: 0.3px; }
-    .landing-logo-text .green { color: var(--teal-darker); }
-    .landing-hero { text-align: center; padding: 18px 20px 6px; max-width: 640px; margin: 0 auto; }
+    .landing-hero { text-align: center; padding: 28px 20px 6px; max-width: 640px; margin: 0 auto; }
     .landing-hero h1 { font-size: clamp(1.7rem, 4.6vw, 2.5rem); line-height: 1.2; margin-bottom: 10px; color: var(--gray-800); }
     .landing-hero h1 span { color: var(--teal-darker); }
     .landing-hero .sub { color: var(--gray-500); font-size: 0.95rem; margin: 0; }
@@ -71,13 +66,14 @@
 </head>
 <body>
 
-<!-- Header MINIMAL: solo logo, sin nav -->
-<div class="landing-top">
-  <a href="/" class="landing-logo" aria-label="Broker Hipotecario">
-    <img src="img/bh-logo.png" alt="" />
-    <span class="landing-logo-text">BROKER <span class="green">HIPOTECARIO.es</span></span>
-  </a>
-</div>
+<!-- Header igual que el index (sin navegacion para mantener landing sin friccion) -->
+<header>
+  <div class="container header-inner">
+    <a href="/" class="logo">
+      <img src="img/bh-logo.png" alt="Broker Hipotecario" class="logo-icon" /><div class="logo-text-wrapper"><span class="logo-main">BROKER <span class="logo-green">HIPOTECARIO.es</span></span><span class="logo-sub">By FIRMAX</span></div>
+    </a>
+  </div>
+</header>
 
 <!-- Hero corto: una frase de promesa -->
 <div class="landing-hero">
