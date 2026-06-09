@@ -512,8 +512,11 @@ function initQuiz() {
     const clasificacion = globalMejor >= 75 ? 'A' : globalMejor >= 50 ? 'B' : globalMejor >= 25 ? 'C' : 'D';
 
     const consentMarketing = quiz.querySelector('[name="q_consent_marketing"]')?.checked ?? false;
+    // event_id compartido entre Pixel (cliente) y Conversions API (n8n) para deduplicar en Meta
+    const eventId = (window.crypto?.randomUUID?.() || ('lead-' + Date.now() + '-' + Math.random().toString(36).slice(2)));
     const ok = await submitLead({
       nombre, telefono, email, _hp: hp, source: 'quiz',
+      event_id: eventId,
       recaptcha_token: recaptchaToken,
       consent: true, consent_marketing: consentMarketing,
       urgencia, clasificacion,
@@ -561,6 +564,14 @@ function initQuiz() {
     if (descEl) descEl.textContent = msg.desc;
 
     window.brokerAnalytics?.sendEvent('quiz_complete', { clasificacion, score_80: sA.global, score_90: sB.global });
+    // Meta Pixel: evento Lead (cliente potencial) — con eventID para dedup con Conversions API server-side
+    if (window.fbq) {
+      fbq('track', 'Lead', {
+        content_name: 'Quiz Broker Hipotecario',
+        content_category: clasificacion,
+        currency: 'EUR'
+      }, { eventID: eventId });
+    }
     if (!ok) showToast('Error al enviar. Te llamaremos igualmente.', 'error');
   }
 
