@@ -694,12 +694,23 @@ function initQuiz() {
         updateLabels(+inp.value, 0);
       }
 
-      el.addEventListener('mousedown',  e => { onStart(e.clientX); e.preventDefault(); });
-      document.addEventListener('mousemove', e => { if (startX !== null) onMove(e.clientX); });
-      document.addEventListener('mouseup',   onEnd);
-      el.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
-      el.addEventListener('touchmove',  e => { onMove(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
-      el.addEventListener('touchend',   onEnd);
+      // Pointer Events: API unificada para mouse, touch y pen.
+      // Compatible con iOS Safari 13+, Chrome 55+, Firefox 59+, Edge — cubre 99.5% de usuarios
+      // y evita bugs históricos de touchstart/touchmove en iOS WebKit.
+      el.addEventListener('pointerdown', e => {
+        if (e.button !== undefined && e.button !== 0) return; // solo botón principal del mouse
+        onStart(e.clientX);
+        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        e.preventDefault();
+      });
+      el.addEventListener('pointermove', e => {
+        if (startX === null) return;
+        onMove(e.clientX);
+        e.preventDefault();
+      });
+      el.addEventListener('pointerup',     e => { onEnd(); try { el.releasePointerCapture(e.pointerId); } catch (_) {} });
+      el.addEventListener('pointercancel', e => { onEnd(); try { el.releasePointerCapture(e.pointerId); } catch (_) {} });
+      el.addEventListener('pointerleave',  () => { if (startX !== null) onEnd(); });
 
       render(clamp(+inp.value), 0);
     });
@@ -840,7 +851,9 @@ function initMobileCTA() {
   }, { passive: false });
   document.addEventListener('touchmove', function(e) {
     if (e.touches.length > 1) { e.preventDefault(); return; }
-    if (e.target.closest('.drag-wheel')) return;
+    // Si hay un drag activo de ruedita, no interferimos (aunque el dedo se haya
+    // salido del bounding box). Pointer Events ya tiene capturado el puntero.
+    if (e.target.closest('.drag-wheel') || document.querySelector('.drag-wheel.dragging')) return;
     const dx = Math.abs(e.touches[0].clientX - _tx);
     const dy = Math.abs(e.touches[0].clientY - _ty);
     if (dx > dy && dx > 8) e.preventDefault();
