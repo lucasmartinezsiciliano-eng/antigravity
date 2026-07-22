@@ -7,6 +7,15 @@ from pathlib import Path
 from datetime import datetime, timezone
 from collections import deque
 
+# Consola en UTF-8. Sin esto, un print con emoji (p.ej. el 📍 de la explicación
+# de trade) lanza UnicodeEncodeError en cp1252 y MATA el hilo que lo ejecuta:
+# así murió simulated_executor el 17-jul-2026 y el bot dejó de operar.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 def install_if_missing():
     import importlib.util
     needed = {"fastapi":"fastapi","uvicorn":"uvicorn[standard]",
@@ -178,6 +187,7 @@ def _mirror_trade_to_accounts(pnl: float, result: str):
         daily_dd_pct = abs(acc["daily_pnl"]) / acc["start"] * 100 if acc["daily_pnl"] < 0 else 0
         profit_pct   = (acc["balance"] - acc["start"]) / acc["start"] * 100
 
+        prev_status = acc["status"]
         if drawdown_pct >= acc["max_dd_pct"]:
             acc["status"] = "FAILED"
             print(f"[PROP] ⚠️  Cuenta {acc['id']} ELIMINADA — DD {drawdown_pct:.1f}% >= {acc['max_dd_pct']}%")
@@ -190,6 +200,19 @@ def _mirror_trade_to_accounts(pnl: float, result: str):
         else:
             if acc["status"] != "PASSED":
                 acc["status"] = "EVAL"
+
+        # Aviso Telegram inmediato en el momento que importa: pasar o fallar
+        # una eval no puede quedarse solo en un print que nadie mira.
+        if acc["status"] != prev_status and acc["status"] in ("PASSED", "FAILED"):
+            icon = "✅" if acc["status"] == "PASSED" else "❌"
+            try:
+                send_telegram(
+                    f"{icon} *{acc['name']}* ({acc['firm']}) → *{acc['status']}*\n"
+                    f"Balance: ${acc['balance']:,.0f} ({profit_pct:+.1f}%) | "
+                    f"DD: {drawdown_pct:.1f}% | {acc['wins']}W/{acc['losses']}L"
+                )
+            except Exception as e:
+                print(f"[PROP] Error avisando por Telegram: {e}")
 
         print(f"  [ACC{acc['id']}] ${acc['balance']:,.0f} | PnL hoy ${acc['daily_pnl']:+.0f} | "
               f"DD {drawdown_pct:.1f}% | {acc['status']}")
@@ -1166,12 +1189,37 @@ def morning_bias_scheduler():
 
 
 # ── Telegram ─────────────────────────────────────────────────────────────────
-TELEGRAM_TOKEN   = "8683889993:AAEe9Va_TCaReMWkg3T4vfBjY6fH2aQSWCs"
-TELEGRAM_CHAT_ID = "5631114912"
+def _load_secret(key: str, default: str = "") -> str:
+    """Lee un secreto del entorno o del .env local (gitignored).
+
+    NUNCA escribir credenciales en este fichero: estuvo hardcodeado el token de
+    @firmax_broker_bot y quedó publicado en el repo PÚBLICO de GitHub
+    (descubierto 21-jul-2026, ver Bot-Estado-Operativo en el vault).
+    """
+    if os.environ.get(key):
+        return os.environ[key]
+    env_file = Path(__file__).parent / ".env"
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            if k.strip() == key:
+                return v.strip().strip('"').strip("'")
+    return default
+
+TELEGRAM_TOKEN   = _load_secret("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = _load_secret("TELEGRAM_CHAT_ID", "5631114912")
 
 def send_telegram(msg: str, parse_mode: str = "Markdown") -> bool:
     """Envía un mensaje de Telegram. Retorna True si OK."""
     import urllib.request, urllib.parse
+    if not TELEGRAM_TOKEN:
+        # Fallo ruidoso: sin esto el bot operaría "bien" pero mudo, que es
+        # justo el modo de fallo que lo tuvo 4 días caído sin que nadie lo viera.
+        print("[TELEGRAM] SIN TOKEN — falta TELEGRAM_BOT_TOKEN en .env o entorno. Mensaje NO enviado.")
+        return False
     try:
         body = json.dumps({"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": parse_mode}).encode()
         req  = urllib.request.Request(
@@ -1183,6 +1231,112 @@ def send_telegram(msg: str, parse_mode: str = "Markdown") -> bool:
     except Exception as e:
         print(f"[TELEGRAM] Error: {e}")
         return False
+
+
+# ── Baseline del backtest OOS (2yr QQQ 5m) — vara de medir del paper ─────────
+# El paper trading existe para UNA cosa: confirmar o desmentir estos números.
+BACKTEST_BASELINE = {"wr": 41.5, "pf": 1.79, "max_dd": 8.48}
+
+def _profit_factor(trades: list) -> float | None:
+    """PF = ganancias brutas / pérdidas brutas. None si aún no hay pérdidas."""
+    gross_win  = sum(t.get("pnl", 0) for t in trades if t.get("pnl", 0) > 0)
+    gross_loss = abs(sum(t.get("pnl", 0) for t in trades if t.get("pnl", 0) < 0))
+    if gross_loss == 0:
+        return None
+    return round(gross_win / gross_loss, 2)
+
+def _pf_str(pf: float | None) -> str:
+    return "∞ (sin pérdidas)" if pf is None else f"{pf:.2f}"
+
+WEEKLY_MARKER = Path("weekly_report_last.txt")
+
+def _build_weekly_report() -> str:
+    """Resumen semanal para Telegram: la semana + acumulado vs backtest.
+    Se envía SIEMPRE, también con 0 trades — '0 señales pero bot vivo' es
+    exactamente la información que distingue un sistema parado de uno muerto
+    (el bot estuvo caído del 17 al 21-jul-2026 y nadie se enteró en 4 días)."""
+    from datetime import timedelta
+    now_ny = _now_ny()
+    monday = (now_ny - timedelta(days=now_ny.weekday())).date()
+
+    trades = []
+    if PAPER_LOG.exists():
+        trades = [json.loads(l) for l in PAPER_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+
+    week = [t for t in trades if t.get("date", "") >= monday.strftime("%Y-%m-%d")]
+
+    lines = [f"📊 *IFVG Bot — Resumen semanal* _{monday.strftime('%d/%m')}–{now_ny.strftime('%d/%m')}_", ""]
+
+    # ── Esta semana ──
+    if week:
+        w_wins = [t for t in week if t.get("result") == "WIN"]
+        w_pnl  = sum(t.get("pnl", 0) for t in week)
+        lines += [f"*Esta semana:* {len(week)} trades ({len(w_wins)}W/{len(week)-len(w_wins)}L) · "
+                  f"WR {len(w_wins)/len(week)*100:.0f}% · PnL ${w_pnl:+,.0f} · PF {_pf_str(_profit_factor(week))}"]
+    else:
+        lines += ["*Esta semana:* sin trades (bot activo — bias NEUTRAL o sin señal en kill zone)"]
+
+    # ── Acumulado vs backtest ──
+    if trades:
+        wins   = [t for t in trades if t.get("result") == "WIN"]
+        wr     = len(wins) / len(trades) * 100
+        pf     = _profit_factor(trades)
+        pnl    = sum(t.get("pnl", 0) for t in trades)
+        bal, peak, max_dd = ACCOUNT["start"], ACCOUNT["start"], 0.0
+        for t in trades:
+            bal += t.get("pnl", 0)
+            peak = max(peak, bal)
+            max_dd = max(max_dd, (peak - bal) / ACCOUNT["start"] * 100)
+        ret = pnl / ACCOUNT["start"] * 100
+
+        start_str = _get_or_set_paper_start()
+        lines += ["", f"*Acumulado paper* _(desde {start_str})_:",
+                  f"  Trades: {len(trades)} · WR {wr:.1f}% _(backtest {BACKTEST_BASELINE['wr']}%)_",
+                  f"  PF: {_pf_str(pf)} _(backtest {BACKTEST_BASELINE['pf']})_",
+                  f"  Retorno: {ret:+.1f}% · MaxDD {max_dd:.1f}% _(backtest {BACKTEST_BASELINE['max_dd']}%)_"]
+
+        # Veredicto de deriva — con umbral de muestra para no gritar con n pequeño
+        if len(trades) < 10:
+            lines += ["", f"_Muestra pequeña (n={len(trades)}) — sin conclusiones todavía_"]
+        elif pf is not None and pf < 1.0 and len(trades) >= 15:
+            lines += ["", "⚠️ *PF < 1.0 con n≥15 — el paper NO confirma el backtest. Revisar antes de challenge.*"]
+        elif abs(wr - BACKTEST_BASELINE["wr"]) <= 12 and (pf is None or pf >= 1.4):
+            lines += ["", "✓ _En línea con el backtest_"]
+        else:
+            lines += ["", "→ _Desviación moderada del backtest — vigilando_"]
+    else:
+        lines += ["", "*Acumulado:* 0 trades paper aún"]
+
+    # ── Cuentas de fondeo ──
+    counts = {}
+    for a in PROP_ACCOUNTS:
+        counts[a["status"]] = counts.get(a["status"], 0) + 1
+    icons = {"EVAL": "🔄", "PASSED": "✅", "FAILED": "❌", "FUNDED": "💰"}
+    lines += ["", "*Fondeo:* " + " · ".join(f"{icons.get(s,'—')}{n} {s}" for s, n in counts.items())]
+
+    return "\n".join(lines)
+
+
+def _supervised(name: str, fn):
+    """Envuelve la función de un hilo: si muere por excepción, avisa por
+    Telegram y la relanza tras 60s. El 17-jul-2026 un UnicodeEncodeError en un
+    print mató simulated_executor EN SILENCIO y el bot pasó 4 días sin operar
+    — este wrapper hace imposible esa clase de fallo invisible."""
+    def runner():
+        while True:
+            try:
+                fn()
+                print(f"[SUPERVISOR] Hilo {name} terminó sin excepción — relanzo en 60s")
+            except Exception as e:
+                import traceback
+                print(f"[SUPERVISOR] Hilo {name} murió: {e}")
+                traceback.print_exc()
+                try:
+                    send_telegram(f"⚠️ *IFVG Bot* — hilo `{name}` murió: `{e}`\nRelanzado automáticamente en 60s.")
+                except Exception:
+                    pass
+            time.sleep(60)
+    return runner
 
 
 def _build_daily_report() -> str:
@@ -1342,6 +1496,20 @@ _Si quieres cambiar: /api/bias en el dashboard_"""
                     sent_eod = today  # solo marcar si Telegram confirmó OK
             except Exception as e:
                 print(f"[TELEGRAM] Error reporte EOD: {e}")
+
+        # Viernes 16:20 ET — resumen semanal (paper vs backtest).
+        # El marcador va a disco (no a una variable) porque el watchdog puede
+        # reiniciar el bot dentro de la ventana y una variable se perdería.
+        if now.weekday() == 4 and now.hour == 16 and 20 <= now.minute <= 30:
+            iso_week = f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
+            already = WEEKLY_MARKER.exists() and WEEKLY_MARKER.read_text(encoding="utf-8").strip() == iso_week
+            if not already:
+                try:
+                    if send_telegram(_build_weekly_report()):
+                        WEEKLY_MARKER.write_text(iso_week, encoding="utf-8")
+                        print(f"[TELEGRAM] Resumen semanal enviado ({iso_week})")
+                except Exception as e:
+                    print(f"[TELEGRAM] Error resumen semanal: {e}")
 
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
@@ -3120,7 +3288,8 @@ def _build_4week_report() -> str:
         "",
         "*Resumen de operaciones:*",
         f"  Trades: {len(trades)} ({len(wins)}W / {len(losses)}L)",
-        f"  Win Rate: {wr:.1f}%",
+        f"  Win Rate: {wr:.1f}% _(backtest {BACKTEST_BASELINE['wr']}%)_",
+        f"  Profit Factor: {_pf_str(_profit_factor(trades))} _(backtest {BACKTEST_BASELINE['pf']})_",
         f"  Avg RR ganador: {avg_rr:.2f}x",
         f"  PnL total: ${total_pnl:+,.0f}",
         f"  Retorno: {return_pct:+.1f}%",
@@ -3279,17 +3448,33 @@ def _restore_state_from_disk():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__=="__main__":
+    # Si el puerto ya está ocupado hay otra instancia viva: salir ANTES de
+    # arrancar los hilos. Si no, los schedulers se duplican y Telegram manda
+    # el bias dos veces mientras uvicorn muere con "10048 address in use".
+    import socket as _socket
+    _probe = _socket.socket()
+    try:
+        _probe.bind(("0.0.0.0", 8000))
+    except OSError:
+        print("[ABORT] Puerto 8000 ocupado — ya hay una instancia corriendo. Salgo.")
+        sys.exit(1)
+    finally:
+        _probe.close()
+
     print("\n"+"="*55)
     print("  IFVG Trading Cockpit — v2")
     print("  Dashboard: http://localhost:8000/dashboard")
     print("  Ctrl+C para parar")
     print("="*55+"\n")
     _restore_state_from_disk()   # restaura balance, daily state y cuentas tras reinicio
-    threading.Thread(target=simulated_executor,daemon=True).start()
-    threading.Thread(target=paper_position_tracker,daemon=True).start()
-    threading.Thread(target=ifvg_scanner,daemon=True).start()
-    threading.Thread(target=morning_bias_scheduler,daemon=True).start()
-    threading.Thread(target=daily_report_scheduler,daemon=True).start()
-    threading.Thread(target=paper_review_scheduler,daemon=True).start()
+    # Todos los hilos van supervisados: un crash se notifica y se relanza,
+    # nunca muere en silencio (ver _supervised).
+    for _name, _fn in [("executor",      simulated_executor),
+                       ("paper_tracker", paper_position_tracker),
+                       ("scanner",       ifvg_scanner),
+                       ("bias",          morning_bias_scheduler),
+                       ("reports",       daily_report_scheduler),
+                       ("paper_review",  paper_review_scheduler)]:
+        threading.Thread(target=_supervised(_name, _fn), daemon=True, name=_name).start()
     threading.Thread(target=lambda:(time.sleep(1.5),webbrowser.open("http://localhost:8000/dashboard")),daemon=True).start()
     uvicorn.run(app,host="0.0.0.0",port=8000,log_level="warning")
