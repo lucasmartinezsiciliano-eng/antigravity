@@ -10,8 +10,9 @@ import { toFuel, toGearbox, toNumber, toPower, toYear, queryText } from "../norm
 import type { Country, Listing } from "../schema.ts";
 import { ProviderError, type Provider } from "./types.ts";
 
-const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
-const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
+/** Produccion por defecto; EBAY_API_BASE apunta al sandbox o a un doble de prueba. */
+const baseUrl = (env: Record<string, string | undefined>) =>
+  (env.EBAY_API_BASE ?? "https://api.ebay.com").replace(/\/$/, "");
 
 /**
  * Categoria de COCHES por mercado.
@@ -31,13 +32,20 @@ const MERCADO_PAIS: Record<string, Country> = {
   EBAY_DE: "DE", EBAY_FR: "FR", EBAY_IT: "IT", EBAY_ES: "ES",
 };
 
-let cache: { token: string; expira: number } | null = null;
+/** Un token por credencial y entorno: si no, un test se lleva el del anterior. */
+const cache = new Map<string, { token: string; expira: number }>();
+
+export function olvidarTokens() {
+  cache.clear();
+}
 
 async function token(env: Record<string, string | undefined>): Promise<string> {
-  if (cache && cache.expira > Date.now() + 60_000) return cache.token;
+  const clave = `${env.EBAY_CLIENT_ID}@${baseUrl(env)}`;
+  const guardado = cache.get(clave);
+  if (guardado && guardado.expira > Date.now() + 60_000) return guardado.token;
 
   const basic = Buffer.from(`${env.EBAY_CLIENT_ID}:${env.EBAY_CLIENT_SECRET}`).toString("base64");
-  const res = await fetch(TOKEN_URL, {
+  const res = await fetch(`${baseUrl(env)}/identity/v1/oauth2/token`, {
     method: "POST",
     headers: { authorization: `Basic ${basic}`, "content-type": "application/x-www-form-urlencoded" },
     body: "grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope",
@@ -46,8 +54,8 @@ async function token(env: Record<string, string | undefined>): Promise<string> {
   if (!res.ok) throw new ProviderError(`token ${res.status}`, "sin-credenciales");
 
   const data = (await res.json()) as { access_token: string; expires_in: number };
-  cache = { token: data.access_token, expira: Date.now() + data.expires_in * 1000 };
-  return cache.token;
+  cache.set(clave, { token: data.access_token, expira: Date.now() + data.expires_in * 1000 });
+  return data.access_token;
 }
 
 interface ItemSummary {
@@ -96,7 +104,7 @@ export const ebay: Provider = {
     }
 
     const url =
-      `${SEARCH_URL}?` +
+      `${baseUrl(ctx.env)}/buy/browse/v1/item_summary/search?` +
       new URLSearchParams({
         q: queryText(q, "de") || "auto",
         category_ids: CATEGORIA[mercado] ?? "9801",

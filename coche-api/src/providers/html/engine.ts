@@ -268,6 +268,7 @@ export function fromDescriptor(d: Descriptor): Provider {
         }
 
         const listings = parciales
+          .map((p) => ({ ...p, url: absoluta(p.url, url), images: p.images?.map((i) => absoluta(i, url)).filter((i): i is string => Boolean(i)) }))
           .filter((p) => p.url && p.title)
           .map((p, n): Listing => ({
             ...p,
@@ -294,6 +295,19 @@ export function fromDescriptor(d: Descriptor): Provider {
       };
     },
   };
+}
+
+/**
+ * Absolutiza una URL contra la pagina de la que salio.
+ * Es idempotente: una URL que ya es absoluta se devuelve igual.
+ */
+function absoluta(u: string | undefined, base: string): string | undefined {
+  if (!u) return undefined;
+  try {
+    return new URL(u, base).toString();
+  } catch {
+    return undefined;
+  }
 }
 
 /** Un id estable: el del portal si se puede sacar de la URL, si no la posicion. */
