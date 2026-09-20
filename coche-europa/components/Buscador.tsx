@@ -20,6 +20,35 @@ const COMBUSTIBLES: { v: Fuel | ""; label: string }[] = [
 
 const euros = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 0 }) + " €";
 
+/**
+ * Las imagenes de los portales fallan a menudo: enlaces caducados, proteccion
+ * contra hotlinking, anuncios retirados. Un icono de imagen rota queda peor
+ * que no poner nada, asi que se cae a la bandera del pais.
+ */
+function Miniatura({ src, country }: { src?: string; country: CountryCode }) {
+  const [roto, setRoto] = useState(false);
+  const bandera = COUNTRIES[country]?.flag ?? "\u{1F697}";
+
+  if (!src || roto) {
+    return (
+      <div className="thumb">
+        <span>{bandera}</span>
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      className="thumb"
+      style={{ margin: 0 }}
+      loading="lazy"
+      onError={() => setRoto(true)}
+    />
+  );
+}
+
 export default function Buscador() {
   const router = useRouter();
   const [f, setF] = useState<SearchFilters>({
@@ -297,14 +326,7 @@ export default function Buscador() {
               <div className="stack" style={{ marginTop: 14 }}>
                 {anuncios.map((l) => (
                   <article key={l.id} className="listing">
-                    <div className="thumb">
-                      {l.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={l.image} alt="" className="thumb" style={{ margin: 0 }} />
-                      ) : (
-                        <span>{COUNTRIES[l.country]?.flag ?? "\u{1F697}"}</span>
-                      )}
-                    </div>
+                    <Miniatura src={l.image} country={l.country} />
                     <div style={{ minWidth: 0 }}>
                       <div className="spread" style={{ alignItems: "flex-start" }}>
                         <strong style={{ fontSize: 15.5 }}>{l.title}</strong>
