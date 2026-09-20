@@ -1,7 +1,7 @@
 ---
 tags: [moc, index]
 type: index
-updated: 2026-04-08
+updated: 2026-09-20
 ---
 
 # 🗺️ Antigravity — Map of Content
@@ -40,6 +40,14 @@ updated: 2026-04-08
 | [[Broker/Lucenathor — Colaboración]] | Plan 3 meses con Adrián Lucena |
 | [[Broker/Centrum — Estrategia Captación]] | 3 canales + embudo + formulario 4 preguntas |
 | [[Broker/Centrum — Avatar Strategy]] | Debate animado vs IA vs persona real |
+
+---
+
+## 🚗 Coches
+
+| Nota | Descripción |
+|------|-------------|
+| [[Coches/Coche Europa — Proyecto]] | App de búsqueda multiportal, coste de importación y revisión guiada |
 
 ---
 
