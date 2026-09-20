@@ -1,0 +1,70 @@
+{
+  "name": "Coches - Bridge Busqueda Multiportal",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "coche-europa/search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-search",
+      "name": "Receive Search Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-360, 0],
+      "webhookId": "coche-europa-search"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Contrato de entrada (lo manda lib/adapters/bridge.ts):\n//   { filters: SearchFilters, portals: string[] }\n//\n// filters = { make, model, yearFrom, yearTo, priceFrom, priceTo, kmTo,\n//             powerFrom, fuel, gearbox, seller, countries[], sort }\n\nconst body = $input.first().json.body ?? $input.first().json;\nconst f = body.filters ?? {};\n\nreturn [{\n  json: {\n    filters: f,\n    portals: body.portals ?? [],\n    query: [f.make, f.model].filter(Boolean).join(' ').trim(),\n    priceFrom: f.priceFrom ?? null,\n    priceTo: f.priceTo ?? null,\n    kmTo: f.kmTo ?? null,\n    yearFrom: f.yearFrom ?? null,\n    countries: f.countries ?? []\n  }\n}];"
+      },
+      "id": "parse-filters",
+      "name": "Parse Search Filters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-140, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────\n// AQUI ES DONDE ENCHUFAS TU FUENTE\n// ─────────────────────────────────────────────────────────────\n// Sustituye este nodo por lo que tengas: un feed de un concesionario\n// con el que trabajes, una API con credenciales, tu propia base de\n// datos de anuncios o un servicio de scraping que hayas contratado.\n//\n// Lo unico que tiene que devolver es un array `listings` con esta forma\n// (los campos opcionales pueden ir vacios, pero cuantos mas, mejor\n// ordena la app):\n//\n//   {\n//     id:       'string unico',\n//     title:    'BMW 320d xDrive 190 CV',\n//     price:    14500,          // euros, sin puntos\n//     year:     2019,\n//     km:       95000,\n//     co2:      128,            // g/km WLTP -> decide el impuesto\n//     power:    190,            // CV\n//     fuel:     'diesel',       // gasolina|diesel|hibrido|phev|electrico|glp|gnc\n//     gearbox:  'automatico',   // manual|automatico\n//     country:  'DE',           // DE|FR|IT|NL|BE|AT|PT|PL|LU|ES\n//     city:     'Munich',\n//     seller:   'particular',   // particular|profesional\n//     url:      'https://...',\n//     image:    'https://...',\n//     sourceName: 'Nombre que se ve en la tarjeta'\n//   }\n\nconst listings = [];\n\nreturn [{ json: { listings } }];"
+      },
+      "id": "fetch-listings",
+      "name": "Fetch Listings From Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [80, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza y descarta lo que no cumpla los filtros, para que la app\n// no tenga que fiarse de lo que llega.\nconst f = $('Parse Search Filters').first().json.filters ?? {};\nconst raw = $input.first().json.listings ?? [];\n\nconst listings = raw\n  .map((l, n) => ({\n    id: String(l.id ?? `bridge_${n}`),\n    sourceName: l.sourceName ?? 'Fuente propia',\n    title: String(l.title ?? 'Sin titulo'),\n    price: Number(l.price) || 0,\n    year: Number(l.year) || undefined,\n    km: Number(l.km) || undefined,\n    co2: Number(l.co2) || undefined,\n    power: Number(l.power) || undefined,\n    fuel: l.fuel,\n    gearbox: l.gearbox,\n    country: l.country ?? 'DE',\n    city: l.city,\n    seller: l.seller,\n    url: String(l.url ?? ''),\n    image: l.image\n  }))\n  .filter((l) => l.price > 0)\n  .filter((l) => !f.priceTo || l.price <= f.priceTo)\n  .filter((l) => !f.priceFrom || l.price >= f.priceFrom)\n  .filter((l) => !f.kmTo || !l.km || l.km <= f.kmTo)\n  .filter((l) => !f.yearFrom || !l.year || l.year >= f.yearFrom);\n\nreturn [{ json: { listings } }];"
+      },
+      "id": "normalize",
+      "name": "Normalize Listings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond Search Results",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Receive Search Request": { "main": [[{ "node": "Parse Search Filters", "type": "main", "index": 0 }]] },
+    "Parse Search Filters": { "main": [[{ "node": "Fetch Listings From Source", "type": "main", "index": 0 }]] },
+    "Fetch Listings From Source": { "main": [[{ "node": "Normalize Listings", "type": "main", "index": 0 }]] },
+    "Normalize Listings": { "main": [[{ "node": "Respond Search Results", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false,
+  "tags": []
+}
