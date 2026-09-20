@@ -39,6 +39,7 @@ export default function Calculadora() {
     includeItp: true,
     transport: "camion",
     hasCoc: false,
+    modificado: false,
     useGestoria: true,
     vinReport: true,
   });
@@ -110,6 +111,14 @@ export default function Calculadora() {
               type="date"
               value={i.firstRegistration ?? ""}
               onChange={(e) => set("firstRegistration", e.target.value || undefined)}
+            />
+          </label>
+          <label className="field">
+            Fecha de la compra
+            <input
+              type="date"
+              value={i.fechaCompra ?? ""}
+              onChange={(e) => set("fechaCompra", e.target.value || undefined)}
             />
           </label>
           <label className="field">
@@ -190,6 +199,17 @@ export default function Calculadora() {
               </select>
             </label>
             <label className="field">
+              Recargo autonomico del IEDMT (%)
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.25"
+                value={i.recargoAutonomico ?? ""}
+                onChange={(e) => set("recargoAutonomico", num(e.target.value))}
+                placeholder="0 — confirmalo con tu comunidad"
+              />
+            </label>
+            <label className="field">
               Precio del mismo coche en Espana
               <input
                 type="number"
@@ -202,16 +222,22 @@ export default function Calculadora() {
           </div>
           <div className="stack" style={{ marginTop: 14 }}>
             <Toggle
+              on={i.modificado}
+              onChange={(v) => set("modificado", v)}
+              label="El coche lleva reformas (llantas, suspension, escape, potencia)"
+              hint="Espana no convalida lo anotado en el TUV. Es el gasto sorpresa mas caro que existe."
+            />
+            <Toggle
               on={i.includeItp}
               onChange={(v) => set("includeItp", v)}
-              label="Incluir ITP (compra a particular)"
-              hint="Discutido en compras dentro de la UE. Lo dejamos activado para no quedarnos cortos."
+              label="Incluir el ITP como riesgo latente"
+              hint="Sujeto por ley, pero la DGT no lo pide para matricular. Verlo es decidir; ocultarlo es un descuido."
             />
             <Toggle
               on={i.hasCoc}
               onChange={(v) => set("hasCoc", v)}
               label="El coche trae COC"
-              hint="Certificado de conformidad europeo. Sin el, +400 EUR y semanas de tramites."
+              hint="Sin COC hace falta homologacion individual: 400-900 EUR y semanas."
             />
             <Toggle
               on={i.useGestoria}
@@ -281,7 +307,14 @@ export default function Calculadora() {
                   </div>
                 )}
               </div>
-              <div className="amt">{euros(l.amount)}</div>
+              <div className="amt">
+                {euros(l.amount)}
+                {l.range && l.range[0] !== l.range[1] && (
+                  <div className="tiny dim" style={{ fontWeight: 400 }}>
+                    {euros(l.range[0])}&ndash;{euros(l.range[1])}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
           <div className="line total">
@@ -289,6 +322,15 @@ export default function Calculadora() {
             <span className="amt">{euros(r.total)}</span>
           </div>
         </div>
+
+        {r.minoracion > 0 && (
+          <div className="note accent small" style={{ marginTop: 14 }}>
+            Base del impuesto de matriculacion minorada a{" "}
+            <strong style={{ color: "var(--text)" }}>{euros(r.baseIedmt)}</strong> por el art.
+            69.b) de la Ley 38/1992: un usado ya matriculado fuera no tributa sobre el valor
+            completo. Te ahorra {euros((r.minoracion * r.iedmtRate) / 100)}.
+          </div>
+        )}
 
         <div className="row" style={{ marginTop: 16, gap: 8 }}>
           <span className="pill">Impuestos {euros(r.impuestos)}</span>

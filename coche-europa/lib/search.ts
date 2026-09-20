@@ -78,7 +78,7 @@ export async function runSearch(filters: SearchFilters): Promise<SearchResponse>
       vistos.add(huella);
       listings.push({
         ...l,
-        landedCost: costeAproximado(l.price, l.country, l.co2, l.year),
+        landedCost: costeAproximado(l.price, l.country, l.co2),
       });
     }
   }

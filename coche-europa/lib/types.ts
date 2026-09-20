@@ -92,6 +92,8 @@ export interface CostInputs {
   fuel?: Fuel;
   /** Fecha de la primera matriculacion (ISO yyyy-mm-dd) */
   firstRegistration?: string;
+  /** Fecha de la compra. El plazo de 6 meses se cuenta hasta la entrega. */
+  fechaCompra?: string;
   km?: number;
   seller: SellerType;
   /** Valor segun tablas de Hacienda. Si no se indica, se usa el precio pagado. */
@@ -102,6 +104,10 @@ export interface CostInputs {
   includeItp: boolean;
   transport: TransportMode;
   hasCoc: boolean;
+  /** Reformas anotadas en el TUV / carte grise. Espana no las convalida. */
+  modificado: boolean;
+  /** Recargo autonomico del IEDMT (%). Las CCAA pueden subirlo hasta un 15%. */
+  recargoAutonomico?: number;
   useGestoria: boolean;
   vinReport: boolean;
   /** Precio del mismo coche en el mercado espanol, para comparar. */
@@ -113,6 +119,8 @@ export interface CostLine {
   label: string;
   amount: number;
   note?: string;
+  /** Horquilla real [min, max]. Un presupuesto con precision falsa engaña. */
+  range?: [number, number];
   /** true = lo puedes quitar o hacer tu mismo */
   optional?: boolean;
 }
@@ -126,6 +134,9 @@ export interface CostBreakdown {
   sobrecoste: number;
   ahorro?: number;
   iedmtRate: number;
+  /** Base del IEDMT tras la minoracion del art. 69.b). */
+  baseIedmt: number;
+  minoracion: number;
   esMedioTransporteNuevo: boolean;
   avisos: string[];
 }
