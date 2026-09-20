@@ -50,7 +50,19 @@ anuncios reales.
 
 ### El puente (`BRIDGE_URL`)
 
-El hueco para meter tu propia fuente. La app le manda:
+El hueco para meter tu propia fuente. Hay una que ya habla este contrato:
+**[`coche-api`](../coche-api)**, el metabuscador open source de al lado.
+
+```bash
+cd ../coche-api && npm start
+# y en este proyecto:
+BRIDGE_URL=http://localhost:8080/bridge
+```
+
+Con eso los resultados de las fuentes que tenga activas coche-api aparecen
+mezclados en la lista unificada, ya con su coste de importacion calculado.
+
+La app le manda:
 
 ```http
 POST {BRIDGE_URL}
@@ -62,8 +74,8 @@ Authorization: Bearer {BRIDGE_TOKEN}
 
 y espera `{ "listings": [...] }` o `{ "results": [{ "portal", "listings" }] }`.
 
-En `n8n/coche-europa-bridge.json` tienes el flujo de n8n que implementa ese
-contrato, listo para importar. El nodo `Fetch Listings From Source` esta vacio a
+Tambien tienes en `n8n/coche-europa-bridge.json` un flujo de n8n que implementa
+el mismo contrato, por si prefieres montarlo ahi. El nodo `Fetch Listings From Source` esta vacio a
 proposito: ahi enchufas lo que tengas (un feed de concesionario, una API con
 credenciales, tu propia base de anuncios).
 
