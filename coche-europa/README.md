@@ -19,7 +19,7 @@ usuario vive en su navegador.
 |------|----------|
 | `/buscar` | Un formulario de filtros que se lanza contra 13 portales de 9 paises a la vez |
 | `/coste` | Precio del anuncio -> coste real matriculado en Espana |
-| `/revision` | 70 puntos de revision guiada, filtrados al coche concreto |
+| `/revision` | 103 puntos de revision guiada, filtrados al coche concreto |
 | `/informe` | Veredicto, defectos, cuanto negociar y precio maximo a pagar |
 
 ---
@@ -110,14 +110,22 @@ toca esa constante y los tramos.
 
 ## La revision guiada
 
-`lib/checklist.ts`. Ocho fases en el orden en que hay que hacerlas:
+`lib/checklist.ts`. Nueve fases en el orden en que hay que hacerlas:
 
-1. **Antes de coger el avion** — todo por WhatsApp. Si falla aqui, no viajas.
-2. **Papeles** — cambian por pais: Teil II aleman, non-gage frances, fermo
-   italiano, tenaamstellingscode holandes...
-3. **Arranque en frio** — lo primero al llegar, y solo funciona una vez.
-4. **Chapa y pintura** · 5. **Interior y electronica** · 6. **Motor y fluidos**
-7. **Prueba en carretera** · 8. **Cerrar la compra**
+1. **Que el vendedor sea real** — antifraude puro. Los timos que mas dinero se
+   llevan (la senal, el transportista falso, la cuenta de un tercero) ocurren
+   antes de comprar el billete de avion, asi que van separados y todos son
+   motivo para irse.
+2. **Que el coche merezca el viaje** — la fuente oficial de historial de cada
+   pais, el CO2 real, las reformas, y si tienes el dinero: ningun banco espanol
+   financia un coche sin matricula espanola.
+3. **Arranque en frio** — lo primero al llegar. Es perecedero: solo funciona una
+   vez y solo con el motor parado toda la noche, asi que va antes que los
+   papeles.
+4. **Papeles** — cambian por pais: Teil II aleman, HistoVec frances, visura del
+   PRA italiana, tenaamstellingscode holandes, Car-Pass belga.
+5. **Chapa y pintura** · 6. **Interior y electronica** · 7. **Motor y fluidos**
+8. **Prueba en carretera** · 9. **Cerrar la compra**
 
 La lista se adapta al coche: un diesel anade filtro de particulas y AdBlue, un
 automatico anade DSG, un electrico anade salud de bateria.
@@ -142,7 +150,7 @@ app/
 lib/
   portals.ts          URLs de busqueda de cada portal  <- editar aqui
   import-cost.ts      fiscalidad y gastos de importacion
-  checklist.ts        los 70 puntos de revision
+  checklist.ts        los 103 puntos de revision
   scoring.ts          nota, veredicto y descuento
   search.ts           orquestador: paralelo, dedupe, orden
   adapters/           bridge (n8n), eBay, ejemplos

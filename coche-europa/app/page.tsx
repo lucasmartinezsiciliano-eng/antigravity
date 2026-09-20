@@ -19,7 +19,7 @@ const PASOS = [
   {
     n: "03",
     title: "Revisa el coche sin dejarte nada",
-    text: "Una lista de 70 puntos que se filtra a los que le tocan a tu coche, en el orden correcto: lo que se comprueba desde casa antes de coger el avion, los papeles de cada pais, el arranque en frio, la chapa y la prueba en carretera.",
+    text: "Una lista de 103 puntos que se filtra a los que le tocan a tu coche. En el orden correcto: primero comprobar que el vendedor existe, luego que el coche merece el viaje, y ya alli el arranque en frio, los papeles de ese pais y la prueba en carretera.",
     href: "/revision",
     cta: "Empezar revision",
   },
