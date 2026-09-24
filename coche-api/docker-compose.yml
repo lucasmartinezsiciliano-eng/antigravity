@@ -1,0 +1,12 @@
+services:
+  coche-api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      PORT: 8080
+    # Sin volumenes y sin base de datos: no hay nada que persistir. La
+    # metabusqueda es bajo demanda y los resultados no se guardan.
